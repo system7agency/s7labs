@@ -1,26 +1,60 @@
 @import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Fonts (will be set via next/font in layout.tsx — these are fallbacks) */
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --font-serif: var(--font-serif), ui-serif, serif;
+
+  /* Colors — dark theme (default) */
+  --color-bg: #060608;
+  --color-bg-2: #0a0a0c;
+  --color-surface: #101014;
+  --color-surface-2: #16161b;
+
+  --color-border: rgb(255 255 255 / 0.07);
+  --color-border-strong: rgb(255 255 255 / 0.14);
+
+  --color-fg: #ededed;
+  --color-fg-muted: #8a8a8f;
+  --color-fg-dim: #55555b;
+
+  /* Single accent — lime green */
+  --color-accent: #b8ff5c;
+  --color-accent-dim: rgb(184 255 92 / 0.18);
+  --color-accent-glow: rgb(184 255 92 / 0.35);
+
+  /* Decorative */
+  --color-dot: rgb(255 255 255 / 0.055);
+
+  /* Status colors (for future use) */
+  --color-status-online: #22c55e;
+  --color-status-pending: #f59e0b;
+
+  /* Display sizes */
+  --text-display-xl: 88px;
+  --text-display-lg: 56px;
+  --text-display-md: 36px;
+
+  /* Radius */
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-card: 0 24px 48px -12px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-card-hover: 0 32px 64px -12px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.4);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base */
+html,
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: 'ss01', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
