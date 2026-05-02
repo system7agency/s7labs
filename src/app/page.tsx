@@ -3,7 +3,7 @@ import { RoutesSection } from '@/components/features/landing/RoutesSection'
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen">
+    <main className="relative z-10 min-h-screen">
       <Hero />
       <RoutesSection />
     </main>
