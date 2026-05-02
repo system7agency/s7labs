@@ -221,6 +221,90 @@ body {
   animation: beam-scan 2.4s ease-in-out infinite;
 }
 
+/* Route card decorations */
+@keyframes scan-down {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.route-card-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--color-accent) 50%, transparent 100%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.route-card:hover .route-card-scan {
+  animation: scan-down 1.8s ease-out;
+}
+
+.route-card-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+  transition: opacity 200ms ease-out;
+}
+
+@keyframes glyph-fade {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.08;
+  }
+}
+
+.route-card-glyph {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-fg);
+  opacity: 0;
+  animation: glyph-fade 8s ease-in-out infinite;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  letter-spacing: 0.1em;
+}
+
+.route-card-glyph[data-glyph='1'] {
+  top: 16px;
+  right: 16px;
+  animation-delay: 0s;
+}
+
+.route-card-glyph[data-glyph='2'] {
+  bottom: 16px;
+  left: 16px;
+  animation-delay: 2.5s;
+}
+
+.route-card-glyph[data-glyph='3'] {
+  top: 50%;
+  right: 32px;
+  animation-delay: 5s;
+}
+
 /* Typewriter cursor */
 @keyframes typewriter-blink {
   0%,
