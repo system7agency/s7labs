@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Fraunces } from 'next/font/google'
-import { BackgroundLayers } from '@/components/layout/BackgroundLayers'
-import { Footer } from '@/components/layout/Footer'
-import { Header } from '@/components/layout/Header'
+
 import './globals.css'
 
 const geistSans = Geist({
@@ -21,7 +19,7 @@ const fraunces = Fraunces({
   subsets: ['latin'],
   variable: '--font-serif',
   style: 'italic',
-  weight: ['300'],
+  weight: ['300', '500'],
   display: 'swap',
 })
 
@@ -36,16 +34,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col">
-        <BackgroundLayers />
-        <Header />
-        {children}
-        <Footer />
-      </body>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable}`}>
+      <body>{children}</body>
     </html>
   )
 }
