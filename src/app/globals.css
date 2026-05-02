@@ -221,6 +221,25 @@ body {
   animation: beam-scan 2.4s ease-in-out infinite;
 }
 
+/* Typewriter cursor */
+@keyframes typewriter-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  margin-left: 1px;
+  color: var(--color-accent);
+  animation: typewriter-blink 1s steps(1) infinite;
+}
+
 /* Background layers */
 .bg-dots {
   position: fixed;

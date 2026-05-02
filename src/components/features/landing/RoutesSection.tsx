@@ -1,12 +1,9 @@
 import { Container } from '@/components/ui/Container'
 import type { RouteCardData } from '@/types/route'
-import { RouteCard } from './RouteCard'
-import { RoutesSectionHeader } from './RoutesSectionHeader'
-import { SoonCard } from './SoonCard'
 
-// Spec showed `as const` + explicit type; dropping `as const` because the type
-// annotation already provides the same type-safety, and `as const` would make
-// the literal readonly tuple incompatible with `RouteCardData[]`.
+import { RouteCardsClient } from './RouteCardsClient'
+import { RoutesSectionHeader } from './RoutesSectionHeader'
+
 const ACTIVE_ROUTES: RouteCardData[] = [
   {
     index: 'ROUTE_01',
@@ -24,26 +21,19 @@ const ACTIVE_ROUTES: RouteCardData[] = [
   },
 ]
 
+const SOON_ROUTE = {
+  index: 'ROUTE_03',
+  label: 'build_s7labs',
+  tagline: 'Custom AI systems and bespoke integrations for teams ready to ship.',
+  tags: ['CUSTOM', 'INTEGRATIONS', 'SOON'],
+}
+
 export function RoutesSection() {
   return (
     <section aria-labelledby="active-routes-heading" className="py-24">
       <Container>
         <RoutesSectionHeader />
-
-        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {ACTIVE_ROUTES.map((route) => (
-            <RouteCard key={route.index} {...route} />
-          ))}
-        </div>
-
-        <div className="mt-4">
-          <SoonCard
-            index="ROUTE_03"
-            label="build_s7labs"
-            tagline="Custom AI systems and bespoke integrations for teams ready to ship."
-            tags={['CUSTOM', 'INTEGRATIONS', 'SOON']}
-          />
-        </div>
+        <RouteCardsClient routes={ACTIVE_ROUTES} soon={SOON_ROUTE} />
       </Container>
     </section>
   )

@@ -1,8 +1,17 @@
+'use client'
+
 import type { RouteCardData } from '@/types/route'
 
-type Props = RouteCardData
+import { Typewriter } from './Typewriter'
 
-export function RouteCard({ index, label, tagline, tags, href }: Props) {
+type Props = {
+  route: RouteCardData
+  shouldType: boolean
+  onTypingComplete: () => void
+}
+
+export function RouteCard({ route, shouldType, onTypingComplete }: Props) {
+  const { index, label, tagline, tags, href } = route
   return (
     <a
       href={href}
@@ -21,7 +30,14 @@ export function RouteCard({ index, label, tagline, tags, href }: Props) {
           >
             $
           </span>
-          <span className="font-mono text-[24px] font-medium text-[var(--color-fg)]">{label}</span>
+          <Typewriter
+            text={label}
+            start={shouldType}
+            speed={45}
+            startDelay={300}
+            onComplete={onTypingComplete}
+            className="font-mono text-[24px] font-medium text-[var(--color-fg)]"
+          />
         </div>
         <p className="mt-4 max-w-[320px] text-sm font-normal text-[var(--color-fg-muted)]">
           {tagline}
