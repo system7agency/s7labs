@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Fraunces } from 'next/font/google'
+import { BackgroundLayers } from '@/components/layout/BackgroundLayers'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import './globals.css'
@@ -40,6 +41,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <BackgroundLayers />
         <Header />
         {children}
         <Footer />
