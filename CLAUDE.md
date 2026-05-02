@@ -60,6 +60,27 @@ See `/docs/testing.md`.
 - Never disable ESLint rules without a comment explaining why
 - Never install a new dependency without justifying it
 
+## Landing page architecture note
+
+The landing page at `/` is a direct port of the design produced by
+Claude Design (saved at `/docs/design-reference/landing-page.html`).
+It uses inline CSS and inline JavaScript wrapped in a Next.js page,
+rather than the component architecture used elsewhere. This is
+intentional:
+
+- The design has visual nuance (aurora canvas blob math, oscilloscope
+  rings, beam readouts, typewriter sequencers) that proved difficult
+  to translate 1:1 into React components without visual drift.
+- The marketing landing page is built once and rarely changes, so
+  the maintenance cost of the inline approach is low.
+- Inner pages (/creator, /revops, /intel/{company}, etc.) will use
+  proper component architecture per /docs/conventions.md — the
+  inline approach is specific to the landing page.
+
+If the landing page needs changes, prefer regenerating from Claude
+Design and re-porting, rather than incrementally editing the inline
+CSS/JS.
+
 ## When uncertain
 
 Stop and ask. Do not guess on architecture, security, or convention
