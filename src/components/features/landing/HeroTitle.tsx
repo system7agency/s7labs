@@ -1,6 +1,6 @@
 export function HeroTitle() {
   return (
-    <div className="relative">
+    <div className="animate-fade-up animate-delay-200 relative">
       <h1 className="flex items-baseline justify-center font-sans text-[80px] leading-none font-semibold tracking-[-0.02em] text-[var(--color-fg)] md:text-[110px] lg:text-[140px]">
         <span>S7</span>
         <span
