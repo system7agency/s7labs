@@ -49,9 +49,9 @@
    Z-INDEX SCALE
 
    z-0    bg-dots (fixed background dot grid)
-   z-1    aurora canvas (Phase 8)
+   z-1    bg-aurora (canvas, mix-blend-mode: screen)
    z-2    bg-grain (fixed grain overlay)
-   z-3    bg-spotlight (Phase 8 — cursor-tracked spotlight)
+   z-3    bg-spotlight (cursor-tracked radial gradient)
    z-10   page content (main, hero, sections)
    z-50   header (fixed, must overlay everything)
    ───────────────────────────────────────────────────────── */
@@ -140,6 +140,31 @@ body {
   /* Elliptical mask: dots are stronger near center, fade at edges */
   mask-image: radial-gradient(ellipse 80% 60% at center, black 30%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at center, black 30%, transparent 100%);
+}
+
+.bg-aurora {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+  filter: blur(60px);
+  opacity: 0.7;
+}
+
+.bg-spotlight {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  --mx: -100px;
+  --my: -100px;
+  background: radial-gradient(
+    600px circle at var(--mx) var(--my),
+    rgba(184, 255, 92, 0.06),
+    transparent 60%
+  );
+  transition: background 0.1s ease-out;
 }
 
 .bg-grain {
