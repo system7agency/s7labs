@@ -138,25 +138,49 @@ header {
 }
 
 .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--fg-muted);
   text-decoration: none;
   font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.02em;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: color 0.2s ease;
+  transition: color 200ms ease-out;
 }
+
 .back-link:hover {
   color: var(--fg);
 }
-.back-link .arr {
-  transition: transform 0.2s ease;
+
+.back-link-arrow {
   display: inline-block;
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
-.back-link:hover .arr {
-  transform: translateX(-3px);
+
+.back-link:hover .back-link-arrow {
+  transform: translateX(-4px);
+}
+
+.back-link-logo {
+  display: inline-flex;
+  align-items: center;
+}
+
+.back-link-logo svg {
+  display: block;
+  height: 18px;
+  width: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back-link-arrow {
+    transition: none;
+  }
+  .back-link:hover .back-link-arrow {
+    transform: none;
+  }
 }
 
 .wordmark {
@@ -1117,9 +1141,6 @@ footer .foot-right {
   header {
     padding: 0 16px;
     grid-template-columns: auto 1fr auto;
-  }
-  .back-link span.full {
-    display: none;
   }
   .phone-pill span.label {
     display: none;
