@@ -14,9 +14,9 @@
   --fg: #ededed;
   --fg-muted: #8a8a8f;
   --fg-dim: #55555b;
-  --accent: #b8ff5c;
-  --accent-dim: rgba(184, 255, 92, 0.18);
-  --accent-glow: rgba(184, 255, 92, 0.35);
+  --accent: #4f8cff;
+  --accent-dim: rgba(79, 140, 255, 0.18);
+  --accent-glow: rgba(79, 140, 255, 0.35);
   --dot: rgba(255, 255, 255, 0.055);
   --mono: var(--font-mono), ui-monospace, 'SF Mono', Menlo, monospace;
   --sans: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;

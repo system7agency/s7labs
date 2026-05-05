@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
+  NEXT_PUBLIC_REVOPS_WEBHOOK_URL: z.string().url().default('https://example.com/webhook-stub'),
 })
 
 const serverSchema = z.object({

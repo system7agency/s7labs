@@ -73,13 +73,24 @@ intentional:
   to translate 1:1 into React components without visual drift.
 - The marketing landing page is built once and rarely changes, so
   the maintenance cost of the inline approach is low.
-- Inner pages (/creator, /revops, /intel/{company}, etc.) will use
+- Inner pages (/creator, /intel/{company}, etc.) will use
   proper component architecture per /docs/conventions.md — the
-  inline approach is specific to the landing page.
+  inline approach is specific to landing-style pages.
 
 If the landing page needs changes, prefer regenerating from Claude
 Design and re-porting, rather than incrementally editing the inline
 CSS/JS.
+
+## /revops route
+
+`/revops` is an active route that follows the same direct-HTML-port
+workflow as `/`. Source-of-truth is
+`/docs/design-reference/revops-page.html`. The port lives at
+`/src/app/revops/{page.tsx,page-styles.css,PageScripts.tsx}`. The
+state machine (CTA → email → cards → success) is implemented as
+React state in `page.tsx`; only the aurora canvas + cursor spotlight
+remain in `PageScripts.tsx`. Header and footer markup is duplicated
+verbatim from the landing page for visual parity.
 
 ## When uncertain
 
