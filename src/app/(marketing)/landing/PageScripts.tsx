@@ -179,6 +179,39 @@ export function PageScripts() {
       raf(titleLoop)
     }
 
+    // -------- Typewriter --------
+    function typewrite(el: Element, text: string): Promise<void> {
+      return new Promise((resolve) => {
+        if (prefersReduced) {
+          el.textContent = text
+          resolve()
+          return
+        }
+        let i = 0
+        el.textContent = ''
+        const step = () => {
+          if (cancelled) {
+            resolve()
+            return
+          }
+          if (i >= text.length) {
+            resolve()
+            return
+          }
+          el.textContent += text[i++]
+          const id = setTimeout(
+            () => {
+              timeouts.delete(id)
+              step()
+            },
+            TYPE_SPEED_MS + (Math.random() * 20 - 10)
+          )
+          timeouts.add(id)
+        }
+        step()
+      })
+    }
+
     async function runHero() {
       const sub = document.getElementById('heroSub')
       if (!sub) return
@@ -222,6 +255,30 @@ export function PageScripts() {
       })
     }
 
+    async function runRoutes() {
+      const cards = document.querySelectorAll<HTMLElement>('.route-card:not(.soon)')
+      await Promise.all(
+        Array.from(cards).map(
+          (card, idx) =>
+            new Promise<void>((resolve) => {
+              const id = setTimeout(async () => {
+                timeouts.delete(id)
+                const typedEl = card.querySelector('.typed')
+                const cursorEl = card.querySelector('.type-cursor')
+                if (!typedEl || !cursorEl) {
+                  resolve()
+                  return
+                }
+                await typewrite(typedEl, card.dataset.label ?? '')
+                cursorEl.classList.add('done')
+                resolve()
+              }, idx * 300)
+              timeouts.add(id)
+            })
+        )
+      )
+    }
+
     function revealSoon() {
       const soon = document.querySelector<HTMLElement>('.route-card.soon')
       if (!soon) return
@@ -237,6 +294,9 @@ export function PageScripts() {
     async function run() {
       revealSoon()
       await runHero()
+      await delay(200)
+      if (cancelled) return
+      await runRoutes()
     }
 
     if (document.fonts && document.fonts.ready) {
