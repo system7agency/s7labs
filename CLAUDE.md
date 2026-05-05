@@ -81,6 +81,18 @@ If the landing page needs changes, prefer regenerating from Claude
 Design and re-porting, rather than incrementally editing the inline
 CSS/JS.
 
+## Shared header and footer
+
+`/src/components/Header.tsx` and `/src/components/Footer.tsx` are
+the canonical, sitewide header and footer. **All pages must import
+and render these components** rather than duplicating the markup —
+this rule supersedes the earlier "copy the header/footer verbatim"
+guidance from the landing-page port. Co-located CSS lives at
+`Header.css` / `Footer.css`. The `Footer` accepts an optional `lab`
+prop (e.g. `<Footer lab="REVOPS" />` renders `S7 LABS · REVOPS`).
+The `Header` accepts an optional `backHref` (defaults to
+`https://www.system7.ai/`).
+
 ## /revops route
 
 `/revops` is an active route that follows the same direct-HTML-port
@@ -89,8 +101,8 @@ workflow as `/`. Source-of-truth is
 `/src/app/revops/{page.tsx,page-styles.css,PageScripts.tsx}`. The
 state machine (CTA → email → cards → success) is implemented as
 React state in `page.tsx`; only the aurora canvas + cursor spotlight
-remain in `PageScripts.tsx`. Header and footer markup is duplicated
-verbatim from the landing page for visual parity.
+remain in `PageScripts.tsx`. Header and footer come from the shared
+`<Header />` and `<Footer />` components.
 
 ## When uncertain
 
