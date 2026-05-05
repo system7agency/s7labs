@@ -7,11 +7,11 @@ import { useEffect } from 'react'
  * /docs/design-reference/landing-page.html.
  *
  * Stripped: tweaks panel, postMessage edit-mode wiring, 't' shortcut.
- * Inlined: tweaks.accent (#B8FF5C), tweaks.typeSpeedMs (38),
+ * Inlined: tweaks.accent (#4F8CFF), tweaks.typeSpeedMs (38),
  * tweaks.aurora (always true), tweaks.tilt (always true).
  */
 
-const ACCENT_RGB = { r: 184, g: 255, b: 92 }
+const ACCENT_RGB = { r: 79, g: 140, b: 255 }
 const TYPE_SPEED_MS = 38
 
 type RGB = { r: number; g: number; b: number }
