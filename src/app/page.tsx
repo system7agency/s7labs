@@ -81,15 +81,19 @@ export default function HomePage() {
             </svg>
             <span className="li-label">LinkedIn</span>
           </a>
-          <a href="#phone" className="phone-pill" aria-label="Talk to AI System 7">
-            <span className="voice-waveform" aria-hidden="true">
-              <span className="wave-bar" />
-              <span className="wave-bar" />
-              <span className="wave-bar" />
-              <span className="wave-bar" />
-            </span>
-            <span className="live-dot" aria-hidden="true" />
-            <span className="pill-label">Talk to AI System 7</span>
+          <a href="#phone" className="phone-pill" aria-label="Call AI System 7 — voice agent">
+            <span className="live-dot" />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <span className="label">AI System 7</span>
           </a>
         </div>
       </header>
@@ -142,10 +146,25 @@ export default function HomePage() {
           </div>
 
           <div className="routes-grid">
-            <a href="/creator" className="route-card tiltable" data-route="creator">
+            <a
+              href="/creator"
+              className="route-card tiltable"
+              data-route="creator"
+              data-label="creator_s7labs"
+            >
               <span className="scan-line" />
+              <div className="card-glyphs" aria-hidden="true">
+                <span style={{ top: '12%', right: '18%' }}>01010110</span>
+                <span style={{ top: '72%', right: '10%' }}>→ init</span>
+                <span style={{ top: '42%', left: '10%' }}>λ</span>
+              </div>
               <div className="route-card-inner">
-                <h3 className="route-label">Creator</h3>
+                <span className="route-index">ROUTE_01</span>
+                <div className="route-label">
+                  <span className="prompt">$</span>
+                  <span className="typed" />
+                  <span className="type-cursor" />
+                </div>
                 <p className="route-tagline">
                   Content engines and brand intelligence for creative teams.
                 </p>
@@ -159,10 +178,25 @@ export default function HomePage() {
               </div>
             </a>
 
-            <a href="/revops" className="route-card tiltable" data-route="revops">
+            <a
+              href="/revops"
+              className="route-card tiltable"
+              data-route="revops"
+              data-label="revops_s7labs"
+            >
               <span className="scan-line" />
+              <div className="card-glyphs" aria-hidden="true">
+                <span style={{ top: '12%', right: '18%' }}>{'// pipeline'}</span>
+                <span style={{ top: '72%', right: '12%' }}>Σ revenue</span>
+                <span style={{ top: '42%', left: '10%' }}>⌁</span>
+              </div>
               <div className="route-card-inner">
-                <h3 className="route-label">RevOps</h3>
+                <span className="route-index">ROUTE_02</span>
+                <div className="route-label">
+                  <span className="prompt">$</span>
+                  <span className="typed" />
+                  <span className="type-cursor" />
+                </div>
                 <p className="route-tagline">
                   AI-native pipeline, qualification, and outbound orchestration.
                 </p>
@@ -180,7 +214,10 @@ export default function HomePage() {
           <div className="soon-row">
             <a className="route-card soon" aria-disabled="true">
               <div className="route-card-inner">
-                <h3 className="route-label">Build</h3>
+                <span className="route-index">ROUTE_03</span>
+                <div className="route-label">
+                  <span className="prompt">$</span>build_s7labs
+                </div>
                 <p className="route-tagline">
                   Custom AI systems for teams defining the future of their industry.
                 </p>
