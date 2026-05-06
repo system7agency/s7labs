@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 import './Header.css'
 
@@ -7,9 +10,38 @@ type HeaderProps = {
   backHref?: string
 }
 
+const SCROLL_THRESHOLD = 80
+
 export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
+  const [hidden, setHidden] = useState(false)
+
+  useEffect(() => {
+    let ticking = false
+    let lastScrollY = window.scrollY
+
+    const handleScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY
+        if (currentScrollY < SCROLL_THRESHOLD) {
+          setHidden(false)
+        } else if (currentScrollY > lastScrollY) {
+          setHidden(true)
+        } else if (currentScrollY < lastScrollY) {
+          setHidden(false)
+        }
+        lastScrollY = currentScrollY
+        ticking = false
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
-    <header>
+    <header className={hidden ? 'header-hidden' : undefined} inert={hidden || undefined}>
       <div className="header-left">
         <a
           className="back-link"
