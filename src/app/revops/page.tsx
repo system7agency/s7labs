@@ -22,8 +22,8 @@ const STAGES: Stage[] = [
   { num: '01', label: "Reading your company's website", status: 'parsing', icon: 'globe' },
   { num: '02', label: 'Inferring your ICP', status: 'analyzing', icon: 'crosshair' },
   { num: '03', label: 'Identifying competitors', status: 'scanning', icon: 'radar' },
-  { num: '04', label: 'Searching 25 target companies', status: 'querying', icon: 'database' },
-  { num: '05', label: 'Finding decision-makers', status: 'matching', icon: 'users' },
+  { num: '04', label: 'Searching sample accounts', status: 'querying', icon: 'database' },
+  { num: '05', label: 'Finding sample contacts', status: 'matching', icon: 'users' },
   { num: '06', label: 'Compiling your report', status: 'compiling', icon: 'file' },
 ]
 
@@ -315,7 +315,10 @@ export default function RevOpsPage() {
       <main>
         <section className="hero">
           <div className="lab-wordmark">
-            <span className="acc">S7</span> · LABS
+            <span className="acc">
+              S<sup className="wordmark-superscript">7</sup>
+            </span>{' '}
+            · LABS
           </div>
           <div className="hero-eyebrow">
             <span className="accent-dot" />
@@ -331,11 +334,11 @@ export default function RevOpsPage() {
           <div className="hero-meta">
             <span>ICP</span>
             <span className="sep" />
-            <span>25 ACCOUNTS</span>
+            <span>COMPETITORS</span>
             <span className="sep" />
-            <span>25 CONTACTS</span>
+            <span>SAMPLE ACCOUNTS</span>
             <span className="sep" />
-            <span className="v">~15 MIN</span>
+            <span>SAMPLE CONTACTS</span>
           </div>
         </section>
 
@@ -348,7 +351,9 @@ export default function RevOpsPage() {
               CH·02 <span className="v">{READOUT_TR[appState]}</span>
             </span>
             <span className="panel-readout bl">FREE BETA</span>
-            <span className="panel-readout br">λ S7·REV</span>
+            <span className="panel-readout br">
+              λ S<sup className="wordmark-superscript">7</sup>·REV
+            </span>
 
             <div className={`state ${appState === 'cta' ? 'active' : ''}`}>
               <button className="cta-btn" type="button" onClick={() => setAppState('email')}>

@@ -58,13 +58,22 @@ header {
 
 .back-link-logo {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: inherit;
 }
 
-.back-link-logo svg {
-  display: block;
-  height: 18px;
-  width: auto;
+.wordmark-superscript {
+  font-size: 0.55em;
+  vertical-align: super;
+  font-weight: inherit;
+  margin-left: 0.05em;
+  letter-spacing: 0;
+  line-height: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -74,6 +83,11 @@ header {
   .back-link:hover .back-link-arrow {
     transform: none;
   }
+}
+
+.wordmark .wordmark-superscript {
+  margin-left: -0.5em;
+  letter-spacing: 0;
 }
 
 .wordmark {

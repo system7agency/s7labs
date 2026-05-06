@@ -164,6 +164,14 @@ main {
 .lab-wordmark .acc {
   color: var(--accent);
 }
+.lab-wordmark .wordmark-superscript {
+  margin-left: -0.5em;
+  letter-spacing: 0;
+}
+.panel-readout .wordmark-superscript {
+  margin-left: -0.3em;
+  letter-spacing: 0;
+}
 
 .hero-title {
   font-family: var(--sans);

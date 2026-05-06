@@ -58,7 +58,7 @@ export function PageScripts() {
     let H = 0
     if (canvas && ctx) {
       const cool: RGB = { r: 80, g: 140, b: 255 }
-      const warm: RGB = { r: 255, g: 130, b: 80 }
+      const warm: RGB = { r: 4, g: 227, b: 238 }
       const blobs: Blob[] = [
         { x: 0.3, y: 0.3, r: 0.45, color: ACCENT_RGB, phase: 0, speed: 0.00018 },
         { x: 0.7, y: 0.45, r: 0.42, color: cool, phase: 2.1, speed: 0.00022 },
@@ -180,25 +180,22 @@ export function PageScripts() {
     }
 
     // -------- Typewriter --------
-    function typewrite(el: Element, text: string): Promise<void> {
+    function typewriteAppendText(el: Element, text: string): Promise<void> {
       return new Promise((resolve) => {
         if (prefersReduced) {
-          el.textContent = text
+          el.appendChild(document.createTextNode(text))
           resolve()
           return
         }
+        const node = document.createTextNode('')
+        el.appendChild(node)
         let i = 0
-        el.textContent = ''
         const step = () => {
-          if (cancelled) {
+          if (cancelled || i >= text.length) {
             resolve()
             return
           }
-          if (i >= text.length) {
-            resolve()
-            return
-          }
-          el.textContent += text[i++]
+          node.data += text[i++]
           const id = setTimeout(
             () => {
               timeouts.delete(id)
@@ -210,6 +207,24 @@ export function PageScripts() {
         }
         step()
       })
+    }
+
+    async function typewriteRouteLabel(el: Element, label: string) {
+      el.textContent = ''
+      const idx = label.indexOf('7')
+      if (idx < 0) {
+        await typewriteAppendText(el, label)
+        return
+      }
+      await typewriteAppendText(el, label.slice(0, idx))
+      if (cancelled) return
+      const sup = document.createElement('sup')
+      sup.className = 'route-card-superscript'
+      sup.textContent = '7'
+      el.appendChild(sup)
+      if (!prefersReduced) await delay(TYPE_SPEED_MS)
+      if (cancelled) return
+      await typewriteAppendText(el, label.slice(idx + 1))
     }
 
     async function runHero() {
@@ -269,7 +284,7 @@ export function PageScripts() {
                   resolve()
                   return
                 }
-                await typewrite(typedEl, card.dataset.label ?? '')
+                await typewriteRouteLabel(typedEl, card.dataset.label ?? '')
                 cursorEl.classList.add('done')
                 resolve()
               }, idx * 300)
