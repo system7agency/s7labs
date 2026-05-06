@@ -289,6 +289,20 @@ main {
   color: var(--fg);
 }
 
+.hero-wordmark-superscript {
+  font-size: 0.38em;
+  line-height: 0;
+  vertical-align: super;
+  margin-left: -0.04em;
+  margin-right: 0.04em;
+  letter-spacing: 0;
+  position: relative;
+  top: -0.08em;
+  color: var(--fg);
+  background: none;
+  -webkit-text-fill-color: var(--fg);
+}
+
 .beam {
   position: relative;
   width: clamp(40px, 4vw, 64px);
@@ -720,6 +734,17 @@ main {
   margin-right: 12px;
   opacity: 0.7;
   text-shadow: 0 0 8px var(--accent-glow);
+}
+
+.route-card-superscript {
+  font-size: 0.55em;
+  line-height: 0;
+  vertical-align: super;
+  letter-spacing: 0;
+  margin-left: -0.02em;
+  margin-right: 0.02em;
+  position: relative;
+  top: -0.12em;
 }
 .route-tagline {
   margin-top: 14px;

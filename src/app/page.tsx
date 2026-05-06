@@ -31,7 +31,9 @@ export default function HomePage() {
               LABS
             </div>
             <h1 className="hero-title">
-              <span className="word s7">S7</span>
+              <span className="word s7">
+                S<sup className="hero-wordmark-superscript">7</sup>
+              </span>
               <span className="beam" aria-hidden="true">
                 <span className="beam-readout top">— λ</span>
                 <span className="beam-readout bot">00·05</span>
@@ -117,10 +119,10 @@ export default function HomePage() {
                   <span className="type-cursor" />
                 </div>
                 <p className="route-tagline">
-                  Content engines and brand intelligence for creative teams.
+                  Software applications for content creators to launch to their audience.
                 </p>
                 <div className="route-meta">
-                  <span className="route-tag">CREATIVE · BRAND · CONTENT</span>
+                  <span className="route-tag">SOFTWARE · DEVELOPMENT · CONTENT</span>
                   <span className="route-arrow">
                     <span>ENTER</span>
                     <span className="a">→</span>
@@ -135,7 +137,8 @@ export default function HomePage() {
               <div className="route-card-inner">
                 <span className="route-index">ROUTE_03</span>
                 <div className="route-label">
-                  <span className="prompt">$</span>build_s7labs
+                  <span className="prompt">$</span>build_s
+                  <sup className="route-card-superscript">7</sup>labs
                 </div>
                 <p className="route-tagline">
                   Custom AI systems for teams defining the future of their industry.
