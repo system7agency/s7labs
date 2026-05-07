@@ -4,10 +4,9 @@ import { useEffect } from 'react'
 
 /*
  * Direct port of the inline <script> from
- * /docs/design-reference/revops-lab-page.html — aurora canvas + cursor
- * spotlight only. Tweaks panel, postMessage edit-mode wiring, and the
- * dead card-hover-spotlight (its --cx/--cy vars aren't read by any
- * style in this design) are stripped.
+ * /docs/design-reference/revops-page.html — aurora + spotlight only.
+ * State machine, stages animation, and email validation live in page.tsx
+ * as React state. Tweaks panel and postMessage edit-mode wiring stripped.
  */
 
 const ACCENT_RGB = { r: 79, g: 140, b: 255 }
@@ -45,7 +44,7 @@ export function PageScripts() {
     let H = 0
     if (canvas && ctx) {
       const cool: RGB = { r: 80, g: 140, b: 255 }
-      const warm: RGB = { r: 4, g: 227, b: 238 }
+      const warm: RGB = { r: 255, g: 130, b: 80 }
       const blobs: Blob[] = [
         { x: 0.3, y: 0.3, r: 0.45, color: ACCENT_RGB, phase: 0, speed: 0.00018 },
         { x: 0.7, y: 0.45, r: 0.42, color: cool, phase: 2.1, speed: 0.00022 },
