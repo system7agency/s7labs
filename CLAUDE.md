@@ -93,16 +93,31 @@ prop (e.g. `<Footer lab="REVOPS" />` renders `S7 LABS · REVOPS`).
 The `Header` accepts an optional `backHref` (defaults to
 `https://www.system7.ai/`).
 
-## /revops route
+## /revops routes
 
-`/revops` is an active route that follows the same direct-HTML-port
-workflow as `/`. Source-of-truth is
+`/revops` is the **RevOps Lab parent landing page** — a hub that
+introduces the lab and links out to the individual micro-apps.
+Source-of-truth is `/docs/design-reference/revops-lab-page.html`.
+The port lives at `/src/app/revops/{page.tsx,page-styles.css,PageScripts.tsx}`.
+`page.tsx` is a server component (the page is largely static); only
+the aurora canvas + cursor spotlight live in `PageScripts.tsx`.
+Header and footer come from the shared `<Header />` and `<Footer />`
+components.
+
+`/revops/sales-insights` is the **Get Sales Insights micro-app**
+(previously served at `/revops`, moved here on the
+`feat/revops-lab-landing` branch so the lab landing could take over
+`/revops`). Source-of-truth is unchanged:
 `/docs/design-reference/revops-page.html`. The port lives at
-`/src/app/revops/{page.tsx,page-styles.css,PageScripts.tsx}`. The
-state machine (CTA → email → cards → success) is implemented as
-React state in `page.tsx`; only the aurora canvas + cursor spotlight
-remain in `PageScripts.tsx`. Header and footer come from the shared
-`<Header />` and `<Footer />` components.
+`/src/app/revops/sales-insights/{page.tsx,page-styles.css,PageScripts.tsx}`
+and follows the same direct-HTML-port workflow. The state machine
+(CTA → email → cards → success) is implemented as React state in
+`page.tsx`; only the aurora canvas + cursor spotlight remain in
+`PageScripts.tsx`.
+
+`/revops/voice-agent` is referenced from the lab landing's app-card
+grid but is **not yet implemented** — the link 404s by design while
+that micro-app is being built.
 
 ## When uncertain
 
