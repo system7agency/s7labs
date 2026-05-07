@@ -44,7 +44,7 @@ export function PageScripts() {
     let H = 0
     if (canvas && ctx) {
       const cool: RGB = { r: 80, g: 140, b: 255 }
-      const warm: RGB = { r: 255, g: 130, b: 80 }
+      const warm: RGB = { r: 4, g: 227, b: 238 }
       const blobs: Blob[] = [
         { x: 0.3, y: 0.3, r: 0.45, color: ACCENT_RGB, phase: 0, speed: 0.00018 },
         { x: 0.7, y: 0.45, r: 0.42, color: cool, phase: 2.1, speed: 0.00022 },
