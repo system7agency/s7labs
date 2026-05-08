@@ -42,10 +42,12 @@ footer .foot-right {
 }
 
 .wordmark-superscript {
-  font-size: 0.55em;
-  vertical-align: super;
+  font-size: 0.75em;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
   font-weight: inherit;
-  margin-left: 0.05em;
+  margin-left: 0.18em;
   letter-spacing: 0;
   line-height: 1;
 }

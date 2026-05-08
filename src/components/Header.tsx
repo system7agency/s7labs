@@ -62,7 +62,11 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
         <span className="wordmark-arrow" aria-hidden="true">
           ←
         </span>
-        <span className="dot" />S<sup className="wordmark-superscript">7</sup> LABS
+        <span className="dot" />
+        <span className="wordmark-s7">
+          S<sup className="wordmark-s7-sup">7</sup>
+        </span>
+        <span className="wordmark-labs">LABS</span>
       </Link>
       <div className="header-right">
         <a

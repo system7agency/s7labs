@@ -32,7 +32,7 @@ export default function HomePage() {
             </div>
             <h1 className="hero-title">
               <span className="word s7">
-                S<sup className="hero-wordmark-superscript">7</sup>
+                S<sup className="hero-s7-sup">7</sup>
               </span>
               <span className="beam" aria-hidden="true">
                 <span className="beam-readout top">— λ</span>
