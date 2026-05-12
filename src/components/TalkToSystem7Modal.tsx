@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 
 import { VoiceAgentPanel } from './VoiceAgentPanel'
 import './TalkToSystem7Modal.css'
@@ -12,6 +13,11 @@ type TalkToSystem7ModalProps = {
 
 export function TalkToSystem7Modal({ open, onClose }: TalkToSystem7ModalProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null)
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   useEffect(() => {
     if (!open) return
@@ -27,9 +33,9 @@ export function TalkToSystem7Modal({ open, onClose }: TalkToSystem7ModalProps) {
     }
   }, [open, onClose])
 
-  if (!open) return null
+  if (!open || !mounted) return null
 
-  return (
+  return createPortal(
     <div
       className="t7-modal-overlay"
       role="dialog"
@@ -59,6 +65,7 @@ export function TalkToSystem7Modal({ open, onClose }: TalkToSystem7ModalProps) {
           <span>ESC to close</span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
