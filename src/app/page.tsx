@@ -71,7 +71,7 @@ export default function HomePage() {
               href="/revops"
               className="route-card tiltable"
               data-route="revops"
-              data-label="revops_s7labs"
+              data-label="revops s7labs"
             >
               <span className="scan-line" />
               <div className="card-glyphs" aria-hidden="true">
@@ -103,7 +103,7 @@ export default function HomePage() {
               href="/creator"
               className="route-card tiltable"
               data-route="creator"
-              data-label="creator_s7labs"
+              data-label="creator s7labs"
             >
               <span className="scan-line" />
               <div className="card-glyphs" aria-hidden="true">
@@ -137,7 +137,7 @@ export default function HomePage() {
               <div className="route-card-inner">
                 <span className="route-index">ROUTE_03</span>
                 <div className="route-label">
-                  <span className="prompt">$</span>build_s
+                  <span className="prompt">$</span>build s
                   <sup className="route-card-superscript">7</sup>labs
                 </div>
                 <p className="route-tagline">
