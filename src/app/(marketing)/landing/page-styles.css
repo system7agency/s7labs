@@ -12,7 +12,7 @@
   --border: rgba(255, 255, 255, 0.07);
   --border-strong: rgba(255, 255, 255, 0.14);
   --fg: #ededed;
-  --fg-muted: #8a8a8f;
+  --fg-muted: #eaeaea;
   --fg-dim: #55555b;
   --accent: #4f8cff;
   --accent-dim: rgba(79, 140, 255, 0.18);
@@ -289,15 +289,15 @@ main {
   color: var(--fg);
 }
 
-.hero-wordmark-superscript {
-  font-size: 0.38em;
-  line-height: 0;
-  vertical-align: super;
-  margin-left: -0.04em;
-  margin-right: 0.04em;
-  letter-spacing: 0;
+.hero-s7-sup {
+  font-size: 0.5em;
+  vertical-align: baseline;
   position: relative;
-  top: -0.08em;
+  top: -0.85em;
+  margin-left: 0.08em;
+  font-weight: inherit;
+  letter-spacing: 0;
+  line-height: 1;
   color: var(--fg);
   background: none;
   -webkit-text-fill-color: var(--fg);

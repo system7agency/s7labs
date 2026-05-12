@@ -80,10 +80,12 @@ header.header-hidden {
 }
 
 .wordmark-superscript {
-  font-size: 0.55em;
-  vertical-align: super;
+  font-size: 0.75em;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
   font-weight: inherit;
-  margin-left: 0.05em;
+  margin-left: 0.18em;
   letter-spacing: 0;
   line-height: 1;
 }
@@ -97,9 +99,23 @@ header.header-hidden {
   }
 }
 
-.wordmark .wordmark-superscript {
-  margin-left: -0.5em;
+.wordmark .wordmark-s7 {
+  display: inline-flex;
+  align-items: baseline;
   letter-spacing: 0;
+}
+.wordmark .wordmark-s7-sup {
+  font-size: 0.75em;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
+  margin-left: 0.12em;
+  font-weight: inherit;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.wordmark .wordmark-labs {
+  letter-spacing: 0.28em;
 }
 
 .wordmark {

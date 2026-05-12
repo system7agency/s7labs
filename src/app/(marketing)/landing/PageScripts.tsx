@@ -11,7 +11,6 @@ import { useEffect } from 'react'
  * tweaks.aurora (always true), tweaks.tilt (always true).
  */
 
-const ACCENT_RGB = { r: 79, g: 140, b: 255 }
 const TYPE_SPEED_MS = 38
 
 type RGB = { r: number; g: number; b: number }
@@ -57,14 +56,19 @@ export function PageScripts() {
     let W = 0
     let H = 0
     if (canvas && ctx) {
-      const cool: RGB = { r: 80, g: 140, b: 255 }
-      const warm: RGB = { r: 4, g: 227, b: 238 }
+      // Blob palette: shades between primary #000BFF and secondary #04E3EE
+      // (interpolated, never the exact endpoints).
+      const deep: RGB = { r: 1, g: 54, b: 252 }
+      const indigo: RGB = { r: 1, g: 87, b: 249 }
+      const azure: RGB = { r: 2, g: 119, b: 247 }
+      const sky: RGB = { r: 3, g: 151, b: 244 }
+      const teal: RGB = { r: 3, g: 184, b: 241 }
       const blobs: Blob[] = [
-        { x: 0.3, y: 0.3, r: 0.45, color: ACCENT_RGB, phase: 0, speed: 0.00018 },
-        { x: 0.7, y: 0.45, r: 0.42, color: cool, phase: 2.1, speed: 0.00022 },
-        { x: 0.5, y: 0.75, r: 0.38, color: ACCENT_RGB, phase: 4.2, speed: 0.0002 },
-        { x: 0.2, y: 0.8, r: 0.3, color: warm, phase: 1.3, speed: 0.00025 },
-        { x: 0.85, y: 0.15, r: 0.28, color: ACCENT_RGB, phase: 3.7, speed: 0.00016 },
+        { x: 0.3, y: 0.3, r: 0.45, color: deep, phase: 0, speed: 0.00018 },
+        { x: 0.7, y: 0.45, r: 0.42, color: indigo, phase: 2.1, speed: 0.00022 },
+        { x: 0.5, y: 0.75, r: 0.38, color: azure, phase: 4.2, speed: 0.0002 },
+        { x: 0.2, y: 0.8, r: 0.3, color: teal, phase: 1.3, speed: 0.00025 },
+        { x: 0.85, y: 0.15, r: 0.28, color: sky, phase: 3.7, speed: 0.00016 },
       ]
 
       const resizeCanvas = () => {
