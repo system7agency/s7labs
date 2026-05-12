@@ -7,6 +7,7 @@ import { Header } from '@/components/Header'
 
 import { CapabilitiesSection } from './CapabilitiesSection'
 import { PageScripts } from './PageScripts'
+import { VoiceAgentCard } from './VoiceAgentCard'
 
 export const metadata = {
   title: 'S7 Labs — RevOps Lab',
@@ -95,21 +96,7 @@ export default function RevOpsLabPage() {
               </span>
             </Link>
 
-            <Link href="/revops/voice-agent" className="module">
-              <span className="corner tl" />
-              <span className="corner br" />
-              <span className="mod-index" aria-hidden="true">
-                02
-              </span>
-              <div>
-                <h3 className="mod-name">Speak to Voice Agent</h3>
-                <p className="mod-tagline">Talk to an AI voice agent trained on your pipeline.</p>
-              </div>
-              <span className="mod-cta">
-                <span>Enter</span>
-                <span className="a">→</span>
-              </span>
-            </Link>
+            <VoiceAgentCard />
 
             <div className="module soon" aria-disabled="true">
               <span className="corner tl" />

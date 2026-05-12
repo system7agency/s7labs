@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Fraunces } from 'next/font/google'
 
+import { VoiceAgentModalProvider } from '@/components/VoiceAgentModalProvider'
+
 import './globals.css'
 
 const geistSans = Geist({
@@ -35,7 +37,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <VoiceAgentModalProvider>{children}</VoiceAgentModalProvider>
+      </body>
     </html>
   )
 }
