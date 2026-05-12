@@ -253,6 +253,7 @@ header.header-hidden {
 }
 
 .phone-pill {
+  font: inherit;
   display: inline-flex;
   align-items: center;
   gap: 8px;
