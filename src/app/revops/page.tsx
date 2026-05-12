@@ -5,6 +5,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 
+import { CapabilitiesSection } from './CapabilitiesSection'
 import { PageScripts } from './PageScripts'
 
 export const metadata = {
@@ -149,6 +150,8 @@ export default function RevOpsLabPage() {
             </div>
           </div>
         </section>
+
+        <CapabilitiesSection />
 
         <section className="section">
           <div className="section-head">
