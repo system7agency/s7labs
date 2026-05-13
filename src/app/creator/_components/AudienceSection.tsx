@@ -50,7 +50,10 @@ export function AudienceSection() {
 
         <div className="tier-stack">
           {TIERS.map((tier) => (
-            <div key={tier.num} className={`tier${tier.target ? 'is-target pulse-once' : ''}`}>
+            <div
+              key={tier.num}
+              className={['tier', tier.target && 'is-target pulse-once'].filter(Boolean).join(' ')}
+            >
               <span className="tier-num">{tier.num}</span>
               <div className="tier-body">
                 <div className="tier-label">{tier.label}</div>
