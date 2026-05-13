@@ -28,7 +28,7 @@ const STATUS_ORDER: Record<MiniApp['status'], number> = {
 export function MiniAppsPageClient() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
-  const [size, setSize] = useState(5)
+  const [size, setSize] = useState(4)
   const [sort, setSort] = useState<SortKey>('featured')
   const [modal, setModal] = useState<ModalState>({ kind: 'none' })
 

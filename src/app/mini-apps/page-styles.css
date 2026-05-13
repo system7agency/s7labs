@@ -1152,7 +1152,7 @@
 /* Grid */
 .mini-apps-lab .grid {
   display: grid;
-  gap: 14px;
+  gap: 18px;
   transition: grid-template-columns 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .mini-apps-lab .grid-5 {
