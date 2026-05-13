@@ -4,18 +4,20 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 
 import { BuildHero } from './_components/BuildHero'
-import { CapabilitiesSection } from './_components/CapabilitiesSection'
+import { BuildModesSection } from './_components/BuildModesSection'
+import { ExampleBuildsSection } from './_components/ExampleBuildsSection'
 import { FooterCTA } from './_components/FooterCTA'
-import { InDevelopmentSection } from './_components/InDevelopmentSection'
 import { PageEyebrow } from './_components/PageEyebrow'
-import { ProcessSection } from './_components/ProcessSection'
-import { ShippedSection } from './_components/ShippedSection'
+import { ProductBuildSystemSection } from './_components/ProductBuildSystemSection'
+import { SoftwareComponentsSection } from './_components/SoftwareComponentsSection'
+import { SupportingCapabilitiesSection } from './_components/SupportingCapabilitiesSection'
+import { WhatWeBuildSection } from './_components/WhatWeBuildSection'
 import { PageScripts } from './PageScripts'
 
 export const metadata = {
   title: 'Build Lab — S7 Labs',
   description:
-    'Custom AI systems for teams defining the future of their industry — designed, built, and shipped by System7 engineers.',
+    'We design and build client-facing products, internal platforms and AI-enabled tools that fit your business, your data and your operating model.',
 }
 
 export default function BuildLabPage() {
@@ -33,10 +35,12 @@ export default function BuildLabPage() {
       <main>
         <PageEyebrow />
         <BuildHero />
-        <ShippedSection />
-        <CapabilitiesSection />
-        <ProcessSection />
-        <InDevelopmentSection />
+        <WhatWeBuildSection />
+        <ProductBuildSystemSection />
+        <SoftwareComponentsSection />
+        <BuildModesSection />
+        <SupportingCapabilitiesSection />
+        <ExampleBuildsSection />
         <FooterCTA />
       </main>
 

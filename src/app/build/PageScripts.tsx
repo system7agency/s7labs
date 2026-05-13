@@ -40,7 +40,7 @@ export function PageScripts() {
       return id
     }
 
-    /* ── Aurora canvas (same palette family as landing) ── */
+    /* Aurora canvas */
     const canvas = document.getElementById('aurora') as HTMLCanvasElement | null
     const ctx = canvas?.getContext('2d') ?? null
     let W = 0
@@ -98,7 +98,7 @@ export function PageScripts() {
       }
     }
 
-    /* ── Spotlight follow ── */
+    /* Spotlight follow */
     const spot = document.getElementById('spotlight')
     let mx = window.innerWidth / 2
     let my = window.innerHeight / 3
@@ -125,25 +125,7 @@ export function PageScripts() {
       raf(spotLoop)
     }
 
-    /* ── Code rain (hero overlay) ── */
-    const rain = document.getElementById('codeRain')
-    if (rain && !prefersReduced) {
-      const charset = '01アイウエオカキクケコサシスセソタチツテト10110101'
-      const cols = 14
-      for (let i = 0; i < cols; i++) {
-        const col = document.createElement('div')
-        col.className = 'col'
-        let s = ''
-        for (let j = 0; j < 60; j++) s += charset[Math.floor(Math.random() * charset.length)] + ' '
-        col.textContent = s
-        col.style.left = (i / cols) * 100 + '%'
-        col.style.animationDuration = 14 + Math.random() * 16 + 's'
-        col.style.animationDelay = -Math.random() * 20 + 's'
-        rain.appendChild(col)
-      }
-    }
-
-    /* ── Typewriter (hero line 1 → reveal line 2) ── */
+    /* Typewriter (hero line 1) */
     const l1 = document.querySelector<HTMLElement>('.build-lab .hero-title .line.l1')
     const l2 = document.querySelector<HTMLElement>('.build-lab .hero-title .line.l2')
     const typed = l1?.querySelector<HTMLElement>('.typed') ?? null
@@ -172,7 +154,19 @@ export function PageScripts() {
       }
     }
 
-    /* ── Reveal on scroll ── */
+    /* Status strip cycler */
+    const steps = document.querySelectorAll<HTMLElement>('.build-lab #statusStrip .step')
+    if (steps.length && !prefersReduced) {
+      let s = 0
+      const id = setInterval(() => {
+        steps.forEach((el) => el.classList.remove('on'))
+        s = (s + 1) % steps.length
+        steps[s]?.classList.add('on')
+      }, 2200)
+      intervals.add(id)
+    }
+
+    /* Reveal on scroll */
     const revealIO = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -187,7 +181,7 @@ export function PageScripts() {
     observers.push(revealIO)
     document.querySelectorAll('.build-lab .reveal').forEach((el) => revealIO.observe(el))
 
-    /* ── Staggered sub-item reveals ── */
+    /* Staggered sub-item reveals */
     const staggerWatch = (rootSel: string, itemSel: string, gap: number) => {
       const sio = new IntersectionObserver(
         (entries) => {
@@ -200,50 +194,33 @@ export function PageScripts() {
             }
           })
         },
-        { threshold: 0.25 }
+        { threshold: 0.2 }
       )
       observers.push(sio)
       document.querySelectorAll(`.build-lab ${rootSel}`).forEach((r) => sio.observe(r))
     }
-    staggerWatch('.ship-layout, .terminal-layout', '[data-product], [data-product-meta]', 200)
-    staggerWatch('.cap-stack', '[data-cap]', 120)
-    staggerWatch('.gitlog', '[data-commit]', 220)
-    staggerWatch('.lsblock', '[data-ls]', 90)
+    staggerWatch('.build-grid', '[data-build]', 150)
+    staggerWatch('.anatomy', '[data-acomp]', 80)
+    staggerWatch('.modes', '[data-mode]', 110)
+    staggerWatch('.support', '[data-supp]', 100)
+    staggerWatch('.examples-grid', '[data-example]', 140)
 
-    /* ── Product card parallax tilt (desktop only) ── */
-    if (!prefersReduced && window.matchMedia('(min-width: 1100px)').matches) {
-      const tiltCards = document.querySelectorAll<HTMLElement>(
-        '.build-lab .phone, .build-lab .terminal'
-      )
-      tiltCards.forEach((card) => {
-        const onMove = (e: PointerEvent) => {
-          const r = card.getBoundingClientRect()
-          const x = (e.clientX - r.left) / r.width
-          const y = (e.clientY - r.top) / r.height
-          const rx = (y - 0.5) * -3
-          const ry = (x - 0.5) * 3
-          card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg)`
-        }
-        const onLeave = () => {
-          card.style.transform = ''
-        }
-        card.addEventListener('pointermove', onMove, { signal: ac.signal })
-        card.addEventListener('pointerleave', onLeave, { signal: ac.signal })
-      })
-    }
-
-    /* ── VSignal fake clock ── */
-    const vsClock = document.getElementById('vsClock')
-    if (vsClock && !prefersReduced) {
-      const tickClock = () => {
-        const d = new Date()
-        const pad = (n: number) => String(n).padStart(2, '0')
-        vsClock.textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`
-      }
-      tickClock()
-      const id = setInterval(tickClock, 1000)
-      intervals.add(id)
-    }
+    /* Pipeline sequential illumination */
+    const pipeIO = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const stages = e.target.querySelectorAll('[data-stage]')
+            stages.forEach((s, idx) => later(() => s.classList.add('lit'), 200 + idx * 220))
+            pipeIO.unobserve(e.target)
+          }
+        })
+      },
+      { threshold: 0.3 }
+    )
+    observers.push(pipeIO)
+    const pipe = document.getElementById('pipe')
+    if (pipe) pipeIO.observe(pipe)
 
     return () => {
       cancelled = true
