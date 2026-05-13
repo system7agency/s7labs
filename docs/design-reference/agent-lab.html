@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>S7 Labs — Agent Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="agent-lab.css?v=1">
+</head>
+<body>
+
+<div class="bg-stack" aria-hidden="true">
+  <svg id="aurora" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="ag1" cx="20%" cy="18%" r="35%">
+        <stop offset="0%" stop-color="#04E3EE" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="#04E3EE" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="ag2" cx="82%" cy="62%" r="40%">
+        <stop offset="0%" stop-color="#2BA6FF" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="#2BA6FF" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="1440" height="900" fill="url(#ag1)"/>
+    <rect width="1440" height="900" fill="url(#ag2)"/>
+  </svg>
+  <div class="bg-dots"></div>
+</div>
+<div class="bg-grain" aria-hidden="true"></div>
+<div class="bg-spotlight" aria-hidden="true"></div>
+
+<header id="siteHeader">
+  <div class="header-left">
+    <a href="#" class="back-link" aria-label="Back to system7">
+      <span class="arr">←</span> <span>Back to system7</span>
+    </a>
+  </div>
+  <div class="wordmark"><span class="dot"></span>S7 LABS</div>
+  <div class="header-right">
+    <a href="https://www.linkedin.com" class="li-btn" target="_blank" rel="noreferrer" aria-label="LinkedIn">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.86 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1 4.98 2.12 4.98 3.5zM.22 8h4.56v15.5H.22V8zm7.34 0h4.37v2.12h.06c.61-1.16 2.1-2.38 4.32-2.38 4.62 0 5.47 3.04 5.47 7v8.76h-4.56v-7.77c0-1.85-.03-4.23-2.58-4.23-2.58 0-2.97 2.02-2.97 4.1v7.9H7.56V8z"/></svg>
+      <span class="li-label">LINKEDIN</span>
+    </a>
+    <a href="#cta" class="phone-pill">
+      <span class="live-dot"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/></svg>
+      <span>Talk to System<sup>7</sup></span>
+    </a>
+  </div>
+</header>
+
+<main>
+
+  <div class="page-eyebrow">
+    <span>ROUTE_04 <span class="slash">/</span> <span class="v">AGENT LAB</span></span>
+    <span class="right">// agentic systems</span>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       HERO — Live Telemetry Console
+       ────────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-grid">
+
+      <div class="hero-copy">
+        <div class="hero-eyebrow">
+          <span class="accent-dot"></span>
+          <span>S7_AGENTS <span class="v">//</span> AGENTIC SYSTEMS</span>
+        </div>
+
+        <h1 class="hero-title">
+          <span class="l1"><span class="typed" data-text="Build agents"></span><span class="caret"></span></span>
+          <span class="l2"><span class="accent-text">that can actually do the work.</span></span>
+        </h1>
+
+        <p class="hero-sub">
+          System7 designs agentic systems that reason across context, use tools, follow business rules and coordinate multi-step work. We connect agents to the systems your business already runs on, with human gates, permissions and observability built in from the start.
+        </p>
+
+        <div class="cta-row">
+          <a href="#cta" class="btn"><span>Design an agent system</span><span class="arr">→</span></a>
+          <a href="#agent-os" class="btn ghost"><span>Explore agent architecture</span></a>
+        </div>
+      </div>
+
+      <!-- LIVE TELEMETRY HUD -->
+      <div class="hud" id="hud">
+        <!-- Floating decorative labels with leader lines -->
+        <div class="hud-floats" aria-hidden="true">
+          <span class="hf hf-1"><i></i>agents.online</span>
+          <span class="hf hf-2"><i></i>tools.connected</span>
+          <span class="hf hf-3"><i class="amb"></i>human.gates.active</span>
+          <span class="hf hf-4"><i></i>mcp.enabled</span>
+          <span class="hf hf-5"><i></i>audit.log</span>
+          <span class="hf hf-6"><i class="amb"></i>action.pending</span>
+        </div>
+
+        <div class="hud-frame">
+          <div class="hud-head">
+            <div class="hud-title">
+              <span class="livedot"></span>
+              <span>AGENT.TELEMETRY</span>
+              <span class="sep">·</span>
+              <span class="v">LIVE</span>
+            </div>
+            <div class="hud-clock">
+              <span class="lbl">T</span>
+              <span class="time" id="hudClock">04:37:18</span>
+              <span class="zone">UTC</span>
+            </div>
+          </div>
+
+          <div class="hud-axis">
+            <span>T+0</span><span>T+30</span><span>T+60</span><span>T+90</span><span>T+120</span><span>T+150</span>
+          </div>
+
+          <!-- 6 lanes: 5 agents + 1 human.gate -->
+          <div class="lanes">
+            <div class="lane" style="--lane-h: 24px">
+              <div class="lane-name"><span class="d"></span>agent.research</div>
+              <div class="lane-track">
+                <div class="bar b-cyan" style="--start:2%; --w:14%;"></div>
+                <div class="bar b-cyan" style="--start:18%; --w:8%;"></div>
+              </div>
+              <div class="lane-status">done</div>
+            </div>
+
+            <div class="lane">
+              <div class="lane-name"><span class="d"></span>agent.review</div>
+              <div class="lane-track">
+                <div class="bar b-cyan" style="--start:20%; --w:10%;"></div>
+              </div>
+              <div class="lane-status">done</div>
+            </div>
+
+            <div class="lane lane-primary">
+              <div class="lane-name"><span class="d"></span>agent.orchestrator</div>
+              <div class="lane-track">
+                <div class="bar b-cyan b-strong" style="--start:6%; --w:78%;"></div>
+                <div class="bar-tick" style="--at:14%"></div>
+                <div class="bar-tick" style="--at:32%"></div>
+                <div class="bar-tick" style="--at:50%"></div>
+                <div class="bar-tick" style="--at:68%"></div>
+                <div class="bar-cursor" style="--at:62%"></div>
+              </div>
+              <div class="lane-status v">routing</div>
+            </div>
+
+            <div class="lane">
+              <div class="lane-name"><span class="d"></span>agent.operator</div>
+              <div class="lane-track">
+                <div class="bar b-cyan" style="--start:36%; --w:14%;"></div>
+                <div class="bar b-cyan" style="--start:52%; --w:6%;"></div>
+              </div>
+              <div class="lane-status">done</div>
+            </div>
+
+            <div class="lane">
+              <div class="lane-name"><span class="d"></span>agent.report</div>
+              <div class="lane-track">
+                <div class="bar b-cyan" style="--start:58%; --w:18%;"></div>
+              </div>
+              <div class="lane-status v">drafting</div>
+            </div>
+
+            <div class="lane lane-gate">
+              <div class="lane-name"><span class="d amb"></span>human.gate</div>
+              <div class="lane-track">
+                <div class="gate-diamond" style="--at:48%"></div>
+                <div class="gate-diamond gate-resolved" style="--at:72%"></div>
+              </div>
+              <div class="lane-status amb">await</div>
+            </div>
+
+            <!-- Tool / system lanes (lower density) -->
+            <div class="lane lane-tool">
+              <div class="lane-name"><span class="d"></span>tool.crm</div>
+              <div class="lane-track">
+                <div class="bar b-pulse" style="--start:14%; --w:3%;"></div>
+                <div class="bar b-pulse" style="--start:38%; --w:3%;"></div>
+                <div class="bar b-pulse" style="--start:54%; --w:3%;"></div>
+              </div>
+              <div class="lane-status dim">read</div>
+            </div>
+
+            <div class="lane lane-tool">
+              <div class="lane-name"><span class="d"></span>tool.docs</div>
+              <div class="lane-track">
+                <div class="bar b-pulse" style="--start:10%; --w:3%;"></div>
+                <div class="bar b-pulse" style="--start:26%; --w:3%;"></div>
+                <div class="bar b-pulse" style="--start:64%; --w:3%;"></div>
+              </div>
+              <div class="lane-status dim">read</div>
+            </div>
+
+            <div class="lane lane-tool">
+              <div class="lane-name"><span class="d"></span>tool.api</div>
+              <div class="lane-track">
+                <div class="bar b-pulse" style="--start:42%; --w:3%;"></div>
+                <div class="bar b-pulse" style="--start:50%; --w:3%;"></div>
+                <div class="bar b-pulse" style="--start:74%; --w:3%;"></div>
+              </div>
+              <div class="lane-status dim">write</div>
+            </div>
+          </div>
+
+          <div class="hud-foot">
+            <div class="hud-status">
+              <span class="v">▸</span>
+              <span class="cycler" id="hudCycler">reading.context</span>
+            </div>
+            <div class="hud-pills">
+              <span class="pill">CRM</span>
+              <span class="pill">DOCS</span>
+              <span class="pill">DB</span>
+              <span class="pill">API</span>
+              <span class="pill pill-mcp">MCP</span>
+              <span class="pill">SLACK</span>
+              <span class="pill">BRAVE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       §01 — AGENT ≠ CHATBOT
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec reveal" data-sec="01">
+    <div class="sec-tag"><span class="n">01</span><span class="lbl"><span>// 01 / 06</span><span class="v">CATEGORY CLARITY</span></span></div>
+    <div class="sec-head">
+      <div class="left">
+        <h2>Not another <span class="accent-text">chatbot.</span></h2>
+        <p>Agents are not conversational interfaces. They are controlled systems for work.</p>
+      </div>
+      <div class="right"><span class="pd"></span><span>AGENT <span class="v">≠</span> CHATBOT</span></div>
+    </div>
+
+    <div class="vs-grid">
+      <div class="vs-col bot">
+        <div class="vs-head"><span class="dt"></span>CHATBOT · responds.to.prompt</div>
+        <ul class="vs-list" data-side="bot">
+          <li>Responds to a prompt</li>
+          <li>Gives an answer</li>
+          <li>Uses conversation as the main interface</li>
+          <li>Waits for the user</li>
+          <li>Works in isolation</li>
+          <li>Usually stops at text</li>
+        </ul>
+      </div>
+      <div class="vs-col agent">
+        <div class="vs-head"><span class="dt"></span>AGENT · responds.to.event</div>
+        <ul class="vs-list" data-side="agent">
+          <li>Responds to an event, objective or workflow state</li>
+          <li>Completes or coordinates work</li>
+          <li>Uses tools, systems, context and business logic</li>
+          <li>Triggers, routes, updates and escalates</li>
+          <li>Operates inside an orchestrated flow</li>
+          <li>Can create, update, check, send, route or hand off</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="vs-foot">— a working layer <span class="v">for multi-step work</span> —</div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       §02 — AGENT OPERATING SYSTEM (vertical cross-section)
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec reveal" id="agent-os" data-sec="02">
+    <div class="sec-tag"><span class="n">02</span><span class="lbl"><span>// 02 / 06</span><span class="v">AGENT OS</span></span></div>
+    <div class="sec-head">
+      <div class="left">
+        <h2>The operating environment for <span class="accent-text">working agents.</span></h2>
+        <p>Trigger → Context → Reasoning → Tools → Control → Action. Six layers that turn an AI model into an agent that can actually do useful work.</p>
+      </div>
+      <div class="right"><span class="pd"></span><span>06 LAYERS · <span class="v">DEPTH SECTION</span></span></div>
+    </div>
+
+    <div class="xsec">
+      <div class="xsec-grid">
+
+        <!-- LEFT: cross-section stack -->
+        <div class="xsec-stack" id="xsecStack">
+          <div class="stratum" data-lyr="0">
+            <div class="strat-fill fill-1"></div>
+            <div class="strat-lbl">
+              <span class="num">01</span>
+              <span class="nm">TRIGGER</span>
+              <span class="thk">surface · 0.2u</span>
+            </div>
+            <div class="strat-stat">event.detected</div>
+          </div>
+          <div class="stratum" data-lyr="1">
+            <div class="strat-fill fill-2"></div>
+            <div class="strat-lbl">
+              <span class="num">02</span>
+              <span class="nm">CONTEXT</span>
+              <span class="thk">depth · 1.0u</span>
+            </div>
+            <div class="strat-stat">docs · db · rules</div>
+          </div>
+          <div class="stratum" data-lyr="2">
+            <div class="strat-fill fill-3"></div>
+            <div class="strat-lbl">
+              <span class="num">03</span>
+              <span class="nm">REASONING</span>
+              <span class="thk">depth · 1.4u</span>
+            </div>
+            <div class="strat-stat">analyse · decide</div>
+          </div>
+          <div class="stratum" data-lyr="3">
+            <div class="strat-fill fill-4"></div>
+            <div class="strat-lbl">
+              <span class="num">04</span>
+              <span class="nm">TOOLS</span>
+              <span class="thk">depth · 0.8u</span>
+            </div>
+            <div class="strat-stat">apis · saas · mcps</div>
+          </div>
+          <div class="stratum" data-lyr="4">
+            <div class="strat-fill fill-5"></div>
+            <div class="strat-lbl">
+              <span class="num">05</span>
+              <span class="nm">CONTROL</span>
+              <span class="thk">depth · 0.6u</span>
+            </div>
+            <div class="strat-stat amb">permissions · gates</div>
+          </div>
+          <div class="stratum" data-lyr="5">
+            <div class="strat-fill fill-6"></div>
+            <div class="strat-lbl">
+              <span class="num">06</span>
+              <span class="nm">ACTION</span>
+              <span class="thk">surface · 0.4u</span>
+            </div>
+            <div class="strat-stat">send · update · route</div>
+          </div>
+
+          <!-- Annotation guides -->
+          <svg class="xsec-guides" viewBox="0 0 100 600" preserveAspectRatio="none" aria-hidden="true">
+            <line x1="98" y1="50"  x2="100" y2="50"  stroke="rgba(4,227,238,0.4)" stroke-width="0.5"/>
+            <line x1="98" y1="150" x2="100" y2="150" stroke="rgba(4,227,238,0.4)" stroke-width="0.5"/>
+            <line x1="98" y1="250" x2="100" y2="250" stroke="rgba(4,227,238,0.4)" stroke-width="0.5"/>
+            <line x1="98" y1="350" x2="100" y2="350" stroke="rgba(4,227,238,0.4)" stroke-width="0.5"/>
+            <line x1="98" y1="450" x2="100" y2="450" stroke="rgba(245,166,35,0.45)" stroke-width="0.5"/>
+            <line x1="98" y1="550" x2="100" y2="550" stroke="rgba(4,227,238,0.4)" stroke-width="0.5"/>
+          </svg>
+        </div>
+
+        <!-- RIGHT: callouts -->
+        <div class="xsec-callouts" id="xsecCallouts">
+          <div class="callout" data-lyr="0">
+            <div class="co-head"><span class="ix">01 / TRIGGER</span><span class="st">· active</span></div>
+            <p>The event, request, schedule or signal that starts the agent. A file arrives, a ticket changes, a report is due or a system detects something that needs action.</p>
+          </div>
+          <div class="callout" data-lyr="1">
+            <div class="co-head"><span class="ix">02 / CONTEXT</span><span class="st">· active</span></div>
+            <p>The knowledge the agent needs to work properly: documents, databases, previous decisions, business rules, customer records and internal knowledge.</p>
+          </div>
+          <div class="callout" data-lyr="2">
+            <div class="co-head"><span class="ix">03 / REASONING</span><span class="st">· active</span></div>
+            <p>The thinking layer where the agent analyses, compares, classifies, plans, summarises, decides, drafts or recommends.</p>
+          </div>
+          <div class="callout" data-lyr="3">
+            <div class="co-head"><span class="ix">04 / TOOLS</span><span class="st">· active</span></div>
+            <p>The systems the agent can use, including SaaS tools, APIs, browsers, databases, internal systems and custom MCPs.</p>
+          </div>
+          <div class="callout" data-lyr="4">
+            <div class="co-head amb"><span class="ix">05 / CONTROL</span><span class="st">· gated</span></div>
+            <p>The safety layer: permissions, confidence thresholds, human gates, logs, approvals, fallbacks and escalation paths.</p>
+          </div>
+          <div class="callout" data-lyr="5">
+            <div class="co-head"><span class="ix">06 / ACTION</span><span class="st">· active</span></div>
+            <p>The useful output: update, send, create, route, escalate, report, schedule, notify, approve or hand off.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="xsec-note">
+        Agents become useful when they can operate inside a designed system. We define what starts them, what they know, what they can use, what they are allowed to do and where a human stays in control.
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       §03 — AGENT ROLES
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec reveal" data-sec="03">
+    <div class="sec-tag"><span class="n">03</span><span class="lbl"><span>// 03 / 06</span><span class="v">ROLES</span></span></div>
+    <div class="sec-head">
+      <div class="left">
+        <h2>Six roles agents play.</h2>
+        <p>Different agents do different work. These roles apply across any business function — support, operations, compliance, finance, knowledge, reporting.</p>
+      </div>
+      <div class="right"><span class="pd"></span><span>06 ROLES · <span class="v">CROSS-FUNCTION</span></span></div>
+    </div>
+
+    <div class="roles">
+      <article class="role">
+        <div class="role-head"><span class="rk">01</span><span class="tag">RESEARCHER</span></div>
+        <h4>Gathers, compares and structures information from approved sources.</h4>
+        <div class="role-spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline points="0,18 12,14 24,16 36,10 48,12 60,6 72,8 84,4 100,2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></div>
+        <div class="tags"><span class="x">briefs</span><span class="x">market scans</span><span class="x">company profiles</span><span class="x">source-backed notes</span></div>
+      </article>
+
+      <article class="role">
+        <div class="role-head"><span class="rk">02</span><span class="tag">ANALYST</span></div>
+        <h4>Reads data, documents or activity and identifies patterns, exceptions or recommendations.</h4>
+        <div class="role-spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline points="0,12 10,8 20,14 30,6 40,16 50,8 60,10 70,4 80,12 90,6 100,8" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></div>
+        <div class="tags"><span class="x">summaries</span><span class="x">scorecards</span><span class="x">exception lists</span><span class="x">risk flags</span></div>
+      </article>
+
+      <article class="role">
+        <div class="role-head"><span class="rk">03</span><span class="tag">OPERATOR</span></div>
+        <h4>Executes repeatable system work using connected tools and defined permissions.</h4>
+        <div class="role-spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline points="0,16 12,16 12,8 24,8 24,14 36,14 36,6 48,6 48,12 60,12 60,4 72,4 72,10 84,10 84,8 100,8" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></div>
+        <div class="tags"><span class="x">record updates</span><span class="x">task creation</span><span class="x">routing</span><span class="x">scheduled actions</span></div>
+      </article>
+
+      <article class="role">
+        <div class="role-head"><span class="rk">04</span><span class="tag">REVIEWER</span></div>
+        <h4>Checks work against rules, criteria or standards before it moves forward.</h4>
+        <div class="role-spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline points="0,12 14,12 14,4 28,4 28,12 42,12 56,12 70,12 70,18 84,18 84,12 100,12" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></div>
+        <div class="tags"><span class="x">QA checks</span><span class="x">compliance flags</span><span class="x">missing-field reports</span><span class="x">approval requests</span></div>
+      </article>
+
+      <article class="role">
+        <div class="role-head"><span class="rk">05</span><span class="tag">COORDINATOR</span></div>
+        <h4>Moves work between agents, tools and people across a multi-step process.</h4>
+        <div class="role-spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline points="0,12 12,8 24,12 36,6 48,12 60,4 72,12 84,8 100,12" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></div>
+        <div class="tags"><span class="x">handoffs</span><span class="x">escalations</span><span class="x">next steps</span><span class="x">status updates</span></div>
+      </article>
+
+      <article class="role">
+        <div class="role-head"><span class="rk">06</span><span class="tag">REPORTER</span></div>
+        <h4>Turns activity, system changes and outcomes into visibility.</h4>
+        <div class="role-spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline points="0,20 14,18 28,14 42,12 56,8 70,6 84,4 100,2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></div>
+        <div class="tags"><span class="x">daily briefs</span><span class="x">audit logs</span><span class="x">management summaries</span><span class="x">reporting snapshots</span></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       §04 — ORCHESTRATION (multi-lane Gantt)
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec reveal" data-sec="04">
+    <div class="sec-tag"><span class="n">04</span><span class="lbl"><span>// 04 / 06</span><span class="v">ORCHESTRATION</span></span></div>
+    <div class="sec-head">
+      <div class="left">
+        <h2>One agent can help. An orchestrated system can <span class="accent-text">change how work moves.</span></h2>
+        <p>Real value comes from coordination — multiple agents, tools and humans working together inside a designed system.</p>
+      </div>
+      <div class="right"><span class="pd"></span><span>TIMELINE · <span class="v">SHARED CLOCK</span></span></div>
+    </div>
+
+    <div class="gantt">
+      <div class="gantt-head">
+        <div class="gh-title"><span class="livedot"></span>ORCHESTRATION.TIMELINE</div>
+        <div class="gh-axis">
+          <span>T+0:00</span><span>0:30</span><span>1:00</span><span>1:30</span><span>2:00</span><span>2:30</span><span>3:00</span><span>3:30</span><span>4:00</span><span>4:30</span><span>5:00</span>
+        </div>
+      </div>
+
+      <div class="gantt-body">
+        <!-- Section: AGENTS -->
+        <div class="grp-label">AGENTS</div>
+
+        <div class="grow" data-bars='[{"s":2,"w":12,"label":"context.read"},{"s":15,"w":6,"label":"summarise"}]'>
+          <div class="gn"><span class="d"></span>agent.research <span class="dim">· researcher</span></div>
+          <div class="gt">
+            <div class="gb" style="--s:2%;--w:12%;"><span>context.read</span></div>
+            <div class="gb" style="--s:15%;--w:6%;"><span>summarise</span></div>
+          </div>
+          <div class="gs">done</div>
+        </div>
+
+        <div class="grow">
+          <div class="gn"><span class="d"></span>agent.review <span class="dim">· reviewer</span></div>
+          <div class="gt">
+            <div class="gb" style="--s:20%;--w:8%;"><span>qa.check</span></div>
+          </div>
+          <div class="gs">done</div>
+        </div>
+
+        <div class="grow grow-primary">
+          <div class="gn"><span class="d"></span>agent.orchestrator <span class="dim">· coordinator</span></div>
+          <div class="gt">
+            <div class="gb gb-strong" style="--s:6%;--w:84%;">
+              <span>route → context → tools → review → action → handoff</span>
+              <div class="gb-cursor" style="--at:62%"></div>
+            </div>
+          </div>
+          <div class="gs v">routing</div>
+        </div>
+
+        <div class="grow">
+          <div class="gn"><span class="d"></span>agent.operator <span class="dim">· operator</span></div>
+          <div class="gt">
+            <div class="gb" style="--s:30%;--w:10%;"><span>tool.call</span></div>
+            <div class="gb" style="--s:42%;--w:8%;"><span>record.update</span></div>
+          </div>
+          <div class="gs">done</div>
+        </div>
+
+        <div class="grow">
+          <div class="gn"><span class="d"></span>agent.report <span class="dim">· reporter</span></div>
+          <div class="gt">
+            <div class="gb" style="--s:62%;--w:22%;"><span>draft.brief</span></div>
+          </div>
+          <div class="gs v">drafting</div>
+        </div>
+
+        <!-- Section: HUMAN GATE -->
+        <div class="grp-label amb">HUMAN GATE</div>
+
+        <div class="grow grow-gate">
+          <div class="gn"><span class="d amb"></span>human.gate <span class="dim">· approval</span></div>
+          <div class="gt">
+            <div class="gd" style="--at:24%"><span>approve&nbsp;send</span></div>
+            <div class="gd gd-resolved" style="--at:54%"><span>approve&nbsp;publish</span></div>
+            <div class="gd" style="--at:88%"><span>approve&nbsp;close</span></div>
+          </div>
+          <div class="gs amb">await · 2 open</div>
+        </div>
+
+        <!-- Section: TOOLS -->
+        <div class="grp-label">TOOLS &amp; SYSTEMS</div>
+
+        <div class="grow grow-tool">
+          <div class="gn"><span class="d"></span>tool.crm</div>
+          <div class="gt">
+            <div class="gp" style="--at:18%"></div>
+            <div class="gp" style="--at:36%"></div>
+            <div class="gp" style="--at:48%"></div>
+          </div>
+          <div class="gs dim">3 reads</div>
+        </div>
+
+        <div class="grow grow-tool">
+          <div class="gn"><span class="d"></span>tool.docs</div>
+          <div class="gt">
+            <div class="gp" style="--at:10%"></div>
+            <div class="gp" style="--at:14%"></div>
+            <div class="gp" style="--at:68%"></div>
+          </div>
+          <div class="gs dim">3 reads</div>
+        </div>
+
+        <div class="grow grow-tool">
+          <div class="gn"><span class="d"></span>tool.database</div>
+          <div class="gt">
+            <div class="gp" style="--at:32%"></div>
+            <div class="gp" style="--at:46%"></div>
+          </div>
+          <div class="gs dim">2 writes</div>
+        </div>
+
+        <div class="grow grow-tool">
+          <div class="gn"><span class="d"></span>mcp.custom</div>
+          <div class="gt">
+            <div class="gp" style="--at:40%"></div>
+            <div class="gp" style="--at:58%"></div>
+          </div>
+          <div class="gs dim">2 calls</div>
+        </div>
+      </div>
+
+      <div class="gantt-foot">
+        <span class="lf-label">AUDIT.LOG ▸</span>
+        <div class="gf-stream" id="gfStream">
+          <span class="gl">[12:04:18]&nbsp;<span class="ag">agent.research</span> → <span>tool.brave_search</span> · <span class="v">query.dispatched</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="orch-line">Agents, tools, humans — <span class="v">coordinated.</span></div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       §05 — TOOL UNIVERSE & MCPs
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec reveal" data-sec="05">
+    <div class="sec-tag"><span class="n">05</span><span class="lbl"><span>// 05 / 06</span><span class="v">TOOL ACCESS</span></span></div>
+    <div class="sec-head">
+      <div class="left">
+        <h2>Give agents the tools. <span class="accent-text">Give humans the control.</span></h2>
+        <p>Agents need to use systems, not just talk about them. We connect agents to the SaaS tools, APIs, databases and custom MCPs your business runs on — with permission boundaries, approval gates and audit logs designed in.</p>
+      </div>
+      <div class="right"><span class="pd"></span><span>04 CONNECTORS · <span class="v">PERMISSIONED</span></span></div>
+    </div>
+
+    <div class="connectors">
+      <article class="conn">
+        <div class="conn-port"><span class="port-dot"></span><span class="port-dot"></span><span class="port-dot"></span><span class="port-dot"></span></div>
+        <div class="tag">01 · CONNECTOR</div>
+        <h4>Standard tool connections</h4>
+        <p class="desc">Agents can connect to the SaaS tools, databases and communication systems your team already uses.</p>
+        <div class="conn-foot">CRM · DOCS · SLACK · NOTION · DRIVE</div>
+      </article>
+
+      <article class="conn">
+        <div class="conn-port"><span class="port-dot"></span><span class="port-dot"></span><span class="port-dot"></span><span class="port-dot"></span></div>
+        <div class="tag">02 · CONNECTOR</div>
+        <h4>API integrations</h4>
+        <p class="desc">Agents can read from and write to systems through structured, reliable interfaces.</p>
+        <div class="conn-foot">REST · GRAPHQL · WEBHOOKS · OAUTH</div>
+      </article>
+
+      <article class="conn">
+        <div class="conn-port"><span class="port-dot"></span><span class="port-dot"></span><span class="port-dot"></span><span class="port-dot"></span></div>
+        <div class="tag">03 · CONNECTOR</div>
+        <h4>Custom MCPs</h4>
+        <p class="desc">When a workflow needs deeper, safer or more precise tool access, System7 can build the custom connector layer agents need.</p>
+        <div class="conn-foot">SCOPED · TYPED · AUDIT-READY</div>
+      </article>
+
+      <article class="conn amber">
+        <div class="conn-port"><span class="port-dot amb"></span><span class="port-dot amb"></span><span class="port-dot amb"></span><span class="port-dot amb"></span></div>
+        <div class="tag">04 · GATE</div>
+        <h4>Human gates</h4>
+        <p class="desc">Critical actions can require approval before anything is sent, changed, published, escalated or finalised.</p>
+        <div class="conn-foot">APPROVE · DEFER · OVERRIDE · LOG</div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       §06 — GOVERNANCE CONSOLE
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec reveal" data-sec="06">
+    <div class="sec-tag"><span class="n">06</span><span class="lbl"><span>// 06 / 06</span><span class="v">GOVERNANCE</span></span></div>
+    <div class="sec-head">
+      <div class="left">
+        <h2>Controlled autonomy, <span class="accent-text">not black-box AI.</span></h2>
+        <p>Every important action has permissions, logs, confidence thresholds and human escalation routes.</p>
+      </div>
+      <div class="right"><span class="pd"></span><span>06 SAFEGUARDS · <span class="v">ALWAYS-ON</span></span></div>
+    </div>
+
+    <div class="gov">
+      <article class="gcard">
+        <div class="lbl">01 · PERMISSIONS</div>
+        <h4>Permissions</h4>
+        <p class="desc">Define which tools, records and actions each agent can access.</p>
+        <div class="gauge"><i style="--w:72%"></i></div>
+      </article>
+      <article class="gcard amber">
+        <div class="lbl">02 · HUMAN GATES</div>
+        <h4>Human gates</h4>
+        <p class="desc">Require approval before sensitive actions are completed.</p>
+        <div class="gauge"><i style="--w:60%"></i></div>
+      </article>
+      <article class="gcard">
+        <div class="lbl">03 · CONFIDENCE</div>
+        <h4>Confidence thresholds</h4>
+        <p class="desc">Escalate or pause work when the agent is uncertain.</p>
+        <div class="gauge"><i style="--w:88%"></i></div>
+      </article>
+      <article class="gcard">
+        <div class="lbl">04 · AUDIT</div>
+        <h4>Audit logs</h4>
+        <p class="desc">Track inputs, reasoning, tool calls, decisions and outputs.</p>
+        <div class="gauge"><i style="--w:96%"></i></div>
+      </article>
+      <article class="gcard">
+        <div class="lbl">05 · FALLBACKS</div>
+        <h4>Fallbacks</h4>
+        <p class="desc">Route edge cases, errors and exceptions to the right person or process.</p>
+        <div class="gauge"><i style="--w:48%"></i></div>
+      </article>
+      <article class="gcard">
+        <div class="lbl">06 · MONITORING</div>
+        <h4>Monitoring</h4>
+        <p class="desc">See what agents are doing, where they are blocked and what outcomes they create.</p>
+        <div class="gauge"><i style="--w:84%"></i></div>
+      </article>
+    </div>
+
+    <div class="log-strip" id="logStrip">
+      <span class="ls-head">AUDIT.STREAM</span>
+      <span class="log-line"><span class="ts">[12:04:18]</span> <span class="ag">agent.research</span><span class="arr">→</span>tool.brave_search · <span class="v">query.dispatched</span></span>
+      <span class="log-line"><span class="ts">[12:04:21]</span> <span class="ag">agent.research</span><span class="arr">→</span>context.brief.draft · <span class="v">confidence=0.92</span></span>
+      <span class="log-line"><span class="ts">[12:04:23]</span> <span class="amb">human.gate</span><span class="arr">→</span>approval.requested · <span class="amb">pending</span></span>
+      <span class="log-line"><span class="ts">[12:04:47]</span> <span class="amb">human.gate</span><span class="arr">→</span>approved · <span class="gr">action.logged</span></span>
+      <span class="log-line"><span class="ts">[12:04:51]</span> <span class="ag">agent.operator</span><span class="arr">→</span>tool.crm.update · <span class="v">record.synced</span></span>
+      <span class="log-line"><span class="ts">[12:04:56]</span> <span class="ag">agent.report</span><span class="arr">→</span>summary.published · <span class="gr">ok</span></span>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       FOOTER CTA — title-block style
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec" id="cta">
+    <div class="cta-block reveal">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+
+      <div class="cta-grid">
+        <div class="cta-main">
+          <div class="eye">// <span class="v">READY</span></div>
+          <h2>Show us the work. <span class="accent-text">We'll design the agent system around it.</span></h2>
+          <p class="sub">If a process needs context, judgement, tools, rules and repeated coordination, it may be ready for agents. System7 can help define the agent roles, connect the tools, build the orchestration layer and decide where humans stay in control.</p>
+          <div class="row">
+            <a href="#" class="btn"><span>Design an agent system</span><span class="arr">→</span></a>
+          </div>
+        </div>
+        <aside class="cta-block-side">
+          <div class="tb-row"><span class="tb-l">PROJECT</span><span class="tb-r">S7 LABS</span></div>
+          <div class="tb-row"><span class="tb-l">ROUTE</span><span class="tb-r">_04 · AGENT</span></div>
+          <div class="tb-row"><span class="tb-l">REVISION</span><span class="tb-r">r.04</span></div>
+          <div class="tb-row"><span class="tb-l">SHEET</span><span class="tb-r">06 / 06</span></div>
+          <div class="tb-row"><span class="tb-l">SCALE</span><span class="tb-r">1 : 1</span></div>
+        </aside>
+      </div>
+
+      <div class="status-row">
+        <span class="dot"></span><span>RESPONSE WITHIN <span class="v">24H</span></span>
+        <span class="sep"></span><span>UK ENGINEERING</span>
+        <span class="sep"></span><span>UK TIMEZONE</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-left">
+      <span>// SYSTEM7 — S7 LABS</span>
+    </div>
+    <div class="foot-right">
+      <span>routes: revops · creator · build · <span style="color:var(--accent)">agent</span></span>
+    </div>
+  </footer>
+
+</main>
+
+<script src="agent-lab.js?v=1"></script>
+</body>
+</html>
