@@ -43,21 +43,28 @@ export function MiniAppCard({ app, onInterested, onLearnMore, onLaunch }: MiniAp
 
   return (
     <article className="card" data-status={app.status} data-id={app.id}>
-      <button
-        type="button"
+      <div
         className="card-inner"
+        role="button"
+        tabIndex={0}
         onClick={handleThumbClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleThumbClick()
+          }
+        }}
         aria-label={`Open ${app.name}`}
-        style={{ all: 'unset', display: 'block', cursor: 'pointer', width: '100%' }}
+        style={{ cursor: 'pointer' }}
       >
-        <span className="card-face card-front">
+        <div className="card-face card-front">
           <CardThumb thumb={app.thumb} />
           <span className={`card-chip ${CHIP_CLASS[app.status]}`}>
             <i />
             {CHIP_LABEL[app.status]}
           </span>
-        </span>
-        <span className="card-face card-back">
+        </div>
+        <div className="card-face card-back">
           <p className="cb-desc">{app.learn_more.what_it_does}</p>
           <div className="cb-io">
             <div className="cb-row">
@@ -72,8 +79,8 @@ export function MiniAppCard({ app, onInterested, onLearnMore, onLaunch }: MiniAp
           <p className="cb-build">
             {app.learn_more.build_potential.replace(/^Could become a? ?/i, '')}
           </p>
-        </span>
-      </button>
+        </div>
+      </div>
       <div className="card-body">
         <div className="card-name">{app.name}</div>
         <p className="card-sub">{app.short_description}</p>
