@@ -10,13 +10,20 @@ type MiniAppsHeroProps = {
 
 export function MiniAppsHero({ onSuggest }: MiniAppsHeroProps) {
   const [cycle, setCycle] = useState(0)
+  const [focusIdx, setFocusIdx] = useState(4)
 
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) return
-    const id = setInterval(() => setCycle((c) => (c + 1) % CYCLE.length), 2200)
-    return () => clearInterval(id)
+    const cId = setInterval(() => setCycle((c) => (c + 1) % CYCLE.length), 2200)
+    const fId = setInterval(() => setFocusIdx((i) => (i + 1) % 5), 4200)
+    return () => {
+      clearInterval(cId)
+      clearInterval(fId)
+    }
   }, [])
+
+  const focusClass = (i: number) => (i === focusIdx ? ' sc-focus' : '')
 
   return (
     <section className="hero">
@@ -92,7 +99,7 @@ export function MiniAppsHero({ onSuggest }: MiniAppsHeroProps) {
           </div>
 
           <div className="shelf-stage">
-            <div className="sc sc-l3 sc-1">
+            <div className={`sc sc-l3 sc-1${focusClass(0)}`}>
               <div className="sc-chip live">
                 <i />
                 LIVE
@@ -106,7 +113,7 @@ export function MiniAppsHero({ onSuggest }: MiniAppsHeroProps) {
               </div>
               <div className="sc-name">VSignal</div>
             </div>
-            <div className="sc sc-l3 sc-2">
+            <div className={`sc sc-l3 sc-2${focusClass(1)}`}>
               <div className="sc-chip beta">
                 <i />
                 BETA
@@ -120,7 +127,7 @@ export function MiniAppsHero({ onSuggest }: MiniAppsHeroProps) {
               <div className="sc-name">CSV Cleanup</div>
             </div>
 
-            <div className="sc sc-l2 sc-3">
+            <div className={`sc sc-l2 sc-3${focusClass(2)}`}>
               <div className="sc-chip new">
                 <i />
                 NEW
@@ -135,7 +142,7 @@ export function MiniAppsHero({ onSuggest }: MiniAppsHeroProps) {
               </div>
               <div className="sc-name">Decision Matrix</div>
             </div>
-            <div className="sc sc-l2 sc-4">
+            <div className={`sc sc-l2 sc-4${focusClass(3)}`}>
               <div className="sc-chip beta">
                 <i />
                 BETA
@@ -150,7 +157,7 @@ export function MiniAppsHero({ onSuggest }: MiniAppsHeroProps) {
               <div className="sc-name">Doc Intelligence</div>
             </div>
 
-            <div className="sc sc-l1 sc-5 sc-focus">
+            <div className={`sc sc-l1 sc-5${focusClass(4)}`}>
               <div className="sc-chip live">
                 <i />
                 LIVE

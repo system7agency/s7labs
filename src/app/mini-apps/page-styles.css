@@ -499,55 +499,15 @@
 }
 .mini-apps-lab .sc-1 {
   transform: translate3d(-30%, -30%, -40px);
-  animation: ma-sc1Drift 14s ease-in-out infinite;
 }
 .mini-apps-lab .sc-2 {
   transform: translate3d(60%, -25%, -40px);
-  animation: ma-sc2Drift 16s ease-in-out -3s infinite;
 }
 .mini-apps-lab .sc-3 {
   transform: translate3d(-15%, 35%, 20px);
-  animation: ma-sc3Drift 13s ease-in-out -5s infinite;
 }
 .mini-apps-lab .sc-4 {
   transform: translate3d(55%, 30%, 20px);
-  animation: ma-sc4Drift 17s ease-in-out -8s infinite;
-}
-@keyframes ma-sc1Drift {
-  0%,
-  100% {
-    transform: translate3d(-30%, -30%, -40px);
-  }
-  50% {
-    transform: translate3d(-32%, -32%, -10px);
-  }
-}
-@keyframes ma-sc2Drift {
-  0%,
-  100% {
-    transform: translate3d(60%, -25%, -40px);
-  }
-  50% {
-    transform: translate3d(62%, -23%, -70px);
-  }
-}
-@keyframes ma-sc3Drift {
-  0%,
-  100% {
-    transform: translate3d(-15%, 35%, 20px);
-  }
-  50% {
-    transform: translate3d(-13%, 37%, 50px);
-  }
-}
-@keyframes ma-sc4Drift {
-  0%,
-  100% {
-    transform: translate3d(55%, 30%, 20px);
-  }
-  50% {
-    transform: translate3d(57%, 28%, -10px);
-  }
 }
 .mini-apps-lab .sc-focus {
   border-color: color-mix(in srgb, var(--accent) 50%, var(--border-strong));
