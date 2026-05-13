@@ -95,7 +95,7 @@ export function AgentOperatingSystemSection() {
                   <span className="nm">{s.nm}</span>
                   <span className="thk">{s.thk}</span>
                 </div>
-                <div className={`strat-stat${s.amber ? 'amb' : ''}`}>{s.stat}</div>
+                <div className={s.amber ? 'strat-stat amb' : 'strat-stat'}>{s.stat}</div>
               </div>
             ))}
           </div>
@@ -103,7 +103,7 @@ export function AgentOperatingSystemSection() {
           <div className="xsec-callouts" id="xsecCallouts">
             {STRATA.map((s, idx) => (
               <div key={s.num} className="callout" data-lyr={idx}>
-                <div className={`co-head${s.amber ? 'amb' : ''}`}>
+                <div className={s.amber ? 'co-head amb' : 'co-head'}>
                   <span className="ix">{s.head}</span>
                   <span className="st">{s.amber ? '· gated' : '· active'}</span>
                 </div>
