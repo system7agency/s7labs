@@ -63,7 +63,7 @@ export default function HomePage() {
         <section className="routes-section">
           <div className="routes-header">
             <span className="routes-label">{'// Active Routes'}</span>
-            <span className="routes-count">02 / 03</span>
+            <span className="routes-count">05 / 05</span>
           </div>
 
           <div className="routes-grid">
@@ -71,7 +71,7 @@ export default function HomePage() {
               href="/revops"
               className="route-card tiltable"
               data-route="revops"
-              data-label="revops s7labs"
+              data-label="revops_s7labs"
             >
               <span className="scan-line" />
               <div className="card-glyphs" aria-hidden="true">
@@ -103,7 +103,7 @@ export default function HomePage() {
               href="/creator"
               className="route-card tiltable"
               data-route="creator"
-              data-label="creator s7labs"
+              data-label="creator_s7labs"
             >
               <span className="scan-line" />
               <div className="card-glyphs" aria-hidden="true">
@@ -130,23 +130,100 @@ export default function HomePage() {
                 </div>
               </div>
             </a>
-          </div>
 
-          <div className="soon-row">
-            <a className="route-card soon" aria-disabled="true">
+            <a
+              href="/build"
+              className="route-card tiltable"
+              data-route="build"
+              data-label="build_s7labs"
+            >
+              <span className="scan-line" />
+              <div className="card-glyphs" aria-hidden="true">
+                <span style={{ top: '12%', right: '18%' }}>{'// systems'}</span>
+                <span style={{ top: '72%', right: '12%' }}>∆ build</span>
+                <span style={{ top: '42%', left: '10%' }}>◇</span>
+              </div>
               <div className="route-card-inner">
                 <span className="route-index">ROUTE_03</span>
                 <div className="route-label">
-                  <span className="prompt">$</span>build s
-                  <sup className="route-card-superscript">7</sup>labs
+                  <span className="prompt">$</span>
+                  <span className="typed" />
+                  <span className="type-cursor" />
                 </div>
                 <p className="route-tagline">
                   Custom AI systems for teams defining the future of their industry.
                 </p>
                 <div className="route-meta">
-                  <span className="soon-badge">COMING SOON</span>
+                  <span className="route-tag">AI · SYSTEMS · CUSTOM</span>
                   <span className="route-arrow">
-                    <span>—</span>
+                    <span>ENTER</span>
+                    <span className="a">→</span>
+                  </span>
+                </div>
+              </div>
+            </a>
+
+            <a
+              href="/agent"
+              className="route-card tiltable"
+              data-route="agent"
+              data-label="agent_s7labs"
+            >
+              <span className="scan-line" />
+              <div className="card-glyphs" aria-hidden="true">
+                <span style={{ top: '12%', right: '18%' }}>{'// agent'}</span>
+                <span style={{ top: '72%', right: '10%' }}>→ talk</span>
+                <span style={{ top: '42%', left: '10%' }}>◉</span>
+              </div>
+              <div className="route-card-inner">
+                <span className="route-index">ROUTE_04</span>
+                <div className="route-label">
+                  <span className="prompt">$</span>
+                  <span className="typed" />
+                  <span className="type-cursor" />
+                </div>
+                <p className="route-tagline">
+                  Voice and chat agents for sales, support, and intake.
+                </p>
+                <div className="route-meta">
+                  <span className="route-tag">SOFTWARE · VOICE · CHAT</span>
+                  <span className="route-arrow">
+                    <span>ENTER</span>
+                    <span className="a">→</span>
+                  </span>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div className="soon-row">
+            <a
+              href="/mini-apps"
+              className="route-card tiltable"
+              data-route="mini-apps"
+              data-label="miniApps_s7labs"
+            >
+              <span className="scan-line" />
+              <div className="card-glyphs" aria-hidden="true">
+                <span style={{ top: '12%', right: '18%' }}>{'// gallery'}</span>
+                <span style={{ top: '72%', right: '10%' }}>★ demo</span>
+                <span style={{ top: '42%', left: '10%' }}>▣</span>
+              </div>
+              <div className="route-card-inner">
+                <span className="route-index">ROUTE_05</span>
+                <div className="route-label">
+                  <span className="prompt">$</span>
+                  <span className="typed" />
+                  <span className="type-cursor" />
+                </div>
+                <p className="route-tagline">
+                  Small AI utilities and live experiments — a gallery of what&apos;s possible.
+                </p>
+                <div className="route-meta">
+                  <span className="route-tag">GALLERY · DEMOS · UTILITIES</span>
+                  <span className="route-arrow">
+                    <span>ENTER</span>
+                    <span className="a">→</span>
                   </span>
                 </div>
               </div>
