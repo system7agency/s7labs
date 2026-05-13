@@ -1,0 +1,512 @@
+/* S7 Labs · Mini Apps — interactions */
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ─── header hide on scroll ─── */
+  const header = $('#siteHeader');
+  let lastY = window.scrollY;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (y > lastY && y > 120) header.classList.add('hidden');
+    else header.classList.remove('hidden');
+    lastY = y;
+  }, { passive: true });
+
+  /* ─── cursor spotlight ─── */
+  const spot = $('.bg-spotlight');
+  window.addEventListener('mousemove', e => {
+    if (!spot) return;
+    spot.style.setProperty('--mx', e.clientX + 'px');
+    spot.style.setProperty('--my', e.clientY + 'px');
+  });
+
+  /* ─── reveal-on-scroll ─── */
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        en.target.classList.add('in');
+        io.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.16, rootMargin: '0px 0px -10% 0px' });
+  $$('.reveal').forEach(el => io.observe(el));
+
+  /* ─── HERO typewriter ─── */
+  const l1 = $('.hero-title .l1');
+  const typed = $('.typed', l1);
+  const l2 = $('.hero-title .l2');
+  if (typed) {
+    if (reduce) {
+      typed.textContent = typed.dataset.text;
+      l1?.classList.add('done');
+      l2?.classList.add('show');
+    } else {
+      const text = typed.dataset.text || '';
+      let i = 0;
+      const tick = () => {
+        typed.textContent = text.slice(0, ++i);
+        if (i < text.length) setTimeout(tick, 60 + Math.random() * 30);
+        else setTimeout(() => { l1.classList.add('done'); l2.classList.add('show'); }, 380);
+      };
+      setTimeout(tick, 420);
+    }
+  }
+
+  /* ─── hero status cycler ─── */
+  const heroCycler = $('#heroCycler');
+  const cycle = ['app.loaded', 'preview.ready', 'demo.live', 'try.now'];
+  if (heroCycler) {
+    let i = 0;
+    setInterval(() => {
+      i = (i + 1) % cycle.length;
+      heroCycler.style.opacity = '0';
+      setTimeout(() => {
+        heroCycler.textContent = cycle[i];
+        heroCycler.style.opacity = '1';
+      }, 240);
+    }, 2400);
+  }
+
+  /* ─── shelf focus rotation ─── */
+  const shelf = $('#shelf');
+  if (shelf && !reduce) {
+    const cards = $$('.sc', shelf);
+    const orderClasses = ['sc-1','sc-2','sc-3','sc-4','sc-5'];
+    let focusIdx = 4; // initial focus = sc-5
+    setInterval(() => {
+      // promote a different card briefly
+      cards.forEach(c => c.classList.remove('sc-focus'));
+      const next = (focusIdx + 1) % cards.length;
+      // find the card in dom order whose order-class matches
+      const target = cards[next];
+      if (target) target.classList.add('sc-focus');
+      focusIdx = next;
+    }, 4200);
+  }
+
+  /* ─── GRID controls ────────────────────────────────────────────── */
+  const grid = $('#grid');
+  const cards = $$('.card', grid);
+  const searchInput = $('#searchInput');
+  const chips = $$('#chips .chip');
+  const sizers = $$('.sz');
+  const sortToggle = $('.sort-btn');
+  const sortMenu = $('.sort-menu');
+  const sortWrap = $('#sort');
+  const resultCount = $('#resultCount');
+  const empty = $('#emptyState');
+
+  let state = {
+    cat: 'all',
+    query: '',
+    size: 5,
+    sort: 'featured',
+  };
+
+  // initial card data with sort weights (stable ordering for each mode)
+  const cardData = cards.map((card, i) => ({
+    el: card,
+    cats: (card.dataset.cat || '').split(/\s+/).filter(Boolean),
+    status: card.dataset.status,
+    name: (card.dataset.name || '').toLowerCase(),
+    desc: (card.dataset.desc || '').toLowerCase(),
+    id: card.dataset.id,
+    weights: {
+      featured: i,
+      newest: 11 - i, // approx — flip
+      'most-used': i, // pretend
+      quickest: ['live','beta','new','prototype','soon'].indexOf(card.dataset.status),
+    },
+  }));
+
+  function applyFilters() {
+    let visible = 0;
+    cardData.forEach(c => {
+      const catMatch = state.cat === 'all' || c.cats.includes(state.cat);
+      const q = state.query;
+      const queryMatch = !q || c.name.includes(q) || c.desc.includes(q) || c.cats.some(x => x.includes(q));
+      const show = catMatch && queryMatch;
+      c.el.classList.toggle('hide', !show);
+      if (show) visible++;
+    });
+    if (resultCount) resultCount.textContent = `${visible} apps`;
+    if (empty) empty.hidden = visible !== 0;
+  }
+
+  function applySort() {
+    const mode = state.sort;
+    const sorted = [...cardData].sort((a, b) => a.weights[mode] - b.weights[mode]);
+    sorted.forEach(c => grid.appendChild(c.el));
+  }
+
+  function applySize(n) {
+    state.size = n;
+    grid.classList.remove('grid-5','grid-4','grid-3');
+    grid.classList.add(`grid-${n}`);
+    sizers.forEach(s => s.classList.toggle('is-active', Number(s.dataset.size) === n));
+  }
+
+  /* chips */
+  chips.forEach(ch => {
+    ch.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('is-active'));
+      ch.classList.add('is-active');
+      state.cat = ch.dataset.cat;
+      applyFilters();
+    });
+  });
+
+  /* search */
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      state.query = searchInput.value.toLowerCase().trim();
+      applyFilters();
+    });
+    // "/" focus shortcut
+    document.addEventListener('keydown', e => {
+      if (e.key === '/' && document.activeElement !== searchInput &&
+          !$$('input:focus, textarea:focus').length) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    });
+  }
+
+  /* size slider */
+  sizers.forEach(b => {
+    b.addEventListener('click', () => applySize(Number(b.dataset.size)));
+  });
+
+  /* sort dropdown */
+  if (sortToggle && sortWrap) {
+    sortToggle.addEventListener('click', e => {
+      e.stopPropagation();
+      sortWrap.classList.toggle('is-open');
+    });
+    document.addEventListener('click', () => sortWrap.classList.remove('is-open'));
+    $$('li', sortMenu).forEach(li => {
+      li.addEventListener('click', () => {
+        $$('li', sortMenu).forEach(x => x.classList.remove('is-active'));
+        li.classList.add('is-active');
+        state.sort = li.dataset.sort;
+        $('.sort-lbl', sortToggle).textContent = li.textContent.toUpperCase();
+        applySort();
+        sortWrap.classList.remove('is-open');
+      });
+    });
+  }
+
+  /* reset filters */
+  $('#resetFilters')?.addEventListener('click', () => {
+    state.cat = 'all'; state.query = '';
+    if (searchInput) searchInput.value = '';
+    chips.forEach(c => c.classList.toggle('is-active', c.dataset.cat === 'all'));
+    applyFilters();
+  });
+
+  /* stagger card reveal once they enter view */
+  const cardObs = new IntersectionObserver(entries => {
+    entries.forEach((en, i) => {
+      if (en.isIntersecting) {
+        const idx = cardData.findIndex(c => c.el === en.target);
+        setTimeout(() => en.target.classList.add('in'), 70 * Math.max(0, idx % 10));
+        cardObs.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -8% 0px' });
+  cards.forEach(c => cardObs.observe(c));
+
+  /* ─── MODALS ──────────────────────────────────────────────────── */
+  const learnBackdrop = $('#learnBackdrop');
+  const intBackdrop = $('#intBackdrop');
+
+  function openModal(bd) {
+    bd.hidden = false;
+    requestAnimationFrame(() => bd.classList.add('open'));
+    document.documentElement.style.overflow = 'hidden';
+    // focus first focusable
+    setTimeout(() => $('input,button,a', bd)?.focus(), 80);
+  }
+  function closeModal(bd) {
+    bd.classList.remove('open');
+    setTimeout(() => { bd.hidden = true; document.documentElement.style.overflow = ''; }, 280);
+  }
+  [learnBackdrop, intBackdrop].forEach(bd => {
+    if (!bd) return;
+    bd.addEventListener('click', e => {
+      if (e.target === bd || e.target.matches('[data-close]')) closeModal(bd);
+    });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (learnBackdrop && !learnBackdrop.hidden) closeModal(learnBackdrop);
+      else if (intBackdrop && !intBackdrop.hidden) closeModal(intBackdrop);
+    }
+  });
+
+  /* ─── content lookup for Learn More ─── */
+  const learnContent = {
+    'meet-ting': {
+      title: 'Meet-Ting', status: 'live', cat: 'Operations · AI',
+      desc: 'AI scheduling that books meetings over email and WhatsApp.',
+      what: 'A scheduling agent that handles the back-and-forth of finding a meeting time. It reads inbound emails, drafts replies, proposes options against your real calendar, and locks the slot when both sides agree.',
+      ins: 'email · whatsapp · calendar',
+      steps: 'parse intent → propose slots → confirm → invite',
+      outs: 'booked slot · invite · confirmation',
+      who: 'Operators, sales teams and any role that spends time wrangling calendars across email and chat.',
+      build: 'This could become a full inbox-attached scheduling assistant.',
+      thumb: 'chat',
+      openUrl: '#',
+    },
+    'vsignal': {
+      title: 'VSignal', status: 'live', cat: 'Data · AI',
+      desc: 'Real-time crypto price tracking and AI-generated trade signals.',
+      what: 'Tracks prices across configurable crypto pairs in real time and generates buy/sell/hold signals using a small ensemble of models and configurable thresholds.',
+      ins: 'pair · timeframe · indicators',
+      steps: 'ingest → analyse → score → alert',
+      outs: 'signal · confidence · alert',
+      who: 'Crypto operators, traders and analysts who want a clean signal feed without building one from scratch.',
+      build: 'This could become a full trading-signal desk for crypto operators.',
+      thumb: 'chart',
+      openUrl: '#',
+    },
+    'doc-intelligence': {
+      title: 'Document Intelligence Tester', status: 'beta', cat: 'Documents · AI',
+      desc: 'Upload a document and see structured extraction, summary and classification in action.',
+      what: 'Drop in a PDF and watch the system extract fields, classify the document type, and summarise key sections. A live preview shows exactly what the system pulled out and how confidently.',
+      ins: 'pdf · docx · scanned image',
+      steps: 'parse → extract → classify → summarise',
+      outs: 'fields · summary · classification',
+      who: 'Operations, legal, finance and any team that processes inbound documents at volume.',
+      build: 'This could become a full document-intake pipeline for any team.',
+      thumb: 'doc',
+      openUrl: '#',
+    },
+    'csv-cleanup': {
+      title: 'CSV Cleanup Studio', status: 'beta', cat: 'Data · Utility',
+      desc: 'Drop in messy spreadsheet data and preview cleaned, normalised outputs.',
+      what: 'Paste or drop a messy CSV, choose a target schema, and preview the cleaned and normalised output before export. Highlights changes row-by-row.',
+      ins: 'csv · paste · upload',
+      steps: 'parse → normalise → validate → export',
+      outs: 'clean csv · json · validated',
+      who: 'Ops, data teams and anyone tired of cleaning spreadsheets by hand.',
+      build: 'This could become a full data-quality console for ops teams.',
+      thumb: 'rows',
+      openUrl: '#',
+    },
+    'decision-matrix': {
+      title: 'Decision Matrix Builder', status: 'new', cat: 'Utility · AI',
+      desc: 'Compare options using weighted criteria and generate a clear recommendation.',
+      what: 'Define options and weighted criteria, score each cell, and the matrix produces a ranked recommendation with an exportable summary you can share.',
+      ins: 'options · criteria · weights',
+      steps: 'define → score → weight → rank',
+      outs: 'scores · ranking · export',
+      who: 'Product leaders, ops teams and anyone making a multi-factor decision who wants a defensible audit trail.',
+      build: 'This could become a full decision-support tool for ops or product teams.',
+      thumb: 'matrix',
+      openUrl: '#',
+    },
+    'policy-checker': {
+      title: 'Policy Checker', status: 'prototype', cat: 'Documents · AI',
+      desc: 'Paste policy text and check it against configurable rules or requirements.',
+      what: 'Configure a ruleset, paste any policy or contract text, and flag missing clauses or rule violations with inline reasoning.',
+      ins: 'policy text · rules · standards',
+      steps: 'parse → match → flag · explain',
+      outs: 'flagged sections · risk notes',
+      who: 'Compliance, legal and ops teams reviewing policy at volume.',
+      build: 'This could become a full compliance review console.',
+      thumb: 'policy',
+    },
+    'kb-finder': {
+      title: 'Knowledge Base Finder', status: 'prototype', cat: 'Search · AI',
+      desc: 'Ask a question and see how an internal knowledge search experience could work.',
+      what: 'Type a question and watch matched sources light up alongside a synthesised answer drafted from those sources, with confidence and citations.',
+      ins: 'query · context · scope',
+      steps: 'embed → retrieve → rank → synthesise',
+      outs: 'answer · sources · confidence',
+      who: 'Support, ops and any team buried in internal documentation.',
+      build: 'This could become a full internal knowledge assistant.',
+      thumb: 'kb',
+    },
+    'brief-generator': {
+      title: 'Brief Generator', status: 'soon', cat: 'AI · Utility',
+      desc: 'Turn rough notes into a structured brief, plan or project outline.',
+      what: 'Drop in messy notes or a voice transcript and get a structured brief with headings, bullet points and next steps in a chosen format.',
+      ins: 'notes · transcript · prompt',
+      steps: 'parse → outline → expand → format',
+      outs: 'brief · plan · outline',
+      who: 'PMs, strategists and anyone briefing across teams.',
+      build: 'This could become a full briefing assistant for any planning team.',
+      thumb: 'brief',
+    },
+    'report-snapshot': {
+      title: 'Report Snapshot Builder', status: 'soon', cat: 'Dashboards · Data',
+      desc: 'Convert a simple data input into a clean executive-style report card.',
+      what: 'Feed in a CSV or query result and generate a polished executive snapshot — title block, KPIs, mini-charts — ready for PDF export.',
+      ins: 'csv · query · template',
+      steps: 'parse → summarise → chart → render',
+      outs: 'report card · pdf · charts',
+      who: 'Founders, BizOps and anyone who reports to a board.',
+      build: 'This could become a full lightweight BI-output engine.',
+      thumb: 'report',
+    },
+    'form-workflow': {
+      title: 'Form-to-Workflow Prototype', status: 'soon', cat: 'Utility · Operations',
+      desc: 'Submit a structured request and see how it could route into a system or task queue.',
+      what: 'Configure form → routing → queue and watch a submitted request flow into the right destination automatically, with status updates and an audit trail.',
+      ins: 'form fields · rules · target',
+      steps: 'collect → validate → route → notify',
+      outs: 'task · status · audit',
+      who: 'Internal ops teams running requests that today live in inboxes and spreadsheets.',
+      build: 'This could become a full request-routing layer for any internal ops team.',
+      thumb: 'form',
+    },
+    'content-transformer': {
+      title: 'Content Transformer', status: 'soon', cat: 'AI · Utility',
+      desc: 'Turn one piece of content into multiple useful formats, tones or summaries.',
+      what: 'Paste any content and generate variants — short summary, long-form, social-style — with options for tone and target audience.',
+      ins: 'content · tone · format',
+      steps: 'parse → adapt → rewrite → preview',
+      outs: 'variants · summary · rewrite',
+      who: 'Marketers, founders, support — anyone who reuses content across formats.',
+      build: 'This could become a full multi-format content engine.',
+      thumb: 'fan',
+    },
+    'mini-portal': {
+      title: 'Mini Portal Preview', status: 'soon', cat: 'Product · Interface',
+      desc: 'Explore a small portal-style interface with login-state, records and actions.',
+      what: 'A small portal showing what an internal interface could look like — login, records list, detail view and one or two actions like approve or export.',
+      ins: 'records · roles · actions',
+      steps: 'auth → list → view → act',
+      outs: 'portal ui · records · audit',
+      who: 'Any team that wants to give a stakeholder group a small, focused interface.',
+      build: 'This could become a full internal portal for any business.',
+      thumb: 'portal',
+    },
+  };
+
+  function buildPreviewMarkup(thumb) {
+    // re-use thumb HTML from a card if it exists; otherwise simple placeholder
+    const sample = $(`.card .thumb-${thumb}`);
+    if (sample) return sample.cloneNode(true).outerHTML;
+    return `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--fg-dim);font-family:var(--mono);font-size:11px;letter-spacing:.18em">PREVIEW · ${thumb}</div>`;
+  }
+
+  function fillLearn(id) {
+    const d = learnContent[id];
+    if (!d) return;
+    $('#learnTitle').textContent = d.title;
+    $('#learnDesc').textContent = d.desc;
+    $('#learnId').textContent = id.toUpperCase();
+    $('#learnCat').textContent = '// ' + d.cat.toUpperCase();
+    $('#learnWhat').textContent = d.what;
+    $('#learnIn').textContent = d.ins;
+    $('#learnSteps').textContent = d.steps;
+    $('#learnOut').textContent = d.outs;
+    $('#learnWho').textContent = d.who;
+    $('#learnBuild').textContent = d.build;
+    const chip = $('#learnChip');
+    chip.className = 'mx-chip ' + d.status;
+    chip.innerHTML = `<i></i>${d.status.toUpperCase().replace('SOON','COMING SOON')}`;
+    $('#learnPreview').innerHTML = buildPreviewMarkup(d.thumb);
+    const openBtn = $('#learnOpenBtn');
+    if (['live','beta','new'].includes(d.status) && d.openUrl) {
+      openBtn.hidden = false;
+      openBtn.href = d.openUrl;
+    } else {
+      openBtn.hidden = true;
+    }
+    // remember which app for the "Interested" jump
+    learnBackdrop.dataset.appId = id;
+  }
+
+  function fillInterest(id, name, intent) {
+    if (id) {
+      $('#intAppId').value = id;
+      $('#intAppName').value = name;
+      $('#intTitle').textContent = `Interested in ${name}?`;
+      $('#intLead').textContent = `Tell us how you'd want to use ${name}.`;
+    } else {
+      $('#intAppId').value = '';
+      $('#intAppName').value = '';
+      $('#intTitle').textContent = 'Suggest a mini-app';
+      $('#intLead').textContent = "If you can describe the problem, we'll work out whether it fits the lab.";
+    }
+    if (intent) {
+      $$('.if-radio').forEach(r => {
+        const inp = $('input', r);
+        const active = inp.value === intent;
+        r.classList.toggle('is-active', active);
+        inp.checked = active;
+      });
+    }
+    // reset form state
+    const form = $('#intForm');
+    if (form) form.hidden = false;
+    $('#intSuccess').hidden = true;
+  }
+
+  /* card buttons */
+  cards.forEach(card => {
+    const id = card.dataset.id;
+    const name = card.dataset.name;
+    card.querySelector('.js-open-learn')?.addEventListener('click', e => {
+      e.stopPropagation();
+      fillLearn(id);
+      openModal(learnBackdrop);
+    });
+    card.querySelector('.js-open-interest')?.addEventListener('click', e => {
+      e.stopPropagation();
+      fillInterest(id, name);
+      openModal(intBackdrop);
+    });
+  });
+
+  /* "Suggest an app" buttons (hero + CTA) — open Interested with no app */
+  $$('.js-suggest-app, .hero-copy .js-open-interest').forEach(b => {
+    b.addEventListener('click', () => {
+      fillInterest(null, null, 'different');
+      openModal(intBackdrop);
+    });
+  });
+
+  /* jump from Learn More → Interested */
+  $('.js-from-learn-interest')?.addEventListener('click', () => {
+    const id = learnBackdrop.dataset.appId;
+    const d = learnContent[id];
+    if (d) fillInterest(id, d.title);
+    closeModal(learnBackdrop);
+    setTimeout(() => openModal(intBackdrop), 220);
+  });
+
+  /* intent radios */
+  $$('.if-radio').forEach(r => {
+    r.addEventListener('click', () => {
+      $$('.if-radio').forEach(x => x.classList.remove('is-active'));
+      r.classList.add('is-active');
+    });
+  });
+
+  /* form submit (no-op success state) */
+  const form = $('#intForm');
+  form?.addEventListener('submit', e => {
+    e.preventDefault();
+    form.hidden = true;
+    $('#intSuccess').hidden = false;
+  });
+  $('#intKeepBrowsing')?.addEventListener('click', () => closeModal(intBackdrop));
+
+  /* initial reveal */
+  // trigger first batch of card reveals immediately for cards already in viewport
+  setTimeout(() => {
+    cards.forEach((c, i) => {
+      const rect = c.getBoundingClientRect();
+      if (rect.top < window.innerHeight) {
+        setTimeout(() => c.classList.add('in'), 70 * (i % 10));
+      }
+    });
+  }, 50);
+
+})();

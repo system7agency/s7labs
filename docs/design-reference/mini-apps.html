@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>S7 Labs — Mini Apps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="mini-apps.css?v=1">
+</head>
+<body>
+
+<div class="bg-stack" aria-hidden="true">
+  <svg id="aurora" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <radialGradient id="ag1" cx="20%" cy="18%" r="35%">
+        <stop offset="0%" stop-color="#04E3EE" stop-opacity="0.32"/>
+        <stop offset="100%" stop-color="#04E3EE" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="ag2" cx="82%" cy="62%" r="40%">
+        <stop offset="0%" stop-color="#2BA6FF" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="#2BA6FF" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="1440" height="900" fill="url(#ag1)"/>
+    <rect width="1440" height="900" fill="url(#ag2)"/>
+  </svg>
+  <div class="bg-dots"></div>
+</div>
+<div class="bg-grain" aria-hidden="true"></div>
+<div class="bg-spotlight" aria-hidden="true"></div>
+
+<header id="siteHeader">
+  <div class="header-left">
+    <a href="#" class="back-link" aria-label="Back to system7">
+      <span class="arr">←</span> <span>Back to system7</span>
+    </a>
+  </div>
+  <div class="wordmark"><span class="dot"></span>S7 LABS</div>
+  <div class="header-right">
+    <a href="https://www.linkedin.com" class="li-btn" target="_blank" rel="noreferrer" aria-label="LinkedIn">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.86 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1 4.98 2.12 4.98 3.5zM.22 8h4.56v15.5H.22V8zm7.34 0h4.37v2.12h.06c.61-1.16 2.1-2.38 4.32-2.38 4.62 0 5.47 3.04 5.47 7v8.76h-4.56v-7.77c0-1.85-.03-4.23-2.58-4.23-2.58 0-2.97 2.02-2.97 4.1v7.9H7.56V8z"/></svg>
+      <span class="li-label">LINKEDIN</span>
+    </a>
+    <a href="#cta" class="phone-pill">
+      <span class="live-dot"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/></svg>
+      <span>Talk to System<sup>7</sup></span>
+    </a>
+  </div>
+</header>
+
+<main>
+
+  <div class="page-eyebrow">
+    <span>ROUTE_05 <span class="slash">/</span> <span class="v">MINI APPS</span></span>
+    <span class="right">// live software products</span>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       HERO — compact, with 3D app shelf
+       ────────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-grid">
+
+      <div class="hero-copy">
+        <div class="hero-eyebrow">
+          <span class="accent-dot"></span>
+          <span>S7_MINI-APPS <span class="v">//</span> LIVE SOFTWARE PRODUCTS</span>
+        </div>
+
+        <h1 class="hero-title">
+          <span class="l1"><span class="typed" data-text="Test small software products"></span><span class="caret"></span></span>
+          <span class="l2"><span class="accent-text">before you build big ones.</span></span>
+        </h1>
+
+        <p class="hero-sub">
+          Explore live mini-apps built by System7. Each one is a compact product you can open, test and learn from — showing how useful software can solve specific problems, connect ideas and turn capability into something tangible.
+        </p>
+
+        <div class="cta-row">
+          <a href="#gallery" class="btn"><span>Explore mini-apps</span><span class="arr">→</span></a>
+          <button type="button" class="btn ghost js-open-interest" data-app=""><span>Suggest an app</span></button>
+        </div>
+
+        <div class="hero-status">
+          <span class="livedot"></span>
+          <span class="cycler" id="heroCycler">app.loaded</span>
+        </div>
+      </div>
+
+      <!-- 3D APP SHELF -->
+      <div class="shelf" id="shelf" aria-hidden="true">
+        <div class="shelf-floats">
+          <span class="sf sf-1"><i></i>live.demo</span>
+          <span class="sf sf-2"><i></i>app.ready</span>
+          <span class="sf sf-3"><i></i>try.now</span>
+          <span class="sf sf-4"><i></i>mini.product</span>
+          <span class="sf sf-5"><i></i>built.by.s7</span>
+          <span class="sf sf-6"><i></i>launchable</span>
+        </div>
+
+        <div class="shelf-stage">
+          <!-- back layer -->
+          <div class="sc sc-l3 sc-1">
+            <div class="sc-chip live"><i></i>LIVE</div>
+            <div class="sc-thumb sc-thumb-chart"><i style="--w:30%"></i><i style="--w:55%"></i><i style="--w:42%"></i><i style="--w:74%"></i><i style="--w:60%"></i></div>
+            <div class="sc-name">VSignal</div>
+          </div>
+          <div class="sc sc-l3 sc-2">
+            <div class="sc-chip beta"><i></i>BETA</div>
+            <div class="sc-thumb sc-thumb-rows"><span></span><span></span><span></span><span></span></div>
+            <div class="sc-name">CSV Cleanup</div>
+          </div>
+
+          <!-- mid layer -->
+          <div class="sc sc-l2 sc-3">
+            <div class="sc-chip new"><i></i>NEW</div>
+            <div class="sc-thumb sc-thumb-grid"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="sc-name">Decision Matrix</div>
+          </div>
+          <div class="sc sc-l2 sc-4">
+            <div class="sc-chip beta"><i></i>BETA</div>
+            <div class="sc-thumb sc-thumb-doc">
+              <span class="ln"></span><span class="ln hi"></span><span class="ln"></span><span class="ln hi"></span><span class="ln"></span>
+            </div>
+            <div class="sc-name">Doc Intelligence</div>
+          </div>
+
+          <!-- front layer (focus) -->
+          <div class="sc sc-l1 sc-5 sc-focus">
+            <div class="sc-chip live"><i></i>LIVE</div>
+            <div class="sc-thumb sc-thumb-chat">
+              <span class="bb bb-l"><i></i><i style="width:60%"></i></span>
+              <span class="bb bb-r"><i style="width:80%"></i><i style="width:40%"></i></span>
+              <span class="bb bb-l bb-cal"><i class="cal"></i></span>
+            </div>
+            <div class="sc-name">Meet-Ting</div>
+            <div class="sc-meta">ai · scheduling · email · whatsapp</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       §01 — HOW IT WORKS (compact 3-step)
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec sec-hiw reveal" data-sec="hiw">
+    <div class="hiw-head">
+      <div class="hiw-eye"><span class="n">// 01 / 03</span> <span class="v">HOW IT WORKS</span></div>
+      <h2 class="hiw-title">Browse. <span class="accent-text">Test.</span> Register interest.</h2>
+      <p class="hiw-sub">These are not case studies. They are working products you can open and use directly.</p>
+    </div>
+    <div class="hiw-steps">
+      <article class="hiw-step">
+        <div class="hs-num">01</div>
+        <div class="hs-lbl">BROWSE</div>
+        <p>Move through a shelf of live mini-products, each designed around a specific problem or interaction.</p>
+      </article>
+      <article class="hiw-step">
+        <div class="hs-num">02</div>
+        <div class="hs-lbl">TEST</div>
+        <p>Open apps directly from the card or use the app preview to understand how the product works.</p>
+      </article>
+      <article class="hiw-step">
+        <div class="hs-num">03</div>
+        <div class="hs-lbl">REGISTER INTEREST</div>
+        <p>If an app is relevant, click Interested and S7 can turn the idea into a tailored build.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       MARKETPLACE TOOLBAR
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec sec-gallery" id="gallery" data-sec="gallery">
+    <div class="gallery-head reveal">
+      <div class="gh-eye"><span class="n">// 02 / 03</span> <span class="v">LIVE GALLERY</span></div>
+      <h2 class="gh-title">Open, <span class="accent-text">test, explore.</span></h2>
+    </div>
+
+    <div class="toolbar reveal" id="toolbar">
+      <div class="tb-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic-search"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" id="searchInput" placeholder="search mini-apps..." />
+        <span class="kbd">/</span>
+      </div>
+
+      <div class="tb-chips" id="chips">
+        <button class="chip is-active" data-cat="all">ALL</button>
+        <button class="chip" data-cat="ai">AI</button>
+        <button class="chip" data-cat="documents">DOCUMENTS</button>
+        <button class="chip" data-cat="dashboards">DASHBOARDS</button>
+        <button class="chip" data-cat="calculators">CALCULATORS</button>
+        <button class="chip" data-cat="data">DATA</button>
+        <button class="chip" data-cat="operations">OPERATIONS</button>
+        <button class="chip" data-cat="utilities">UTILITIES</button>
+        <button class="chip" data-cat="experimental">EXPERIMENTAL</button>
+      </div>
+
+      <div class="tb-controls">
+        <div class="tb-sizer" id="sizer" aria-label="Card size">
+          <button class="sz" data-size="3" title="Focus · 3 per row">
+            <svg viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="3" width="5" height="10" rx="1"/><rect x="5.5" y="3" width="5" height="10" rx="1"/><rect x="11" y="3" width="5" height="10" rx="1"/></svg>
+          </button>
+          <button class="sz" data-size="4" title="Balanced · 4 per row">
+            <svg viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="3" width="3.5" height="10" rx="1"/><rect x="4" y="3" width="3.5" height="10" rx="1"/><rect x="8" y="3" width="3.5" height="10" rx="1"/><rect x="12" y="3" width="3.5" height="10" rx="1"/></svg>
+          </button>
+          <button class="sz is-active" data-size="5" title="Compact · 5 per row">
+            <svg viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="3" width="2.6" height="10" rx="0.6"/><rect x="3.1" y="3" width="2.6" height="10" rx="0.6"/><rect x="6.2" y="3" width="2.6" height="10" rx="0.6"/><rect x="9.3" y="3" width="2.6" height="10" rx="0.6"/><rect x="12.4" y="3" width="2.6" height="10" rx="0.6"/></svg>
+          </button>
+        </div>
+
+        <div class="tb-sort" id="sort">
+          <button class="sort-btn">
+            <span class="sort-lbl">FEATURED</span>
+            <svg viewBox="0 0 12 12" fill="currentColor"><path d="M2 4l4 4 4-4"/></svg>
+          </button>
+          <ul class="sort-menu" role="menu">
+            <li data-sort="featured" class="is-active">Featured</li>
+            <li data-sort="newest">Newest</li>
+            <li data-sort="most-used">Most Used</li>
+            <li data-sort="quickest">Quickest to Try</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-meta">
+      <span id="resultCount">12 apps</span>
+      <span class="dt">·</span>
+      <span><span class="v">3 live</span></span>
+      <span class="dt">·</span>
+      <span><span class="amb">2 beta</span></span>
+      <span class="dt">·</span>
+      <span><span class="vv">1 new</span></span>
+      <span class="dt">·</span>
+      <span>2 prototype</span>
+      <span class="dt">·</span>
+      <span class="dim">4 coming soon</span>
+    </div>
+
+    <!-- GRID -->
+    <div class="grid grid-5" id="grid">
+
+      <!-- 01 — Meet-Ting -->
+      <article class="card" data-cat="operations ai" data-status="live" data-id="meet-ting" data-name="Meet-Ting" data-desc="AI scheduling that books meetings over email and WhatsApp.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-chat" data-thumb="chat">
+              <span class="bb bb-l"><i></i><i style="width:60%"></i></span>
+              <span class="bb bb-r"><i style="width:80%"></i><i style="width:40%"></i></span>
+              <span class="bb bb-l bb-cal"><i class="cal"></i>10:30 — Wed</span>
+            </div>
+            <div class="card-chip live"><i></i>LIVE</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">AI scheduling agent that handles back-and-forth booking over email and WhatsApp until a slot is confirmed.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>email · whatsapp · calendar</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>booked slot · invite · confirmation</span></div>
+            </div>
+            <p class="cb-build">Could become a full inbox-attached scheduling assistant.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Meet-Ting</div>
+          <p class="card-sub">AI scheduling that books meetings over email and WhatsApp.</p>
+          <div class="card-tags"><span>scheduling</span><span>email</span><span>whatsapp</span><span>ai</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 02 — VSignal -->
+      <article class="card" data-cat="data ai" data-status="live" data-id="vsignal" data-name="VSignal" data-desc="Real-time crypto price tracking and AI-generated trade signals.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-chart" data-thumb="chart">
+              <svg viewBox="0 0 100 60" preserveAspectRatio="none" class="t-line">
+                <polyline points="0,42 8,38 16,44 24,30 32,36 40,22 48,28 56,18 64,24 72,12 80,18 88,10 100,16" fill="none" stroke="currentColor" stroke-width="1.4"/>
+              </svg>
+              <span class="sig sig-1"></span>
+              <span class="sig sig-2"></span>
+              <span class="sig sig-3"></span>
+            </div>
+            <div class="card-chip live"><i></i>LIVE</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Real-time price tracking with AI signal generation across configurable crypto pairs.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>pair · timeframe · indicators</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>signal · confidence · alert</span></div>
+            </div>
+            <p class="cb-build">Could become a full trading-signal desk for crypto operators.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">VSignal</div>
+          <p class="card-sub">Real-time crypto price tracking and AI-generated trade signals.</p>
+          <div class="card-tags"><span>crypto</span><span>signals</span><span>real-time</span><span>alerts</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 03 — Document Intelligence Tester -->
+      <article class="card" data-cat="documents ai" data-status="beta" data-id="doc-intelligence" data-name="Document Intelligence Tester" data-desc="Upload a document and see structured extraction, summary and classification in action.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-doc" data-thumb="doc">
+              <span class="ln" style="width:90%"></span>
+              <span class="ln hi" style="width:60%"></span>
+              <span class="ln" style="width:80%"></span>
+              <span class="ln hi" style="width:45%"></span>
+              <span class="ln" style="width:75%"></span>
+              <span class="ln hi" style="width:55%"></span>
+            </div>
+            <div class="card-chip beta"><i></i>BETA</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Drop in a PDF and watch the system extract fields, classify the document, and summarise key sections.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>pdf · docx · scanned image</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>fields · summary · classification</span></div>
+            </div>
+            <p class="cb-build">Could become a full document-intake pipeline for any team.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Document Intelligence Tester</div>
+          <p class="card-sub">Upload a document and see structured extraction, summary and classification in action.</p>
+          <div class="card-tags"><span>pdf</span><span>extract</span><span>summary</span><span>table</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 04 — CSV Cleanup Studio -->
+      <article class="card" data-cat="data utilities" data-status="beta" data-id="csv-cleanup" data-name="CSV Cleanup Studio" data-desc="Drop in messy spreadsheet data and preview cleaned, normalised outputs.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-rows" data-thumb="rows">
+              <span class="rr"><i style="width:30%"></i><i style="width:48%;opacity:.4"></i><i style="width:22%"></i></span>
+              <span class="rr"><i style="width:42%"></i><i style="width:30%"></i><i style="width:35%;opacity:.3"></i></span>
+              <span class="rr"><i style="width:28%"></i><i style="width:54%"></i><i style="width:32%"></i></span>
+              <span class="rr rr-out"><i style="width:32%"></i><i style="width:42%"></i><i style="width:30%"></i></span>
+              <span class="rr rr-out"><i style="width:30%"></i><i style="width:40%"></i><i style="width:34%"></i></span>
+            </div>
+            <div class="card-chip beta"><i></i>BETA</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Paste or drop a messy CSV, choose a target schema, and preview the cleaned and normalised output before export.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>csv · paste · upload</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>clean csv · json · validated</span></div>
+            </div>
+            <p class="cb-build">Could become a full data-quality console for ops teams.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">CSV Cleanup Studio</div>
+          <p class="card-sub">Drop in messy spreadsheet data and preview cleaned, normalised outputs.</p>
+          <div class="card-tags"><span>csv</span><span>clean</span><span>format</span><span>export</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 05 — Decision Matrix Builder -->
+      <article class="card" data-cat="utilities ai" data-status="new" data-id="decision-matrix" data-name="Decision Matrix Builder" data-desc="Compare options using weighted criteria and generate a clear recommendation.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-matrix" data-thumb="matrix">
+              <span class="mx"></span><span class="mx"></span><span class="mx mx-hi"></span>
+              <span class="mx"></span><span class="mx mx-hi"></span><span class="mx"></span>
+              <span class="mx mx-hi"></span><span class="mx"></span><span class="mx"></span>
+            </div>
+            <div class="card-chip new"><i></i>NEW</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Define options and weighted criteria, score each cell, and let the matrix produce a ranked recommendation.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>options · criteria · weights</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>scores · ranking · export</span></div>
+            </div>
+            <p class="cb-build">Could become a full decision-support tool for ops or product teams.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Decision Matrix Builder</div>
+          <p class="card-sub">Compare options using weighted criteria and generate a clear recommendation.</p>
+          <div class="card-tags"><span>score</span><span>rank</span><span>compare</span><span>export</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 06 — Policy Checker -->
+      <article class="card" data-cat="documents ai" data-status="prototype" data-id="policy-checker" data-name="Policy Checker" data-desc="Paste policy text and check it against configurable rules or requirements.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-doc thumb-policy" data-thumb="policy">
+              <span class="ln" style="width:88%"></span>
+              <span class="ln flag" style="width:62%"></span>
+              <span class="ln" style="width:80%"></span>
+              <span class="ln" style="width:90%"></span>
+              <span class="ln flag" style="width:48%"></span>
+              <span class="ln" style="width:70%"></span>
+            </div>
+            <div class="card-chip prototype"><i></i>PROTOTYPE</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Configure a ruleset, paste any policy or contract text, and flag missing clauses or violations.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>policy text · rules · standards</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>flagged sections · risk notes</span></div>
+            </div>
+            <p class="cb-build">Could become a full compliance review console.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Policy Checker</div>
+          <p class="card-sub">Paste policy text and check it against configurable rules or requirements.</p>
+          <div class="card-tags"><span>rules</span><span>review</span><span>risk</span><span>flag</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 07 — Knowledge Base Finder -->
+      <article class="card" data-cat="ai experimental" data-status="prototype" data-id="kb-finder" data-name="Knowledge Base Finder" data-desc="Ask a question and see how an internal knowledge search experience could work.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-kb" data-thumb="kb">
+              <div class="kb-q"><span class="kbc"></span>how do refunds work?</div>
+              <div class="kb-srcs">
+                <span class="kb-src"></span>
+                <span class="kb-src kb-src-hi"></span>
+                <span class="kb-src"></span>
+                <span class="kb-src kb-src-hi"></span>
+              </div>
+            </div>
+            <div class="card-chip prototype"><i></i>PROTOTYPE</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Type a question and watch matched sources light up, with a synthesised answer drafted alongside.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>query · context · scope</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>answer · sources · confidence</span></div>
+            </div>
+            <p class="cb-build">Could become a full internal knowledge assistant.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Knowledge Base Finder</div>
+          <p class="card-sub">Ask a question and see how an internal knowledge search experience could work.</p>
+          <div class="card-tags"><span>search</span><span>answer</span><span>sources</span><span>chat</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 08 — Brief Generator -->
+      <article class="card" data-cat="ai utilities" data-status="soon" data-id="brief-generator" data-name="Brief Generator" data-desc="Turn rough notes into a structured brief, plan or project outline.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-brief" data-thumb="brief">
+              <div class="br-left">
+                <span class="scribble"></span>
+                <span class="scribble" style="width:70%"></span>
+                <span class="scribble" style="width:55%"></span>
+                <span class="scribble" style="width:80%"></span>
+              </div>
+              <div class="br-arrow">→</div>
+              <div class="br-right">
+                <span class="br-line br-h"></span>
+                <span class="br-line" style="width:90%"></span>
+                <span class="br-line" style="width:70%"></span>
+                <span class="br-line br-h" style="width:60%"></span>
+                <span class="br-line" style="width:80%"></span>
+              </div>
+            </div>
+            <div class="card-chip soon"><i></i>COMING SOON</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Drop in messy notes or voice transcript and get a structured brief with headings, bullet points and next steps.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>notes · transcript · prompt</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>brief · plan · outline</span></div>
+            </div>
+            <p class="cb-build">Could become a full briefing assistant for any planning team.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Brief Generator</div>
+          <p class="card-sub">Turn rough notes into a structured brief, plan or project outline.</p>
+          <div class="card-tags"><span>brief</span><span>generate</span><span>structure</span><span>copy</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 09 — Report Snapshot Builder -->
+      <article class="card" data-cat="dashboards data" data-status="soon" data-id="report-snapshot" data-name="Report Snapshot Builder" data-desc="Convert a simple data input into a clean executive-style report card.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-report" data-thumb="report">
+              <div class="rp-row">
+                <span class="rp-k"><i style="height:60%"></i></span>
+                <span class="rp-k"><i style="height:40%"></i></span>
+                <span class="rp-k"><i style="height:80%"></i></span>
+              </div>
+              <span class="rp-line" style="width:90%"></span>
+              <span class="rp-line" style="width:60%"></span>
+            </div>
+            <div class="card-chip soon"><i></i>COMING SOON</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Feed in a CSV or query result and generate a polished executive snapshot suitable for PDF export.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>csv · query · template</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>report card · pdf · charts</span></div>
+            </div>
+            <p class="cb-build">Could become a full lightweight BI-output engine.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Report Snapshot Builder</div>
+          <p class="card-sub">Convert a simple data input into a clean executive-style report card.</p>
+          <div class="card-tags"><span>dashboard</span><span>summary</span><span>charts</span><span>pdf</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 10 — Form-to-Workflow -->
+      <article class="card" data-cat="utilities operations" data-status="soon" data-id="form-workflow" data-name="Form-to-Workflow Prototype" data-desc="Submit a structured request and see how it could route into a system or task queue.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-form" data-thumb="form">
+              <div class="fm-form">
+                <span class="fm-ln" style="width:80%"></span>
+                <span class="fm-ln" style="width:60%"></span>
+                <span class="fm-ln fm-ln-on" style="width:90%"></span>
+                <span class="fm-btn"></span>
+              </div>
+              <span class="fm-arrow"></span>
+              <div class="fm-queue">
+                <span class="fm-q"></span><span class="fm-q"></span><span class="fm-q fm-q-on"></span>
+              </div>
+            </div>
+            <div class="card-chip soon"><i></i>COMING SOON</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Configure form → routing → queue and watch a submitted request flow into the right place automatically.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>form fields · rules · target</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>task · status · audit</span></div>
+            </div>
+            <p class="cb-build">Could become a full request-routing layer for any internal ops team.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Form-to-Workflow Prototype</div>
+          <p class="card-sub">Submit a structured request and see how it could route into a system or task queue.</p>
+          <div class="card-tags"><span>form</span><span>route</span><span>status</span><span>queue</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 11 — Content Transformer -->
+      <article class="card" data-cat="ai utilities" data-status="soon" data-id="content-transformer" data-name="Content Transformer" data-desc="Turn one piece of content into multiple useful formats, tones or summaries.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-fan" data-thumb="fan">
+              <span class="fan fan-src"></span>
+              <span class="fan fan-1"></span>
+              <span class="fan fan-2"></span>
+              <span class="fan fan-3"></span>
+            </div>
+            <div class="card-chip soon"><i></i>COMING SOON</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">Paste any content and generate variants — short summary, long-form, social-style, with options for tone and target audience.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>content · tone · format</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>variants · summary · rewrite</span></div>
+            </div>
+            <p class="cb-build">Could become a full multi-format content engine.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Content Transformer</div>
+          <p class="card-sub">Turn one piece of content into multiple useful formats, tones or summaries.</p>
+          <div class="card-tags"><span>rewrite</span><span>format</span><span>summary</span><span>variants</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+      <!-- 12 — Mini Portal Preview -->
+      <article class="card" data-cat="utilities experimental" data-status="soon" data-id="mini-portal" data-name="Mini Portal Preview" data-desc="Explore a small portal-style interface with login-state, records and actions.">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-thumb thumb-portal" data-thumb="portal">
+              <div class="pt-top"><span class="pt-d"></span><span class="pt-bar"></span></div>
+              <div class="pt-row"><span></span><span style="width:30%"></span></div>
+              <div class="pt-row pt-row-hi"><span></span><span style="width:48%"></span></div>
+              <div class="pt-row"><span></span><span style="width:24%"></span></div>
+            </div>
+            <div class="card-chip soon"><i></i>COMING SOON</div>
+          </div>
+          <div class="card-face card-back">
+            <p class="cb-desc">A small portal showing what an internal interface could look like — login, records list, detail view and one or two actions.</p>
+            <div class="cb-io">
+              <div class="cb-row"><span class="lbl">IN</span><span>records · roles · actions</span></div>
+              <div class="cb-row"><span class="lbl">OUT</span><span>portal ui · records · audit</span></div>
+            </div>
+            <p class="cb-build">Could become a full internal portal for any business.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-name">Mini Portal Preview</div>
+          <p class="card-sub">Explore a small portal-style interface with login-state, records and actions.</p>
+          <div class="card-tags"><span>portal</span><span>ui</span><span>records</span><span>actions</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-primary js-open-interest"><span>Interested</span></button>
+          <button class="ca-btn ca-ghost js-open-learn"><span>Learn more</span><span class="arr">→</span></button>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="empty-state" id="emptyState" hidden>
+      <div class="es-mark">∅</div>
+      <div class="es-title">No apps match this filter</div>
+      <div class="es-sub">Try a different category or clear the search.</div>
+      <button class="ca-btn ca-ghost" id="resetFilters"><span>Reset filters</span></button>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────────────────────────
+       FINAL CTA
+       ────────────────────────────────────────────────────────────── -->
+  <section class="sec" id="cta">
+    <div class="cta-block reveal">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+
+      <div class="cta-inner">
+        <div class="eye">// 03 / 03 · <span class="v">BUILD IT</span></div>
+        <h2>Have an idea for a <span class="accent-text">mini-app?</span></h2>
+        <p class="sub">If you can describe the problem, System7 can turn it into a small product people can test. Start with a focused mini-app, then scale it into a fuller product, platform or agent-enabled system when the value is clear.</p>
+        <div class="row">
+          <button type="button" class="btn js-suggest-app"><span>Suggest an app</span><span class="arr">→</span></button>
+          <a href="#" class="btn ghost"><span>Start a build</span></a>
+        </div>
+        <div class="status-row">
+          <span class="dot"></span><span>RESPONSE WITHIN <span class="v">24H</span></span>
+          <span class="sep"></span><span>UK ENGINEERING</span>
+          <span class="sep"></span><span>UK TIMEZONE</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-left">
+      <span>// SYSTEM7 — S7 LABS</span>
+    </div>
+    <div class="foot-right">
+      <span>routes: revops · creator · build · agent · <span style="color:var(--accent)">mini-apps</span></span>
+    </div>
+  </footer>
+
+</main>
+
+<!-- ──────────────────────────────────────────────────────────────
+     LEARN MORE MODAL
+     ────────────────────────────────────────────────────────────── -->
+<div class="mx-backdrop" id="learnBackdrop" hidden>
+  <div class="mx mx-learn" role="dialog" aria-modal="true" aria-labelledby="learnTitle">
+    <button class="mx-close" aria-label="Close" data-close>×</button>
+    <div class="mx-grid">
+      <div class="mx-left">
+        <div class="mx-chip" id="learnChip"><i></i>LIVE</div>
+        <div class="mx-preview" id="learnPreview"></div>
+        <div class="mx-cat" id="learnCat">CATEGORY · AI</div>
+      </div>
+      <div class="mx-right">
+        <div class="mx-eye">// MINI-APP · <span class="v" id="learnId">ID</span></div>
+        <h3 id="learnTitle">App Name</h3>
+        <p class="mx-lead" id="learnDesc">App description.</p>
+
+        <div class="mx-section">
+          <div class="ms-lbl">WHAT IT DOES</div>
+          <p id="learnWhat">2–3 lines plain language description.</p>
+        </div>
+        <div class="mx-section">
+          <div class="ms-lbl">HOW IT WORKS</div>
+          <div class="ms-io">
+            <div class="ms-row"><span class="lbl">IN</span><span id="learnIn">inputs</span></div>
+            <div class="ms-row"><span class="lbl">↓</span><span id="learnSteps">processing steps</span></div>
+            <div class="ms-row"><span class="lbl">OUT</span><span id="learnOut">outputs</span></div>
+          </div>
+        </div>
+        <div class="mx-section">
+          <div class="ms-lbl">WHO IT'S FOR</div>
+          <p id="learnWho">Team or workflow this fits.</p>
+        </div>
+        <div class="mx-section">
+          <div class="ms-lbl">BUILD POTENTIAL</div>
+          <p id="learnBuild" class="v-text">This could become a full ...</p>
+        </div>
+
+        <div class="mx-actions">
+          <button class="ca-btn ca-primary js-from-learn-interest"><span>Interested</span></button>
+          <a href="#" class="ca-btn ca-ghost" id="learnOpenBtn" hidden><span>Open app</span><span class="arr">→</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────────────────────────────────────────────────────
+     INTERESTED MODAL
+     ────────────────────────────────────────────────────────────── -->
+<div class="mx-backdrop" id="intBackdrop" hidden>
+  <div class="mx mx-int" role="dialog" aria-modal="true" aria-labelledby="intTitle">
+    <button class="mx-close" aria-label="Close" data-close>×</button>
+    <div class="mx-eye">// REGISTER INTEREST</div>
+    <h3 id="intTitle">Interested in this app?</h3>
+    <p class="mx-lead mx-lead-int" id="intLead">Tell us a little about how you'd want to use it.</p>
+
+    <form class="int-form" id="intForm" autocomplete="on">
+      <div class="if-row">
+        <label class="if-field">
+          <span class="if-lbl">NAME</span>
+          <input type="text" name="name" required placeholder="Your name" />
+        </label>
+        <label class="if-field">
+          <span class="if-lbl">EMAIL</span>
+          <input type="email" name="email" required placeholder="you@company.com" />
+        </label>
+      </div>
+      <label class="if-field">
+        <span class="if-lbl">COMPANY <span class="opt">· optional</span></span>
+        <input type="text" name="company" placeholder="Where you work" />
+      </label>
+
+      <div class="if-field">
+        <span class="if-lbl">INTEREST TYPE</span>
+        <div class="if-radios" role="radiogroup" id="intentRadios">
+          <label class="if-radio is-active">
+            <input type="radio" name="intent" value="use" checked />
+            <span>Use this app</span>
+          </label>
+          <label class="if-radio">
+            <input type="radio" name="intent" value="similar" />
+            <span>Build something similar</span>
+          </label>
+          <label class="if-radio">
+            <input type="radio" name="intent" value="customise" />
+            <span>Customise this</span>
+          </label>
+          <label class="if-radio">
+            <input type="radio" name="intent" value="different" />
+            <span>Discuss a different idea</span>
+          </label>
+        </div>
+      </div>
+
+      <label class="if-field">
+        <span class="if-lbl">MESSAGE <span class="opt">· optional</span></span>
+        <textarea name="message" rows="3" placeholder="Anything specific?"></textarea>
+      </label>
+
+      <input type="hidden" name="app_id" id="intAppId" value="" />
+      <input type="hidden" name="app_name" id="intAppName" value="" />
+      <input type="hidden" name="source" value="mini-apps" />
+
+      <button class="ca-btn ca-primary if-submit" type="submit"><span>Register interest</span><span class="arr">→</span></button>
+    </form>
+
+    <div class="int-success" id="intSuccess" hidden>
+      <div class="is-mark">●</div>
+      <div class="is-title">Interest registered.</div>
+      <div class="is-sub">We'll come back to you within 24 hours.</div>
+      <button class="ca-btn ca-ghost" id="intKeepBrowsing"><span>Keep browsing mini-apps</span></button>
+    </div>
+  </div>
+</div>
+
+<script src="mini-apps.js?v=1"></script>
+</body>
+</html>
