@@ -795,7 +795,6 @@ main {
 
 .soon-row {
   margin: 20px auto 0;
-  max-width: calc(50% - 10px);
 }
 .route-card.soon {
   opacity: 0.42;
@@ -913,9 +912,6 @@ main {
   }
   .routes-grid {
     grid-template-columns: 1fr;
-  }
-  .soon-row {
-    max-width: 100%;
   }
   .route-card {
     padding: 28px 24px;
