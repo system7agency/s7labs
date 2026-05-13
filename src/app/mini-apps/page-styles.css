@@ -1264,35 +1264,9 @@
 .mini-apps-lab .card-inner {
   position: relative;
   height: 0;
-  padding-bottom: 62%;
-  perspective: 900px;
-  transform-style: preserve-3d;
-}
-.mini-apps-lab .card-face {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.mini-apps-lab .card-front {
-  transform: rotateY(0deg);
-}
-.mini-apps-lab .card-back {
-  transform: rotateY(180deg);
-  padding: 14px 14px 12px;
-  background: linear-gradient(180deg, #0c0c11, #080809);
+  padding-bottom: 42%;
+  overflow: hidden;
   border-bottom: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow-y: auto;
-}
-.mini-apps-lab .card:hover .card-front {
-  transform: rotateY(-180deg);
-}
-.mini-apps-lab .card:hover .card-back {
-  transform: rotateY(0deg);
 }
 
 .mini-apps-lab .card-thumb {
@@ -1300,7 +1274,6 @@
   inset: 0;
   padding: 14px;
   overflow: hidden;
-  border-bottom: 1px solid var(--border);
 }
 .mini-apps-lab .card-thumb::before {
   content: '';
@@ -1474,53 +1447,6 @@
   color: var(--accent);
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 4%, transparent);
-}
-
-.mini-apps-lab .card-back .cb-desc {
-  font-family: var(--mono);
-  font-size: 11.5px;
-  line-height: 1.55;
-  color: var(--fg);
-  margin: 0;
-  flex: 0 0 auto;
-}
-.mini-apps-lab .cb-io {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 0;
-  border-top: 1px dashed var(--border);
-  border-bottom: 1px dashed var(--border);
-}
-.mini-apps-lab .cb-row {
-  display: grid;
-  grid-template-columns: 32px 1fr;
-  gap: 8px;
-  align-items: center;
-  font-family: var(--mono);
-  font-size: 10.5px;
-}
-.mini-apps-lab .cb-row .lbl {
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  color: var(--accent);
-  text-transform: uppercase;
-}
-.mini-apps-lab .cb-row span:nth-child(2) {
-  color: var(--fg-muted);
-}
-.mini-apps-lab .cb-build {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  line-height: 1.5;
-  color: var(--accent);
-  margin: 0;
-  text-transform: lowercase;
-  letter-spacing: 0.02em;
-}
-.mini-apps-lab .cb-build::before {
-  content: '// ';
-  color: var(--fg-dim);
 }
 
 /* Thumb variants */
@@ -2600,11 +2526,5 @@
   }
   .mini-apps-lab #aurora {
     display: none;
-  }
-  .mini-apps-lab .card:hover .card-front {
-    transform: none;
-  }
-  .mini-apps-lab .card:hover .card-back {
-    transform: rotateY(180deg);
   }
 }

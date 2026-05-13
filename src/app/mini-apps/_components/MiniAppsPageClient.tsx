@@ -148,98 +148,17 @@ export function MiniAppsPageClient() {
             </button>
           </div>
         ) : (
-          (() => {
-            const filtersActive = category !== 'all' || query.trim() !== ''
-            const cardProps = (a: MiniApp) => ({
-              app: a,
-              onInterested: (x: MiniApp) => openInterested(x),
-              onLearnMore: (x: MiniApp) => setModal({ kind: 'learn', app: x }),
-              onLaunch: handleLaunch,
-            })
-
-            if (filtersActive) {
-              return (
-                <div className={gridClass}>
-                  {filtered.map((app) => (
-                    <MiniAppCard key={app.id} {...cardProps(app)} />
-                  ))}
-                </div>
-              )
-            }
-
-            const liveBand = filtered.filter((a) => a.status === 'live')
-            const newBand = filtered.filter((a) => a.status === 'new' || a.status === 'beta')
-            const labBand = filtered.filter(
-              (a) => a.status === 'prototype' || a.status === 'coming-soon'
-            )
-
-            return (
-              <>
-                {liveBand.length > 0 ? (
-                  <div className="band band-live">
-                    <div className="band-head">
-                      <div className="band-eye">
-                        <span className="band-dot" />
-                        LIVE NOW
-                      </div>
-                      <div className="band-meta">
-                        <span className="v">{liveBand.length} shipped</span>
-                        <span className="dt">·</span>
-                        <span>open and use directly</span>
-                      </div>
-                    </div>
-                    <div className="grid-2 grid">
-                      {liveBand.map((app) => (
-                        <MiniAppCard key={app.id} {...cardProps(app)} />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                {newBand.length > 0 ? (
-                  <div className="band band-new">
-                    <div className="band-head">
-                      <div className="band-eye">
-                        <span className="band-dot amb" />
-                        IN BETA / NEW
-                      </div>
-                      <div className="band-meta">
-                        <span className="amb">{newBand.length} testing</span>
-                        <span className="dt">·</span>
-                        <span>usable previews</span>
-                      </div>
-                    </div>
-                    <div className="grid-3 grid">
-                      {newBand.map((app) => (
-                        <MiniAppCard key={app.id} {...cardProps(app)} />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                {labBand.length > 0 ? (
-                  <div className="band band-lab">
-                    <div className="band-head">
-                      <div className="band-eye">
-                        <span className="band-dot dim" />
-                        IN THE LAB
-                      </div>
-                      <div className="band-meta">
-                        <span className="dim">{labBand.length} in development</span>
-                        <span className="dt">·</span>
-                        <span>register interest to shape them</span>
-                      </div>
-                    </div>
-                    <div className="grid-4 grid">
-                      {labBand.map((app) => (
-                        <MiniAppCard key={app.id} {...cardProps(app)} />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </>
-            )
-          })()
+          <div className={gridClass}>
+            {filtered.map((app) => (
+              <MiniAppCard
+                key={app.id}
+                app={app}
+                onInterested={(a) => openInterested(a)}
+                onLearnMore={(a) => setModal({ kind: 'learn', app: a })}
+                onLaunch={handleLaunch}
+              />
+            ))}
+          </div>
         )}
       </section>
 

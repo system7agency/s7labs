@@ -57,38 +57,15 @@ export function MiniAppCard({ app, onInterested, onLearnMore, onLaunch }: MiniAp
         aria-label={`Open ${app.name}`}
         style={{ cursor: 'pointer' }}
       >
-        <div className="card-face card-front">
-          <CardThumb thumb={app.thumb} />
-          <span className={`card-chip ${CHIP_CLASS[app.status]}`}>
-            <i />
-            {CHIP_LABEL[app.status]}
-          </span>
-        </div>
-        <div className="card-face card-back">
-          <p className="cb-desc">{app.learn_more.what_it_does}</p>
-          <div className="cb-io">
-            <div className="cb-row">
-              <span className="lbl">IN</span>
-              <span>{app.learn_more.how_it_works.inputs.join(' · ')}</span>
-            </div>
-            <div className="cb-row">
-              <span className="lbl">OUT</span>
-              <span>{app.learn_more.how_it_works.outputs.join(' · ')}</span>
-            </div>
-          </div>
-          <p className="cb-build">
-            {app.learn_more.build_potential.replace(/^Could become a? ?/i, '')}
-          </p>
-        </div>
+        <CardThumb thumb={app.thumb} />
+        <span className={`card-chip ${CHIP_CLASS[app.status]}`}>
+          <i />
+          {CHIP_LABEL[app.status]}
+        </span>
       </div>
       <div className="card-body">
         <div className="card-name">{app.name}</div>
         <p className="card-sub">{app.short_description}</p>
-        <div className="card-tags">
-          {app.tags.map((t) => (
-            <span key={t}>{t}</span>
-          ))}
-        </div>
       </div>
       <div className="card-actions">
         <button type="button" className="ca-btn ca-primary" onClick={handlePrimary}>
