@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
 import { APPS, type MiniApp } from '../_data/apps'
+import { FeaturedCard } from './FeaturedCard'
 import { HowItWorksSection } from './HowItWorksSection'
 import { InterestedModal } from './InterestedModal'
 import { LearnMoreModal } from './LearnMoreModal'
@@ -28,7 +29,7 @@ const STATUS_ORDER: Record<MiniApp['status'], number> = {
 export function MiniAppsPageClient() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
-  const [size, setSize] = useState(4)
+  const [size, setSize] = useState(5)
   const [sort, setSort] = useState<SortKey>('featured')
   const [modal, setModal] = useState<ModalState>({ kind: 'none' })
 
@@ -148,17 +149,44 @@ export function MiniAppsPageClient() {
             </button>
           </div>
         ) : (
-          <div className={gridClass}>
-            {filtered.map((app) => (
-              <MiniAppCard
-                key={app.id}
-                app={app}
-                onInterested={(a) => openInterested(a)}
-                onLearnMore={(a) => setModal({ kind: 'learn', app: a })}
-                onLaunch={handleLaunch}
-              />
-            ))}
-          </div>
+          (() => {
+            const filtersActive = category !== 'all' || query.trim() !== ''
+            const featured = filtersActive ? [] : filtered.filter((a) => a.status === 'live')
+            const rest = filtersActive ? filtered : filtered.filter((a) => a.status !== 'live')
+            return (
+              <>
+                {featured.length > 0 ? (
+                  <div className="featured-rail">
+                    {featured.map((app) => (
+                      <FeaturedCard
+                        key={app.id}
+                        app={app}
+                        onInterested={(a) => openInterested(a)}
+                        onLearnMore={(a) => setModal({ kind: 'learn', app: a })}
+                        onLaunch={handleLaunch}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+                {featured.length > 0 ? (
+                  <div className="rest-divider">
+                    <span>{'// MORE IN THE LAB'}</span>
+                  </div>
+                ) : null}
+                <div className={gridClass}>
+                  {rest.map((app) => (
+                    <MiniAppCard
+                      key={app.id}
+                      app={app}
+                      onInterested={(a) => openInterested(a)}
+                      onLearnMore={(a) => setModal({ kind: 'learn', app: a })}
+                      onLaunch={handleLaunch}
+                    />
+                  ))}
+                </div>
+              </>
+            )
+          })()
         )}
       </section>
 
