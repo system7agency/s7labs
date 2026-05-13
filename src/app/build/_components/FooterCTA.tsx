@@ -1,31 +1,34 @@
-import { CommissionCTA } from './CommissionCTA'
+import { StartBuildButton } from './StartBuildButton'
 
 export function FooterCTA() {
   return (
     <section className="sec">
-      <div className="cta-term reveal">
+      <div className="cta-block reveal">
         <span className="corner tl" />
         <span className="corner tr" />
         <span className="corner bl" />
         <span className="corner br" />
-        <div className="prompt-line">
-          <span className="p">system7 ~$</span>
-          <span>commission --build</span>
-          <span className="v">--problem-worth-solving</span>
+        <div className="eye">
+          {'// '}
+          <span className="v">READY</span>
         </div>
         <h2>
-          Got a problem <span className="accent-text">worth building for?</span>
+          Bring us the idea. <span className="accent-text">We&rsquo;ll build the system.</span>
         </h2>
         <p className="sub">
-          30-minute discovery call. Bring the problem. We&rsquo;ll bring the build plan.
+          If there is a product your team keeps describing, a tool your business keeps missing or a
+          system off-the-shelf software cannot quite solve, System7 can help define, design, build
+          and ship it.
         </p>
         <div className="row">
-          <CommissionCTA />
+          <StartBuildButton />
           <div className="status-row">
             <span className="dot" />
             <span>RESPONSE WITHIN 24H</span>
             <span className="sep" />
-            <span className="v">UK TIMEZONE</span>
+            <span className="v">UK ENGINEERING</span>
+            <span className="sep" />
+            <span>UK TIMEZONE</span>
           </div>
         </div>
       </div>
