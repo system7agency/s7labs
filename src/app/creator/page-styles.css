@@ -2,7 +2,11 @@
  * Creator Lab page styles — scoped under .creator-lab
  *
  * Mirrors the revops/page-styles.css naming and structure.
- * All rules are prefixed with .creator-lab to prevent bleed.
+ * Background layer (.bg-stack, #aurora, .bg-dots, .bg-grain,
+ * .bg-spotlight) and html/body resets are defined here just like
+ * every other page CSS in this project (they are not globally shared).
+ *
+ * All section rules are prefixed with .creator-lab to prevent bleed.
  *
  * Accent re-bound from design hex values to the sitewide
  * --accent (#4F8CFF) and --accent-dim / --accent-glow tokens.
@@ -31,6 +35,91 @@
   --sans: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+html {
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+  letter-spacing: -0.005em;
+  perspective: 1400px;
+}
+
+/* ─── Layered background (identical pattern to revops + landing) ─────────── */
+
+.bg-stack {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#aurora {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.85;
+  mix-blend-mode: screen;
+  filter: blur(40px) saturate(1.3);
+}
+
+.bg-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at center, var(--dot) 1px, transparent 1.2px);
+  background-size: var(--dot-gap, 28px) var(--dot-gap, 28px);
+  mask-image: radial-gradient(ellipse 100% 80% at 50% 40%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 80% at 50% 40%, #000 30%, transparent 100%);
+  opacity: 0.9;
+}
+
+.bg-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+}
+
+.bg-spotlight {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  left: var(--mx, 50%);
+  top: var(--my, 30%);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 10%, transparent),
+    transparent 60%
+  );
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.6;
+  filter: blur(20px);
+}
+
 /* ─── Page shell ─────────────────────────────────────────────────────────── */
 
 .creator-lab main {
@@ -53,6 +142,18 @@
 
 /* ─── Shared keyframes ────────────────────────────────────────────────────── */
 
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
 @keyframes cl-fadeIn {
   from {
     opacity: 0;
@@ -70,18 +171,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes cl-pulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--accent-glow);
-  }
-  70% {
-    box-shadow: 0 0 0 8px transparent;
-  }
-  100% {
-    box-shadow: 0 0 0 0 transparent;
   }
 }
 
@@ -161,7 +250,7 @@
   box-shadow: 0 0 6px var(--accent-glow);
   margin-right: 8px;
   vertical-align: 1px;
-  animation: cl-pulse 2.2s infinite;
+  animation: pulse 2.2s infinite;
 }
 
 .creator-lab .section-head {
@@ -1185,7 +1274,7 @@
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 6px var(--accent-glow);
-  animation: cl-pulse 2.2s infinite;
+  animation: pulse 2.2s infinite;
 }
 
 .creator-lab .proof-card.pending .proof-eyebrow .status-dot {
@@ -1300,7 +1389,7 @@
   border-radius: 50%;
   background: color-mix(in srgb, var(--accent) 80%, transparent);
   box-shadow: 0 0 6px var(--accent-glow);
-  animation: cl-pulse 2.4s infinite;
+  animation: pulse 2.4s infinite;
 }
 
 .creator-lab .footer-cta .accent-dot-row span:nth-child(2) {
