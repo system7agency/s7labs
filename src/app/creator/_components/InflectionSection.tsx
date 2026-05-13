@@ -1,63 +1,73 @@
 const RENTED = [
-  { icon: '⚡', text: 'Algorithm controls your reach' },
-  { icon: '📉', text: 'Revenue tied to post performance' },
-  { icon: '🔒', text: 'No direct access to your audience' },
-  { icon: '🚫', text: 'Platform can deplatform overnight' },
-]
+  { icn: 'IG', name: 'Instagram', arr: 'algorithm' },
+  { icn: 'TT', name: 'TikTok', arr: 'ad spend' },
+  { icn: 'YT', name: 'YouTube', arr: 'throttled' },
+  { icn: 'X', name: 'X / Twitter', arr: 'reach decay' },
+] as const
 
 const OWNED = [
-  { icon: '✓', text: 'Direct line to every subscriber' },
-  { icon: '✓', text: 'Revenue independent of content cycle' },
-  { icon: '✓', text: 'You own the data — full portability' },
-  { icon: '✓', text: 'Software compounds over time' },
-]
+  { icn: '▢', name: 'Product', arr: 'recurring' },
+  { icn: '▢', name: 'Brand', arr: 'compounding' },
+  { icn: '▢', name: 'Audience node', arr: 'directly reachable' },
+  { icn: '↗', name: 'Revenue', arr: 'retained' },
+] as const
 
 export function InflectionSection() {
   return (
-    <section className="section">
+    <section className="section reveal">
       <div className="section-head">
         <span className="section-eyebrow">
           <span className="accent-dot" />
-          {'// THE INFLECTION POINT'}
+          {'// 02 / 05 · THE INFLECTION'}
         </span>
-        <span className="section-num">02 / 06</span>
+        <span className="section-num">
+          02 / 05 · <span className="v">SHIFT</span>
+        </span>
       </div>
 
-      <div className="inflection-wrap">
-        <div className="inflection-copy">
-          <h2>
-            Stop renting your&nbsp;<span className="accent-text">audience.</span>
-          </h2>
+      <div className="grid-2 reverse">
+        <div className="copy">
+          <h2>From rented audience to owned audience.</h2>
           <p>
-            Every follower you have lives on rented land. Platforms change, algorithms shift, and
-            the revenue that came with them disappears.
+            Social platforms throttle organic reach. Ad models mature. Most creators rent their
+            audience — and that rental is getting more expensive every year.
           </p>
           <p>
-            The inflection point is a product — software that creates a direct, owned relationship
-            between you and the people who care about your work.
+            The creators who win the next decade are the ones who turn that rented audience into
+            something they own: a product, a brand, a business with recurring revenue. We build that
+            business with you.
           </p>
         </div>
-
-        <div className="inflection-compare">
-          <div className="compare-row">
-            <div className="compare-cell rented">
-              <div className="compare-label">Rented audience</div>
-              {RENTED.map((item) => (
-                <div key={item.text} className="compare-item">
-                  <span className="ci-icon">{item.icon}</span>
-                  <span>{item.text}</span>
-                </div>
-              ))}
+        <div className="visual">
+          <div className="rent-own">
+            <div className="col rented">
+              <div className="col-head">RENTED</div>
+              <h3 className="col-title">Platform-dependent</h3>
+              <div className="platforms">
+                {RENTED.map((r) => (
+                  <div key={r.name} className="row">
+                    <span className="icn">{r.icn}</span>
+                    <span>{r.name}</span>
+                    <span className="arr">{r.arr}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="meta">{'// reach diminishes over time'}</div>
             </div>
-
-            <div className="compare-cell owned">
-              <div className="compare-label">Owned platform</div>
-              {OWNED.map((item) => (
-                <div key={item.text} className="compare-item">
-                  <span className="ci-icon">{item.icon}</span>
-                  <span>{item.text}</span>
-                </div>
-              ))}
+            <div className="divider" aria-hidden="true" />
+            <div className="col owned">
+              <div className="col-head">OWNED</div>
+              <h3 className="col-title">Equity in your audience</h3>
+              <div className="owned-grid">
+                {OWNED.map((r) => (
+                  <div key={r.name} className="row">
+                    <span className="icn">{r.icn}</span>
+                    <span>{r.name}</span>
+                    <span className="arr">{r.arr}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="meta">{'// value compounds with reach'}</div>
             </div>
           </div>
         </div>

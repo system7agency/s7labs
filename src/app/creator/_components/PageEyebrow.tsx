@@ -1,11 +1,11 @@
 export function PageEyebrow() {
   return (
-    <div className="page-eyebrow-bar" aria-hidden="true">
-      <span className="route-tag">
+    <div className="page-eyebrow" aria-hidden="true">
+      <span className="left">
         <span className="accent-dot" />
-        ROUTE_02 / CREATOR LAB
+        ROUTE_02 <span className="b">/</span> <span className="v">CREATOR LAB</span>
       </span>
-      <span className="tagline">{'// own your audience'}</span>
+      <span className="right">{'// own your audience'}</span>
     </div>
   )
 }

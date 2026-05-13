@@ -1,108 +1,62 @@
-'use client'
-
-import { useEffect, useRef } from 'react'
-
 const STEPS = [
   {
     num: '01',
-    glyph: '◎',
-    title: 'Discovery',
-    desc: "We map your audience, what they'd pay for, and what your competitors don't offer.",
-    tag: '2–3 days',
+    eye: '// DISCOVERY',
+    ttl: 'Discovery',
+    time: 'Weeks 1–2',
+    desc: 'We listen. Understand your audience, content, and ambitions.',
   },
   {
     num: '02',
-    glyph: '◈',
-    title: 'Architecture',
-    desc: 'Product specification, tech stack selection, and UX blueprinting — built for your launch.',
-    tag: '1 week',
+    eye: '// ANALYSIS',
+    ttl: 'Analysis',
+    time: 'Weeks 2–4',
+    desc: 'Audience and product fit modeled with data. Not vibes.',
   },
   {
     num: '03',
-    glyph: '◉',
-    title: 'Build',
-    desc: 'Full-stack development with weekly check-ins. You see progress every step of the way.',
-    tag: '4–8 weeks',
+    eye: '// BUILD',
+    ttl: 'Build',
+    time: 'Weeks 4–12',
+    desc: 'Design, build, and ship the product. AI-native engineering.',
   },
   {
     num: '04',
-    glyph: '✦',
-    title: 'Launch',
-    desc: 'We deploy, you announce. Ongoing support, iterations, and feature expansion included.',
-    tag: 'Ongoing',
+    eye: '// LAUNCH',
+    ttl: 'Launch',
+    time: 'Weeks 12–26',
+    desc: 'Go to market. Iterate. Compound.',
   },
-]
+] as const
 
 export function ProcessSection() {
-  const stepRefs = useRef<(HTMLDivElement | null)[]>([])
-
-  useEffect(() => {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    if (prefersReduced) {
-      stepRefs.current.forEach((el) => {
-        if (el) el.classList.add('lit')
-      })
-      return
-    }
-
-    const observers: IntersectionObserver[] = []
-
-    stepRefs.current.forEach((el) => {
-      if (!el) return
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          if (entry?.isIntersecting) {
-            el.classList.add('lit')
-          }
-        },
-        { threshold: 0.35 }
-      )
-      obs.observe(el)
-      observers.push(obs)
-    })
-
-    return () => {
-      observers.forEach((o) => o.disconnect())
-    }
-  }, [])
-
   return (
-    <section className="section">
+    <section className="section reveal">
       <div className="section-head">
         <span className="section-eyebrow">
           <span className="accent-dot" />
-          {'// THE BUILD PROCESS'}
+          {'// 03 / 05 · PROCESS'}
         </span>
-        <span className="section-num">03 / 06</span>
+        <span className="section-num">
+          03 / 05 · <span className="v">6 MONTHS</span>
+        </span>
       </div>
 
-      <div className="process-intro">
-        <h2>
-          From idea to live product in <span className="accent-text">under 90 days.</span>
-        </h2>
+      <div className="copy process-intro">
+        <h2>From audience to product to exit.</h2>
         <p>
-          We run a tight, opinionated process. Four phases, weekly visibility, and a launch-ready
-          product at the end.
+          A 6-month cycle from first conversation to launched product. Each stage de-risks the next.
         </p>
       </div>
 
-      <div className="pipeline">
-        {STEPS.map((step, i) => (
-          <div
-            key={step.num}
-            className="pipeline-step"
-            ref={(el) => {
-              stepRefs.current[i] = el
-            }}
-          >
-            <div className="step-node" aria-hidden="true">
-              {step.glyph}
-            </div>
-            <div className="step-num">{step.num}</div>
-            <h3 className="step-title">{step.title}</h3>
-            <p className="step-desc">{step.desc}</p>
-            <span className="step-tag">{step.tag}</span>
+      <div className="pipeline" id="pipeline">
+        {STEPS.map((step) => (
+          <div key={step.num} className="pstep" data-step>
+            <span className="num">{step.num}</span>
+            <div className="eye">{step.eye}</div>
+            <h3 className="ttl">{step.ttl}</h3>
+            <span className="time">{step.time}</span>
+            <p className="desc">{step.desc}</p>
           </div>
         ))}
       </div>

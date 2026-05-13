@@ -1,11 +1,9 @@
-import { BookingCTA } from './BookingCTA'
-
 export function CreatorHero() {
   return (
     <section className="hero">
       <div className="hero-eyebrow">
         <span className="accent-dot" />
-        ROUTE_02 — CREATOR LAB
+        CREATOR LAB · EST. 2025
       </div>
 
       <div className="hero-title-wrap">
@@ -20,35 +18,30 @@ export function CreatorHero() {
         </div>
 
         <h1 className="hero-title">
-          <span id="hero-type-target" className="type-target">
-            Build software your audience pays for.
+          <span className="line l1" aria-label="Technology is no longer a barrier.">
+            <span className="typed" data-text="Technology is no longer a barrier." />
+            <span className="caret" aria-hidden="true" />
           </span>
-          <span className="type-cursor" aria-hidden="true" />
+          <span className="line l2">
+            <span className="accent-text">Own your audience.</span>
+          </span>
         </h1>
       </div>
 
       <p className="hero-subtitle">
-        S7 Labs designs and ships software products for creators — tools your audience actually
-        wants, on a platform you own and control.
+        We partner with creators to build digital products that turn followers into recurring
+        revenue — apps, brands, and businesses that you own.
       </p>
 
-      <div className="hero-meta">
-        <span>MICRO</span>
+      <div className="status-row">
+        <span className="dot" />
+        <span className="v">ACTIVE</span>
         <span className="sep" />
-        <span>MACRO</span>
+        <span>100K–1M FOLLOWER RANGE</span>
         <span className="sep" />
-        <span>BUSINESS</span>
+        <span>UK CREATORS</span>
         <span className="sep" />
-        <span className="invite">INVITE-ONLY</span>
-      </div>
-
-      <div className="hero-cta-wrap">
-        <BookingCTA label="Book Discovery Call" />
-      </div>
-
-      <div className="scroll-hint">
-        <span>EXPLORE</span>
-        <span className="line" />
+        <span className="v">INVITE-ONLY</span>
       </div>
     </section>
   )
