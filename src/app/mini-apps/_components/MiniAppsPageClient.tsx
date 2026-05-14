@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
+import { LabTitleHero } from '@/components/LabTitleHero'
+
 import { APPS, type MiniApp } from '../_data/apps'
 import { HowItWorksSection } from './HowItWorksSection'
 import { InterestedModal } from './InterestedModal'
@@ -87,6 +89,19 @@ export function MiniAppsPageClient() {
   return (
     <>
       <PageEyebrow />
+      <LabTitleHero
+        eyebrow="ROUTE_05 — MINI APPS"
+        name="Mini Apps"
+        bgWord="MINI APPS"
+        subtitle="A marketplace of compact products you can open, test and learn from — each one a focused tool that shows how useful software can solve a specific problem."
+        meta={[
+          { label: 'LIVE' },
+          { label: 'BETA' },
+          { label: 'PROTOTYPES' },
+          { label: 'OPEN TO TEST', accent: true },
+        ]}
+        scrollHint="SCROLL"
+      />
       <MiniAppsHero onSuggest={() => openInterested(null, 'different')} />
       <HowItWorksSection />
 
