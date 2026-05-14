@@ -2,6 +2,7 @@ import './page-styles.css'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { LabTitleHero } from '@/components/LabTitleHero'
 
 import { AgentHero } from './_components/AgentHero'
 import { AgentOperatingSystemSection } from './_components/AgentOperatingSystemSection'
@@ -34,6 +35,19 @@ export default function AgentLabPage() {
 
       <main>
         <PageEyebrow />
+        <LabTitleHero
+          eyebrow="ROUTE_04 — AGENT LAB"
+          name="Agent"
+          bgWord="AGENT"
+          subtitle="System7 designs agentic systems that reason across context, use tools, follow business rules and coordinate multi-step work — with human gates, permissions and observability built in."
+          meta={[
+            { label: 'REASONING' },
+            { label: 'TOOLS' },
+            { label: 'ORCHESTRATION' },
+            { label: 'GOVERNED', accent: true },
+          ]}
+          scrollHint="SCROLL"
+        />
         <AgentHero />
         <AgentVsChatbotSection />
         <AgentOperatingSystemSection />

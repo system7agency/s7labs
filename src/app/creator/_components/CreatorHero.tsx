@@ -18,13 +18,7 @@ export function CreatorHero() {
         </div>
 
         <h1 className="hero-title">
-          <span className="line l1" aria-label="Technology is no longer a barrier.">
-            <span className="typed" data-text="Technology is no longer a barrier." />
-            <span className="caret" aria-hidden="true" />
-          </span>
-          <span className="line l2">
-            <span className="accent-text">Own your audience.</span>
-          </span>
+          <span className="accent-text">Creator</span>
         </h1>
       </div>
 

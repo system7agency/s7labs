@@ -2,6 +2,7 @@ import './page-styles.css'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { LabTitleHero } from '@/components/LabTitleHero'
 
 import { BuildHero } from './_components/BuildHero'
 import { BuildModesSection } from './_components/BuildModesSection'
@@ -34,6 +35,19 @@ export default function BuildLabPage() {
 
       <main>
         <PageEyebrow />
+        <LabTitleHero
+          eyebrow="ROUTE_03 — BUILD LAB"
+          name="Build"
+          bgWord="BUILD"
+          subtitle="We design and build client-facing products, internal platforms and AI-enabled tools that fit your business, your data and your operating model."
+          meta={[
+            { label: 'PRODUCTS' },
+            { label: 'PLATFORMS' },
+            { label: 'AI TOOLS' },
+            { label: 'BESPOKE', accent: true },
+          ]}
+          scrollHint="SCROLL"
+        />
         <BuildHero />
         <WhatWeBuildSection />
         <ProductBuildSystemSection />
