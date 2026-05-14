@@ -31,43 +31,18 @@ const STAGE_DURATION_MS = 1400
 const STAGE_TAIL_MS = 500
 const SUCCESS_DELAY_MS = 600
 
-const FREE_PROVIDERS = new Set([
-  'gmail.com',
-  'googlemail.com',
-  'yahoo.com',
-  'yahoo.co.uk',
-  'outlook.com',
-  'hotmail.com',
-  'live.com',
-  'aol.com',
-  'icloud.com',
-  'me.com',
-  'mac.com',
-  'protonmail.com',
-  'proton.me',
-  'msn.com',
-  'gmx.com',
-  'gmx.net',
-  'mail.com',
-  'zoho.com',
-  'yandex.com',
-  'hey.com',
-  'duck.com',
-  'fastmail.com',
-  'tutanota.com',
-])
-
-function validateEmail(value: string): { ok: true } | { ok: false; msg: string } {
+function validateEmailFormat(value: string): { ok: true } | { ok: false; msg: string } {
   const v = (value || '').trim().toLowerCase()
   if (!v) return { ok: false, msg: 'Please enter your work email.' }
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
   if (!re.test(v)) return { ok: false, msg: 'Please enter a valid email address.' }
-  const domain = v.split('@')[1] ?? ''
-  if (FREE_PROVIDERS.has(domain)) {
-    return { ok: false, msg: 'Please use your work email (not a personal address).' }
-  }
   return { ok: true }
 }
+
+type SubmitResponse =
+  | { ok: true; state: 'processing' | 'cached'; message: string }
+  | { ok: false; state: 'rejected'; reason: string; message: string }
+  | { ok: false; state: 'error'; message: string }
 
 const READOUT_TL: Record<AppState, string> = {
   cta: '// IDLE',
@@ -202,6 +177,8 @@ export default function RevOpsPage() {
   const [shakeKey, setShakeKey] = useState(0)
   const [activeStage, setActiveStage] = useState(0)
   const [allComplete, setAllComplete] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const emailInputRef = useRef<HTMLInputElement | null>(null)
   const stageTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
@@ -255,7 +232,8 @@ export default function RevOpsPage() {
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
-      const result = validateEmail(email)
+      if (submitting) return
+      const result = validateEmailFormat(email)
       if (!result.ok) {
         setEmailError(result.msg)
         setShakeKey((k) => k + 1)
@@ -264,31 +242,41 @@ export default function RevOpsPage() {
       setEmailError(null)
       const normalized = email.trim().toLowerCase()
       setSubmittedEmail(normalized)
+      setSubmitting(true)
+      setSuccessMessage(null)
       setAppState('cards')
       runStageSequence()
 
-      const webhookUrl = process.env.NEXT_PUBLIC_REVOPS_WEBHOOK_URL
-      if (!webhookUrl || webhookUrl === 'https://example.com/webhook-stub') return
-
+      let body: SubmitResponse
       try {
-        const res = await fetch(webhookUrl, {
+        const res = await fetch('/api/revops/sales-insights', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: normalized,
-            submittedAt: new Date().toISOString(),
-            source: 'revops-form',
-          }),
+          body: JSON.stringify({ email: normalized, type: 'sales' }),
         })
-        if (!res.ok) throw new Error(`Webhook responded ${res.status}`)
+        body = (await res.json()) as SubmitResponse
       } catch {
         clearStageTimers()
         setAppState('email')
         setEmailError('Something went wrong. Please try again.')
         setShakeKey((k) => k + 1)
+        setSubmitting(false)
+        return
       }
+
+      if (body.ok) {
+        setSuccessMessage(body.message)
+        setSubmitting(false)
+        return
+      }
+
+      clearStageTimers()
+      setAppState('email')
+      setEmailError(body.message)
+      setShakeKey((k) => k + 1)
+      setSubmitting(false)
     },
-    [email, runStageSequence, clearStageTimers]
+    [email, submitting, runStageSequence, clearStageTimers]
   )
 
   const stageProgressPct = useMemo(() => {
@@ -389,12 +377,18 @@ export default function RevOpsPage() {
                     autoComplete="email"
                     spellCheck={false}
                     value={email}
+                    disabled={submitting}
                     onChange={(e) => {
                       setEmail(e.target.value)
                       if (emailError) setEmailError(null)
                     }}
                   />
-                  <button className="email-submit" type="submit" aria-label="Submit">
+                  <button
+                    className="email-submit"
+                    type="submit"
+                    aria-label="Submit"
+                    disabled={submitting}
+                  >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -483,8 +477,12 @@ export default function RevOpsPage() {
                 </div>
                 <h2>Check your email</h2>
                 <p>
-                  Your report link will arrive in <span className="email">~15 minutes</span> from{' '}
-                  <span className="email">reports@s7labs.ai</span>.
+                  {successMessage ?? (
+                    <>
+                      Your report link will arrive in <span className="email">~15 minutes</span>{' '}
+                      from <span className="email">reports@s7labs.ai</span>.
+                    </>
+                  )}
                 </p>
                 <div className="success-meta">
                   <span className="live-dot" />
