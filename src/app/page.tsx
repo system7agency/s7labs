@@ -100,16 +100,16 @@ export default function HomePage() {
             </a>
 
             <a
-              href="/creator"
+              href="/agent"
               className="route-card tiltable"
-              data-route="creator"
-              data-label="creator_s7labs"
+              data-route="agent"
+              data-label="agent_s7labs"
             >
               <span className="scan-line" />
               <div className="card-glyphs" aria-hidden="true">
-                <span style={{ top: '12%', right: '18%' }}>01010110</span>
-                <span style={{ top: '72%', right: '10%' }}>→ init</span>
-                <span style={{ top: '42%', left: '10%' }}>λ</span>
+                <span style={{ top: '12%', right: '18%' }}>{'// agent'}</span>
+                <span style={{ top: '72%', right: '10%' }}>→ talk</span>
+                <span style={{ top: '42%', left: '10%' }}>◉</span>
               </div>
               <div className="route-card-inner">
                 <span className="route-index">ROUTE_02</span>
@@ -119,10 +119,10 @@ export default function HomePage() {
                   <span className="type-cursor" />
                 </div>
                 <p className="route-tagline">
-                  Software applications for content creators to launch to their audience.
+                  Voice and chat agents for sales, support, and intake.
                 </p>
                 <div className="route-meta">
-                  <span className="route-tag">SOFTWARE · DEVELOPMENT · CONTENT</span>
+                  <span className="route-tag">SOFTWARE · VOICE · CHAT</span>
                   <span className="route-arrow">
                     <span>ENTER</span>
                     <span className="a">→</span>
@@ -164,16 +164,16 @@ export default function HomePage() {
             </a>
 
             <a
-              href="/agent"
+              href="/creator"
               className="route-card tiltable"
-              data-route="agent"
-              data-label="agent_s7labs"
+              data-route="creator"
+              data-label="creator_s7labs"
             >
               <span className="scan-line" />
               <div className="card-glyphs" aria-hidden="true">
-                <span style={{ top: '12%', right: '18%' }}>{'// agent'}</span>
-                <span style={{ top: '72%', right: '10%' }}>→ talk</span>
-                <span style={{ top: '42%', left: '10%' }}>◉</span>
+                <span style={{ top: '12%', right: '18%' }}>01010110</span>
+                <span style={{ top: '72%', right: '10%' }}>→ init</span>
+                <span style={{ top: '42%', left: '10%' }}>λ</span>
               </div>
               <div className="route-card-inner">
                 <span className="route-index">ROUTE_04</span>
@@ -183,10 +183,10 @@ export default function HomePage() {
                   <span className="type-cursor" />
                 </div>
                 <p className="route-tagline">
-                  Voice and chat agents for sales, support, and intake.
+                  Software applications for content creators to launch to their audience.
                 </p>
                 <div className="route-meta">
-                  <span className="route-tag">SOFTWARE · VOICE · CHAT</span>
+                  <span className="route-tag">SOFTWARE · DEVELOPMENT · CONTENT</span>
                   <span className="route-arrow">
                     <span>ENTER</span>
                     <span className="a">→</span>
