@@ -4,6 +4,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 
 import styles from './CapabilitiesSection.module.css'
+import { AiRevOpsFlowChart } from './AiRevOpsFlowChart'
+import { AutomatedOutboundFlowChart } from './AutomatedOutboundFlowChart'
+import { SalesGtmFlowChart } from './SalesGtmFlowChart'
+
+const FLOW_CHART_KEYS = new Set<Capability['key']>(['sales', 'marketing', 'revops'])
 
 type Capability = {
   key: 'sales' | 'marketing' | 'revops'
@@ -308,7 +313,10 @@ export function CapabilitiesSection() {
         style={active ? ({ ['--cap-c' as string]: active.capVar } as CSSProperties) : undefined}
       >
         {active && (
-          <div className={styles.modal} role="document">
+          <div
+            className={`${styles.modal} ${FLOW_CHART_KEYS.has(active.key) ? styles.modalWide : ''}`}
+            role="document"
+          >
             <span className={`${styles.corner} ${styles.cornerTl}`} />
             <span className={`${styles.corner} ${styles.cornerTr}`} />
             <span className={`${styles.corner} ${styles.cornerBl}`} />
@@ -320,32 +328,47 @@ export function CapabilitiesSection() {
               <span className={styles.d} />
               <span>{active.modal.eyebrow}</span>
             </div>
-            <h3>{active.modal.title}</h3>
-            <p className={styles.modalSub}>{active.modal.sub}</p>
-            <div className={styles.modalMeta}>
-              {active.modal.meta.map(([k, v], i) => (
-                <span key={k}>
-                  <span className={styles.k}>{k}</span>
-                  <span className={styles.v}>{v}</span>
-                  {i < active.modal.meta.length - 1 && <span className={styles.sep}> · </span>}
-                </span>
-              ))}
-            </div>
-            <div className={styles.modalActions}>
-              <a
-                ref={primaryBtnRef}
-                className={`${styles.modalBtn} ${styles.modalBtnPrimary}`}
-                href={active.modal.primary}
-              >
-                Open Live Demo <span aria-hidden="true">→</span>
-              </a>
-              <a
-                className={`${styles.modalBtn} ${styles.modalBtnSecondary}`}
-                href={active.modal.secondary}
-              >
-                Read the brief
-              </a>
-            </div>
+            {!FLOW_CHART_KEYS.has(active.key) && (
+              <>
+                <h3>{active.modal.title}</h3>
+                <p className={styles.modalSub}>{active.modal.sub}</p>
+              </>
+            )}
+            {FLOW_CHART_KEYS.has(active.key) && (
+              <div className={styles.flowWrap}>
+                {active.key === 'sales' && <AutomatedOutboundFlowChart />}
+                {active.key === 'marketing' && <SalesGtmFlowChart />}
+                {active.key === 'revops' && <AiRevOpsFlowChart />}
+              </div>
+            )}
+            {!FLOW_CHART_KEYS.has(active.key) && (
+              <>
+                <div className={styles.modalMeta}>
+                  {active.modal.meta.map(([k, v], i) => (
+                    <span key={k}>
+                      <span className={styles.k}>{k}</span>
+                      <span className={styles.v}>{v}</span>
+                      {i < active.modal.meta.length - 1 && <span className={styles.sep}> · </span>}
+                    </span>
+                  ))}
+                </div>
+                <div className={styles.modalActions}>
+                  <a
+                    ref={primaryBtnRef}
+                    className={`${styles.modalBtn} ${styles.modalBtnPrimary}`}
+                    href={active.modal.primary}
+                  >
+                    Open Live Demo <span aria-hidden="true">→</span>
+                  </a>
+                  <a
+                    className={`${styles.modalBtn} ${styles.modalBtnSecondary}`}
+                    href={active.modal.secondary}
+                  >
+                    Read the brief
+                  </a>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
