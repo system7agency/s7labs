@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Fraunces } from 'next/font/google'
 
+import { S7ChatWidget } from '@/components/S7ChatWidget'
+
 import './globals.css'
 
 const geistSans = Geist({
@@ -35,7 +37,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable}`}>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {children}
+        <S7ChatWidget />
+      </body>
     </html>
   )
 }
