@@ -2237,6 +2237,94 @@
   }
 }
 
+@media (max-width: 640px) {
+  /* Orchestration timeline: stack each row as a card to avoid the 3-column
+     grid collisions at narrow widths. */
+  .agent-lab .gantt-body {
+    padding: 10px 12px 12px;
+    gap: 8px;
+  }
+  .agent-lab .grow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 0;
+    height: auto;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.012);
+  }
+  .agent-lab .grow-primary,
+  .agent-lab .grow-tool,
+  .agent-lab .grow-gate {
+    height: auto;
+  }
+  .agent-lab .grow .gn {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--fg);
+  }
+  .agent-lab .grow .gn .dim {
+    display: none;
+  }
+  .agent-lab .grow .gs {
+    order: 2;
+    flex: 0 0 auto;
+    text-align: right;
+  }
+  .agent-lab .grow .gt {
+    order: 3;
+    flex: 1 1 100%;
+    margin-top: 10px;
+  }
+
+  /* Human gate: stack approval pills vertically as full-width rows. */
+  .agent-lab .grow-gate .gt {
+    height: auto;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0;
+  }
+  .agent-lab .grow-gate .gd {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    padding: 8px 10px 8px 26px;
+    box-sizing: border-box;
+    justify-content: flex-start;
+  }
+  .agent-lab .grow-gate .gd::before {
+    left: 8px;
+  }
+
+  /* Audit log: wrap to second line, break long tokens gracefully. */
+  .agent-lab .gantt-foot {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 6px 10px;
+  }
+  .agent-lab .gf-stream {
+    flex: 1 1 100%;
+    overflow: visible;
+    min-height: 0;
+  }
+  .agent-lab .gl {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .agent-lab *,
   .agent-lab *::before,

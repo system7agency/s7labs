@@ -47,10 +47,19 @@ const CONNECTORS: string[] = [
   'M 715 1880 L 715 1940 L 865 1940 L 865 2000',
 ]
 
+function levelForBody(cy: number): number {
+  if (cy < 600) return 2
+  if (cy < 800) return 3
+  if (cy < 1100) return 4
+  if (cy < 1300) return 5
+  if (cy < 1500) return 6
+  return 7
+}
+
 function NodeBox({ cx, cy, w, label }: Node) {
   const h = 100
   return (
-    <g>
+    <g data-flow-node data-flow-level={levelForBody(cy)}>
       <rect
         x={cx - w / 2}
         y={cy - h / 2}
@@ -70,7 +79,7 @@ function NodeBox({ cx, cy, w, label }: Node) {
 function TerminatorPill({ cx, cy, w, label }: Node) {
   const h = 100
   return (
-    <g>
+    <g data-flow-node data-flow-level="9">
       <rect
         x={cx - w / 2}
         y={cy - h / 2}
@@ -116,7 +125,7 @@ export function SalesGtmFlowChart() {
         ))}
       </g>
 
-      <g>
+      <g data-flow-node data-flow-level="0">
         <rect
           x={355}
           y={0}
@@ -134,7 +143,7 @@ export function SalesGtmFlowChart() {
         </text>
       </g>
 
-      <g>
+      <g data-flow-node data-flow-level="1">
         <polygon points="633,240 833,240 797,340 597,340" className={styles.flowNodeBody} />
         <text x={715} y={290} className={styles.flowNodeText}>
           System7.ai
@@ -145,7 +154,7 @@ export function SalesGtmFlowChart() {
         <NodeBox key={node.label} {...node} />
       ))}
 
-      <g>
+      <g data-flow-node data-flow-level="8">
         <rect
           x={605}
           y={1780}

@@ -7,6 +7,8 @@ import styles from './CapabilitiesSection.module.css'
 import { AiRevOpsFlowChart } from './AiRevOpsFlowChart'
 import { AutomatedOutboundFlowChart } from './AutomatedOutboundFlowChart'
 import { SalesGtmFlowChart } from './SalesGtmFlowChart'
+import { MobileFlowTimeline } from './MobileFlowTimeline'
+import { MARKETING_MOBILE, REVOPS_MOBILE, SALES_MOBILE } from './mobileFlowData'
 import { useFlowBuildAnimation } from './useFlowBuildAnimation'
 
 const FLOW_COORDS: Record<'sales' | 'marketing' | 'revops', string> = {
@@ -193,8 +195,21 @@ const CAPABILITIES: Capability[] = [
   },
 ]
 
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)')
+    const sync = () => setIsMobile(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+  return isMobile
+}
+
 export function CapabilitiesSection() {
   const [activeKey, setActiveKey] = useState<Capability['key'] | null>(null)
+  const isMobile = useIsMobile()
   const lastFocusRef = useRef<HTMLElement | null>(null)
   const primaryBtnRef = useRef<HTMLAnchorElement | null>(null)
   const flowWrapRef = useRef<HTMLDivElement | null>(null)
@@ -203,7 +218,7 @@ export function CapabilitiesSection() {
 
   useFlowBuildAnimation(flowWrapRef, {
     active: isFlow,
-    replayKey: activeKey ?? '',
+    replayKey: `${activeKey ?? ''}:${isMobile ? 'm' : 'd'}`,
     inClassName: styles.in ?? '',
     livePulseClassName: styles.livePulse ?? '',
     nodeClassName: styles.flowNode ?? '',
@@ -354,12 +369,36 @@ export function CapabilitiesSection() {
             {FLOW_CHART_KEYS.has(active.key) && (
               <div className={`${styles.flowWrap} ${styles.flowStage}`} ref={flowWrapRef}>
                 <span className={styles.flowStageLabel}>{'// FLOW · LIVE'}</span>
-                <span className={styles.flowStageCoords}>{FLOW_COORDS[active.key]}</span>
-                <div className={styles.flowScroll}>
+                {!isMobile && (
+                  <span className={styles.flowStageCoords}>{FLOW_COORDS[active.key]}</span>
+                )}
+                <div className={`${styles.flowScroll} ${isMobile ? styles.flowScrollMobile : ''}`}>
                   <div className={styles.flowFrame}>
-                    {active.key === 'sales' && <AutomatedOutboundFlowChart />}
-                    {active.key === 'marketing' && <SalesGtmFlowChart />}
-                    {active.key === 'revops' && <AiRevOpsFlowChart />}
+                    {isMobile ? (
+                      <>
+                        {active.key === 'sales' && (
+                          <MobileFlowTimeline levels={SALES_MOBILE} markerId="mobile-arrow-sales" />
+                        )}
+                        {active.key === 'marketing' && (
+                          <MobileFlowTimeline
+                            levels={MARKETING_MOBILE}
+                            markerId="mobile-arrow-marketing"
+                          />
+                        )}
+                        {active.key === 'revops' && (
+                          <MobileFlowTimeline
+                            levels={REVOPS_MOBILE}
+                            markerId="mobile-arrow-revops"
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {active.key === 'sales' && <AutomatedOutboundFlowChart />}
+                        {active.key === 'marketing' && <SalesGtmFlowChart />}
+                        {active.key === 'revops' && <AiRevOpsFlowChart />}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

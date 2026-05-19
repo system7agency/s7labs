@@ -161,7 +161,7 @@ export function AiRevOpsFlowChart() {
         })}
       </g>
 
-      <g>
+      <g data-flow-node data-flow-level="0">
         <rect
           x={370}
           y={0}
@@ -185,7 +185,7 @@ export function AiRevOpsFlowChart() {
       </g>
 
       {COLUMN_X.map((cx) => (
-        <g key={`s7-${cx}`}>
+        <g key={`s7-${cx}`} data-flow-node data-flow-level="1">
           <polygon
             points={parallelogramPoints(cx, SYSTEM7_CY, SYSTEM7_W, SYSTEM7_H, SYSTEM7_SKEW)}
             className={styles.flowNodeHeader}
@@ -200,7 +200,12 @@ export function AiRevOpsFlowChart() {
         COLUMN_X.map((cx, colIdx) => {
           const w = typeof row.w === 'number' ? row.w : (row.w[colIdx] ?? row.w[0])
           return (
-            <g key={`body-${rowIdx}-${colIdx}`} transform={`translate(${cx}, ${row.cy})`}>
+            <g
+              key={`body-${rowIdx}-${colIdx}`}
+              transform={`translate(${cx}, ${row.cy})`}
+              data-flow-node
+              data-flow-level={rowIdx + 2}
+            >
               <rect
                 x={-w / 2}
                 y={-row.h / 2}
@@ -219,7 +224,7 @@ export function AiRevOpsFlowChart() {
       )}
 
       {COLUMN_X.map((cx, colIdx) => (
-        <g key={`term-${cx}`}>
+        <g key={`term-${cx}`} data-flow-node data-flow-level="6">
           <rect
             x={cx - TERMINATOR_ROW.w / 2}
             y={TERMINATOR_ROW.cy - TERMINATOR_ROW.h / 2}
