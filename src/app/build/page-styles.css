@@ -1848,8 +1848,12 @@
 /* RESPONSIVE */
 @media (max-width: 1100px) {
   .build-lab .hero-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 40px;
+  }
+  .build-lab .hero-copy,
+  .build-lab .console {
+    min-width: 0;
   }
   .build-lab .console {
     height: 440px;
@@ -1936,6 +1940,130 @@
     padding: 36px 22px 32px;
   }
   .build-lab .float-labels span {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Page container — tighter gutters, prevent horizontal bleed. */
+  .build-lab main {
+    padding: 56px 16px 0;
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+  .build-lab .hero {
+    padding: 32px 0 56px;
+    min-height: auto;
+    overflow-x: clip;
+  }
+  .build-lab .hero-grid {
+    gap: 24px;
+  }
+
+  /* Eyebrow line */
+  .build-lab .hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .build-lab .hero-eyebrow::before {
+    width: 12px;
+  }
+
+  /* Headline */
+  .build-lab .hero-title {
+    font-size: 34px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 20px;
+    max-width: 100%;
+  }
+
+  /* Body paragraph */
+  .build-lab .hero-sub {
+    font-size: 15px;
+    line-height: 1.55;
+    max-width: 100%;
+    margin: 0 0 24px;
+    overflow-wrap: anywhere;
+  }
+
+  /* CTAs — stack full-width */
+  .build-lab .cta-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .build-lab .cta-row .btn {
+    width: 100%;
+    padding: 16px 24px;
+  }
+
+  /* Status strip — horizontal swipe row */
+  .build-lab .status-strip {
+    display: flex;
+    width: 100%;
+    margin-top: 32px;
+    padding: 12px 14px;
+    gap: 12px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    mask-image: linear-gradient(
+      90deg,
+      #000 0,
+      #000 calc(100% - 24px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      #000 0,
+      #000 calc(100% - 24px),
+      transparent 100%
+    );
+  }
+  .build-lab .status-strip::-webkit-scrollbar {
+    display: none;
+  }
+  .build-lab .status-strip .step,
+  .build-lab .status-strip .sep,
+  .build-lab .status-strip .dot {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  /* Hero illustration: reduce to a single hero window (portal.ui) on mobile.
+     The desktop overlapping composition would clip beyond the viewport edge. */
+  .build-lab .console {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 280px;
+    overflow: hidden;
+  }
+  .build-lab .panel.p-admin,
+  .build-lab .panel.p-ai,
+  .build-lab .panel.p-data,
+  .build-lab .panel.p-api {
+    display: none;
+  }
+  .build-lab .panel.p-portal {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    margin: 0 auto;
+    transform: none;
+  }
+  .build-lab .float-labels {
     display: none;
   }
 }

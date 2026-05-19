@@ -240,21 +240,73 @@ function S7ChatPanel({
     }
   }
 
-  const startVoiceCall = useCallback(async () => {
+  const startVoiceCall = useCallback(() => {
+    // iOS Safari: getUserMedia MUST be initiated synchronously inside the
+    // gesture handler — no awaits, no setState before it. Capture the promise
+    // first, resolve later.
+    const micPromise = navigator.mediaDevices.getUserMedia({ audio: true })
+
+    // iOS Safari: audio playback is muted unless an AudioContext is created
+    // and a buffer played within the user gesture. Do both synchronously.
+    let audioContext: AudioContext | null = null
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      stream.getTracks().forEach((t) => t.stop())
-    } catch (err) {
-      console.error('[S7ChatWidget] mic getUserMedia error:', err)
-      return
+      const AC: typeof AudioContext | undefined =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (AC) {
+        audioContext = new AC()
+        const buffer = audioContext.createBuffer(1, 1, 22050)
+        const source = audioContext.createBufferSource()
+        source.buffer = buffer
+        source.connect(audioContext.destination)
+        source.start(0)
+      }
+    } catch (e) {
+      console.warn('[S7ChatWidget] audio unlock failed:', e)
     }
+
+    // Eager UI feedback now that the gesture-bound work is done.
     setCallDuration(0)
     setVoiceStatusText('')
-    try {
-      conversation.startSession({ agentId, connectionType: 'websocket' })
-    } catch (err) {
-      console.error('[S7ChatWidget] voice startSession catch:', err)
-    }
+    setErrorMsg(null)
+
+    void (async () => {
+      try {
+        if (audioContext && audioContext.state === 'suspended') {
+          await audioContext.resume()
+        }
+
+        // Resolve the mic permission promise so any rejection surfaces here
+        // (rather than from the SDK's own getUserMedia call). Then release our
+        // hold — the SDK will reacquire; iOS keeps the permission cached.
+        const stream = await micPromise
+        stream.getTracks().forEach((t) => t.stop())
+
+        await conversation.startSession({ agentId, connectionType: 'websocket' })
+
+        // Ensure any <audio> elements the SDK created play inline on iOS
+        // instead of triggering the fullscreen player.
+        requestAnimationFrame(() => {
+          document.querySelectorAll('audio').forEach((a) => {
+            ;(a as unknown as { playsInline: boolean }).playsInline = true
+            a.setAttribute('playsinline', '')
+            a.setAttribute('webkit-playsinline', '')
+          })
+        })
+      } catch (err) {
+        console.error('[S7ChatWidget] voice start failed:', err)
+        const name = (err as { name?: string })?.name
+        if (name === 'NotAllowedError') {
+          setErrorMsg('Microphone access denied. Enable it in Settings → Safari → Microphone.')
+        } else if (name === 'NotFoundError') {
+          setErrorMsg('No microphone found.')
+        } else if (name === 'NotReadableError') {
+          setErrorMsg('Microphone in use by another app. Close other apps and try again.')
+        } else {
+          setErrorMsg(err instanceof Error ? `Voice failed: ${err.message}` : 'Voice failed')
+        }
+      }
+    })()
   }, [agentId, conversation])
 
   const endVoiceCall = useCallback(() => {
@@ -477,6 +529,10 @@ function S7ChatPanel({
                   TRY AGAIN
                 </button>
               </>
+            )}
+
+            {errorMsg && voiceStatus !== 'connected' && (
+              <div className={styles.voiceError}>{errorMsg}</div>
             )}
           </div>
         )}

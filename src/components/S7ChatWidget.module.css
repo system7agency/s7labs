@@ -493,6 +493,17 @@
   color: var(--s7-fg-muted);
 }
 
+.voiceError {
+  font-family: var(--s7-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: #ff8b8b;
+  text-align: center;
+  max-width: 28ch;
+  margin-top: 4px;
+  text-wrap: pretty;
+}
+
 .voiceStatusText {
   font-family: var(--s7-mono);
   font-size: 10px;

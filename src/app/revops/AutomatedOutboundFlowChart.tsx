@@ -79,7 +79,7 @@ export function AutomatedOutboundFlowChart() {
         ))}
       </g>
 
-      <g>
+      <g data-flow-node data-flow-level="0">
         <rect
           x={CENTER_X - 360}
           y={0}
@@ -97,7 +97,7 @@ export function AutomatedOutboundFlowChart() {
         </text>
       </g>
 
-      <g>
+      <g data-flow-node data-flow-level="1">
         <polygon
           points={parallelogramPoints(CENTER_X, 320, 200, 100, 14)}
           className={styles.flowNodeBody}
@@ -108,7 +108,7 @@ export function AutomatedOutboundFlowChart() {
       </g>
 
       {SELECTION_NODES.map((n) => (
-        <g key={n.label}>
+        <g key={n.label} data-flow-node data-flow-level={n.cy < 700 ? 2 : 4}>
           <rect
             x={n.cx - n.w / 2}
             y={n.cy - n.h / 2}
@@ -124,24 +124,27 @@ export function AutomatedOutboundFlowChart() {
         </g>
       ))}
 
-      {BODY_NODES.map((n) => (
-        <g key={n.label}>
-          <rect
-            x={n.cx - n.w / 2}
-            y={n.cy - n.h / 2}
-            width={n.w}
-            height={n.h}
-            rx={10}
-            ry={10}
-            className={styles.flowNodeBody}
-          />
-          <text x={n.cx} y={n.cy} className={styles.flowNodeText}>
-            {n.label}
-          </text>
-        </g>
-      ))}
+      {BODY_NODES.map((n) => {
+        const level = n.cy < 900 ? 3 : n.cy < 1400 ? 5 : n.cy < 1600 ? 6 : 7
+        return (
+          <g key={n.label} data-flow-node data-flow-level={level}>
+            <rect
+              x={n.cx - n.w / 2}
+              y={n.cy - n.h / 2}
+              width={n.w}
+              height={n.h}
+              rx={10}
+              ry={10}
+              className={styles.flowNodeBody}
+            />
+            <text x={n.cx} y={n.cy} className={styles.flowNodeText}>
+              {n.label}
+            </text>
+          </g>
+        )
+      })}
 
-      <g>
+      <g data-flow-node data-flow-level="8">
         <rect
           x={240}
           y={1870}
@@ -159,7 +162,7 @@ export function AutomatedOutboundFlowChart() {
         </text>
       </g>
 
-      <g>
+      <g data-flow-node data-flow-level="8">
         <rect
           x={690}
           y={1870}
