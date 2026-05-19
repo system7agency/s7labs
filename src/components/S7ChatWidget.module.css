@@ -338,6 +338,7 @@
   gap: 10px;
   padding: 12px 14px;
   border-top: 1px solid var(--s7-border);
+  flex-shrink: 0;
 }
 
 .prompt {
@@ -602,8 +603,15 @@
   }
   @supports (height: 100dvh) {
     .panel {
+      height: 100dvh;
       max-height: 100dvh;
     }
+  }
+
+  /* iOS Safari auto-zooms any input < 16px on focus. Bump the chat field
+     up; the keystroke prompt and other monospace UI stay at desktop sizes. */
+  .field {
+    font-size: 16px;
   }
 
   .header {
