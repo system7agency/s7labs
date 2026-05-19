@@ -7,6 +7,13 @@ import styles from './CapabilitiesSection.module.css'
 import { AiRevOpsFlowChart } from './AiRevOpsFlowChart'
 import { AutomatedOutboundFlowChart } from './AutomatedOutboundFlowChart'
 import { SalesGtmFlowChart } from './SalesGtmFlowChart'
+import { useFlowBuildAnimation } from './useFlowBuildAnimation'
+
+const FLOW_COORDS: Record<'sales' | 'marketing' | 'revops', string> = {
+  sales: '1260 × 2030',
+  marketing: '1490 × 2160',
+  revops: '1700 × 1420',
+}
 
 const FLOW_CHART_KEYS = new Set<Capability['key']>(['sales', 'marketing', 'revops'])
 
@@ -190,7 +197,17 @@ export function CapabilitiesSection() {
   const [activeKey, setActiveKey] = useState<Capability['key'] | null>(null)
   const lastFocusRef = useRef<HTMLElement | null>(null)
   const primaryBtnRef = useRef<HTMLAnchorElement | null>(null)
+  const flowWrapRef = useRef<HTMLDivElement | null>(null)
   const active = activeKey ? (CAPABILITIES.find((c) => c.key === activeKey) ?? null) : null
+  const isFlow = active ? FLOW_CHART_KEYS.has(active.key) : false
+
+  useFlowBuildAnimation(flowWrapRef, {
+    active: isFlow,
+    replayKey: activeKey ?? '',
+    inClassName: styles.in ?? '',
+    livePulseClassName: styles.livePulse ?? '',
+    nodeClassName: styles.flowNode ?? '',
+  })
 
   const close = useCallback(() => {
     setActiveKey(null)
@@ -335,10 +352,16 @@ export function CapabilitiesSection() {
               </>
             )}
             {FLOW_CHART_KEYS.has(active.key) && (
-              <div className={styles.flowWrap}>
-                {active.key === 'sales' && <AutomatedOutboundFlowChart />}
-                {active.key === 'marketing' && <SalesGtmFlowChart />}
-                {active.key === 'revops' && <AiRevOpsFlowChart />}
+              <div className={`${styles.flowWrap} ${styles.flowStage}`} ref={flowWrapRef}>
+                <span className={styles.flowStageLabel}>{'// FLOW · LIVE'}</span>
+                <span className={styles.flowStageCoords}>{FLOW_COORDS[active.key]}</span>
+                <div className={styles.flowScroll}>
+                  <div className={styles.flowFrame}>
+                    {active.key === 'sales' && <AutomatedOutboundFlowChart />}
+                    {active.key === 'marketing' && <SalesGtmFlowChart />}
+                    {active.key === 'revops' && <AiRevOpsFlowChart />}
+                  </div>
+                </div>
               </div>
             )}
             {!FLOW_CHART_KEYS.has(active.key) && (
