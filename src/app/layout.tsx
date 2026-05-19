@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Fraunces } from 'next/font/google'
 
 import { S7ChatWidget } from '@/components/S7ChatWidget'
@@ -28,6 +28,12 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: 'S7 Labs',
   description: 'The innovation sub-brand of System7.',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({

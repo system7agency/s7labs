@@ -45,6 +45,25 @@ export function S7ChatWidget() {
   const enabled = process.env.NEXT_PUBLIC_ELEVENLABS_CHATBOT_ENABLED === 'true'
 
   const [open, setOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 640px)')
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    if (!(open && isMobile)) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [open, isMobile])
 
   if (!enabled || !agentId) return null
 
@@ -265,7 +284,7 @@ function S7ChatPanel({
   }
 
   return (
-    <div className={styles.root}>
+    <div className={`${styles.root} ${styles.rootOpen}`}>
       <div className={styles.panel} role="dialog" aria-label="S7 Labs AI">
         <div className={styles.header}>
           <div className={styles.headerLeft}>

@@ -44,7 +44,6 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   letter-spacing: -0.005em;
-  perspective: 1400px;
 }
 
 /* ---------------- LAYERED BACKGROUND ---------------- */
@@ -117,6 +116,7 @@ main {
   padding: 64px 28px 80px;
   max-width: 1200px;
   margin: 0 auto;
+  perspective: 1400px;
 }
 
 .hero {

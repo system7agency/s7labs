@@ -336,3 +336,41 @@ header.header-hidden {
     padding: 6px 8px;
   }
 }
+
+@media (max-width: 640px) {
+  header {
+    height: 56px;
+    padding: 0 12px;
+    grid-template-columns: 1fr auto 1fr;
+  }
+  .header-left {
+    min-width: 64px;
+    gap: 8px;
+  }
+  .header-right {
+    min-width: 64px;
+    gap: 8px;
+  }
+  .back-link-logo {
+    display: none;
+  }
+  .back-link {
+    min-width: 36px;
+    min-height: 36px;
+    justify-content: flex-start;
+  }
+  .back-link-arrow {
+    font-size: 18px;
+    padding: 6px;
+  }
+  .li-btn {
+    height: 36px;
+    width: 36px;
+    padding: 0;
+  }
+  .phone-pill {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 10px;
+  }
+}
