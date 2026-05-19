@@ -30,3 +30,9 @@
   --radius-card: 16px;
   --radius-pill: 999px;
 }
+
+html,
+body {
+  overflow-x: clip !important;
+  max-width: 100vw !important;
+}
