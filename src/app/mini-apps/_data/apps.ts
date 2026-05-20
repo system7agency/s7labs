@@ -13,6 +13,7 @@ export type AppThumb =
   | 'form'
   | 'fan'
   | 'portal'
+  | 'score'
 
 export type MiniApp = {
   id: string
@@ -47,6 +48,30 @@ export const CATEGORIES = [
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'pricing-diagnostic',
+    name: 'Pricing Page Diagnostic',
+    status: 'live',
+    category: 'AI / Utilities',
+    cats: ['ai', 'utilities'],
+    short_description:
+      'Drop any SaaS pricing page URL. Get a brutal teardown and three concrete improvements.',
+    tags: ['pricing', 'saas', 'conversion', 'audit', 'ai'],
+    thumb: 'score',
+    launch_url: '/mini-apps/pricing-diagnostic',
+    learn_more: {
+      what_it_does:
+        'Scrapes any pricing page and runs it through a structured AI rubric — scoring friction, clarity, plan legibility, and buyer targeting. Returns three concrete improvements ranked by conversion impact.',
+      how_it_works: {
+        inputs: ['pricing page url'],
+        outputs: ['friction score', 'clarity grade', 'buyer inference', '3 improvements'],
+      },
+      who_its_for:
+        "Product, marketing, and founders who want a fast, honest read on their own pricing page — or a competitor's.",
+      build_potential: 'Could become a full pricing strategy audit tool with historical tracking.',
+    },
+    interest_context: 'pricing-diagnostic',
+  },
   {
     id: 'meet-ting',
     name: 'Meet-Ting',
