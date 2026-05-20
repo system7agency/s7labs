@@ -97,7 +97,8 @@ export function S7ChatWidget() {
         >
           <span className={styles.orb} aria-hidden />
           <span className={styles.pill}>
-            {'// ASK S7 '}
+            {'// ASK S'}
+            <sup className="wordmark-superscript">7</sup>{' '}
             <span className={styles.pillArrow}>→</span>
           </span>
         </button>
@@ -361,7 +362,10 @@ function S7ChatPanel({
           <div className={styles.headerLeft}>
             <div className={styles.headerLabelRow}>
               <span className={styles.miniOrb} aria-hidden />
-              <span className={styles.headerLabel}>S7 LABS // AI</span>
+              <span className={styles.headerLabel}>
+                S<sup className="wordmark-superscript">7</sup>
+                {' LABS // AI'}
+              </span>
             </div>
             <div className={styles.statusLine}>
               {mode === 'voice' && voiceStatus === 'connected' ? (
@@ -562,7 +566,9 @@ function S7ChatPanel({
 
         <div className={styles.footer}>
           <span>POWERED BY ELEVENLABS</span>
-          <span>S7_AI · v1.0</span>
+          <span>
+            S<sup className="wordmark-superscript">7</sup>_AI · v1.0
+          </span>
         </div>
       </div>
     </div>
