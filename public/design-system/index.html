@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>S7 Labs · Design System</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="ds-body">
+<!-- Background stack (matches sitewide pattern) -->
+<div class="bg-stack" aria-hidden="true">
+  <div class="bg-dots"></div>
+  <div class="bg-grain"></div>
+</div>
+
+<!-- Top bar -->
+<header class="ds-header">
+  <div class="ds-header-left">
+    <span class="ds-logo">
+      <span class="ds-logo-s7">S<sup>7</sup></span>
+      <span class="ds-logo-labs">LABS</span>
+    </span>
+    <span class="ds-header-sep">·</span>
+    <span class="ds-eyebrow"><span class="dot"></span>// DESIGN_SYSTEM <span class="v">LIVE</span></span>
+  </div>
+  <div class="ds-header-right">
+    <span class="ds-eyebrow muted" id="ds-timestamp"></span>
+  </div>
+</header>
+
+<div class="ds-shell">
+  <!-- Sidebar TOC -->
+  <aside class="ds-toc" id="ds-toc">
+    <button class="ds-toc-toggle" id="ds-toc-toggle" aria-controls="ds-toc-list">// CONTENTS</button>
+    <ol class="ds-toc-list" id="ds-toc-list">
+      <li><a href="#brand">01 · Brand</a></li>
+      <li><a href="#color">02 · Color</a></li>
+      <li><a href="#type">03 · Typography</a></li>
+      <li><a href="#space">04 · Spacing &amp; Layout</a></li>
+      <li><a href="#components">05 · Components</a></li>
+      <li><a href="#motion">06 · Motion</a></li>
+      <li><a href="#archetypes">07 · Page archetypes</a></li>
+      <li><a href="#a11y">08 · Accessibility</a></li>
+    </ol>
+  </aside>
+
+  <main class="ds-main">
+
+  <!-- ============================== 01 BRAND ============================== -->
+  <section id="brand" class="ds-section">
+    <div class="ds-section-head">
+      <span class="ds-eyebrow"><span class="dot"></span>SECTION_01</span>
+      <span class="ds-eyebrow muted">// BRAND IDENTITY</span>
+    </div>
+    <div class="brand-card">
+      <div class="brand-mark">
+        <span class="brand-s7">S<sup>7</sup></span>
+        <span class="brand-labs">LABS</span>
+      </div>
+      <p class="brand-tagline">// The innovation sub-brand of System<sup>7</sup>.</p>
+      <p class="brand-blurb">
+        Dark theme. Terminal/monospace voice. A single cyan-blue accent. No
+        glassmorphism — instead, layered scanlines, dot grids, corner brackets,
+        and breathing glows. Everything reads as a console: typewritten titles,
+        mono uppercase labels with wide tracking, status pills with live dots.
+      </p>
+      <div class="brand-meta">
+        <span class="kv"><b>Apex</b> s7labs.ai</span>
+        <span class="kv"><b>Stack</b> Next.js 16 · React 19 · Tailwind v4</span>
+        <span class="kv"><b>Voice</b> dark · monospace · cyan accent</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 02 COLOR =============================== -->
+  <section id="color" class="ds-section">
+    <div class="ds-section-head">
+      <span class="ds-eyebrow"><span class="dot"></span>SECTION_02</span>
+      <span class="ds-eyebrow muted">// COLOR TOKENS</span>
+    </div>
+
+    <h3 class="ds-h3">Backgrounds &amp; surfaces</h3>
+    <div class="swatch-grid">
+      <div class="swatch" style="--c:#060608"><div class="sw"></div><b>--bg</b><span>#060608</span><em>Page background. Apex of the dark stack.</em></div>
+      <div class="swatch" style="--c:#0a0a0c"><div class="sw"></div><b>--bg-2</b><span>#0a0a0c</span><em>Inset background under cards, sub-surfaces.</em></div>
+      <div class="swatch" style="--c:#101014"><div class="sw"></div><b>--surface</b><span>#101014</span><em>Cards, route tiles, modules, chat panel.</em></div>
+      <div class="swatch" style="--c:#16161b"><div class="sw"></div><b>--surface-2</b><span>#16161b</span><em>Raised surface inside cards (avatars, inputs).</em></div>
+    </div>
+
+    <h3 class="ds-h3">Foregrounds</h3>
+    <div class="swatch-grid">
+      <div class="swatch" style="--c:#ededed"><div class="sw"></div><b>--fg</b><span>#ededed</span><em>Primary text, headings.</em></div>
+      <div class="swatch" style="--c:#eaeaea"><div class="sw"></div><b>--fg-muted</b><span>#eaeaea</span><em>Secondary text. Some pages bind this to #8a8a8f.</em></div>
+      <div class="swatch" style="--c:#55555b"><div class="sw"></div><b>--fg-dim</b><span>#55555b</span><em>Mono labels, captions, eyebrows.</em></div>
+      <div class="swatch" style="--c:#2a2a2e"><div class="sw"></div><b>--fg-deep</b><span>#2a2a2e</span><em>Footer text, near-invisible captions.</em></div>
+    </div>
+
+    <h3 class="ds-h3">Accent</h3>
+    <div class="swatch-grid">
+      <div class="swatch" style="--c:#4f8cff"><div class="sw"></div><b>--accent</b><span>#4f8cff</span><em>Sitewide cyan-blue. CTAs, links, live dots, edge strokes.</em></div>
+      <div class="swatch" style="--c:#2ba6ff"><div class="sw"></div><b>--accent-2</b><span>#2ba6ff</span><em>Gradient pair for primary button hover sweep.</em></div>
+      <div class="swatch" style="--c:rgba(79,140,255,0.18)"><div class="sw"></div><b>--accent-dim</b><span>rgba(79,140,255,.18)</span><em>Soft accent fill, hover halos.</em></div>
+      <div class="swatch" style="--c:rgba(79,140,255,0.35)"><div class="sw"></div><b>--accent-glow</b><span>rgba(79,140,255,.35)</span><em>Box-shadow glow on dots, orbs, pulses.</em></div>
+      <div class="swatch" style="--c:#04e3ee"><div class="sw"></div><b>--s7-accent</b><span>#04e3ee</span><em>Chat widget cyan. Used <i>only</i> inside the floating S7 widget.</em></div>
+    </div>
+
+    <h3 class="ds-h3">Semantic</h3>
+    <div class="swatch-grid">
+      <div class="swatch" style="--c:#22c55e"><div class="sw"></div><b>--status-online</b><span>#22c55e</span><em>Live / online indicator.</em></div>
+      <div class="swatch" style="--c:#4fcf8a"><div class="sw"></div><b>--green</b><span>#4fcf8a</span><em>Widget online dot.</em></div>
+      <div class="swatch" style="--c:#f59e0b"><div class="sw"></div><b>--status-pending</b><span>#f59e0b</span><em>Warning / pending.</em></div>
+      <div class="swatch" style="--c:#f5a623"><div class="sw"></div><b>--amber / c-orange</b><span>#f5a623</span><em>Flow-chart accent color, callouts.</em></div>
+      <div class="swatch" style="--c:#c9a7ff"><div class="sw"></div><b>--c-purple</b><span>#c9a7ff</span><em>Flow-chart third accent.</em></div>
+      <div class="swatch" style="--c:#ff6b6b"><div class="sw"></div><b>--red</b><span>#ff6b6b</span><em>Errors, end-call button.</em></div>
+    </div>
+
+    <h3 class="ds-h3">Borders &amp; dots</h3>
+    <div class="swatch-grid">
+      <div class="swatch" style="--c:rgba(255,255,255,0.07)"><div class="sw"></div><b>--border</b><span>rgba(255,255,255,.07)</span><em>Hairline borders, dividers.</em></div>
+      <div class="swatch" style="--c:rgba(255,255,255,0.14)"><div class="sw"></div><b>--border-strong</b><span>rgba(255,255,255,.14)</span><em>Card edges, corner brackets, button borders.</em></div>
+      <div class="swatch" style="--c:rgba(255,255,255,0.055)"><div class="sw"></div><b>--dot</b><span>rgba(255,255,255,.055)</span><em>Background dot grid color. Gap 28px.</em></div>
+    </div>
+  </section>
+
+  <!-- ============================== 03 TYPE ================================ -->
+  <section id="type" class="ds-section">
+    <div class="ds-section-head">
+      <span class="ds-eyebrow"><span class="dot"></span>SECTION_03</span>
+      <span class="ds-eyebrow muted">// TYPOGRAPHY</span>
+    </div>
+    <p class="ds-note">
+      Three families, loaded via <code>next/font/google</code>:
+      <b>Geist Sans</b> (<code>--font-sans</code>) for body and headings,
+      <b>Geist Mono</b> (<code>--font-mono</code>) for every label / eyebrow / status line,
+      <b>Fraunces italic</b> (<code>--font-serif</code>) for occasional emphasis.
+    </p>
+
+    <div class="type-row"><span class="type-label">display</span><div class="type-sample t-display">Build with motion.</div><span class="type-meta">Geist · 500 · clamp(40px,5.4vw,76px) · -0.035em</span></div>
+    <div class="type-row"><span class="type-label">h2</span><div class="type-sample t-h2">Three labs. One studio.</div><span class="type-meta">Geist · 500 · clamp(36px,5vw,64px) · -0.035em</span></div>
+    <div class="type-row"><span class="type-label">h3</span><div class="type-sample t-h3">Section heading</div><span class="type-meta">Geist · 500 · 28px · -0.02em</span></div>
+    <div class="type-row"><span class="type-label">body</span><div class="type-sample t-body">A multi-subdomain platform with three labs: Creator, RevOps, and Build.</div><span class="type-meta">Geist · 400 · 14–15px · 1.55</span></div>
+    <div class="type-row"><span class="type-label">mono-label</span><div class="type-sample t-mono-label">// ASK S<sup>7</sup></div><span class="type-meta">Geist Mono · 11px · 0.22em · uppercase · fg-dim</span></div>
+    <div class="type-row"><span class="type-label">mono-mini</span><div class="type-sample t-mono-mini">REQUIREMENTS.LOADED · INTERFACE.READY · API</div><span class="type-meta">Geist Mono · 10px · 0.18em · uppercase · fg-dim</span></div>
+    <div class="type-row"><span class="type-label">eyebrow</span><div class="type-sample t-eyebrow">— S7_BUILDS // SOFTWARE DEVELOPMENT</div><span class="type-meta">Geist Mono · 11px · 0.24em · uppercase · leading dash 24×1px</span></div>
+    <div class="type-row"><span class="type-label">route-id</span><div class="type-sample t-route">ROUTE_04 ━━━━━━━━━━━━━━</div><span class="type-meta">Geist Mono · 11px · 0.12em · trailing fade rule</span></div>
+
+    <h3 class="ds-h3">Letter-spacing scale (mono uppercase)</h3>
+    <div class="tracking-grid">
+      <div class="tracking"><b>0.08em</b><span style="letter-spacing:.08em">SUBTLE TRACKING</span><em>Pill labels, mono button text</em></div>
+      <div class="tracking"><b>0.16em</b><span style="letter-spacing:.16em">CTA LABELS</span><em>Module CTAs, mode toggles</em></div>
+      <div class="tracking"><b>0.18em</b><span style="letter-spacing:.18em">PILL CHIPS</span><em>S7 pill, status lines, mod-index</em></div>
+      <div class="tracking"><b>0.22em</b><span style="letter-spacing:.22em">EYEBROWS</span><em>Section eyebrow, example eyebrow</em></div>
+      <div class="tracking"><b>0.24em</b><span style="letter-spacing:.24em">HERO EYEBROW</span><em>Build / philosophy bracket</em></div>
+      <div class="tracking"><b>0.28em</b><span style="letter-spacing:.28em">WORDMARK</span><em>S<sup>7</sup> LABS wordmark</em></div>
+    </div>
+  </section>
+
+  <!-- ============================== 04 SPACE =============================== -->
+  <section id="space" class="ds-section">
+    <div class="ds-section-head">
+      <span class="ds-eyebrow"><span class="dot"></span>SECTION_04</span>
+      <span class="ds-eyebrow muted">// SPACING &amp; LAYOUT</span>
+    </div>
+
+    <h3 class="ds-h3">Spacing scale</h3>
+    <div class="space-grid" id="space-grid"></div>
+
+    <h3 class="ds-h3">Border radius</h3>
+    <div class="radius-grid">
+      <div class="radius-card" style="border-radius:0"><span>0</span><em>Flush edge, flow-chart node</em></div>
+      <div class="radius-card" style="border-radius:6px"><span>6</span><em>Icon button</em></div>
+      <div class="radius-card" style="border-radius:8px"><span>8</span><em>Send button, retry pill</em></div>
+      <div class="radius-card" style="border-radius:10px"><span>10</span><em>Bubble, panel, primary button</em></div>
+      <div class="radius-card" style="border-radius:14px"><span>14</span><em>Cards, example boxes, chat panel</em></div>
+      <div class="radius-card" style="border-radius:16px"><span>16</span><em>--radius-card global</em></div>
+      <div class="radius-card" style="border-radius:18px"><span>18</span><em>Voice modal</em></div>
+      <div class="radius-card" style="border-radius:999px"><span>pill</span><em>Phone pill, t7-btn, --radius-pill</em></div>
+    </div>
+
+    <h3 class="ds-h3">Container &amp; grid</h3>
+    <ul class="ds-bullets">
+      <li><b>Main container</b> · <code>max-width: 1200px; padding: 64px 28px 0; margin: 0 auto;</code></li>
+      <li><b>Header</b> · fixed, 64px tall (56px mobile), 28px horizontal padding</li>
+      <li><b>Routes grid</b> · <code>grid-template-columns: 1fr 1fr; gap: 20px;</code></li>
+      <li><b>Modules grid</b> · <code>repeat(3, 1fr); gap: 18px;</code></li>
+      <li><b>Mobile breakpoint</b> · <code>@media (max-width: 640px)</code> (also <code>760px</code>)</li>
+    </ul>
+  </section>
+
+  <!-- ============================== 05 COMPONENTS ========================== -->
+  <section id="components" class="ds-section">
+    <div class="ds-section-head">
+      <span class="ds-eyebrow"><span class="dot"></span>SECTION_05</span>
+      <span class="ds-eyebrow muted">// COMPONENTS · INTERACTIVE</span>
+    </div>
+
+    <!-- BUTTONS -->
+    <h3 class="ds-h3">Buttons</h3>
+    <div class="demo" style="--demo-radius:10px;--demo-padx:24px;--demo-pady:15px">
+      <div class="demo-stage">
+        <button class="btn-primary" type="button">
+          <span>START_BUILD</span><span class="arr">→</span>
+        </button>
+        <button class="btn-ghost" type="button">
+          <span>VIEW_ROUTES</span><span class="arr">→</span>
+        </button>
+        <button class="phone-pill" type="button">
+          <span class="live-dot"></span>
+          <span>+1 (415) 555-0199</span>
+        </button>
+      </div>
+      <div class="controls">
+        <label>radius<input type="range" min="0" max="24" value="10" data-prop="--demo-radius" data-unit="px"></label>
+        <label>padding-x<input type="range" min="8" max="40" value="24" data-prop="--demo-padx" data-unit="px"></label>
+        <label>padding-y<input type="range" min="6" max="24" value="15" data-prop="--demo-pady" data-unit="px"></label>
+      </div>
+      <details><summary>HTML / CSS</summary><pre><code>&lt;button class="btn-primary"&gt;&lt;span&gt;START_BUILD&lt;/span&gt;&lt;span class="arr"&gt;→&lt;/span&gt;&lt;/button&gt;
+
+.btn-primary {
+  padding: var(--demo-pady) var(--demo-padx);
+  border-radius: var(--demo-radius);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border-strong));
+  font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase;
+}
+/* fill sweep on hover */
+.btn-primary::before { background: linear-gradient(120deg, #4f8cff, #2ba6ff); transform: translateX(-101%); }
+.btn-primary:hover::before { transform: translateX(0); }</code></pre></details>
+    </div>
+
+    <!-- ROUTE CARD -->
+    <h3 class="ds-h3">Route card</h3>
+    <div class="demo" style="--demo-radius:14px;--demo-corner:1;--demo-pad:36px">
+      <div class="demo-stage">
+        <a class="route-card" href="#" aria-label="Route 04">
+          <span class="scan-line"></span>
+          <span class="route-corner"></span>
+          <div class="route-card-inner">
+            <span class="route-index">ROUTE_04</span>
+            <div class="route-label"><span class="prompt">&gt;</span>build</div>
+            <p class="route-tagline">Designed and shipped in days, not quarters.</p>
+            <div class="route-meta">
+              <span class="route-tag">SOFTWARE · INTERFACES · AI</span>
+              <span class="route-arrow"><span class="a">→</span></span>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="controls">
+        <label>radius<input type="range" min="0" max="24" value="14" data-prop="--demo-radius" data-unit="px"></label>
+        <label>padding<input type="range" min="16" max="56" value="36" data-prop="--demo-pad" data-unit="px"></label>
+        <label class="toggle"><input type="checkbox" checked data-toggle="route-corner"> corner bracket</label>
+      </div>
+      <details><summary>Markup</summary><pre><code>&lt;a class="route-card"&gt;
+  &lt;span class="scan-line"&gt;&lt;/span&gt;
+  &lt;span class="route-card-inner"&gt;
+    &lt;span class="route-index"&gt;ROUTE_04&lt;/span&gt;
+    &lt;div class="route-label"&gt;&lt;span class="prompt"&gt;&gt;&lt;/span&gt;build&lt;/div&gt;
+    &lt;p class="route-tagline"&gt;…&lt;/p&gt;
+    &lt;div class="route-meta"&gt;
+      &lt;span class="route-tag"&gt;SOFTWARE · INTERFACES · AI&lt;/span&gt;
+      &lt;span class="route-arrow"&gt;→&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/span&gt;
+&lt;/a&gt;</code></pre></details>
+    </div>
+
+    <!-- MODULE / LAB CARD -->
+    <h3 class="ds-h3">Module card (RevOps lab)</h3>
+    <div class="demo" style="--demo-radius:10px;--demo-pad:38px">
+      <div class="demo-stage">
+        <a class="module" href="#">
+          <span class="corner tl"></span>
+          <span class="corner br"></span>
+          <span class="mod-index">// 01 / MICRO_APP</span>
+          <h3 class="mod-name">Get sales insights from a public company.</h3>
+          <p class="mod-tagline">Enter a domain, get the brief on revenue motion and ICP signal in under a minute.</p>
+          <span class="mod-cta">LAUNCH <span class="a">→</span></span>
+        </a>
+      </div>
+      <div class="controls">
+        <label>radius<input type="range" min="0" max="24" value="10" data-prop="--demo-radius" data-unit="px"></label>
+        <label>padding<input type="range" min="16" max="56" value="38" data-prop="--demo-pad" data-unit="px"></label>
+      </div>
+    </div>
+
+    <!-- CHAT WIDGET COLLAPSED -->
+    <h3 class="ds-h3">Chat widget · collapsed bubble</h3>
+    <div class="demo widget-demo" style="--orb-1:#bffafe;--orb-2:#04e3ee;--orb-size:56px">
+      <div class="demo-stage demo-stage-widget">
+        <span class="bubble">
+          <span class="orb"></span>
+          <span class="widget-pill">// ASK S<sup>7</sup> <span class="pillArrow">›</span></span>
+        </span>
+      </div>
+      <div class="controls">
+        <label>orb size<input type="range" min="36" max="96" value="56" data-prop="--orb-size" data-unit="px"></label>
+        <label>orb hi<input type="color" value="#bffafe" data-prop="--orb-1"></label>
+        <label>orb core<input type="color" value="#04e3ee" data-prop="--orb-2"></label>
+      </div>
+    </div>
+
+    <!-- CHAT WIDGET EXPANDED -->
+    <h3 class="ds-h3">Chat widget · expanded panel</h3>
+    <div class="demo">
+      <div class="demo-stage demo-stage-panel">
+        <div class="chat-panel">
+          <div class="chat-header">
+            <div class="chat-header-left">
+              <div class="chat-header-label-row">
+                <span class="mini-orb"></span>
+                <span class="chat-header-label">ASK S<sup>7</sup></span>
+              </div>
+              <div class="chat-status">
+                <span class="status-dot-green">●</span>ONLINE · MODEL READY
+              </div>
+              <div class="mode-toggle">
+                <button class="mode-btn mode-btn-active">CHAT</button>
+                <button class="mode-btn">VOICE</button>
+              </div>
+            </div>
+            <div class="chat-header-buttons">
+              <button class="icon-btn">−</button>
+              <button class="icon-btn">×</button>
+            </div>
+          </div>
+          <div class="chat-messages">
+            <div class="divider">— SESSION 04.21 —</div>
+            <div class="chat-msg">
+              <div class="avatar"></div>
+              <div class="msg-body">
+                <span class="msg-meta">S<sup>7</sup> · 14:02</span>
+                <div class="bubble-body">Hello — what are you building today?</div>
+              </div>
+            </div>
+            <div class="chat-msg msg-user">
+              <div class="avatar-user">YA</div>
+              <div class="msg-body">
+                <span class="msg-meta">YOU · 14:02</span>
+                <div class="bubble-body bubble-user">Need a sales-insight micro-app for a B2B SaaS.</div>
+              </div>
+            </div>
+            <div class="chat-msg">
+              <div class="avatar"></div>
+              <div class="msg-body">
+                <span class="msg-meta">S<sup>7</sup> · 14:02</span>
+                <div class="bubble-body"><span class="typing">thinking<span class="caret"></span></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <span class="prompt">$</span>
+            <input class="field" placeholder="type a message…" />
+            <button class="send">↵</button>
+          </div>
+          <div class="chat-footer">
+            <span>S<sup>7</sup> · PRIVATE</span><span>v1.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW NODE -->
+    <h3 class="ds-h3">Flow-chart node (terminal board)</h3>
+    <div class="demo" style="--node-radius:0px;--node-padx:20px;--node-pady:14px;--node-c:#4f8cff">
+      <div class="demo-stage">
+        <div class="flow-node">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+          <span class="flow-id">02</span>
+          <div class="flow-node-title">ENRICH_LEADS</div>
+          <div class="flow-node-sub">Clearbit · LinkedIn · CRM</div>
+        </div>
+      </div>
+      <div class="controls">
+        <label>radius<input type="range" min="0" max="20" value="0" data-prop="--node-radius" data-unit="px"></label>
+        <label>padding-x<input type="range" min="10" max="40" value="20" data-prop="--node-padx" data-unit="px"></label>
+        <label>padding-y<input type="range" min="8" max="32" value="14" data-prop="--node-pady" data-unit="px"></label>
+        <label>id color
+          <select data-prop="--node-c" data-raw>
+            <option value="#4f8cff">accent</option>
+            <option value="#4fcf8a">success</option>
+            <option value="#f5a623">amber</option>
+            <option value="#c9a7ff">purple</option>
+            <option value="#55555b">neutral</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <!-- FLOW CONNECTOR -->
+    <h3 class="ds-h3">Flow connector (with optional draw animation)</h3>
+    <div class="demo">
+      <div class="demo-stage" style="padding:24px 0">
+        <svg viewBox="0 0 200 160" width="200" height="160" id="flow-svg">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <polygon points="0,0 10,5 0,10" fill="#4f8cff" />
+            </marker>
+          </defs>
+          <path id="flow-edge" d="M100 10 L100 140" stroke="#4f8cff" stroke-width="2.4" fill="none" stroke-linecap="round" marker-end="url(#arrow)" />
+        </svg>
+      </div>
+      <div class="controls">
+        <button class="mini-btn" id="flow-replay">▶ REPLAY DRAW</button>
+      </div>
+    </div>
+
+    <!-- TERMINAL BOARD BG -->
+    <h3 class="ds-h3">Modal terminal-board background</h3>
+    <div class="demo" style="--scan-density:32px;--dot-gap:20px">
+      <div class="demo-stage demo-stage-tall">
+        <div class="terminal-board">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+          <span class="flow-stage-label">// STAGE_03 · ORCHESTRATION</span>
+          <span class="flow-stage-coords">[X 320 · Y 480]</span>
+          <div class="tb-shimmer"></div>
+        </div>
+      </div>
+      <div class="controls">
+        <label>scan grid<input type="range" min="16" max="64" value="32" data-prop="--scan-density" data-unit="px"></label>
+        <label>dot gap<input type="range" min="10" max="40" value="20" data-prop="--dot-gap" data-unit="px"></label>
+      </div>
+    </div>
+
+    <!-- VOICE PILL -->
+    <h3 class="ds-h3">Voice-agent pill</h3>
+    <div class="demo">
+      <div class="demo-stage">
+        <button class="phone-pill" type="button">
+          <span class="live-dot"></span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span class="label">+1 (415) 555-0199</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <h3 class="ds-h3">Status bar / breadcrumb</h3>
+    <div class="demo">
+      <div class="demo-stage">
+        <div class="status-bar">
+          <span><b class="v">●</b> REQUIREMENTS.LOADED</span>
+          <span class="sep">·</span>
+          <span><b class="v">●</b> INTERFACE.READY</span>
+          <span class="sep">·</span>
+          <span>API <b class="v">v1</b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- EYEBROW -->
+    <h3 class="ds-h3">Eyebrow label</h3>
+    <div class="demo">
+      <div class="demo-stage">
+        <span class="eyebrow-label">
+          <span class="eyebrow-rule"></span>
+          <span class="accent-dot"></span>
+          S7_BUILDS // SOFTWARE DEVELOPMENT <span class="v">·v1</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 06 MOTION ============================== -->
+  <section id="motion" class="ds-section">
+    <div class="ds-section-head">
+      <span class="ds-eyebrow"><span class="dot"></span>SECTION_06</span>
+      <span class="ds-eyebrow muted">// MOTION</span>
+    </div>
+
+    <div class="motion-grid">
+      <div class="motion-card">
+        <div class="motion-preview" id="motion-build-in"><div class="m-node">NODE_IN</div></div>
+        <div class="motion-meta">
+          <b>build-in node</b>
+          <span>opacity 0→1, translateY 8px→0, 460ms cubic-bezier(.16,1,.3,1)</span>
+          <button class="mini-btn" data-replay="motion-build-in">▶ REPLAY</button>
+        </div>
+      </div>
+
+      <div class="motion-card">
+        <div class="motion-preview">
+          <div class="m-typewriter">
+            <span class="m-typed" id="motion-typed">build with motion</span><span class="m-caret"></span>
+          </div>
+        </div>
+        <div class="motion-meta">
+          <b>typewriter + caret</b>
+          <span>JS-driven typing, caret blinks @ 1.1s steps(2)</span>
+          <button class="mini-btn" data-replay="motion-typed">▶ REPLAY</button>
+        </div>
+      </div>
+
+      <div class="motion-card">
+        <div class="motion-preview">
+          <svg viewBox="0 0 200 80" width="100%" height="80">
+            <path id="m-edge" d="M10 40 L190 40" stroke="#4f8cff" stroke-width="2.4" fill="none" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div class="motion-meta">
+          <b>stroke-dashoffset draw</b>
+          <span>stroke-dasharray = length, dashoffset → 0, ease-out 900ms</span>
+          <button class="mini-btn" data-replay="m-edge">▶ REPLAY</button>
+        </div>
+      </div>
+
+      <div class="motion-card">
+        <div class="motion-preview"><div class="m-live-ring"></div></div>
+        <div class="motion-meta">
+          <b>live ring pulse</b>
+          <span>drop-shadow 0→8px @ accent, 3.2s ease-out infinite</span>
+        </div>
+      </div>
+
+      <div class="motion-card">
+        <div class="motion-preview"><div class="m-orb"></div></div>
+        <div class="motion-meta">
+          <b>orb breathe</b>
+          <span>box-shadow 22→36px accent-glow, 4.2s ease-in-out infinite</span>
+        </div>
+      </div>
+
+      <div class="motion-card">
+        <div class="motion-preview"><div class="m-scan"></div></div>
+        <div class="motion-meta">
+          <b>scan shimmer overlay</b>
+          <span>vertical gradient sweep, 7–8s linear infinite, mix-blend screen</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 07 ARCHETYPES ========================== -->
+  <section id="archetypes" class="ds-section">
+    <div class="ds-section-head">
+      <span class="ds-eyebrow"><span class="dot"></span>SECTION_07</span>
+      <span class="ds-eyebrow muted">// PAGE ARCHETYPES</span>
+    </div>
+    <div class="arch-grid">
+      <a class="arch-card" href="/" target="_blank" rel="noopener">
+        <div class="arch-thumb arch-thumb-landing">
+          <div class="t-eyebrow">INNOVATION LAB · EST. 2025</div>
+          <div class="t-title">S<sup>7</sup>LABS</div>
+          <div class="t-grid">
+            <div class="t-tile"><span>ROUTE_01</span><b>&gt; revops</b></div>
+            <div class="t-tile"><span>ROUTE_02</span><b>&gt; agent</b></div>
+            <div class="t-tile"><span>ROUTE_03</span><b>&gt; creator</b></div>
+            <div class="t-tile"><span>ROUTE_04</span><b>&gt; build</b></div>
+          </div>
+        </div>
+        <div class="arch-label"><b>/</b><span>Landing · routes grid</span></div>
+      </a>
+      <a class="arch-card" href="/revops" target="_blank" rel="noopener">
+        <div class="arch-thumb arch-thumb-revops">
+          <div class="t-eyebrow">// REVOPS_LAB</div>
+          <div class="t-flip">
+            <div class="t-flip-card"></div>
+            <div class="t-flip-card"></div>
+            <div class="t-flip-card"></div>
+          </div>
+        </div>
+        <div class="arch-label"><b>/revops</b><span>Lab hub · flipping cards</span></div>
+      </a>
+      <a class="arch-card" href="/revops/sales-insights" target="_blank" rel="noopener">
+        <div class="arch-thumb arch-thumb-detail">
+          <div class="t-eyebrow">// MICRO_APP</div>
+          <div class="t-cards">
+            <div class="t-card"></div><div class="t-card"></div><div class="t-card"></div>
+          </div>
+        </div>
+        <div class="arch-label"><b>/revops/[capability]</b><span>Micro-app detail</span></div>
+      </a>
+      <a class="arch-card" href="/build" target="_blank" rel="noopener">
+        <div class="arch-thumb arch-thumb-build">
+          <div class="t-eyebrow">S7_BUILDS // SOFTWARE</div>
+          <div class="t-windows">
+            <div class="t-win"></div><div class="t-win t-win-2"></div><div class="t-win t-win-3"></div>
+          </div>
+        </div>
+        <div class="arch-label"><b>/build</b><span>Hero with stacked windows</span></div>
+      </a>
+      <a class="arch-card" href="/agent" target="_blank" rel="noopener">
+        <div class="arch-thumb arch-thumb-agent">
+          <div class="t-eyebrow">// AGENT_ORCHESTRATION</div>
+          <div class="t-timeline">
+            <span class="t-node"></span><span class="t-line"></span>
+            <span class="t-node"></span><span class="t-line"></span>
+            <span class="t-node"></span>
+          </div>
+        </div>
+        <div class="arch-label"><b>/agent</b><span>Orchestration timeline</span></div>
+      </a>
+      <a class="arch-card" href="/creator" target="_blank" rel="noopener">
+        <div class="arch-thumb arch-thumb-creator">
+          <div class="t-eyebrow">// CREATOR_LAB</div>
+          <div class="t-cluster"><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="arch-label"><b>/creator</b><span>Creator lab</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============================== 08 A11Y ================================= -->
+  <section id="a11y" class="ds-section">
+    <div class="ds-section-head">
+      <span class="ds-eyebrow"><span class="dot"></span>SECTION_08</span>
+      <span class="ds-eyebrow muted">// ACCESSIBILITY &amp; MOTION</span>
+    </div>
+    <ul class="ds-bullets">
+      <li><b>prefers-reduced-motion</b> — all animation declarations are gated; e.g. <code>.orb</code>, <code>.caret</code>, <code>.voiceOrb</code>, <code>.back-link-arrow</code>, <code>.wordmark-arrow</code>, and every <code>t7-orb-*</code> ring are zeroed under <code>@media (prefers-reduced-motion: reduce)</code>.</li>
+      <li><b>Touch targets</b> — buttons in mobile (&lt;640px) bumped to min 36×36px (icon-btn, mode-btn, back-link, li-btn). Send button bumped to 40×40px.</li>
+      <li><b>iOS auto-zoom</b> — the chat <code>.field</code> uses 16px font on mobile to suppress Safari focus-zoom; other mono UI stays at desktop sizes.</li>
+      <li><b>Body scroll lock</b> — the S7ChatWidget locks <code>body { overflow: hidden }</code> while expanded; root container expands to full viewport on mobile (<code>top/right/bottom/left:8px</code>).</li>
+      <li><b>Mobile breakpoints</b> — <code>760px</code> (layout reflow) and <code>640px</code> (mobile-first sizes, sticky CTA stacks, hidden labels).</li>
+      <li><b>Header backdrop</b> — uses <code>backdrop-filter: blur(16px) saturate(140%)</code>; falls back to a solid <code>color-mix</code> background.</li>
+    </ul>
+  </section>
+
+  <footer class="ds-foot">
+    <span>S<sup>7</sup> LABS · DESIGN_SYSTEM</span>
+    <span id="ds-foot-meta">generated from commit <code>3002f2c</code> on 2026-05-19</span>
+  </footer>
+  </main>
+</div>
+
+<script src="./controls.js" defer></script>
+</body>
+</html>
