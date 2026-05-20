@@ -94,7 +94,7 @@ export function MiniAppCard({ app, index, onInterested, onLearnMore, onLaunch }:
 
   return (
     <article
-      className={`mx-card${launchable ? '' : 'is-soft'}`}
+      className={launchable ? 'mx-card' : 'mx-card is-soft'}
       data-status={app.status}
       data-id={app.id}
       role="button"
@@ -126,7 +126,7 @@ export function MiniAppCard({ app, index, onInterested, onLearnMore, onLaunch }:
         <div className="mx-label">
           <span className="mx-prompt">$</span>
           <span className="mx-typed">{typed}</span>
-          <span className={`mx-cursor${typeDone ? 'done' : ''}`} />
+          <span className={typeDone ? 'mx-cursor done' : 'mx-cursor'} />
         </div>
         <p className="mx-tagline">{app.short_description}</p>
         <div className="mx-meta">
