@@ -164,10 +164,11 @@ export function MiniAppsPageClient() {
           </div>
         ) : (
           <div className={gridClass}>
-            {filtered.map((app) => (
+            {filtered.map((app, idx) => (
               <MiniAppCard
                 key={app.id}
                 app={app}
+                index={idx}
                 onInterested={(a) => openInterested(a)}
                 onLearnMore={(a) => setModal({ kind: 'learn', app: a })}
                 onLaunch={handleLaunch}
