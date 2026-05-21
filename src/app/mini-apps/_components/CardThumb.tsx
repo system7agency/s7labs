@@ -224,5 +224,17 @@ export function CardThumb({ thumb }: CardThumbProps) {
           </div>
         </div>
       )
+    case 'radar':
+      return (
+        <div className="card-thumb thumb-radar">
+          <span className="rd-ring rd-ring-1" />
+          <span className="rd-ring rd-ring-2" />
+          <span className="rd-ring rd-ring-3" />
+          <span className="rd-dot rd-dot-1" />
+          <span className="rd-dot rd-dot-2" />
+          <span className="rd-dot rd-dot-3" />
+          <span className="rd-sweep" />
+        </div>
+      )
   }
 }
