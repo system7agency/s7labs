@@ -6,6 +6,29 @@ type CardThumbProps = {
 
 export function CardThumb({ thumb }: CardThumbProps) {
   switch (thumb) {
+    case 'sanity':
+      return (
+        <div className="card-thumb thumb-sanity">
+          <div className="sn-row sn-row-crit">
+            <span className="sn-field" />
+            <span className="sn-bar sn-bar-crit" />
+            <span className="sn-dot sn-crit" />
+          </div>
+          <div className="sn-row sn-row-warn">
+            <span className="sn-field" />
+            <span className="sn-bar sn-bar-warn" />
+            <span className="sn-dot sn-warn" />
+          </div>
+          <div className="sn-row sn-row-ok">
+            <span className="sn-field" />
+            <span className="sn-bar sn-bar-ok" />
+            <span className="sn-dot sn-ok" />
+          </div>
+          <div className="sn-score">
+            <span className="sn-score-num">74</span>
+          </div>
+        </div>
+      )
     case 'brief':
       return (
         <div className="card-thumb thumb-brief-jb">

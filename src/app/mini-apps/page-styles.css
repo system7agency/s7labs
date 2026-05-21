@@ -2302,6 +2302,76 @@
   }
 }
 
+/* CRM Sanity thumb */
+.mini-apps-lab .thumb-sanity {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  height: 100%;
+  padding: 4px 0;
+}
+.mini-apps-lab .sn-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mini-apps-lab .sn-field {
+  width: 28px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+.mini-apps-lab .sn-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+}
+.mini-apps-lab .sn-bar-crit {
+  background: rgba(255, 92, 122, 0.5);
+}
+.mini-apps-lab .sn-bar-warn {
+  background: rgba(245, 166, 35, 0.45);
+  width: 70%;
+}
+.mini-apps-lab .sn-bar-ok {
+  background: rgba(79, 200, 138, 0.4);
+  width: 90%;
+}
+.mini-apps-lab .sn-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mini-apps-lab .sn-crit {
+  background: #ff5c7a;
+  box-shadow: 0 0 6px #ff5c7a;
+}
+.mini-apps-lab .sn-warn {
+  background: #f5a623;
+  box-shadow: 0 0 5px #f5a623;
+}
+.mini-apps-lab .sn-ok {
+  background: #4fcf8a;
+  box-shadow: 0 0 5px #4fcf8a;
+}
+.mini-apps-lab .sn-score {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: ui-monospace, monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(245, 166, 35, 0.9);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
 /* Job Brief thumb */
 .mini-apps-lab .thumb-brief-jb {
   display: flex;

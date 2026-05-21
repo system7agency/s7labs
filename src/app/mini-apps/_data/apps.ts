@@ -1,6 +1,6 @@
 export type AppStatus = 'live' | 'beta' | 'new' | 'prototype' | 'coming-soon'
 
-export type AppThumb = 'score' | 'radar' | 'hook' | 'brief' | 'proposal'
+export type AppThumb = 'score' | 'radar' | 'hook' | 'brief' | 'proposal' | 'sanity' 
 
 export type MiniApp = {
   id: string
@@ -30,6 +30,31 @@ export const CATEGORIES = [
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'crm-sanity',
+    name: 'CRM Field Sanity Check',
+    status: 'live',
+    category: 'AI / Operations',
+    cats: ['ai', 'operations'],
+    short_description:
+      'Paste any CRM record. Get a data quality score, issue flags by severity, exact fixes, and duplicate risk in seconds.',
+    tags: ['crm', 'data quality', 'hygiene', 'salesforce', 'hubspot', 'ai'],
+    thumb: 'sanity',
+    launch_url: '/mini-apps/crm-sanity',
+    learn_more: {
+      what_it_does:
+        'Reads any pasted CRM record — contact, account, lead, or deal — and returns a 0–100 quality score, a list of issues ranked by severity (critical / warning / suggestion), an exact fix for each issue, clean field list, and a duplicate risk assessment.',
+      how_it_works: {
+        inputs: ['crm record (any format — key:value, CSV, JSON, free text)'],
+        outputs: ['quality score', 'grade', 'issues + fixes', 'clean fields', 'duplicate risk'],
+      },
+      who_its_for:
+        'RevOps, sales ops, and SDRs who want to catch bad data before it breaks automations, skews reporting, or causes missed follow-ups.',
+      build_potential:
+        'Could become a real-time CRM validation layer that runs on every record save via webhook.',
+    },
+    interest_context: 'crm-sanity',
+  },
   {
     id: 'job-brief',
     name: 'Job Posting to Sales Brief',
