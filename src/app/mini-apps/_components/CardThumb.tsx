@@ -94,5 +94,17 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="rd-sweep" />
         </div>
       )
+    case 'proposal':
+      return (
+        <div className="card-thumb thumb-proposal">
+          <div className="pr-doc">
+            <span className="pr-line" style={{ width: '88%' }} />
+            <span className="pr-line pr-heading" style={{ width: '55%' }} />
+            <span className="pr-line" style={{ width: '75%' }} />
+            <span className="pr-line" style={{ width: '65%' }} />
+          </div>
+          <span className="pr-badge">S7</span>
+        </div>
+      )
   }
 }
