@@ -1,6 +1,6 @@
 export type AppStatus = 'live' | 'beta' | 'new' | 'prototype' | 'coming-soon'
 
-export type AppThumb = 'score' | 'radar' | 'hook' | 'brief'
+export type AppThumb = 'score' | 'radar' | 'hook' | 'brief' | 'proposal'
 
 export type MiniApp = {
   id: string
@@ -128,6 +128,31 @@ export const APPS: MiniApp[] = [
       build_potential: 'Could become a full pricing strategy audit tool with historical tracking.',
     },
     interest_context: 'pricing-diagnostic',
+  },
+  {
+    id: 'proposal-engine',
+    name: 'Proposal Draft Engine',
+    status: 'live',
+    category: 'AI / Utilities',
+    cats: ['ai', 'utilities'],
+    short_description:
+      'Paste a client brief or RFP. Get a full tailored proposal — scope, phases, stack, timeline, and a why-us section — in seconds.',
+    tags: ['proposal', 'sales', 'ai', 'drafting', 'rfp'],
+    thumb: 'proposal',
+    launch_url: '/mini-apps/proposal-engine',
+    learn_more: {
+      what_it_does:
+        'Reads a client brief, RFP, or job description and generates a structured project proposal with scope summary, suggested phases, tech stack recommendation, rough timeline, and a tailored why-us section seeded with S7 capabilities.',
+      how_it_works: {
+        inputs: ['client brief or RFP text', 'tone (formal / conversational / technical)'],
+        outputs: ['scope', 'phases', 'tech stack', 'timeline', 'why S7'],
+      },
+      who_its_for:
+        'S7 team members responding to inbound briefs or RFPs who want a solid first draft in seconds instead of starting from a blank doc.',
+      build_potential:
+        'Could become a full proposal management tool with version history, client-specific templates, and direct export to Google Docs or Notion.',
+    },
+    interest_context: 'proposal-engine',
   },
 ]
 

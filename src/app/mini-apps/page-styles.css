@@ -2401,6 +2401,48 @@
   box-shadow: 0 0 8px rgba(79, 140, 255, 0.2);
 }
 
+/* Proposal thumb */
+.mini-apps-lab .thumb-proposal {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 12px 14px;
+}
+.mini-apps-lab .pr-doc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding-right: 28px;
+}
+.mini-apps-lab .pr-line {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.mini-apps-lab .pr-line.pr-heading {
+  height: 7px;
+  background: rgba(79, 140, 255, 0.5);
+  box-shadow: 0 0 8px rgba(79, 140, 255, 0.35);
+  border-radius: 3px;
+}
+.mini-apps-lab .pr-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  border: 1px solid rgba(79, 140, 255, 0.4);
+  background: rgba(79, 140, 255, 0.12);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
 /* Empty state */
 .mini-apps-lab .empty-state {
   text-align: center;
