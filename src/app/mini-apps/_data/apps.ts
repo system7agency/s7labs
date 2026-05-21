@@ -14,6 +14,7 @@ export type AppThumb =
   | 'fan'
   | 'portal'
   | 'score'
+  | 'radar'
 
 export type MiniApp = {
   id: string
@@ -48,6 +49,31 @@ export const CATEGORIES = [
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'outbound-radar',
+    name: 'Outbound Trigger Radar',
+    status: 'live',
+    category: 'AI / Operations',
+    cats: ['ai', 'operations'],
+    short_description:
+      'Enter a company domain. Get a scored brief of buy signals, the best outreach angle, and who to contact first.',
+    tags: ['outbound', 'signals', 'sales', 'intent', 'ai'],
+    thumb: 'radar',
+    launch_url: '/mini-apps/outbound-radar',
+    learn_more: {
+      what_it_does:
+        'Scrapes a company homepage, about page, and careers page in parallel, then uses AI to detect buying signals — hiring patterns, expansion moves, tech changes — and scores overall intent. Returns a concrete outreach angle and best-fit persona.',
+      how_it_works: {
+        inputs: ['company name', 'domain'],
+        outputs: ['intent score', 'urgency', 'buy signals', 'outreach angle', 'best persona'],
+      },
+      who_its_for:
+        'SDRs, AEs, and founders who want fast, evidence-based context before a cold outreach — instead of guessing.',
+      build_potential:
+        'Could become a full account-intelligence layer feeding directly into a CRM or sequencer.',
+    },
+    interest_context: 'outbound-radar',
+  },
   {
     id: 'pricing-diagnostic',
     name: 'Pricing Page Diagnostic',
