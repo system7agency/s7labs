@@ -2302,6 +2302,57 @@
   }
 }
 
+/* Job Brief thumb */
+.mini-apps-lab .thumb-brief-jb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+}
+.mini-apps-lab .jb-left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+.mini-apps-lab .jb-line {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.mini-apps-lab .jb-line.jb-tech {
+  background: rgba(4, 227, 238, 0.45);
+  box-shadow: 0 0 5px rgba(4, 227, 238, 0.3);
+}
+.mini-apps-lab .jb-line.jb-pain {
+  background: rgba(255, 92, 122, 0.45);
+  box-shadow: 0 0 5px rgba(255, 92, 122, 0.3);
+}
+.mini-apps-lab .jb-arrow {
+  font-size: 14px;
+  color: rgba(79, 140, 255, 0.6);
+  flex-shrink: 0;
+}
+.mini-apps-lab .jb-brief {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+.mini-apps-lab .jb-b-line {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  width: 100%;
+}
+.mini-apps-lab .jb-b-line.jb-b-angle {
+  background: rgba(79, 140, 255, 0.45);
+  box-shadow: 0 0 8px rgba(79, 140, 255, 0.3);
+  height: 8px;
+}
+
 /* Hook thumb */
 .mini-apps-lab .thumb-hook {
   display: flex;

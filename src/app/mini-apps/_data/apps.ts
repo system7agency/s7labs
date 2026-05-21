@@ -1,6 +1,6 @@
 export type AppStatus = 'live' | 'beta' | 'new' | 'prototype' | 'coming-soon'
 
-export type AppThumb = 'score' | 'radar' | 'hook'
+export type AppThumb = 'score' | 'radar' | 'hook' | 'brief'
 
 export type MiniApp = {
   id: string
@@ -30,6 +30,31 @@ export const CATEGORIES = [
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'job-brief',
+    name: 'Job Posting to Sales Brief',
+    status: 'live',
+    category: 'AI / Operations',
+    cats: ['ai', 'operations'],
+    short_description:
+      'Drop a job posting URL or paste the text. Get a sales brief with pain points, tech stack, budget signals, and a ready-to-use pitch.',
+    tags: ['sales', 'jobs', 'brief', 'signals', 'ai'],
+    thumb: 'brief',
+    launch_url: '/mini-apps/job-brief',
+    learn_more: {
+      what_it_does:
+        'Scrapes or reads a job posting, then uses AI to extract the tech stack, infer pain points, identify budget signals, and write a specific sales angle — plus the ideal first contact to reach out to.',
+      how_it_works: {
+        inputs: ['job posting URL or pasted text'],
+        outputs: ['pain points', 'tech stack', 'budget signals', 'sales angle', 'ideal contact'],
+      },
+      who_its_for:
+        'AEs and SDRs who want to turn job postings into warm, intelligence-led outreach instead of guessing what the company needs.',
+      build_potential:
+        'Could become a real-time job-feed monitor that auto-generates briefs for every new posting matching your ICP.',
+    },
+    interest_context: 'job-brief',
+  },
   {
     id: 'linkedin-hook',
     name: 'LinkedIn Post to Outbound Hook',
