@@ -89,6 +89,48 @@ function jsonResponse(body: ApiResponse, status: number) {
   return NextResponse.json(body, { status })
 }
 
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+async function fallbackFetchContent(url: string, signal: AbortSignal): Promise<string> {
+  try {
+    const res = await fetch(url, {
+      signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; S7LabsWebsiteRoast/1.0; +https://s7labs.ai)',
+        Accept: 'text/html,application/xhtml+xml',
+      },
+      redirect: 'follow',
+    })
+    if (!res.ok) return ''
+    const html = await res.text()
+    const text = htmlToText(html)
+    return text.length >= 200 ? text.slice(0, 10000) : ''
+  } catch {
+    return ''
+  }
+}
+
+function scrapeFailureMessage(scrapeResult: PromiseSettledResult<unknown>): string {
+  if (scrapeResult.status === 'rejected') {
+    const reason = scrapeResult.reason as { statusCode?: number; message?: string } | undefined
+    if (reason?.statusCode === 401 || reason?.statusCode === 403) {
+      return 'Scrape service authentication failed. Check FIRECRAWL_API_KEY in environment variables.'
+    }
+    return "Couldn't fetch that URL. Check it's public and try again."
+  }
+  const value = scrapeResult.value as { success?: boolean; error?: string } | undefined
+  if (value?.error) return `Couldn't fetch that URL: ${value.error}`
+  return "Couldn't fetch that URL. Check it's public and try again."
+}
+
 function extractLighthouseScore(data: unknown, category: string): number | null {
   if (!data || typeof data !== 'object') return null
   const root = data as Record<string, unknown>
@@ -103,7 +145,11 @@ function extractLighthouseScore(data: unknown, category: string): number | null 
   return Math.round(score * 100)
 }
 
-async function fetchPageSpeed(url: string, signal: AbortSignal): Promise<LighthouseScores> {
+async function fetchPageSpeed(
+  url: string,
+  signal: AbortSignal,
+  apiKey?: string
+): Promise<LighthouseScores> {
   const nullScores: LighthouseScores = {
     performance: null,
     seo: null,
@@ -112,7 +158,12 @@ async function fetchPageSpeed(url: string, signal: AbortSignal): Promise<Lightho
   }
 
   try {
-    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile`
+    const params = new URLSearchParams({
+      url,
+      strategy: 'mobile',
+    })
+    if (apiKey) params.set('key', apiKey)
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params.toString()}`
     const res = await fetch(apiUrl, { signal })
     if (!res.ok) return nullScores
     const data = (await res.json()) as unknown
@@ -130,6 +181,7 @@ async function fetchPageSpeed(url: string, signal: AbortSignal): Promise<Lightho
 export async function POST(request: Request) {
   const anthropicKey = process.env.ANTHROPIC_API_KEY
   const firecrawlKey = process.env.FIRECRAWL_API_KEY
+  const pagespeedKey = process.env.PAGESPEED_API_KEY
 
   if (!anthropicKey || !firecrawlKey) {
     return jsonResponse(
@@ -159,24 +211,24 @@ export async function POST(request: Request) {
 
     const [scrapeResult, lighthouseResult] = await Promise.allSettled([
       firecrawl.scrapeUrl(url, { formats: ['markdown'] }),
-      fetchPageSpeed(url, controller.signal),
+      fetchPageSpeed(url, controller.signal, pagespeedKey),
     ])
 
     let scrapedContent = ''
-    if (
-      scrapeResult.status === 'fulfilled' &&
-      scrapeResult.value.success &&
-      scrapeResult.value.markdown
-    ) {
-      scrapedContent = scrapeResult.value.markdown.slice(0, 10000)
+    if (scrapeResult.status === 'fulfilled') {
+      const scrape = scrapeResult.value
+      if (scrape.success && scrape.markdown) {
+        scrapedContent = scrape.markdown.slice(0, 10000)
+      }
+    }
+
+    if (!scrapedContent) {
+      scrapedContent = await fallbackFetchContent(url, controller.signal)
     }
 
     if (!scrapedContent) {
       clearTimeout(timer)
-      return jsonResponse(
-        { ok: false, message: "Couldn't fetch that URL. Check it's public and try again." },
-        422
-      )
+      return jsonResponse({ ok: false, message: scrapeFailureMessage(scrapeResult) }, 422)
     }
 
     const lighthouse: LighthouseScores =
