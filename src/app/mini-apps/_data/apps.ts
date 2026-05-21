@@ -1,6 +1,6 @@
 export type AppStatus = 'live' | 'beta' | 'new' | 'prototype' | 'coming-soon'
 
-export type AppThumb = 'score' | 'radar'
+export type AppThumb = 'score' | 'radar' | 'hook'
 
 export type MiniApp = {
   id: string
@@ -30,6 +30,31 @@ export const CATEGORIES = [
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'linkedin-hook',
+    name: 'LinkedIn Post to Outbound Hook',
+    status: 'live',
+    category: 'AI / Operations',
+    cats: ['ai', 'operations'],
+    short_description:
+      'Paste a LinkedIn post. Get three personalised outbound hooks — each with a different angle, tone, and channel.',
+    tags: ['outbound', 'linkedin', 'hooks', 'copywriting', 'ai'],
+    thumb: 'hook',
+    launch_url: '/mini-apps/linkedin-hook',
+    learn_more: {
+      what_it_does:
+        'Reads a LinkedIn post, extracts the outbound trigger (opinion, achievement, pain, or news), profiles the ideal buyer persona, and writes three ready-to-send hooks with distinct angles across LinkedIn DM, email, and cold call.',
+      how_it_works: {
+        inputs: ['linkedin post text'],
+        outputs: ['trigger', 'persona', '3 hooks', 'best pick'],
+      },
+      who_its_for:
+        'SDRs and AEs who want to turn content they see in their feed into instant, highly personalised outbound without spending 20 minutes writing.',
+      build_potential:
+        'Could become a feed-connected prospecting tool that surfaces posts and auto-generates hooks in real time.',
+    },
+    interest_context: 'linkedin-hook',
+  },
   {
     id: 'outbound-radar',
     name: 'Outbound Trigger Radar',

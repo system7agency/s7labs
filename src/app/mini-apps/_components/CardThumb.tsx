@@ -6,6 +6,22 @@ type CardThumbProps = {
 
 export function CardThumb({ thumb }: CardThumbProps) {
   switch (thumb) {
+    case 'hook':
+      return (
+        <div className="card-thumb thumb-hook">
+          <div className="hk-post">
+            <span className="hk-line" style={{ width: '90%' }} />
+            <span className="hk-line" style={{ width: '70%' }} />
+            <span className="hk-line hk-hi" style={{ width: '55%' }} />
+          </div>
+          <div className="hk-arrow">→</div>
+          <div className="hk-hooks">
+            <span className="hk-hook hk-hook-best" />
+            <span className="hk-hook" />
+            <span className="hk-hook" />
+          </div>
+        </div>
+      )
     case 'score':
       return (
         <div className="card-thumb thumb-score">
