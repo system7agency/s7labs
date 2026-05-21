@@ -258,7 +258,9 @@ export default function JobBriefPage() {
       setSysState('running')
       setAppState('loading')
       const label =
-        inputMode === 'url' ? trimUrl.replace(/^https?:\/\//, '').split('/')[0] : 'pasted text'
+        inputMode === 'url'
+          ? (trimUrl.replace(/^https?:\/\//, '').split('/')[0] ?? trimUrl)
+          : 'pasted text'
       startLoadingAnimation(label)
 
       let data: ApiResponse
