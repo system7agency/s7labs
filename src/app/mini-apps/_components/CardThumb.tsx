@@ -6,6 +6,18 @@ type CardThumbProps = {
 
 export function CardThumb({ thumb }: CardThumbProps) {
   switch (thumb) {
+    case 'roast':
+      return (
+        <div className="card-thumb thumb-roast">
+          <div className="rt-browser">
+            <span className="rt-bar" />
+            <span className="rt-line" style={{ width: '80%' }} />
+            <span className="rt-line" style={{ width: '55%' }} />
+            <span className="rt-line rt-line-hi" style={{ width: '40%' }} />
+          </div>
+          <span className="rt-badge">C+</span>
+        </div>
+      )
     case 'sanity':
       return (
         <div className="card-thumb thumb-sanity">

@@ -1,6 +1,6 @@
 export type AppStatus = 'live' | 'beta' | 'new' | 'prototype' | 'coming-soon'
 
-export type AppThumb = 'score' | 'radar' | 'hook' | 'brief' | 'proposal' | 'sanity' 
+export type AppThumb = 'score' | 'radar' | 'hook' | 'brief' | 'proposal' | 'sanity' | 'roast'
 
 export type MiniApp = {
   id: string
@@ -30,6 +30,37 @@ export const CATEGORIES = [
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'website-roast',
+    name: 'Website Roast Bot',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'utilities'],
+    short_description:
+      'Drop a URL. Get a brutally honest roast of the site — copy, CTAs, SEO, mobile UX, and real Lighthouse scores — with 3 priority fixes.',
+    tags: ['website', 'roast', 'audit', 'seo', 'ux', 'ai'],
+    thumb: 'roast',
+    launch_url: '/mini-apps/website-roast',
+    learn_more: {
+      what_it_does:
+        'Scrapes any website, runs it through Google PageSpeed for real Lighthouse scores, and feeds everything to Claude for a brutally honest breakdown across 6 categories: copy quality, CTA clarity, SEO basics, mobile UX, performance, and trust signals.',
+      how_it_works: {
+        inputs: ['website URL'],
+        outputs: [
+          'overall score',
+          '6 category scores',
+          'roast per category',
+          'lighthouse scores',
+          '3 priority fixes',
+        ],
+      },
+      who_its_for:
+        "Founders, marketers, and agencies who want a fast honest audit of any site — their own or a competitor's.",
+      build_potential:
+        'Could become a full site audit tool with historical tracking, competitor comparison, and weekly automated reports.',
+    },
+    interest_context: 'website-roast',
+  },
   {
     id: 'crm-sanity',
     name: 'CRM Field Sanity Check',
