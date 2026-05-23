@@ -5,6 +5,9 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react'
 
 import styles from './S7ChatWidget.module.css'
 
+/** Dispatch this window event to open the chat widget from anywhere (e.g. the header CTA). */
+export const OPEN_CHAT_WIDGET_EVENT = 's7:open-chat-widget'
+
 type Role = 'user' | 'ai'
 type Mode = 'chat' | 'voice'
 
@@ -54,6 +57,12 @@ export function S7ChatWidget() {
     update()
     mq.addEventListener('change', update)
     return () => mq.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    const openWidget = () => setOpen(true)
+    window.addEventListener(OPEN_CHAT_WIDGET_EVENT, openWidget)
+    return () => window.removeEventListener(OPEN_CHAT_WIDGET_EVENT, openWidget)
   }, [])
 
   useEffect(() => {

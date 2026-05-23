@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
-import { TalkToSystem7Modal } from './TalkToSystem7Modal'
+import { OPEN_CHAT_WIDGET_EVENT } from './S7ChatWidget'
 import './Header.css'
 
 type HeaderProps = {
@@ -15,7 +15,6 @@ const SCROLL_THRESHOLD = 80
 
 export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
   const [hidden, setHidden] = useState(false)
-  const [callOpen, setCallOpen] = useState(false)
 
   useEffect(() => {
     let ticking = false
@@ -87,7 +86,7 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
           type="button"
           className="phone-pill"
           aria-label="Call System 7 — voice agent"
-          onClick={() => setCallOpen(true)}
+          onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CHAT_WIDGET_EVENT))}
         >
           <span className="live-dot" />
           <svg
@@ -105,7 +104,6 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
           </span>
         </button>
       </div>
-      <TalkToSystem7Modal open={callOpen} onClose={() => setCallOpen(false)} />
     </header>
   )
 }
