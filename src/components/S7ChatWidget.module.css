@@ -502,6 +502,293 @@
   transform: scale(1.05);
 }
 
+.voiceOrbSm {
+  width: 80px;
+  height: 80px;
+  box-shadow: 0 0 28px var(--s7-accent-glow);
+}
+
+/* --- Voice-idle: three-option picker --- */
+.callOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.callCard {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: var(--s7-surface);
+  border: 1px solid var(--s7-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: var(--s7-fg);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.callCard:hover {
+  border-color: var(--s7-border-strong);
+  background: var(--s7-surface-2);
+}
+
+/* Terminal-board corner brackets (matches the /agent cards). */
+.callCard::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--s7-border-strong), var(--s7-border-strong)) 0 0 / 9px 1px no-repeat,
+    linear-gradient(var(--s7-border-strong), var(--s7-border-strong)) 0 0 / 1px 9px no-repeat,
+    linear-gradient(var(--s7-border-strong), var(--s7-border-strong)) 100% 0 / 9px 1px no-repeat,
+    linear-gradient(var(--s7-border-strong), var(--s7-border-strong)) 100% 0 / 1px 9px no-repeat,
+    linear-gradient(var(--s7-border-strong), var(--s7-border-strong)) 0 100% / 9px 1px no-repeat,
+    linear-gradient(var(--s7-border-strong), var(--s7-border-strong)) 0 100% / 1px 9px no-repeat,
+    linear-gradient(var(--s7-border-strong), var(--s7-border-strong)) 100% 100% / 9px 1px no-repeat,
+    linear-gradient(var(--s7-border-strong), var(--s7-border-strong)) 100% 100% / 1px 9px no-repeat;
+  opacity: 0.5;
+  transition: opacity 160ms ease;
+}
+
+.callCard:hover::after {
+  opacity: 1;
+}
+
+.callCardIcon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--s7-surface-2);
+  border: 1px solid var(--s7-border);
+  color: var(--s7-accent);
+}
+
+.callCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.callCardLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--s7-sans);
+  font-size: 14px;
+  color: var(--s7-fg);
+}
+
+.callCardSub {
+  font-family: var(--s7-sans);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--s7-fg-muted);
+}
+
+.callCardSubMono {
+  font-family: var(--s7-mono);
+  letter-spacing: 0.06em;
+  color: var(--s7-accent);
+}
+
+.copiedToast {
+  font-family: var(--s7-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--s7-green);
+  border: 1px solid color-mix(in srgb, var(--s7-green) 40%, transparent);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+/* --- Get-a-call form --- */
+.callForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.callFormRow {
+  display: flex;
+  gap: 8px;
+}
+
+.callCode {
+  flex-shrink: 0;
+  background: var(--s7-surface);
+  border: 1px solid var(--s7-border);
+  border-radius: 8px;
+  color: var(--s7-fg);
+  font-family: var(--s7-mono);
+  font-size: 13px;
+  padding: 0 8px;
+  cursor: pointer;
+  outline: none;
+}
+
+.callCode:focus {
+  border-color: var(--s7-border-strong);
+}
+
+.callPhoneInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--s7-surface);
+  border: 1px solid var(--s7-border);
+  border-radius: 8px;
+  color: var(--s7-fg);
+  font-family: var(--s7-mono);
+  font-size: 13px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.callPhoneInput::placeholder {
+  color: var(--s7-fg-dim);
+}
+
+.callPhoneInput:focus {
+  border-color: var(--s7-border-strong);
+}
+
+.callSubmit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--s7-accent);
+  border: none;
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-family: var(--s7-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #04181b;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.callSubmit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.callSpinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(4, 24, 27, 0.35);
+  border-top-color: #04181b;
+  animation: callSpin 0.7s linear infinite;
+}
+
+@keyframes callSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.callFormError {
+  font-family: var(--s7-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: #ff8b8b;
+  text-wrap: pretty;
+}
+
+.voiceBack {
+  align-self: center;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  font-family: var(--s7-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--s7-fg-muted);
+  cursor: pointer;
+}
+
+.voiceBack:hover {
+  color: var(--s7-fg);
+}
+
+.voiceBack:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- Get-a-call success --- */
+.callSuccess {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+}
+
+.callRing {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--s7-accent-dim);
+}
+
+.callRing::before,
+.callRing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--s7-accent);
+  animation: callPing 1.8s ease-out infinite;
+}
+
+.callRing::after {
+  animation-delay: 0.9s;
+}
+
+@keyframes callPing {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.callSuccessText {
+  font-family: var(--s7-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--s7-fg);
+  text-wrap: pretty;
+}
+
 @keyframes orbBreatheLg {
   0%,
   100% {
@@ -608,6 +895,13 @@
   .voiceOrbActive {
     animation: none;
   }
+
+  /* Keep the success state visible, just drop the ring + spinner motion. */
+  .callRing::before,
+  .callRing::after,
+  .callSpinner {
+    animation: none;
+  }
 }
 
 @media (max-width: 640px) {
@@ -682,8 +976,16 @@
 
   /* iOS Safari auto-zooms any input < 16px on focus. Bump the chat field
      up; the keystroke prompt and other monospace UI stay at desktop sizes. */
-  .field {
+  .field,
+  .callPhoneInput,
+  .callCode {
     font-size: 16px;
+  }
+
+  .callOptions,
+  .callForm,
+  .callSuccess {
+    max-width: 100%;
   }
 
   .header {

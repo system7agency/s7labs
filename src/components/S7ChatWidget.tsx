@@ -119,6 +119,7 @@ export function S7ChatWidget() {
     <ConversationProvider>
       <S7ChatPanel
         agentId={agentId}
+        isMobile={isMobile}
         onClose={() => setOpen(false)}
         onMinimize={() => setOpen(false)}
       />
@@ -126,12 +127,29 @@ export function S7ChatWidget() {
   )
 }
 
+const COUNTRY_CODES = [
+  { flag: '🇺🇸', code: '+1', country: 'United States' },
+  { flag: '🇬🇧', code: '+44', country: 'United Kingdom' },
+  { flag: '🇮🇳', code: '+91', country: 'India' },
+  { flag: '🇵🇰', code: '+92', country: 'Pakistan' },
+  { flag: '🇫🇷', code: '+33', country: 'France' },
+  { flag: '🇩🇪', code: '+49', country: 'Germany' },
+  { flag: '🇦🇺', code: '+61', country: 'Australia' },
+  { flag: '🇦🇪', code: '+971', country: 'United Arab Emirates' },
+]
+const PUBLIC_PHONE = process.env.NEXT_PUBLIC_ELEVENLABS_PUBLIC_PHONE ?? ''
+
+type VoiceView = 'options' | 'getcall'
+type CallFormStatus = 'idle' | 'loading' | 'success'
+
 function S7ChatPanel({
   agentId,
+  isMobile,
   onClose,
   onMinimize,
 }: {
   agentId: string
+  isMobile: boolean
   onClose: () => void
   onMinimize: () => void
 }) {
@@ -144,6 +162,17 @@ function S7ChatPanel({
 
   const [callDuration, setCallDuration] = useState(0)
   const [voiceStatusText, setVoiceStatusText] = useState<string>('')
+
+  // "Get a call" / "Call us directly" picker state (voice-idle).
+  const [voiceView, setVoiceView] = useState<VoiceView>('options')
+  const [countryCode, setCountryCode] = useState('+1')
+  const [phoneInput, setPhoneInput] = useState('')
+  const [callFormStatus, setCallFormStatus] = useState<CallFormStatus>('idle')
+  const [callFormError, setCallFormError] = useState<string | null>(null)
+  const [successMasked, setSuccessMasked] = useState('')
+  const [copied, setCopied] = useState(false)
+  const successTimerRef = useRef<number | null>(null)
+  const copyTimerRef = useRef<number | null>(null)
 
   const chatConvoRef = useRef<SDKConversation | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -347,10 +376,78 @@ function S7ChatPanel({
     }
   }, [conversation])
 
+  // --- "Get a call" form ---
+  const phoneDigits = phoneInput.replace(/\D/g, '')
+  const phoneValid = phoneDigits.length >= 7 && phoneDigits.length <= 15
+  const e164 = `${countryCode}${phoneDigits}`
+
+  const resetCallForm = useCallback(() => {
+    if (successTimerRef.current) {
+      window.clearTimeout(successTimerRef.current)
+      successTimerRef.current = null
+    }
+    setVoiceView('options')
+    setCallFormStatus('idle')
+    setCallFormError(null)
+    setPhoneInput('')
+    setSuccessMasked('')
+  }, [])
+
+  const handleGetCallSubmit = useCallback(async () => {
+    if (!phoneValid || callFormStatus === 'loading') return
+    setCallFormStatus('loading')
+    setCallFormError(null)
+    try {
+      const res = await fetch('/api/voice/outbound-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: e164 }),
+      })
+      if (res.ok) {
+        setSuccessMasked(`${countryCode}•••••${phoneDigits.slice(-4)}`)
+        setCallFormStatus('success')
+        successTimerRef.current = window.setTimeout(() => {
+          resetCallForm()
+        }, 30_000)
+        return
+      }
+      setCallFormStatus('idle')
+      if (res.status === 400) {
+        setCallFormError('Invalid phone number')
+      } else if (res.status === 429) {
+        setCallFormError('Too many requests. Try again in an hour')
+      } else {
+        setCallFormError('Couldn’t place call. Please try again or use browser voice instead')
+      }
+    } catch {
+      setCallFormStatus('idle')
+      setCallFormError('Couldn’t place call. Please try again or use browser voice instead')
+    }
+  }, [phoneValid, callFormStatus, e164, countryCode, phoneDigits, resetCallForm])
+
+  const handleCopyNumber = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(PUBLIC_PHONE)
+      setCopied(true)
+      if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current)
+      copyTimerRef.current = window.setTimeout(() => setCopied(false), 1800)
+    } catch {
+      /* clipboard unavailable — no-op */
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) window.clearTimeout(successTimerRef.current)
+      if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current)
+    }
+  }, [])
+
   const switchMode = (next: Mode) => {
     if (next === mode) return
-    if (mode === 'voice' && isCallActive) {
-      endVoiceCall()
+    if (mode === 'voice') {
+      if (isCallActive) endVoiceCall()
+      resetCallForm()
     }
     setMode(next)
   }
@@ -361,6 +458,7 @@ function S7ChatPanel({
     if (isCallActive) {
       conversation.endSession()
     }
+    resetCallForm()
     onClose()
   }
 
@@ -508,26 +606,13 @@ function S7ChatPanel({
               </button>
             </div>
           </>
-        ) : (
+        ) : isCallActive || voiceStatus === 'error' ? (
+          /* Active in-browser WebRTC call (unchanged flow). */
           <div className={styles.voicePane}>
             <span
               className={`${styles.voiceOrb} ${isCallActive ? styles.voiceOrbActive : ''}`}
               aria-hidden
             />
-
-            {voiceStatus === 'disconnected' && (
-              <>
-                <div className={styles.voicePrompt}>TAP TO CONNECT</div>
-                <button
-                  type="button"
-                  className={styles.voiceStartBtn}
-                  onClick={startVoiceCall}
-                  aria-label="Start voice call"
-                >
-                  <PhoneIcon />
-                </button>
-              </>
-            )}
 
             {voiceStatus === 'connecting' && (
               <>
@@ -571,6 +656,148 @@ function S7ChatPanel({
               <div className={styles.voiceError}>{errorMsg}</div>
             )}
           </div>
+        ) : (
+          /* voice-idle: three-option picker / get-a-call form. */
+          <div className={styles.voicePane}>
+            <span className={`${styles.voiceOrb} ${styles.voiceOrbSm}`} aria-hidden />
+
+            {voiceView === 'options' ? (
+              <div className={styles.callOptions}>
+                <button type="button" className={styles.callCard} onClick={startVoiceCall}>
+                  <span className={styles.callCardIcon} aria-hidden>
+                    <HeadphonesIcon />
+                  </span>
+                  <span className={styles.callCardText}>
+                    <span className={styles.callCardLabel}>Talk in browser</span>
+                    <span className={styles.callCardSub}>
+                      Voice chat through your speakers and mic
+                    </span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.callCard}
+                  onClick={() => {
+                    setCallFormError(null)
+                    setVoiceView('getcall')
+                  }}
+                >
+                  <span className={styles.callCardIcon} aria-hidden>
+                    <PhoneIncomingIcon />
+                  </span>
+                  <span className={styles.callCardText}>
+                    <span className={styles.callCardLabel}>Get a call</span>
+                    <span className={styles.callCardSub}>
+                      Enter your number, our agent will call you
+                    </span>
+                  </span>
+                </button>
+
+                {isMobile && PUBLIC_PHONE ? (
+                  <a
+                    className={styles.callCard}
+                    href={`tel:${PUBLIC_PHONE.replace(/[^\d+]/g, '')}`}
+                  >
+                    <span className={styles.callCardIcon} aria-hidden>
+                      <PhoneOutgoingIcon />
+                    </span>
+                    <span className={styles.callCardText}>
+                      <span className={styles.callCardLabel}>Call us directly</span>
+                      <span className={`${styles.callCardSub} ${styles.callCardSubMono}`}>
+                        {PUBLIC_PHONE}
+                      </span>
+                    </span>
+                  </a>
+                ) : (
+                  <button type="button" className={styles.callCard} onClick={handleCopyNumber}>
+                    <span className={styles.callCardIcon} aria-hidden>
+                      <PhoneOutgoingIcon />
+                    </span>
+                    <span className={styles.callCardText}>
+                      <span className={styles.callCardLabel}>
+                        Call us directly
+                        {copied && <span className={styles.copiedToast}>Copied</span>}
+                      </span>
+                      <span className={`${styles.callCardSub} ${styles.callCardSubMono}`}>
+                        {PUBLIC_PHONE}
+                      </span>
+                    </span>
+                  </button>
+                )}
+              </div>
+            ) : callFormStatus === 'success' ? (
+              <div className={styles.callSuccess}>
+                <span className={styles.callRing} aria-hidden />
+                <div className={styles.callSuccessText}>
+                  Calling you at {successMasked} — answer your phone
+                </div>
+                <button type="button" className={styles.voiceBack} onClick={resetCallForm}>
+                  ← BACK TO OPTIONS
+                </button>
+              </div>
+            ) : (
+              <form
+                className={styles.callForm}
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  void handleGetCallSubmit()
+                }}
+              >
+                <div className={styles.callFormRow}>
+                  <select
+                    className={styles.callCode}
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    aria-label="Country code"
+                  >
+                    {COUNTRY_CODES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {`${c.flag}  ${c.code}`}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    className={styles.callPhoneInput}
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    placeholder="phone number"
+                    aria-label="Phone number"
+                  />
+                </div>
+
+                {callFormError && <div className={styles.callFormError}>{callFormError}</div>}
+
+                <button
+                  type="submit"
+                  className={styles.callSubmit}
+                  disabled={!phoneValid || callFormStatus === 'loading'}
+                >
+                  {callFormStatus === 'loading' ? (
+                    <>
+                      <span className={styles.callSpinner} aria-hidden /> Calling…
+                    </>
+                  ) : (
+                    'Call me'
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.voiceBack}
+                  onClick={resetCallForm}
+                  disabled={callFormStatus === 'loading'}
+                >
+                  ← BACK
+                </button>
+              </form>
+            )}
+
+            {errorMsg && <div className={styles.voiceError}>{errorMsg}</div>}
+          </div>
         )}
 
         <div className={styles.footer}>
@@ -598,6 +825,49 @@ function PhoneIcon({ rotated = false }: { rotated?: boolean }) {
       style={rotated ? { transform: 'rotate(135deg)' } : undefined}
       aria-hidden
     >
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z" />
+    </svg>
+  )
+}
+
+function cardIconProps() {
+  return {
+    width: 18,
+    height: 18,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.7,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  }
+}
+
+function HeadphonesIcon() {
+  return (
+    <svg {...cardIconProps()}>
+      <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+    </svg>
+  )
+}
+
+function PhoneIncomingIcon() {
+  return (
+    <svg {...cardIconProps()}>
+      <polyline points="16 2 16 8 22 8" />
+      <line x1="22" y1="2" x2="16" y2="8" />
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z" />
+    </svg>
+  )
+}
+
+function PhoneOutgoingIcon() {
+  return (
+    <svg {...cardIconProps()}>
+      <polyline points="23 7 23 1 17 1" />
+      <line x1="16" y1="8" x2="23" y2="1" />
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z" />
     </svg>
   )
