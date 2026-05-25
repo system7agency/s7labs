@@ -663,7 +663,11 @@ function S7ChatPanel({
 
             {voiceView === 'options' ? (
               <div className={styles.callOptions}>
-                <button type="button" className={styles.callCard} onClick={startVoiceCall}>
+                <button
+                  type="button"
+                  className={`${styles.callCard} ${styles.callCardGlow}`}
+                  onClick={startVoiceCall}
+                >
                   <span className={styles.callCardIcon} aria-hidden>
                     <HeadphonesIcon />
                   </span>
@@ -677,7 +681,7 @@ function S7ChatPanel({
 
                 <button
                   type="button"
-                  className={styles.callCard}
+                  className={`${styles.callCard} ${styles.callCardGlow}`}
                   onClick={() => {
                     setCallFormError(null)
                     setVoiceView('getcall')

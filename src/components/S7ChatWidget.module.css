@@ -564,6 +564,101 @@
   opacity: 1;
 }
 
+/*
+ * Glowing variant for the two primary call options ("Talk in browser",
+ * "Get a call"). Echoes the orb's cyan glow language so the cards read as
+ * extensions of the orb. Additive: the corner brackets (::after) still layer
+ * on top. "Call us directly" stays on the plain .callCard treatment.
+ */
+.callCard.callCardGlow {
+  border-color: var(--s7-accent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--s7-accent) 4%, transparent),
+    color-mix(in srgb, var(--s7-accent) 1%, transparent)
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--s7-accent) 18%, transparent),
+    0 0 24px -4px color-mix(in srgb, var(--s7-accent) 28%, transparent),
+    inset 0 0 32px -12px color-mix(in srgb, var(--s7-accent) 12%, transparent);
+  /* Breathe in sync with the orb (orbBreatheLg / orbBreathe use 4.2s). */
+  animation: optionGlow 4.2s ease-in-out infinite;
+  transition:
+    box-shadow 320ms ease,
+    border-color 320ms ease;
+}
+
+.callCard.callCardGlow:hover {
+  border-color: var(--s7-accent);
+  /* Drop the breathing so the intensified static glow isn't overridden. */
+  animation: none;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--s7-accent) 32%, transparent),
+    0 0 36px -4px color-mix(in srgb, var(--s7-accent) 45%, transparent),
+    inset 0 0 40px -12px color-mix(in srgb, var(--s7-accent) 18%, transparent);
+}
+
+@keyframes optionGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--s7-accent) 18%, transparent),
+      0 0 24px -4px color-mix(in srgb, var(--s7-accent) 28%, transparent),
+      inset 0 0 32px -12px color-mix(in srgb, var(--s7-accent) 12%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--s7-accent) 28%, transparent),
+      0 0 32px -4px color-mix(in srgb, var(--s7-accent) 40%, transparent),
+      inset 0 0 36px -12px color-mix(in srgb, var(--s7-accent) 16%, transparent);
+  }
+}
+
+/*
+ * Border halo — the same spinning conic-gradient glint that travels around
+ * the collapsed "// ASK S7" pill (.pill::before). Reuses the shared
+ * @property --s7-halo-angle and the pillHaloSpin 3.6s linear keyframe so the
+ * cards and the pill share one effect. Additive: it rides the card border
+ * while the breathing glow (::card box-shadow) and corner brackets (::after)
+ * layer underneath/on top. Desktop only — see the @media block below.
+ * No overflow:hidden: this is a border ring (inset -1px), not a surface sweep.
+ */
+@media (min-width: 768px) {
+  .callCard.callCardGlow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 11px; /* card radius (10px) + 1px inset */
+    padding: 1px;
+    background: conic-gradient(
+      from var(--s7-halo-angle),
+      rgba(4, 227, 238, 0) 0deg,
+      rgba(4, 227, 238, 0) 280deg,
+      var(--s7-accent) 340deg,
+      #ffffff 360deg,
+      var(--s7-accent) 380deg,
+      rgba(4, 227, 238, 0) 440deg,
+      rgba(4, 227, 238, 0) 720deg
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: pillHaloSpin 3.6s linear infinite;
+    pointer-events: none;
+  }
+
+  /* Stagger the second card (Card B) by half a cycle so the two glints
+     don't orbit in lockstep. */
+  .callCard.callCardGlow:nth-of-type(2)::before {
+    animation-delay: 1.8s;
+  }
+}
+
 .callCardIcon {
   flex-shrink: 0;
   width: 34px;
@@ -894,6 +989,17 @@
   .voiceOrb,
   .voiceOrbActive {
     animation: none;
+  }
+
+  /* Keep the static cyan glow on the option cards, drop the breathing. */
+  .callCard.callCardGlow {
+    animation: none;
+  }
+
+  /* Remove the spinning border halo entirely (no glint). */
+  .callCard.callCardGlow::before {
+    animation: none;
+    background: none;
   }
 
   /* Keep the success state visible, just drop the ring + spinner motion. */
