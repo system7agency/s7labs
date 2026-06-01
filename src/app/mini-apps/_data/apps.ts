@@ -1,6 +1,14 @@
 export type AppStatus = 'live' | 'beta' | 'new' | 'prototype' | 'coming-soon'
 
-export type AppThumb = 'score' | 'radar' | 'hook' | 'brief' | 'proposal' | 'sanity' | 'roast'
+export type AppThumb =
+  | 'score'
+  | 'radar'
+  | 'hook'
+  | 'brief'
+  | 'proposal'
+  | 'sanity'
+  | 'roast'
+  | 'blueprint'
 
 export type MiniApp = {
   id: string
@@ -25,11 +33,44 @@ export type MiniApp = {
 export const CATEGORIES = [
   { id: 'all', label: 'ALL' },
   { id: 'ai', label: 'AI' },
+  { id: 'automations', label: 'AUTOMATIONS' },
   { id: 'operations', label: 'OPERATIONS' },
   { id: 'utilities', label: 'UTILITIES' },
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'automation-blueprint',
+    name: 'Automation Blueprint',
+    status: 'live',
+    category: 'Automations / AI',
+    cats: ['ai', 'automations'],
+    short_description:
+      'Describe a manual process in plain English and get a visual automation blueprint — the steps, the right tool (Make, n8n, Zapier), time saved per week, a difficulty rating, and a starter config.',
+    tags: ['automation', 'make', 'n8n', 'zapier', 'workflow', 'ai'],
+    thumb: 'blueprint',
+    launch_url: '/mini-apps/automation-blueprint',
+    learn_more: {
+      what_it_does:
+        'Turns a plain-English description of a repetitive manual process into a concrete automation blueprint: a rendered flowchart of the steps, which tool to use and why, realistic time saved per week and per year, a difficulty rating, and a starter Make or n8n config to build from.',
+      how_it_works: {
+        inputs: ['a plain-English description of a manual process'],
+        outputs: [
+          'visual flowchart',
+          'step-by-step breakdown',
+          'tool recommendation (Make / n8n / Zapier)',
+          'time saved estimate',
+          'difficulty rating',
+          'starter config',
+        ],
+      },
+      who_its_for:
+        "Founders, ops people, and agencies who want to see what an automation would actually look like before committing — and consultants who want to scope a client's pain point live.",
+      build_potential:
+        'Could generate import-ready Make and n8n blueprints, store a library of common process templates, and link straight into a build engagement.',
+    },
+    interest_context: 'automation-blueprint',
+  },
   {
     id: 'website-roast',
     name: 'Website Roast Bot',

@@ -18,6 +18,19 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="rt-badge">C+</span>
         </div>
       )
+    case 'blueprint':
+      return (
+        <div className="card-thumb thumb-blueprint">
+          <div className="bp-flow">
+            <span className="bp-node" />
+            <span className="bp-arrow">→</span>
+            <span className="bp-node" />
+            <span className="bp-arrow">→</span>
+            <span className="bp-node bp-node-end" />
+          </div>
+          <span className="bp-auto-badge">⚡</span>
+        </div>
+      )
     case 'sanity':
       return (
         <div className="card-thumb thumb-sanity">
