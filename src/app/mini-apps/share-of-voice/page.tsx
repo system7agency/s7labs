@@ -114,36 +114,53 @@ function buildPlainText(free: ScanFree, gated: ScanGated | null): string {
   return lines.join('\n')
 }
 
-function ScoreBarRow({
+function SovScoreCard({
   score,
   maxShare,
   totalBrands,
+  yourRank,
 }: {
   score: BrandScore
   maxShare: number
   totalBrands: number
+  yourRank: number
 }) {
-  const width = maxShare > 0 ? Math.max(4, (score.share_of_voice / maxShare) * 100) : 0
+  const fillPct = maxShare > 0 ? Math.max(6, (score.share_of_voice / maxShare) * 100) : 0
+  const isChaser = yourRank === 1 && score.rank === 2
+  const cardClass = [
+    'sov-score-card',
+    score.is_you && 'is-you',
+    score.rank === 1 && !score.is_you && 'is-leader',
+    isChaser && 'is-chaser',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const metaParts: string[] = []
+  if (score.is_you) metaParts.push(`rank ${score.rank} of ${totalBrands}`)
+  if (isChaser) metaParts.push('closest rival')
+  if (score.rank === 1 && !score.is_you) metaParts.push('leader')
+
   return (
-    <div
-      className={`score-bar-row${score.is_you ? 'is-you' : ''}${score.rank === 1 ? 'is-leader' : ''}`}
-    >
-      <div className="score-bar-meta">
-        <span className="score-bar-name">
-          {score.name}
-          {score.is_you ? ' (you)' : ''}
-        </span>
-        <span className="score-bar-pct">{score.share_of_voice}%</span>
+    <article className={cardClass}>
+      <div className="sov-score-top">
+        <span className="sov-score-rank">{String(score.rank).padStart(2, '0')}</span>
+        <div className="sov-score-info">
+          <div className="sov-score-name-row">
+            <span className="sov-score-name">{score.name}</span>
+            {score.is_you && <span className="sov-score-you">you</span>}
+          </div>
+          {metaParts.length > 0 && <div className="sov-score-meta">{metaParts.join(' · ')}</div>}
+        </div>
+        <div className="sov-score-pct-col">
+          <span className="sov-score-pct">{score.share_of_voice}</span>
+          <span className="sov-score-pct-suffix">%</span>
+        </div>
       </div>
-      <div className="score-bar-track">
-        <div className="score-bar" style={{ width: `${width}%` }} />
+      <div className="sov-meter" aria-hidden>
+        <div className="sov-meter-fill" style={{ width: `${fillPct}%` }} />
       </div>
-      {score.is_you && (
-        <span className="score-bar-rank">
-          rank {score.rank} of {totalBrands}
-        </span>
-      )}
-    </div>
+    </article>
   )
 }
 
@@ -703,13 +720,14 @@ export default function ShareOfVoicePage() {
                         <span>{'// scoreboard'}</span>
                         <span>{free.scores.length} brands</span>
                       </div>
-                      <div className="scoreboard">
+                      <div className="sov-scoreboard">
                         {free.scores.map((score) => (
-                          <ScoreBarRow
+                          <SovScoreCard
                             key={score.domain}
                             score={score}
                             maxShare={maxShare}
                             totalBrands={free.scores.length}
+                            yourRank={free.headline.your_rank}
                           />
                         ))}
                       </div>
@@ -722,6 +740,11 @@ export default function ShareOfVoicePage() {
                           <ProviderCard key={p} provider={p} free={free} />
                         ))}
                       </div>
+                      <p className="provider-footnote">
+                        {free.providers_used.length < 3
+                          ? `Scored across ${free.providers_used.map((p) => PROVIDER_LABELS[p]).join(' and ')} only — unavailable providers excluded.`
+                          : 'Your share within each provider’s answers.'}
+                      </p>
                     </div>
 
                     {resultView === 'locked' && (
