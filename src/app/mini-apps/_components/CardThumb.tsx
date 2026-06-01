@@ -18,6 +18,26 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="rt-badge">C+</span>
         </div>
       )
+    case 'agentic':
+      return (
+        <div className="card-thumb thumb-agentic">
+          <div className="ag-page">
+            <span className="ag-page-bar" />
+            <span className="ag-page-line" style={{ width: '75%' }} />
+            <span className="ag-page-line" style={{ width: '55%' }} />
+            <span className="ag-page-line" style={{ width: '40%' }} />
+          </div>
+          <div className="ag-agent">
+            <span className="ag-agent-head" />
+            <span className="ag-agent-body" />
+          </div>
+          <div className="ag-checks">
+            <span className="ag-mark ag-pass">✓</span>
+            <span className="ag-mark ag-fail">✕</span>
+            <span className="ag-mark ag-warn">!</span>
+          </div>
+        </div>
+      )
     case 'sov':
       return (
         <div className="card-thumb thumb-sov">

@@ -11,6 +11,7 @@ export type AppThumb =
   | 'blueprint'
   | 'stack'
   | 'sov'
+  | 'agentic'
 
 export type MiniApp = {
   id: string
@@ -43,6 +44,38 @@ export const CATEGORIES = [
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'agentic-readiness',
+    name: 'Agentic Readiness Checker',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'gtm'],
+    short_description:
+      'Check whether an AI agent can actually read and act on your site. Free result shows your biggest blockers and a readiness score; the full 6-point checklist and ranked fix plan unlock by email.',
+    tags: ['ai agents', 'structured data', 'seo', 'readiness', 'gtm', 'ai'],
+    thumb: 'agentic',
+    launch_url: '/mini-apps/agentic-readiness',
+    learn_more: {
+      what_it_does:
+        'Scrapes a website and assesses how ready it is for AI agents and LLM crawlers to read it and act on it — across structured data, content clarity, crawl access, render dependency, action readiness, and identity signals. It shows a readiness score and the biggest blockers free, and unlocks the full checklist, the specific fix for each issue, and a ranked action plan by email.',
+      how_it_works: {
+        inputs: ['website URL'],
+        outputs: [
+          'agentic readiness score',
+          '1-2 free blockers',
+          'full 6-point checklist',
+          'specific fix per issue',
+          'prioritised fix plan',
+          'quick wins',
+        ],
+      },
+      who_its_for:
+        "Brands, marketers, and agencies who want to know whether AI agents can use their site — a problem most don't know they have yet, ahead of where the market is heading.",
+      build_potential:
+        'Could re-scan on a schedule to track readiness over time, diff against competitors, validate fixes after deploy, and generate the structured-data snippets needed to fix each issue.',
+    },
+    interest_context: 'agentic-readiness',
+  },
   {
     id: 'share-of-voice',
     name: 'AI Share of Voice Scorer',

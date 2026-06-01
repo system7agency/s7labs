@@ -9,12 +9,23 @@ export type ShareOfVoiceLeadContext = {
   top_competitor: string
 }
 
+export type AgenticReadinessLeadContext = {
+  interest_context: 'agentic-readiness'
+  email: string
+  url: string
+  site_name: string
+  overall_score: number
+  overall_grade: string
+}
+
+export type MiniAppLeadContext = ShareOfVoiceLeadContext | AgenticReadinessLeadContext
+
 export function isValidEmail(email: string): boolean {
   return EMAIL_RE.test(email.trim().toLowerCase())
 }
 
 /** Posts to the n8n lead webhook (same pipeline as revops sales-insights). */
-export async function captureMiniAppLead(ctx: ShareOfVoiceLeadContext): Promise<boolean> {
+export async function captureMiniAppLead(ctx: MiniAppLeadContext): Promise<boolean> {
   const webhookUrl =
     process.env.N8N_MINI_APPS_LEAD_WEBHOOK_URL ?? process.env.N8N_SALES_INSIGHTS_WEBHOOK_URL
   if (!webhookUrl) return false
@@ -22,27 +33,41 @@ export async function captureMiniAppLead(ctx: ShareOfVoiceLeadContext): Promise<
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 15_000)
 
+  const body =
+    ctx.interest_context === 'agentic-readiness'
+      ? {
+          email: ctx.email,
+          type: ctx.interest_context,
+          interest_context: ctx.interest_context,
+          source: 'mini-apps',
+          url: ctx.url,
+          site_name: ctx.site_name,
+          overall_score: ctx.overall_score,
+          overall_grade: ctx.overall_grade,
+        }
+      : {
+          email: ctx.email,
+          type: ctx.interest_context,
+          interest_context: ctx.interest_context,
+          source: 'mini-apps',
+          your_domain: ctx.your_domain,
+          category: ctx.category,
+          your_share: ctx.your_share,
+          top_competitor: ctx.top_competitor,
+        }
+
   try {
     const res = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: ctx.email,
-        type: ctx.interest_context,
-        interest_context: ctx.interest_context,
-        source: 'mini-apps',
-        your_domain: ctx.your_domain,
-        category: ctx.category,
-        your_share: ctx.your_share,
-        top_competitor: ctx.top_competitor,
-      }),
+      body: JSON.stringify(body),
       signal: controller.signal,
       cache: 'no-store',
     })
     clearTimeout(timer)
     if (!res.ok) return false
-    const body = (await res.json()) as { ok?: unknown }
-    return body.ok !== false
+    const payload = (await res.json()) as { ok?: unknown }
+    return payload.ok !== false
   } catch {
     clearTimeout(timer)
     return false
