@@ -13,6 +13,7 @@ import type {
   ScanGated,
   UnlockApiResponse,
 } from '@/lib/mini-apps/agentic-types'
+import { parseUnlockApiResponse } from '@/lib/mini-apps/agentic-types'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
@@ -41,6 +42,10 @@ const STAGES = [
   },
 ]
 const STAGE_MS = 5000
+
+function stateSection(active: boolean, extra = ''): string {
+  return ['ar-state', extra, active ? 'active' : ''].filter(Boolean).join(' ')
+}
 
 function fmtTs(d: Date) {
   const p = (n: number) => String(n).padStart(2, '0')
@@ -348,7 +353,7 @@ export default function AgenticReadinessPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ scanId, email }),
         })
-        data = (await res.json()) as UnlockApiResponse
+        data = parseUnlockApiResponse(await res.json())
       } catch {
         setUnlockError('Network error. Please try again.')
         setUnlocking(false)
@@ -520,7 +525,7 @@ export default function AgenticReadinessPage() {
             </div>
 
             <div className="panel-body">
-              <section className={`ar-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={stateSection(appState === 'idle')}>
                 <div className="idle-label">Can an AI agent actually use your site?</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
@@ -561,7 +566,7 @@ export default function AgenticReadinessPage() {
                 </form>
               </section>
 
-              <section className={`ar-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={stateSection(appState === 'loading')}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -602,7 +607,7 @@ export default function AgenticReadinessPage() {
                 </div>
               </section>
 
-              <section className={`ar-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={stateSection(appState === 'result')}>
                 {free && (
                   <>
                     <div ref={shareableRef} className="shareable-block">
@@ -809,7 +814,7 @@ export default function AgenticReadinessPage() {
                 )}
               </section>
 
-              <section className={`ar-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section className={stateSection(appState === 'error', 'error-state')}>
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"
