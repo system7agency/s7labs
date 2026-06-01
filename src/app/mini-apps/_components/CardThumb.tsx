@@ -18,6 +18,16 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="rt-badge">C+</span>
         </div>
       )
+    case 'sov':
+      return (
+        <div className="card-thumb thumb-sov">
+          <div className="sov-bars">
+            <span className="sov-bar sov-bar-you" />
+            <span className="sov-bar sov-bar-rival" />
+            <span className="sov-bar sov-bar-mid" />
+          </div>
+        </div>
+      )
     case 'stack':
       return (
         <div className="card-thumb thumb-stack">

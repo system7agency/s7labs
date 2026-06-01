@@ -2471,6 +2471,42 @@
   box-shadow: 0 0 8px rgba(79, 140, 255, 0.2);
 }
 
+/* SOV thumb */
+.mini-apps-lab .thumb-sov {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 14px 18px;
+}
+.mini-apps-lab .sov-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.mini-apps-lab .sov-bar {
+  display: block;
+  height: 10px;
+  border-radius: 3px;
+}
+.mini-apps-lab .sov-bar-you {
+  width: 28%;
+  background: rgba(4, 227, 238, 0.55);
+  border: 1px solid rgba(4, 227, 238, 0.7);
+}
+.mini-apps-lab .sov-bar-rival {
+  width: 72%;
+  background: rgba(255, 92, 122, 0.35);
+  border: 1px solid rgba(255, 92, 122, 0.5);
+}
+.mini-apps-lab .sov-bar-mid {
+  width: 45%;
+  background: rgba(79, 140, 255, 0.2);
+  border: 1px solid rgba(79, 140, 255, 0.35);
+}
+
 /* Stack thumb */
 .mini-apps-lab .thumb-stack {
   display: flex;
