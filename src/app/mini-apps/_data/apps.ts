@@ -10,6 +10,7 @@ export type AppThumb =
   | 'roast'
   | 'blueprint'
   | 'stack'
+  | 'sov'
 
 export type MiniApp = {
   id: string
@@ -35,12 +36,44 @@ export const CATEGORIES = [
   { id: 'all', label: 'ALL' },
   { id: 'ai', label: 'AI' },
   { id: 'automations', label: 'AUTOMATIONS' },
+  { id: 'gtm', label: 'GTM' },
   { id: 'software', label: 'SOFTWARE' },
   { id: 'operations', label: 'OPERATIONS' },
   { id: 'utilities', label: 'UTILITIES' },
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'share-of-voice',
+    name: 'AI Share of Voice Scorer',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'gtm'],
+    short_description:
+      'Enter your domain and up to 3 competitors. We run the same buying-intent questions across Claude, ChatGPT, and Perplexity and show how often each brand appears in the answers — one headline number free, the full breakdown by email.',
+    tags: ['ai search', 'share of voice', 'seo', 'gtm', 'competitors', 'ai'],
+    thumb: 'sov',
+    launch_url: '/mini-apps/share-of-voice',
+    learn_more: {
+      what_it_does:
+        "Measures how visible a brand is inside AI answers. It generates real buying-intent questions for the brand's category, asks them across Claude, ChatGPT, and Perplexity, and counts how often each brand shows up — giving a share-of-voice score for the brand and its competitors, with the exact questions and answers unlocked by email.",
+      how_it_works: {
+        inputs: ['your domain', 'up to 3 competitor domains'],
+        outputs: [
+          'headline share-of-voice number',
+          'ranked scoreboard vs competitors',
+          'share by AI provider',
+          'the exact questions and answers (email-gated)',
+          '3 ways to close the gap',
+        ],
+      },
+      who_its_for:
+        'Brands, marketers, and agencies who want to know whether AI assistants recommend them or a competitor when buyers ask — the new SEO.',
+      build_potential:
+        'Could track share of voice over time, alert on competitor moves, expand the question set per category, and run scheduled weekly scans.',
+    },
+    interest_context: 'share-of-voice',
+  },
   {
     id: 'tech-stack-recommender',
     name: 'Tech Stack Recommender',
