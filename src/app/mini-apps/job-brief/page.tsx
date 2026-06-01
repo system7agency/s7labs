@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, BriefResult, Signal } from '@/app/api/mini-apps/job-brief/route'
 import { PageScripts } from './PageScripts'
 
@@ -589,125 +591,159 @@ export default function JobBriefPage() {
               {/* RESULT */}
               <section className={`jb-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
-                  <>
-                    <div ref={resultPanelRef}>
-                      <div className="result-head">
-                        <span className="title">Brief ready — {result.company}</span>
-                        <span className="ts-label">{resultTs}</span>
-                      </div>
-
-                      <div className="summary-block">
-                        <div className="summary-eyebrow">
-                          {'// Executive summary'}
-                          <div className="role-badges">
-                            <span className={`badge urgency-${result.urgency}`}>
-                              {result.urgency} urgency
-                            </span>
-                            <span className="badge dept">{result.department}</span>
-                            <span className="badge">
-                              {SENIORITY_LABEL[result.seniority] ?? result.seniority}
-                            </span>
+                  <EmailGate
+                    miniAppSlug="job-posting-sales-brief"
+                    pattern="upfront"
+                    initialInput={inputMode === 'url' ? { url: url.trim() } : { text: text.trim() }}
+                  >
+                    {({ submitToApi }) => (
+                      <>
+                        <SubmitOnce
+                          submit={submitToApi}
+                          input={inputMode === 'url' ? { url: url.trim() } : { text: text.trim() }}
+                          output={result}
+                        />
+                        <div ref={resultPanelRef}>
+                          <div className="result-head">
+                            <span className="title">Brief ready — {result.company}</span>
+                            <span className="ts-label">{resultTs}</span>
                           </div>
-                        </div>
-                        <p className="summary-text">{result.summary}</p>
-                      </div>
 
-                      <div className="angle-block">
-                        <div className="angle-eyebrow">{'// Best sales angle'}</div>
-                        <p className="angle-text">{result.best_angle}</p>
-                        <div className="contact-row">
-                          Ideal first contact: <strong>{result.ideal_contact}</strong>
-                        </div>
-                      </div>
+                          <div className="summary-block">
+                            <div className="summary-eyebrow">
+                              {'// Executive summary'}
+                              <div className="role-badges">
+                                <span className={`badge urgency-${result.urgency}`}>
+                                  {result.urgency} urgency
+                                </span>
+                                <span className="badge dept">{result.department}</span>
+                                <span className="badge">
+                                  {SENIORITY_LABEL[result.seniority] ?? result.seniority}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="summary-text">{result.summary}</p>
+                          </div>
 
-                      {result.tech_stack.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Tech stack'}</span>
-                            <span>{result.tech_stack.length} tools</span>
+                          <div className="angle-block">
+                            <div className="angle-eyebrow">{'// Best sales angle'}</div>
+                            <p className="angle-text">{result.best_angle}</p>
+                            <div className="contact-row">
+                              Ideal first contact: <strong>{result.ideal_contact}</strong>
+                            </div>
                           </div>
-                          <div className="tag-cloud">
-                            {result.tech_stack.map((t) => (
-                              <span key={t} className="tag tech">
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
 
-                      {result.pain_points.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Implied pain points'}</span>
-                          </div>
-                          <div className="tag-cloud">
-                            {result.pain_points.map((p) => (
-                              <span key={p} className="tag pain">
-                                {p}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      {result.budget_indicators.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Budget indicators'}</span>
-                          </div>
-                          <div className="tag-cloud" style={{ marginBottom: '20px' }}>
-                            {result.budget_indicators.map((b) => (
-                              <span key={b} className="tag budget">
-                                {b}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      <div className="section-header">
-                        <span>{'// Sales signals'}</span>
-                        <span>{result.signals.length} found</span>
-                      </div>
-                      <div className="signals">
-                        {result.signals.map((s, i) => (
-                          <SignalCard key={i} signal={s} />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : ''}
-                      </span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? (
+                          {result.tech_stack.length > 0 && (
                             <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
+                              <div className="section-header">
+                                <span>{'// Tech stack'}</span>
+                                <span>{result.tech_stack.length} tools</span>
+                              </div>
+                              <div className="tag-cloud">
+                                {result.tech_stack.map((t) => (
+                                  <span key={t} className="tag tech">
+                                    {t}
+                                  </span>
+                                ))}
+                              </div>
                             </>
-                          ) : (
+                          )}
+
+                          {result.pain_points.length > 0 && (
                             <>
+                              <div className="section-header">
+                                <span>{'// Implied pain points'}</span>
+                              </div>
+                              <div className="tag-cloud">
+                                {result.pain_points.map((p) => (
+                                  <span key={p} className="tag pain">
+                                    {p}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          {result.budget_indicators.length > 0 && (
+                            <>
+                              <div className="section-header">
+                                <span>{'// Budget indicators'}</span>
+                              </div>
+                              <div className="tag-cloud" style={{ marginBottom: '20px' }}>
+                                {result.budget_indicators.map((b) => (
+                                  <span key={b} className="tag budget">
+                                    {b}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          <div className="section-header">
+                            <span>{'// Sales signals'}</span>
+                            <span>{result.signals.length} found</span>
+                          </div>
+                          <div className="signals">
+                            {result.signals.map((s, i) => (
+                              <SignalCard key={i} signal={s} />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="result-footer">
+                          <span className="token-pill">
+                            {tokens
+                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                              : ''}
+                          </span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              type="button"
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'copying' ? (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M20 6L9 17l-5-5" />
+                                  </svg>
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                  </svg>
+                                  Copy
+                                </>
+                              )}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPng}
+                              disabled={exportState !== 'idle'}
+                            >
                               <svg
                                 width="12"
                                 height="12"
@@ -718,76 +754,55 @@ export default function JobBriefPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="M21 15l-5-5L5 21" />
                               </svg>
-                              Copy
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          New brief
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                              {exportState === 'png' ? '…' : 'PNG'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPdf}
+                              disabled={exportState !== 'idle'}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <path d="M14 2v6h6" />
+                                <path d="M12 18v-6M9 15l3 3 3-3" />
+                              </svg>
+                              {exportState === 'pdf' ? '…' : 'PDF'}
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              New brief
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </EmailGate>
                 )}
               </section>
 
