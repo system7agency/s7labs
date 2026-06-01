@@ -9,6 +9,7 @@ export type AppThumb =
   | 'sanity'
   | 'roast'
   | 'blueprint'
+  | 'stack'
 
 export type MiniApp = {
   id: string
@@ -34,11 +35,44 @@ export const CATEGORIES = [
   { id: 'all', label: 'ALL' },
   { id: 'ai', label: 'AI' },
   { id: 'automations', label: 'AUTOMATIONS' },
+  { id: 'software', label: 'SOFTWARE' },
   { id: 'operations', label: 'OPERATIONS' },
   { id: 'utilities', label: 'UTILITIES' },
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'tech-stack-recommender',
+    name: 'Tech Stack Recommender',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'software'],
+    short_description:
+      'Describe a project in plain English and get a recommended tech stack — frontend, backend, database, hosting, auth, payments, and key services — with reasoning, cost estimates, and a complexity rating, all on a clean shareable card.',
+    tags: ['tech stack', 'architecture', 'software', 'planning', 'ai'],
+    thumb: 'stack',
+    launch_url: '/mini-apps/tech-stack-recommender',
+    learn_more: {
+      what_it_does:
+        'Takes a plain-English description of a product idea and returns a recommended tech stack across frontend, backend, database, hosting, auth, and payments, plus the key third-party services it needs — each with reasoning, small-scale cost estimates, a complexity rating, and a build-time estimate, laid out as a clean architecture card.',
+      how_it_works: {
+        inputs: ['a plain-English description of a project'],
+        outputs: [
+          'recommended stack per layer',
+          'reasoning per choice',
+          'cost estimates',
+          'complexity rating',
+          'build estimate',
+          'shareable architecture card',
+        ],
+      },
+      who_its_for:
+        'Founders, product people, and agencies scoping a build — and anyone who wants to turn a meeting-room idea into a real architecture on the spot.',
+      build_potential:
+        'Could compare two stacks side by side, link choices to setup docs, generate a starter repo scaffold, and version stacks as a project evolves.',
+    },
+    interest_context: 'tech-stack-recommender',
+  },
   {
     id: 'automation-blueprint',
     name: 'Automation Blueprint',
