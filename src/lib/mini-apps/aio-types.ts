@@ -48,6 +48,38 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
 }
 
+function isKeywordStatus(v: unknown): v is KeywordStatus {
+  return v === 'cited' || v === 'blind_spot' || v === 'ghost' || v === 'no_aio' || v === 'error'
+}
+
+function isScanFree(v: unknown): v is ScanFree {
+  if (!isRecord(v)) return false
+  if (!Array.isArray(v.keyword_statuses)) return false
+  for (const row of v.keyword_statuses) {
+    if (!isRecord(row)) return false
+    if (typeof row.keyword !== 'string') return false
+    if (typeof row.ai_overview_present !== 'boolean') return false
+    if (typeof row.brand_cited !== 'boolean') return false
+    if (!isKeywordStatus(row.status)) return false
+  }
+  const comp = v.top_cited_competitor
+  const compOk =
+    comp === null ||
+    (isRecord(comp) && typeof comp.domain === 'string' && typeof comp.appearances === 'number')
+  return (
+    typeof v.domain === 'string' &&
+    typeof v.location === 'string' &&
+    typeof v.keywords_scored === 'number' &&
+    typeof v.one_liner === 'string' &&
+    typeof v.verdict_label === 'string' &&
+    typeof v.aio_trigger_rate === 'number' &&
+    typeof v.citation_rate === 'number' &&
+    typeof v.blind_spot_count === 'number' &&
+    typeof v.ghost_count === 'number' &&
+    compOk
+  )
+}
+
 function isScanGated(v: unknown): v is ScanGated {
   if (!isRecord(v)) return false
   return (
@@ -67,4 +99,15 @@ export function parseUnlockApiResponse(raw: unknown): UnlockApiResponse {
     return { ok: false, message: 'Invalid response. Please try again.' }
   }
   return { ok: true, data: raw.data }
+}
+
+export function parseScanApiResponse(raw: unknown): ScanApiResponse {
+  if (!isRecord(raw)) return { ok: false, message: 'Invalid response. Please try again.' }
+  if (raw.ok === false && typeof raw.message === 'string')
+    return { ok: false, message: raw.message }
+  if (raw.ok !== true) return { ok: false, message: 'Invalid response. Please try again.' }
+  if (typeof raw.scanId !== 'string' || !isScanFree(raw.free)) {
+    return { ok: false, message: 'Invalid response. Please try again.' }
+  }
+  return { ok: true, scanId: raw.scanId, free: raw.free }
 }

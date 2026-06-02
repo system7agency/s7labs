@@ -5,7 +5,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import type { KeywordStatus, ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/aio-types'
-import { parseUnlockApiResponse } from '@/lib/mini-apps/aio-types'
+import { parseScanApiResponse, parseUnlockApiResponse } from '@/lib/mini-apps/aio-types'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
@@ -246,7 +246,7 @@ export default function AiOverviewTrackerPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ domain: normalizedDomain, keywords, location }),
         })
-        data = (await res.json()) as ScanApiResponse
+        data = parseScanApiResponse(await res.json())
       } catch {
         clearTimers()
         setErrorMsg('Network error. Please check your connection and try again.')
@@ -529,7 +529,7 @@ export default function AiOverviewTrackerPage() {
                         </div>
                       </div>
                       <div className="keyword-strip">
-                        {free.keyword_statuses.map((k) => (
+                        {(free.keyword_statuses ?? []).map((k) => (
                           <div key={k.keyword} className="keyword-row">
                             <span className="keyword-label">{k.keyword}</span>
                             <span className={`status-pill is-${k.status}`}>
