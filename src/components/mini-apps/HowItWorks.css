@@ -1,0 +1,251 @@
+/* Reusable "How it works" section for mini-app pages.
+ * Uses each mini-app's standard palette: --blue, --text, --text-muted, --border. */
+
+.how-it-works {
+  margin: 96px auto 0;
+  width: min(100%, 920px);
+}
+.how-it-works .hiw-head {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.how-it-works .hiw-eyebrow {
+  display: inline-block;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--blue, #4f8cff);
+  padding: 6px 14px;
+  border: 1px solid rgba(79, 140, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(79, 140, 255, 0.05);
+  margin-bottom: 18px;
+}
+.how-it-works .hiw-head h2 {
+  font-size: 38px;
+  font-weight: 600;
+  color: var(--text, #f2f3f5);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0 auto 12px;
+  max-width: 640px;
+}
+.how-it-works .hiw-head h2 .accent {
+  font-style: italic;
+  color: var(--blue, #4f8cff);
+  background: linear-gradient(135deg, #4f8cff, #7aa9ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.how-it-works .hiw-head p {
+  font-size: 15px;
+  color: var(--text-muted, #5e6068);
+  margin: 0;
+}
+
+.how-it-works .hiw-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+.how-it-works .hiw-steps::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 255, 255, 0.06) 8%,
+    rgba(255, 255, 255, 0.06) 92%,
+    transparent
+  );
+  transform: translateX(-50%);
+}
+
+.how-it-works .hiw-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 56px 1fr;
+  align-items: center;
+  margin-bottom: 28px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.how-it-works .hiw-step.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+.how-it-works .hiw-step:last-child {
+  margin-bottom: 0;
+}
+
+.how-it-works .hiw-rail {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+.how-it-works .hiw-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #060608;
+  border: 2px solid rgba(79, 140, 255, 0.35);
+  box-shadow:
+    0 0 0 4px rgba(79, 140, 255, 0.06),
+    0 0 16px rgba(79, 140, 255, 0.28);
+  transition:
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
+}
+.how-it-works .hiw-step.in-view .hiw-dot {
+  border-color: var(--blue, #4f8cff);
+  box-shadow:
+    0 0 0 5px rgba(79, 140, 255, 0.1),
+    0 0 22px rgba(79, 140, 255, 0.5);
+}
+
+.how-it-works .hiw-step[data-side='left'] .hiw-card {
+  grid-column: 1;
+  margin-right: 18px;
+  text-align: right;
+}
+.how-it-works .hiw-step[data-side='right'] .hiw-card {
+  grid-column: 3;
+  margin-left: 18px;
+}
+
+.how-it-works .hiw-card {
+  position: relative;
+  padding: 22px 24px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.07));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.008));
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    border-color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.how-it-works .hiw-card:hover {
+  border-color: rgba(79, 140, 255, 0.35);
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(79, 140, 255, 0.06);
+}
+
+.how-it-works .hiw-step-label {
+  display: inline-block;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--blue, #4f8cff);
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+
+.how-it-works .hiw-card-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.how-it-works .hiw-step[data-side='left'] .hiw-card-row {
+  flex-direction: row-reverse;
+}
+
+.how-it-works .hiw-icon {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(79, 140, 255, 0.08);
+  border: 1px solid rgba(79, 140, 255, 0.18);
+  color: var(--blue, #4f8cff);
+}
+.how-it-works .hiw-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.how-it-works .hiw-text {
+  flex: 1;
+  min-width: 0;
+}
+.how-it-works .hiw-text h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text, #f2f3f5);
+  margin: 0 0 6px;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+.how-it-works .hiw-text p {
+  font-size: 13.5px;
+  color: var(--text-muted, #5e6068);
+  line-height: 1.55;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .how-it-works {
+    margin-top: 64px;
+  }
+  .how-it-works .hiw-head h2 {
+    font-size: 26px;
+  }
+  .how-it-works .hiw-steps::before {
+    left: 16px;
+    transform: none;
+  }
+  .how-it-works .hiw-step {
+    grid-template-columns: 32px 1fr;
+    align-items: start;
+    margin-bottom: 18px;
+  }
+  .how-it-works .hiw-rail {
+    grid-column: 1;
+    align-items: flex-start;
+    padding-top: 24px;
+  }
+  .how-it-works .hiw-step[data-side='left'] .hiw-card,
+  .how-it-works .hiw-step[data-side='right'] .hiw-card {
+    grid-column: 2;
+    margin-left: 14px;
+    margin-right: 0;
+    text-align: left;
+  }
+  .how-it-works .hiw-step[data-side='left'] .hiw-card-row {
+    flex-direction: row;
+  }
+  .how-it-works .hiw-card {
+    padding: 16px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .how-it-works .hiw-step {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .how-it-works .hiw-card,
+  .how-it-works .hiw-dot {
+    transition: none;
+  }
+}
