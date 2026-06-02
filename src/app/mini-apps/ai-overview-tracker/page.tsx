@@ -4,12 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
 import type { KeywordStatus, ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/aio-types'
-import { parseScanApiResponse, parseUnlockApiResponse } from '@/lib/mini-apps/aio-types'
+import { parseScanApiResponse } from '@/lib/mini-apps/aio-types'
+import { GatedBreakdown } from './GatedBreakdown'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
-type ResultView = 'locked' | 'unlocked'
 
 const DOMAIN_RE = /^([a-z0-9-]+\.)+[a-z]{2,}$/i
 const STAGE_MS = 5000
@@ -101,7 +102,6 @@ function buildPlainText(free: ScanFree, gated: ScanGated | null): string {
 
 export default function AiOverviewTrackerPage() {
   const [appState, setAppState] = useState<AppState>('idle')
-  const [resultView, setResultView] = useState<ResultView>('locked')
   const [domain, setDomain] = useState('')
   const [keywordsText, setKeywordsText] = useState('')
   const [location, setLocation] = useState('United States')
@@ -116,9 +116,6 @@ export default function AiOverviewTrackerPage() {
   const [resultTs, setResultTs] = useState('')
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
-  const [unlockEmail, setUnlockEmail] = useState('')
-  const [unlockError, setUnlockError] = useState<string | null>(null)
-  const [unlocking, setUnlocking] = useState(false)
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
   const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
@@ -135,6 +132,23 @@ export default function AiOverviewTrackerPage() {
   const runStartRef = useRef(0)
 
   const parsedKeywords = useMemo(() => keywordsFromText(keywordsText), [keywordsText])
+
+  const leadInput = useMemo(
+    () => ({
+      domain: normalizeDomainInput(domain),
+      keywords: parsedKeywords,
+      location,
+    }),
+    [domain, parsedKeywords, location]
+  )
+
+  const handleGatedLoaded = useCallback((data: ScanGated) => {
+    setGated(data)
+  }, [])
+
+  const handleTokens = useCallback((t: { in: number; out: number }) => {
+    setTokens(t)
+  }, [])
 
   useEffect(() => {
     const tick = () => {
@@ -232,7 +246,6 @@ export default function AiOverviewTrackerPage() {
       setScanId(null)
       setFree(null)
       setGated(null)
-      setResultView('locked')
       setErrorMsg('')
       setTokens(null)
       setAppState('loading')
@@ -279,51 +292,14 @@ export default function AiOverviewTrackerPage() {
     [submitting, domain, keywordsText, location, startLoadingAnimation, clearTimers]
   )
 
-  const handleUnlock = useCallback(
-    async (e: FormEvent) => {
-      e.preventDefault()
-      if (!scanId || unlocking) return
-      const email = unlockEmail.trim().toLowerCase()
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-        setUnlockError('Enter a valid email.')
-        return
-      }
-      setUnlockError(null)
-      setUnlocking(true)
-      try {
-        const res = await fetch('/api/mini-apps/ai-overview-tracker/unlock', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ scanId, email }),
-        })
-        const parsed = parseUnlockApiResponse(await res.json())
-        if (parsed.ok) {
-          setGated(parsed.data)
-          setTokens({ in: parsed.data.tokens_in, out: parsed.data.tokens_out })
-          setResultView('unlocked')
-        } else {
-          setUnlockError(parsed.message)
-        }
-      } catch {
-        setUnlockError('Network error. Please try again.')
-      }
-      setUnlocking(false)
-    },
-    [scanId, unlockEmail, unlocking]
-  )
-
   const handleReset = useCallback(() => {
     clearTimers()
     setAppState('idle')
-    setResultView('locked')
     setFree(null)
     setGated(null)
     setScanId(null)
     setErrorMsg('')
-    setUnlockEmail('')
-    setUnlockError(null)
     setSubmitting(false)
-    setUnlocking(false)
     setSysState('idle')
     setLatency('—')
     setTokens(null)
@@ -484,243 +460,165 @@ export default function AiOverviewTrackerPage() {
                 </div>
               </section>
               <section className={`sov-state${appState === 'result' ? 'active' : ''}`}>
-                {free && (
-                  <>
-                    <div ref={shareableRef} className="shareable-block">
-                      <div className="one-liner-block">
-                        <p className="one-liner-text">&ldquo;{free.one_liner}&rdquo;</p>
-                        <div className="one-liner-meta">
-                          <span className="project-name">{free.domain}</span>
-                          <span className="type-pill">{free.verdict_label}</span>
+                {free && scanId && (
+                  <EmailGate
+                    miniAppSlug="ai-overview-tracker"
+                    pattern="after-teaser"
+                    initialInput={leadInput}
+                    teaser={
+                      <div ref={shareableRef} className="shareable-block">
+                        <div className="one-liner-block">
+                          <p className="one-liner-text">&ldquo;{free.one_liner}&rdquo;</p>
+                          <div className="one-liner-meta">
+                            <span className="project-name">{free.domain}</span>
+                            <span className="type-pill">{free.verdict_label}</span>
+                          </div>
                         </div>
+                        <div className="score-row">
+                          <div className="score-card">
+                            <div className="sc-label">Citation rate</div>
+                            <div className="sc-value">
+                              <span className="sc-big">{free.citation_rate}%</span>
+                            </div>
+                            <div className="sc-delta">
+                              {free.aio_trigger_rate}% of your keywords trigger an AI Overview
+                            </div>
+                          </div>
+                          <div className="score-card">
+                            <div className="sc-label">Gap snapshot</div>
+                            <div className="stat-grid">
+                              <div>
+                                <span>Keywords</span>
+                                <strong>{free.keywords_scored}</strong>
+                              </div>
+                              <div>
+                                <span>AI Overviews</span>
+                                <strong>
+                                  {Math.round((free.keywords_scored * free.aio_trigger_rate) / 100)}
+                                </strong>
+                              </div>
+                              <div>
+                                <span>Blind spots</span>
+                                <strong>{free.blind_spot_count}</strong>
+                              </div>
+                              <div>
+                                <span>Ghosts</span>
+                                <strong>{free.ghost_count}</strong>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="keyword-strip">
+                          {(free.keyword_statuses ?? []).map((k) => (
+                            <div key={k.keyword} className="keyword-row">
+                              <span className="keyword-label">{k.keyword}</span>
+                              <span className={`status-pill is-${k.status}`}>
+                                {statusLabel(k.status)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        {free.top_cited_competitor && (
+                          <div className="hook-line">
+                            {free.top_cited_competitor.domain} is cited in{' '}
+                            {free.top_cited_competitor.appearances} of your keywords.
+                          </div>
+                        )}
                       </div>
-                      <div className="score-row">
-                        <div className="score-card">
-                          <div className="sc-label">Citation rate</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{free.citation_rate}%</span>
-                          </div>
-                          <div className="sc-delta">
-                            {free.aio_trigger_rate}% of your keywords trigger an AI Overview
-                          </div>
-                        </div>
-                        <div className="score-card">
-                          <div className="sc-label">Gap snapshot</div>
-                          <div className="stat-grid">
-                            <div>
-                              <span>Keywords</span>
-                              <strong>{free.keywords_scored}</strong>
-                            </div>
-                            <div>
-                              <span>AI Overviews</span>
-                              <strong>
-                                {Math.round((free.keywords_scored * free.aio_trigger_rate) / 100)}
-                              </strong>
-                            </div>
-                            <div>
-                              <span>Blind spots</span>
-                              <strong>{free.blind_spot_count}</strong>
-                            </div>
-                            <div>
-                              <span>Ghosts</span>
-                              <strong>{free.ghost_count}</strong>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="keyword-strip">
-                        {(free.keyword_statuses ?? []).map((k) => (
-                          <div key={k.keyword} className="keyword-row">
-                            <span className="keyword-label">{k.keyword}</span>
-                            <span className={`status-pill is-${k.status}`}>
-                              {statusLabel(k.status)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {free.top_cited_competitor && (
-                        <div className="hook-line">
-                          {free.top_cited_competitor.domain} is cited in{' '}
-                          {free.top_cited_competitor.appearances} of your keywords.
-                        </div>
-                      )}
-                    </div>
-
-                    {resultView === 'locked' && (
-                      <div className="gate-block">
-                        <div className="gate-preview" aria-hidden>
-                          <div className="gate-preview-fake">
-                            <div className="gate-fake-row" />
-                            <div className="gate-fake-row" />
-                            <div className="gate-fake-row" />
-                          </div>
-                        </div>
-                        <div className="gate-card">
-                          <h3 className="gate-title">
-                            See exactly who&apos;s getting cited instead of you
-                          </h3>
-                          <p className="gate-sub">
-                            Get the full per-keyword breakdown — every domain cited in each AI
-                            Overview — plus 3 ways to start getting cited. We found{' '}
-                            {free.blind_spot_count} blind spots.
-                          </p>
-                          <form noValidate onSubmit={handleUnlock} className="gate-form">
-                            <div
-                              className={`input-box gate-email-box${unlockError ? 'error' : ''}`}
-                            >
-                              <input
-                                type="email"
-                                placeholder="you@company.com"
-                                value={unlockEmail}
-                                disabled={unlocking}
-                                onChange={(e) => setUnlockEmail(e.target.value)}
-                              />
-                            </div>
-                            {unlockError && <div className="field-error">{unlockError}</div>}
-                            <button
-                              type="submit"
-                              className="submit-btn gate-submit"
-                              disabled={unlocking}
-                            >
-                              {unlocking ? 'Unlocking…' : 'Unlock the full breakdown'}
-                            </button>
-                          </form>
-                        </div>
-                      </div>
-                    )}
-
-                    {resultView === 'unlocked' && gated && (
+                    }
+                  >
+                    {({ submitToApi }) => (
                       <>
-                        <div className="section-header">
-                          <span>{'// per-keyword breakdown'}</span>
-                        </div>
-                        <div className="keyword-cards">
-                          {gated.keywords.map((k) => (
-                            <article key={k.keyword} className={`keyword-card is-${k.status}`}>
-                              <div className="keyword-card-head">
-                                <h4>{k.keyword}</h4>
-                                <span className={`status-pill is-${k.status}`}>
-                                  {statusLabel(k.status)}
-                                </span>
-                              </div>
-                              {k.status === 'ghost' && (
-                                <p className="ghost-note">
-                                  You rank organically for this keyword, but the AI answer does not
-                                  cite you.
-                                </p>
-                              )}
-                              <div className="sources-list">
-                                {k.sources.length > 0 ? (
-                                  k.sources.map((s) => (
-                                    <div
-                                      key={`${k.keyword}-${s.url}`}
-                                      className={`source-row${s.domain === free.domain ? 'is-you' : ''}`}
-                                    >
-                                      <span className="source-domain">{s.domain}</span>
-                                      <span className="source-title">{s.title}</span>
-                                    </div>
-                                  ))
-                                ) : (
-                                  <div className="source-row is-missing">
-                                    No citation sources captured.
-                                  </div>
-                                )}
-                              </div>
-                            </article>
-                          ))}
-                        </div>
-                        <div className="section-header">
-                          <span>{'// who keeps getting cited'}</span>
-                        </div>
-                        <div className="leaders-list">
-                          {gated.citation_leaders.map((l, i) => (
-                            <div key={l.domain} className="leader-row">
-                              <span className="leader-rank">{String(i + 1).padStart(2, '0')}</span>
-                              <span className="leader-domain">{l.domain}</span>
-                              <span className="leader-app">{l.appearances}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="reco-block">
-                          <div className="plan-eyebrow">{'// how to start getting cited'}</div>
-                          <ol className="plan-list">
-                            {gated.recommendations.map((r, i) => (
-                              <li key={r} className="plan-row">
-                                <span className="reco-number">
-                                  {String(i + 1).padStart(2, '0')}
-                                </span>
-                                <div className="plan-body">{r}</div>
-                              </li>
-                            ))}
-                          </ol>
+                        <GatedBreakdown
+                          scanId={scanId}
+                          free={free}
+                          leadInput={leadInput}
+                          submitToApi={submitToApi}
+                          onTokens={handleTokens}
+                          onGatedLoaded={handleGatedLoaded}
+                        />
+                        <div className="result-footer">
+                          <span className="token-pill">
+                            {tokens
+                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens`
+                              : 'Loading…'}
+                          </span>
+                          <span className="result-ts hide-sm">{resultTs}</span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              onClick={async () => {
+                                setExportState('copying')
+                                await navigator.clipboard.writeText(buildPlainText(free, gated))
+                                setTimeout(() => setExportState('idle'), 900)
+                              }}
+                            >
+                              Copy
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              onClick={async () => {
+                                setExportState('png')
+                                const canvas = await captureShareable()
+                                if (canvas) {
+                                  const a = document.createElement('a')
+                                  a.download = `aio-${free.domain}.png`
+                                  a.href = canvas.toDataURL('image/png')
+                                  a.click()
+                                }
+                                setExportState('idle')
+                              }}
+                            >
+                              PNG
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              onClick={async () => {
+                                setExportState('pdf')
+                                const canvas = await captureShareable()
+                                if (canvas) {
+                                  const { jsPDF } = await import('jspdf')
+                                  const imgW = 190
+                                  const imgH = (canvas.height / canvas.width) * imgW
+                                  const pdf = new jsPDF({
+                                    orientation: imgH > imgW ? 'portrait' : 'landscape',
+                                    unit: 'mm',
+                                  })
+                                  pdf.addImage(
+                                    canvas.toDataURL('image/png'),
+                                    'PNG',
+                                    10,
+                                    10,
+                                    imgW,
+                                    imgH
+                                  )
+                                  pdf.save(`aio-${free.domain}.pdf`)
+                                }
+                                setExportState('idle')
+                              }}
+                            >
+                              PDF
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              Check again
+                            </button>
+                          </div>
                         </div>
                       </>
                     )}
+                  </EmailGate>
+                )}
 
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens`
-                          : 'Unlock for token usage'}
-                      </span>
-                      <span className="result-ts hide-sm">{resultTs}</span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          onClick={async () => {
-                            if (!free) return
-                            setExportState('copying')
-                            await navigator.clipboard.writeText(buildPlainText(free, gated))
-                            setTimeout(() => setExportState('idle'), 900)
-                          }}
-                        >
-                          Copy
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          onClick={async () => {
-                            if (!free) return
-                            setExportState('png')
-                            const canvas = await captureShareable()
-                            if (canvas) {
-                              const a = document.createElement('a')
-                              a.download = `aio-${free.domain}.png`
-                              a.href = canvas.toDataURL('image/png')
-                              a.click()
-                            }
-                            setExportState('idle')
-                          }}
-                        >
-                          PNG
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          onClick={async () => {
-                            if (!free) return
-                            setExportState('pdf')
-                            const canvas = await captureShareable()
-                            if (canvas) {
-                              const { jsPDF } = await import('jspdf')
-                              const imgW = 190
-                              const imgH = (canvas.height / canvas.width) * imgW
-                              const pdf = new jsPDF({
-                                orientation: imgH > imgW ? 'portrait' : 'landscape',
-                                unit: 'mm',
-                              })
-                              pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-                              pdf.save(`aio-${free.domain}.pdf`)
-                            }
-                            setExportState('idle')
-                          }}
-                        >
-                          PDF
-                        </button>
-                        <button className="run-again" onClick={handleReset}>
-                          Check again
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                {free && (
+                  <div className="result-actions-pre-gate">
+                    <button
+                      className="run-again run-again-ghost"
+                      type="button"
+                      onClick={handleReset}
+                    >
+                      Check again
+                    </button>
+                  </div>
                 )}
               </section>
               <section className={`sov-state error-state${appState === 'error' ? 'active' : ''}`}>
@@ -733,6 +631,141 @@ export default function AiOverviewTrackerPage() {
             </div>
           </div>
         </div>
+
+        <section className="how-it-works">
+          <div className="hiw-head">
+            <span className="hiw-eyebrow">How it works</span>
+            <h2>
+              From keywords to citation gaps in <span className="accent">under a minute</span>
+            </h2>
+            <p>
+              No login. Paste your domain and buyer keywords — we check live Google results for AI
+              Overviews and who gets cited.
+            </p>
+          </div>
+
+          <ol className="hiw-steps">
+            <li className="hiw-step" data-side="left">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 01</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="5" width="18" height="14" rx="2" />
+                      <path d="M7 9h10M7 13h6" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>Add your domain and keywords</h3>
+                    <p>Up to five buyer searches you care about, plus your target market.</p>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li className="hiw-step" data-side="right">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 02</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="11" cy="11" r="7" />
+                      <path d="M20 20l-3-3" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>We run live Google searches</h3>
+                    <p>
+                      Each keyword is queried with AI Overview detection — not a rank position
+                      report.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li className="hiw-step" data-side="left">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 03</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 19V5l8 4 8-4v14" />
+                      <path d="M12 9v10" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>See your free snapshot</h3>
+                    <p>
+                      Citation rate, AI Overview trigger rate, blind spots, and a per-keyword status
+                      strip — before you share your email.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li className="hiw-step" data-side="right">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 04</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 3v18M3 12h18" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>Unlock the full breakdown</h3>
+                    <p>
+                      Every cited domain per keyword, citation leaders, and three ways to start
+                      getting cited in AI answers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </section>
       </main>
       <Footer />
       <PageScripts />
