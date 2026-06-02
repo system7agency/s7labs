@@ -443,52 +443,47 @@ export default function PricingDiagnosticPage() {
             Drop in any URL — yours or a competitor&apos;s. We scrape it, parse the plan structure,
             and return an AI teardown of where it&apos;s leaking trust.
           </p>
-          <div className="meta-tags">
-            <span>· Friction Score</span>
-            <span>· Clarity Grade</span>
-            <span>· Buyer Inference</span>
-            <span>· 3 Improvements</span>
-          </div>
         </section>
 
         {/* Panel */}
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
-            {/* Panel readouts bar */}
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
-                </span>
+            {/* Panel readouts bar — only during run/result for technical credibility */}
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <>
+                      <span className="hide-sm">
+                        <span className="stat-key">tok</span>{' '}
+                        <span className="stat-val">
+                          {(tokens.in + tokens.out).toLocaleString()}
+                        </span>
+                      </span>
+                      <span className="pr-sep hide-sm" />
+                    </>
+                  )}
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-              <div className="prr">
-                {tokens && (
-                  <>
-                    <span className="hide-sm">
-                      <span className="stat-key">tok</span>{' '}
-                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
-                    </span>
-                    <span className="pr-sep hide-sm" />
-                  </>
-                )}
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="panel-body">
               {/* IDLE */}
@@ -501,7 +496,6 @@ export default function PricingDiagnosticPage() {
                   onSubmit={handleSubmit}
                   autoComplete="off"
                 >
-                  <span className="prompt">$</span>
                   <input
                     ref={urlInputRef}
                     type="text"
@@ -814,28 +808,138 @@ export default function PricingDiagnosticPage() {
           </div>
         </div>
 
-        {/* Info strip */}
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Structure'}</div>
-            <div className="name">Plan hierarchy &amp; tiers</div>
-            <div className="desc">How clearly the page maps plans to buyer segments.</div>
+        {/* How it works */}
+        <section className="how-it-works">
+          <div className="hiw-head">
+            <span className="hiw-eyebrow">How it works</span>
+            <h2>
+              From URL to teardown in <span className="accent">under a minute</span>
+            </h2>
+            <p>No login, no install. Four steps from paste to ranked fixes.</p>
           </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Friction'}</div>
-            <div className="name">Path-to-purchase</div>
-            <div className="desc">Hidden CTAs, contact-gates, and silent assumptions.</div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Copy'}</div>
-            <div className="name">Plain-language fit</div>
-            <div className="desc">Whether a first-time visitor can self-qualify in 30s.</div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Signal'}</div>
-            <div className="name">Trust &amp; social proof</div>
-            <div className="desc">Presence and placement of logos, quotes, guarantees.</div>
-          </div>
+
+          <ol className="hiw-steps">
+            <li className="hiw-step" data-side="left">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 01</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="5" width="18" height="14" rx="2" />
+                      <path d="M3 9h18" />
+                      <path d="M7 13h8" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>Paste your pricing page URL</h3>
+                    <p>
+                      Yours, a competitor&apos;s, or any public pricing page you want to benchmark.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li className="hiw-step" data-side="right">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 02</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 7l9-4 9 4-9 4-9-4z" />
+                      <path d="M3 12l9 4 9-4" />
+                      <path d="M3 17l9 4 9-4" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>We scrape and parse the page</h3>
+                    <p>Plan tiers, CTAs, gates, copy, and trust signals — extracted in seconds.</p>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li className="hiw-step" data-side="left">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 03</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>AI evaluates four conversion dimensions</h3>
+                    <p>
+                      Structure, friction, copy, and signal — scored against what actually converts.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li className="hiw-step" data-side="right">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 04</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M9 11l3 3 8-8" />
+                      <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>Get your scores and the 3 quickest fixes</h3>
+                    <p>
+                      Friction Score, Clarity Grade, Plan Legibility — plus top improvements ranked
+                      by impact.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ol>
         </section>
       </main>
 
