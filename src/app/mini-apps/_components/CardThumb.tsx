@@ -6,6 +6,25 @@ type CardThumbProps = {
 
 export function CardThumb({ thumb }: CardThumbProps) {
   switch (thumb) {
+    case 'aio':
+      return (
+        <div className="card-thumb thumb-aio">
+          <div className="aio-search">
+            <span className="aio-search-dot" />
+            <span className="aio-search-line" />
+          </div>
+          <div className="aio-summary">
+            <span className="aio-sm-line aio-sm-main" />
+            <span className="aio-sm-line" />
+            <span className="aio-sm-line" />
+          </div>
+          <div className="aio-cites">
+            <span className="aio-cite aio-cite-rival" />
+            <span className="aio-cite aio-cite-empty" />
+            <span className="aio-cite" />
+          </div>
+        </div>
+      )
     case 'roast':
       return (
         <div className="card-thumb thumb-roast">
