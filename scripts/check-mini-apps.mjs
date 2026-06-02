@@ -20,6 +20,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { execSync } from 'node:child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -48,6 +49,32 @@ function listMiniAppFolders() {
         return false
       }
     })
+}
+
+/**
+ * In CI (GitHub Actions PR runs), only check mini-apps whose page.tsx was
+ * modified in this PR. Returns null to mean "no scoping, check everything"
+ * (local runs or when we can't determine the diff).
+ */
+function getChangedFolderNames() {
+  const baseRef = process.env.GITHUB_BASE_REF
+  if (!baseRef) return null
+  try {
+    const out = execSync(`git diff --name-only origin/${baseRef}...HEAD`, {
+      encoding: 'utf8',
+      cwd: ROOT,
+    })
+    const folders = new Set()
+    for (const line of out.split('\n')) {
+      const m = line.match(/^src\/app\/mini-apps\/([^/]+)\/page\.tsx$/)
+      if (m) folders.add(m[1])
+    }
+    return folders
+  } catch (err) {
+    console.warn(`Could not compute changed files vs origin/${baseRef}: ${err.message}`)
+    console.warn('Falling back to checking every mini-app.')
+    return null
+  }
 }
 
 // --- per-page static checks -----------------------------------------------
@@ -86,13 +113,30 @@ async function fetchActiveSlugs() {
 
 // --- main ------------------------------------------------------------------
 
-const folders = listMiniAppFolders()
-if (folders.length === 0) {
+const allFolders = listMiniAppFolders()
+if (allFolders.length === 0) {
   console.log('No mini-app pages found. Nothing to check.')
   process.exit(0)
 }
 
-console.log(`Checking ${folders.length} mini-app page(s)…\n`)
+const changed = getChangedFolderNames()
+const folders =
+  changed === null
+    ? allFolders
+    : allFolders.filter((f) => changed.has(f.split('/').pop()))
+
+if (folders.length === 0) {
+  console.log('This PR does not modify any mini-app page.tsx. Nothing to check.')
+  process.exit(0)
+}
+
+if (changed === null) {
+  console.log(`Checking all ${folders.length} mini-app page(s)…\n`)
+} else {
+  console.log(
+    `PR modifies ${folders.length} mini-app page(s): ${folders.map((f) => f.split('/').pop()).join(', ')}\n`
+  )
+}
 
 const activeSlugs = await fetchActiveSlugs()
 

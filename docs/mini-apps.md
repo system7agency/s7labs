@@ -21,8 +21,10 @@ them is strongly recommended for grep-ability.
 ## Required (the CI check enforces these)
 
 A pull request that touches `src/app/mini-apps/**` runs
-[`scripts/check-mini-apps.mjs`](../scripts/check-mini-apps.mjs) against every
-mini-app in the folder. The PR cannot merge until all three checks pass.
+[`scripts/check-mini-apps.mjs`](../scripts/check-mini-apps.mjs). In CI the
+script scopes itself to **only the mini-apps whose `page.tsx` was changed in
+the PR** — unrelated stragglers don't block your PR. Run it locally without
+`GITHUB_BASE_REF` set to check every mini-app in the repo.
 
 ### 1. Wrap the result in `<EmailGate>`
 
