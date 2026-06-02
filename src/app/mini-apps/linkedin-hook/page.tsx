@@ -5,11 +5,88 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, Hook, HookResult } from '@/app/api/mini-apps/linkedin-hook/route'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
+
+const HOOK_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Paste a LinkedIn post',
+    description:
+      'Any public post — yours, your prospect’s, or a thought-leader you want to bring into your outreach.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M8 11v6M8 7h.01M12 17v-4M16 17v-3a2 2 0 10-4 0" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We extract the trigger, author, and signals',
+    description:
+      'Opinion, news, pain, or achievement — the specific moment in the post that creates an opening for outreach.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 7l9-4 9 4-9 4-9-4z" />
+        <path d="M3 12l9 4 9-4" />
+        <path d="M3 17l9 4 9-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'AI generates personalized outbound hooks',
+    description:
+      'Each hook uses a different tone and channel — LinkedIn DM, email, or cold call — mapped to the buyer persona.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get hooks ranked by reply likelihood',
+    description:
+      'The hook most likely to land is flagged first so you can send it without second-guessing.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
 
 const STAGES = [
   {
@@ -433,50 +510,45 @@ export default function LinkedInHookPage() {
             Paste a LinkedIn post. We detect the trigger, profile the persona, and write three
             ready-to-send hooks — each with a different angle and channel.
           </p>
-          <div className="meta-tags">
-            <span>· Trigger Detection</span>
-            <span>· 3 Hook Variants</span>
-            <span>· Best Angle</span>
-            <span>· Channel Match</span>
-          </div>
         </section>
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
-                </span>
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <>
+                      <span className="hide-sm">
+                        <span className="stat-key">tok</span>{' '}
+                        <span className="stat-val">
+                          {(tokens.in + tokens.out).toLocaleString()}
+                        </span>
+                      </span>
+                      <span className="pr-sep hide-sm" />
+                    </>
+                  )}
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-              <div className="prr">
-                {tokens && (
-                  <>
-                    <span className="hide-sm">
-                      <span className="stat-key">tok</span>{' '}
-                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
-                    </span>
-                    <span className="pr-sep hide-sm" />
-                  </>
-                )}
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="panel-body">
               {/* IDLE */}
@@ -489,7 +561,6 @@ export default function LinkedInHookPage() {
                       key={`p-${shakePost}`}
                       className={`textarea-box${postError ? 'error' : ''}`}
                     >
-                      <span className="prompt">$</span>
                       <textarea
                         ref={textareaRef}
                         placeholder={`Just raised our Series A...\nHiring 10 engineers in Q3...\nWhy I stopped using spreadsheets for sales...`}
@@ -747,38 +818,15 @@ export default function LinkedInHookPage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Trigger'}</div>
-            <div className="name">Signal extraction</div>
-            <div className="desc">
-              Identifies the specific moment in the post that creates an opening — opinion, news,
-              pain, or achievement.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Persona'}</div>
-            <div className="name">Buyer profiling</div>
-            <div className="desc">
-              Maps the post context to the most likely buyer persona worth reaching out to first.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Hooks'}</div>
-            <div className="name">3 unique angles</div>
-            <div className="desc">
-              Each hook uses a different tone and channel — LinkedIn DM, email, or cold call.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Best pick'}</div>
-            <div className="name">Ranked opener</div>
-            <div className="desc">
-              The hook most likely to get a reply is flagged, so you can move fast without
-              second-guessing.
-            </div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From a single post to <span className="accent">ranked hooks</span>
+            </>
+          }
+          subtitle="No login, no install. Four steps from paste to a ready-to-send opener."
+          steps={HOOK_STEPS}
+        />
       </main>
 
       <Footer />
