@@ -1366,42 +1366,18 @@
 }
 
 .mini-apps-lab .mx-label {
-  font-family: var(--mono);
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--fg);
-  letter-spacing: -0.005em;
   display: flex;
   align-items: center;
   min-height: 1.4em;
   margin-bottom: 14px;
 }
-.mini-apps-lab .mx-prompt {
-  color: var(--accent);
-  margin-right: 10px;
-  opacity: 0.75;
-  text-shadow: 0 0 8px var(--accent-glow);
-}
-.mini-apps-lab .mx-typed {
-  white-space: pre;
-}
-.mini-apps-lab .mx-cursor {
-  display: inline-block;
-  width: 0.55ch;
-  height: 1em;
-  background: var(--accent);
-  vertical-align: -0.15em;
-  margin-left: 2px;
-  animation: mx-blink 1s steps(1) infinite;
-  box-shadow: 0 0 8px var(--accent-glow);
-}
-.mini-apps-lab .mx-cursor.done {
-  opacity: 0.5;
-}
-@keyframes mx-blink {
-  50% {
-    opacity: 0;
-  }
+.mini-apps-lab .mx-name {
+  font-family: var(--sans);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
 }
 
 .mini-apps-lab .mx-tagline {
@@ -3277,8 +3253,8 @@
   .mini-apps-lab .mx-card {
     padding: 18px 18px 16px;
   }
-  .mini-apps-lab .mx-label {
-    font-size: 14px;
+  .mini-apps-lab .mx-name {
+    font-size: 18px;
   }
   .mini-apps-lab .mx-tagline {
     font-size: 12.5px;
