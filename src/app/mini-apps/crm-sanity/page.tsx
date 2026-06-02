@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, FieldIssue, SanityResult } from '@/app/api/mini-apps/crm-sanity/route'
 import { PageScripts } from './PageScripts'
 
@@ -526,139 +528,177 @@ export default function CrmSanityPage() {
               {/* RESULT */}
               <section className={`cs-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
-                  <>
-                    <div ref={resultPanelRef}>
-                      <div className="result-head">
-                        <span className="title">Sanity check complete — {result.record_type}</span>
-                        <span className="ts-label">{resultTs}</span>
-                      </div>
+                  <EmailGate
+                    miniAppSlug="crm-field-sanity-check"
+                    pattern="upfront"
+                    initialInput={{ record_text: recordText.trim() }}
+                  >
+                    {({ submitToApi }) => (
+                      <>
+                        <SubmitOnce
+                          submit={submitToApi}
+                          input={{ record_text: recordText.trim() }}
+                          output={result}
+                        />
+                        <div ref={resultPanelRef}>
+                          <div className="result-head">
+                            <span className="title">
+                              Sanity check complete — {result.record_type}
+                            </span>
+                            <span className="ts-label">{resultTs}</span>
+                          </div>
 
-                      <div className="score-row">
-                        <div className={`score-card ${scoreClass(result.quality_score)}`}>
-                          <div className="sc-label">Quality Score</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.quality_score}</span>
-                            <span className="sc-small">/100</span>
-                          </div>
-                          <div className="sc-delta">
-                            Grade {result.grade} — {gradeLabel(result.grade)}
-                          </div>
-                        </div>
-                        <div
-                          className={`score-card ${criticalCount > 0 ? 'bad' : warningCount > 0 ? 'mid' : 'good'}`}
-                        >
-                          <div className="sc-label">Issues</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.issues.length}</span>
-                          </div>
-                          <div className="sc-delta">
-                            {criticalCount} critical · {warningCount} warnings
-                          </div>
-                        </div>
-                        <div
-                          className={`score-card ${result.duplicate_risk === 'high' ? 'bad' : result.duplicate_risk === 'medium' ? 'mid' : 'good'}`}
-                        >
-                          <div className="sc-label">Dup Risk</div>
-                          <div className="sc-value">
-                            <span
-                              className="sc-big"
-                              style={{ fontSize: '28px', textTransform: 'capitalize' }}
+                          <div className="score-row">
+                            <div className={`score-card ${scoreClass(result.quality_score)}`}>
+                              <div className="sc-label">Quality Score</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.quality_score}</span>
+                                <span className="sc-small">/100</span>
+                              </div>
+                              <div className="sc-delta">
+                                Grade {result.grade} — {gradeLabel(result.grade)}
+                              </div>
+                            </div>
+                            <div
+                              className={`score-card ${criticalCount > 0 ? 'bad' : warningCount > 0 ? 'mid' : 'good'}`}
                             >
-                              {result.duplicate_risk}
-                            </span>
+                              <div className="sc-label">Issues</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.issues.length}</span>
+                              </div>
+                              <div className="sc-delta">
+                                {criticalCount} critical · {warningCount} warnings
+                              </div>
+                            </div>
+                            <div
+                              className={`score-card ${result.duplicate_risk === 'high' ? 'bad' : result.duplicate_risk === 'medium' ? 'mid' : 'good'}`}
+                            >
+                              <div className="sc-label">Dup Risk</div>
+                              <div className="sc-value">
+                                <span
+                                  className="sc-big"
+                                  style={{ fontSize: '28px', textTransform: 'capitalize' }}
+                                >
+                                  {result.duplicate_risk}
+                                </span>
+                              </div>
+                              <div className="sc-delta">
+                                {result.clean_fields.length} clean fields
+                              </div>
+                            </div>
                           </div>
-                          <div className="sc-delta">{result.clean_fields.length} clean fields</div>
-                        </div>
-                      </div>
 
-                      <div className="summary-block">
-                        <div className="summary-eyebrow">{'// Summary'}</div>
-                        <p className="summary-text">{result.summary}</p>
-                      </div>
+                          <div className="summary-block">
+                            <div className="summary-eyebrow">{'// Summary'}</div>
+                            <p className="summary-text">{result.summary}</p>
+                          </div>
 
-                      {result.issues.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Issues detected'}</span>
-                            <span>{result.issues.length} total</span>
-                          </div>
-                          <div className="issues">
-                            {result.issues.map((issue, i) => (
-                              <IssueCard key={i} issue={issue} />
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      {result.clean_fields.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Clean fields'}</span>
-                          </div>
-                          <div className="clean-fields">
-                            {result.clean_fields.map((f) => (
-                              <span key={f} className="clean-tag">
-                                {f}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      <div className="section-header">
-                        <span>{'// Duplicate risk'}</span>
-                      </div>
-                      <div className={`dup-block dup-${result.duplicate_risk}`}>
-                        <div className="dup-icon">
-                          {result.duplicate_risk === 'high'
-                            ? '⚠️'
-                            : result.duplicate_risk === 'medium'
-                              ? '🔍'
-                              : '✓'}
-                        </div>
-                        <div className="dup-body">
-                          <div className="dup-label">
-                            Risk level
-                            <span className={`dup-risk-badge ${result.duplicate_risk}`}>
-                              {result.duplicate_risk}
-                            </span>
-                          </div>
-                          <p className="dup-reason">{result.duplicate_reason}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : ''}
-                      </span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? (
+                          {result.issues.length > 0 && (
                             <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
+                              <div className="section-header">
+                                <span>{'// Issues detected'}</span>
+                                <span>{result.issues.length} total</span>
+                              </div>
+                              <div className="issues">
+                                {result.issues.map((issue, i) => (
+                                  <IssueCard key={i} issue={issue} />
+                                ))}
+                              </div>
                             </>
-                          ) : (
+                          )}
+
+                          {result.clean_fields.length > 0 && (
                             <>
+                              <div className="section-header">
+                                <span>{'// Clean fields'}</span>
+                              </div>
+                              <div className="clean-fields">
+                                {result.clean_fields.map((f) => (
+                                  <span key={f} className="clean-tag">
+                                    {f}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          <div className="section-header">
+                            <span>{'// Duplicate risk'}</span>
+                          </div>
+                          <div className={`dup-block dup-${result.duplicate_risk}`}>
+                            <div className="dup-icon">
+                              {result.duplicate_risk === 'high'
+                                ? '⚠️'
+                                : result.duplicate_risk === 'medium'
+                                  ? '🔍'
+                                  : '✓'}
+                            </div>
+                            <div className="dup-body">
+                              <div className="dup-label">
+                                Risk level
+                                <span className={`dup-risk-badge ${result.duplicate_risk}`}>
+                                  {result.duplicate_risk}
+                                </span>
+                              </div>
+                              <p className="dup-reason">{result.duplicate_reason}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="result-footer">
+                          <span className="token-pill">
+                            {tokens
+                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                              : ''}
+                          </span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              type="button"
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'copying' ? (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M20 6L9 17l-5-5" />
+                                  </svg>
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                  </svg>
+                                  Copy
+                                </>
+                              )}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPng}
+                              disabled={exportState !== 'idle'}
+                            >
                               <svg
                                 width="12"
                                 height="12"
@@ -669,76 +709,55 @@ export default function CrmSanityPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="M21 15l-5-5L5 21" />
                               </svg>
-                              Copy
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          Check another
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                              {exportState === 'png' ? '…' : 'PNG'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPdf}
+                              disabled={exportState !== 'idle'}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <path d="M14 2v6h6" />
+                                <path d="M12 18v-6M9 15l3 3 3-3" />
+                              </svg>
+                              {exportState === 'pdf' ? '…' : 'PDF'}
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              Check another
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </EmailGate>
                 )}
               </section>
 

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type {
   ApiResponse,
   RoastCategory,
@@ -524,119 +526,136 @@ export default function WebsiteRoastPage() {
 
               <section className={`wr-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
-                  <>
-                    <div ref={resultPanelRef}>
-                      <div className="one-liner-block">
-                        <p className="one-liner-text">&ldquo;{result.one_liner}&rdquo;</p>
-                        <div className="one-liner-meta">
-                          <span className="site-name">{result.site_name}</span>
-                          <span className="url-pill">{result.url}</span>
-                        </div>
-                      </div>
-
-                      <div className="score-row">
-                        <div className={`score-card ${overallGradeClass(result.overall_grade)}`}>
-                          <div className="sc-label">Overall score</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.overall_score}</span>
-                            <span className="sc-small">/100</span>
+                  <EmailGate
+                    miniAppSlug="website-roast"
+                    pattern="upfront"
+                    initialInput={{ url: result.url }}
+                  >
+                    {({ submitToApi }) => (
+                      <>
+                        <SubmitOnce
+                          submit={submitToApi}
+                          input={{ url: result.url }}
+                          output={result}
+                        />
+                        <div ref={resultPanelRef}>
+                          <div className="one-liner-block">
+                            <p className="one-liner-text">&ldquo;{result.one_liner}&rdquo;</p>
+                            <div className="one-liner-meta">
+                              <span className="site-name">{result.site_name}</span>
+                              <span className="url-pill">{result.url}</span>
+                            </div>
                           </div>
-                          <div className="sc-delta">Grade {result.overall_grade}</div>
-                        </div>
-                        <div className="score-card lighthouse-card">
-                          <div className="sc-label">Lighthouse (mobile)</div>
-                          <div className="lighthouse-grid">
-                            <LighthouseMini
-                              label="Performance"
-                              value={result.lighthouse.performance}
-                            />
-                            <LighthouseMini label="SEO" value={result.lighthouse.seo} />
-                            <LighthouseMini
-                              label="Accessibility"
-                              value={result.lighthouse.accessibility}
-                            />
-                            <LighthouseMini
-                              label="Best Practices"
-                              value={result.lighthouse.best_practices}
-                            />
+
+                          <div className="score-row">
+                            <div
+                              className={`score-card ${overallGradeClass(result.overall_grade)}`}
+                            >
+                              <div className="sc-label">Overall score</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.overall_score}</span>
+                                <span className="sc-small">/100</span>
+                              </div>
+                              <div className="sc-delta">Grade {result.overall_grade}</div>
+                            </div>
+                            <div className="score-card lighthouse-card">
+                              <div className="sc-label">Lighthouse (mobile)</div>
+                              <div className="lighthouse-grid">
+                                <LighthouseMini
+                                  label="Performance"
+                                  value={result.lighthouse.performance}
+                                />
+                                <LighthouseMini label="SEO" value={result.lighthouse.seo} />
+                                <LighthouseMini
+                                  label="Accessibility"
+                                  value={result.lighthouse.accessibility}
+                                />
+                                <LighthouseMini
+                                  label="Best Practices"
+                                  value={result.lighthouse.best_practices}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="section-header">
+                            <span>{'// Category breakdown'}</span>
+                            <span>6 categories</span>
+                          </div>
+                          <div className="category-grid">
+                            {result.categories.map((cat) => (
+                              <CategoryCard key={cat.name} cat={cat} />
+                            ))}
+                          </div>
+
+                          <div className="fixes-block">
+                            <div className="fixes-eyebrow">{'// 3 things to fix first'}</div>
+                            <ol className="fixes-list">
+                              {result.top_3_fixes.map((fix, i) => (
+                                <li key={i} className="fix-row">
+                                  <span className="fix-number">
+                                    {String(i + 1).padStart(2, '0')}
+                                  </span>
+                                  <span className="fix-text-main">{fix}</span>
+                                </li>
+                              ))}
+                            </ol>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="section-header">
-                        <span>{'// Category breakdown'}</span>
-                        <span>6 categories</span>
-                      </div>
-                      <div className="category-grid">
-                        {result.categories.map((cat) => (
-                          <CategoryCard key={cat.name} cat={cat} />
-                        ))}
-                      </div>
-
-                      <div className="fixes-block">
-                        <div className="fixes-eyebrow">{'// 3 things to fix first'}</div>
-                        <ol className="fixes-list">
-                          {result.top_3_fixes.map((fix, i) => (
-                            <li key={i} className="fix-row">
-                              <span className="fix-number">{String(i + 1).padStart(2, '0')}</span>
-                              <span className="fix-text-main">{fix}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    </div>
-
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : ''}
-                      </span>
-                      <span className="result-ts hide-sm">{resultTs}</span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? 'Copied' : 'Copy'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          Roast another
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                        <div className="result-footer">
+                          <span className="token-pill">
+                            {tokens
+                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                              : ''}
+                          </span>
+                          <span className="result-ts hide-sm">{resultTs}</span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              type="button"
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'copying' ? 'Copied' : 'Copy'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPng}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'png' ? '…' : 'PNG'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPdf}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'pdf' ? '…' : 'PDF'}
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              Roast another
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </EmailGate>
                 )}
               </section>
 

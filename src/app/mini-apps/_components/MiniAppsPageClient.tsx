@@ -30,7 +30,7 @@ const STATUS_ORDER: Record<MiniApp['status'], number> = {
 export function MiniAppsPageClient() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
-  const [size, setSize] = useState(5)
+  const [size, setSize] = useState(3)
   const [sort, setSort] = useState<SortKey>('featured')
   const [modal, setModal] = useState<ModalState>({ kind: 'none' })
 
@@ -76,7 +76,7 @@ export function MiniAppsPageClient() {
 
   const handleLaunch = (app: MiniApp) => {
     if (!app.launch_url) return
-    window.open(app.launch_url, '_blank', 'noopener,noreferrer')
+    window.location.href = app.launch_url
   }
 
   const openInterested = (
