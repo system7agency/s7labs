@@ -30,6 +30,9 @@ export type MiniApp = {
     build_potential: string
   }
   interest_context: string
+  /** Developer initials. Shown on the card only in non-production builds
+   * (i.e. `npm run dev`) so the team can see who owns each app at a glance. */
+  author?: string
 }
 
 export const CATEGORIES = [
@@ -45,6 +48,7 @@ export const CATEGORIES = [
 export const APPS: MiniApp[] = [
   {
     id: 'share-of-voice',
+    author: 'SK',
     name: 'AI Share of Voice Scorer',
     status: 'live',
     category: 'Software / AI',
@@ -76,6 +80,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'tech-stack-recommender',
+    author: 'SK',
     name: 'Tech Stack Recommender',
     status: 'live',
     category: 'Software / AI',
@@ -108,6 +113,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'automation-blueprint',
+    author: 'SK',
     name: 'Automation Blueprint',
     status: 'live',
     category: 'Automations / AI',
@@ -140,6 +146,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'website-roast',
+    author: 'YA',
     name: 'Website Roast Bot',
     status: 'live',
     category: 'AI / GTM',
@@ -171,6 +178,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'crm-sanity',
+    author: 'YA',
     name: 'CRM Field Sanity Check',
     status: 'live',
     category: 'AI / Operations',
@@ -196,6 +204,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'job-brief',
+    author: 'YA',
     name: 'Job Posting to Sales Brief',
     status: 'live',
     category: 'AI / Operations',
@@ -221,6 +230,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'linkedin-hook',
+    author: 'YA',
     name: 'LinkedIn Post to Outbound Hook',
     status: 'live',
     category: 'AI / Operations',
@@ -246,6 +256,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'outbound-radar',
+    author: 'YA',
     name: 'Outbound Trigger Radar',
     status: 'live',
     category: 'AI / Operations',
@@ -271,6 +282,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'pricing-diagnostic',
+    author: 'YA',
     name: 'Pricing Page Diagnostic',
     status: 'live',
     category: 'AI / Utilities',
@@ -295,6 +307,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'proposal-engine',
+    author: 'SK',
     name: 'Proposal Draft Engine',
     status: 'live',
     category: 'AI / Utilities',
