@@ -1,9 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type {
   ApiResponse,
   RoastCategory,
@@ -12,6 +17,83 @@ import type {
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
+
+const ROAST_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Paste any website URL',
+    description:
+      'Yours, a competitor’s, or any public page. We support marketing sites, SaaS landings, and product pages.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M7 13h8" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We scrape the page and pull Lighthouse scores',
+    description:
+      'Firecrawl extracts real content; PageSpeed Insights runs in parallel. Failures don’t block the roast.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 7l9-4 9 4-9 4-9-4z" />
+        <path d="M3 12l9 4 9-4" />
+        <path d="M3 17l9 4 9-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'AI roasts six honest categories',
+    description:
+      'Copy, CTAs, SEO, mobile UX, performance, and trust — each with a score, a roast, and a specific quick fix.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 2v6" />
+        <path d="M12 22a8 8 0 008-8c0-4-2-7-4-9 0 3-2 4-4 4s-3 1-3 3 1 3 3 3-1 2-3 2a5 5 0 105 5z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get your overall grade and top 3 fixes',
+    description:
+      'A friction-style score, a one-liner verdict, and the highest-impact changes ranked first — specific actions, not advice.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
 
 const STAGES = [
   {
@@ -375,13 +457,7 @@ export default function WebsiteRoastPage() {
 
   return (
     <div className="website-roast">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="wr-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -395,50 +471,45 @@ export default function WebsiteRoastPage() {
             Brutally honest feedback on copy, CTAs, SEO, mobile UX, and trust signals — backed by
             real Google Lighthouse scores.
           </p>
-          <div className="meta-tags">
-            <span>· Copy</span>
-            <span>· CTAs</span>
-            <span>· Lighthouse</span>
-            <span>· 3 Fixes</span>
-          </div>
         </section>
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
-                </span>
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <>
+                      <span className="hide-sm">
+                        <span className="stat-key">tok</span>{' '}
+                        <span className="stat-val">
+                          {(tokens.in + tokens.out).toLocaleString()}
+                        </span>
+                      </span>
+                      <span className="pr-sep hide-sm" />
+                    </>
+                  )}
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-              <div className="prr">
-                {tokens && (
-                  <>
-                    <span className="hide-sm">
-                      <span className="stat-key">tok</span>{' '}
-                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
-                    </span>
-                    <span className="pr-sep hide-sm" />
-                  </>
-                )}
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="panel-body">
               <section className={`wr-state${appState === 'idle' ? 'active' : ''}`}>
@@ -447,7 +518,6 @@ export default function WebsiteRoastPage() {
                   <div className="input-field">
                     <label>Website URL</label>
                     <div key={`u-${shakeInput}`} className={`input-box${urlError ? 'error' : ''}`}>
-                      <span className="prompt">$</span>
                       <input
                         ref={urlInputRef}
                         type="url"
@@ -498,7 +568,7 @@ export default function WebsiteRoastPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -524,119 +594,136 @@ export default function WebsiteRoastPage() {
 
               <section className={`wr-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
-                  <>
-                    <div ref={resultPanelRef}>
-                      <div className="one-liner-block">
-                        <p className="one-liner-text">&ldquo;{result.one_liner}&rdquo;</p>
-                        <div className="one-liner-meta">
-                          <span className="site-name">{result.site_name}</span>
-                          <span className="url-pill">{result.url}</span>
-                        </div>
-                      </div>
-
-                      <div className="score-row">
-                        <div className={`score-card ${overallGradeClass(result.overall_grade)}`}>
-                          <div className="sc-label">Overall score</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.overall_score}</span>
-                            <span className="sc-small">/100</span>
+                  <EmailGate
+                    miniAppSlug="website-roast"
+                    pattern="upfront"
+                    initialInput={{ url: result.url }}
+                  >
+                    {({ submitToApi }) => (
+                      <>
+                        <SubmitOnce
+                          submit={submitToApi}
+                          input={{ url: result.url }}
+                          output={result}
+                        />
+                        <div ref={resultPanelRef}>
+                          <div className="one-liner-block">
+                            <p className="one-liner-text">&ldquo;{result.one_liner}&rdquo;</p>
+                            <div className="one-liner-meta">
+                              <span className="site-name">{result.site_name}</span>
+                              <span className="url-pill">{result.url}</span>
+                            </div>
                           </div>
-                          <div className="sc-delta">Grade {result.overall_grade}</div>
-                        </div>
-                        <div className="score-card lighthouse-card">
-                          <div className="sc-label">Lighthouse (mobile)</div>
-                          <div className="lighthouse-grid">
-                            <LighthouseMini
-                              label="Performance"
-                              value={result.lighthouse.performance}
-                            />
-                            <LighthouseMini label="SEO" value={result.lighthouse.seo} />
-                            <LighthouseMini
-                              label="Accessibility"
-                              value={result.lighthouse.accessibility}
-                            />
-                            <LighthouseMini
-                              label="Best Practices"
-                              value={result.lighthouse.best_practices}
-                            />
+
+                          <div className="score-row">
+                            <div
+                              className={`score-card ${overallGradeClass(result.overall_grade)}`}
+                            >
+                              <div className="sc-label">Overall score</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.overall_score}</span>
+                                <span className="sc-small">/100</span>
+                              </div>
+                              <div className="sc-delta">Grade {result.overall_grade}</div>
+                            </div>
+                            <div className="score-card lighthouse-card">
+                              <div className="sc-label">Lighthouse (mobile)</div>
+                              <div className="lighthouse-grid">
+                                <LighthouseMini
+                                  label="Performance"
+                                  value={result.lighthouse.performance}
+                                />
+                                <LighthouseMini label="SEO" value={result.lighthouse.seo} />
+                                <LighthouseMini
+                                  label="Accessibility"
+                                  value={result.lighthouse.accessibility}
+                                />
+                                <LighthouseMini
+                                  label="Best Practices"
+                                  value={result.lighthouse.best_practices}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="section-header">
+                            <span>{'// Category breakdown'}</span>
+                            <span>6 categories</span>
+                          </div>
+                          <div className="category-grid">
+                            {result.categories.map((cat) => (
+                              <CategoryCard key={cat.name} cat={cat} />
+                            ))}
+                          </div>
+
+                          <div className="fixes-block">
+                            <div className="fixes-eyebrow">{'// 3 things to fix first'}</div>
+                            <ol className="fixes-list">
+                              {result.top_3_fixes.map((fix, i) => (
+                                <li key={i} className="fix-row">
+                                  <span className="fix-number">
+                                    {String(i + 1).padStart(2, '0')}
+                                  </span>
+                                  <span className="fix-text-main">{fix}</span>
+                                </li>
+                              ))}
+                            </ol>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="section-header">
-                        <span>{'// Category breakdown'}</span>
-                        <span>6 categories</span>
-                      </div>
-                      <div className="category-grid">
-                        {result.categories.map((cat) => (
-                          <CategoryCard key={cat.name} cat={cat} />
-                        ))}
-                      </div>
-
-                      <div className="fixes-block">
-                        <div className="fixes-eyebrow">{'// 3 things to fix first'}</div>
-                        <ol className="fixes-list">
-                          {result.top_3_fixes.map((fix, i) => (
-                            <li key={i} className="fix-row">
-                              <span className="fix-number">{String(i + 1).padStart(2, '0')}</span>
-                              <span className="fix-text-main">{fix}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    </div>
-
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : ''}
-                      </span>
-                      <span className="result-ts hide-sm">{resultTs}</span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? 'Copied' : 'Copy'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          Roast another
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                        <div className="result-footer">
+                          <span className="token-pill">
+                            {tokens
+                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                              : ''}
+                          </span>
+                          <span className="result-ts hide-sm">{resultTs}</span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              type="button"
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'copying' ? 'Copied' : 'Copy'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPng}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'png' ? '…' : 'PNG'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPdf}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'pdf' ? '…' : 'PDF'}
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              Roast another
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </EmailGate>
                 )}
               </section>
 
@@ -664,39 +751,15 @@ export default function WebsiteRoastPage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Scrape'}</div>
-            <div className="name">Live page content</div>
-            <div className="desc">
-              Firecrawl pulls the real page — headings, copy, CTAs, and meta — not a guess from the
-              URL alone.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Lighthouse'}</div>
-            <div className="name">Real Google scores</div>
-            <div className="desc">
-              PageSpeed Insights runs in parallel. If it fails, the roast continues without
-              blocking.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Roast'}</div>
-            <div className="name">Six honest categories</div>
-            <div className="desc">
-              Copy, CTAs, SEO, mobile UX, performance, and trust — each with a score and a specific
-              fix.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Priorities'}</div>
-            <div className="name">Top 3 fixes</div>
-            <div className="desc">
-              The highest-impact changes to make first — specific actions, not generic advice.
-            </div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From URL to roast in <span className="accent">under a minute</span>
+            </>
+          }
+          subtitle="No login, no install. Four steps from paste to ranked fixes."
+          steps={ROAST_STEPS}
+        />
       </main>
 
       <Footer />

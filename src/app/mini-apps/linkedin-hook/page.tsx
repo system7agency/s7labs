@@ -1,13 +1,94 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, Hook, HookResult } from '@/app/api/mini-apps/linkedin-hook/route'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
+
+const HOOK_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Paste a LinkedIn post',
+    description:
+      'Any public post — yours, your prospect’s, or a thought-leader you want to bring into your outreach.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M8 11v6M8 7h.01M12 17v-4M16 17v-3a2 2 0 10-4 0" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We extract the trigger, author, and signals',
+    description:
+      'Opinion, news, pain, or achievement — the specific moment in the post that creates an opening for outreach.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 7l9-4 9 4-9 4-9-4z" />
+        <path d="M3 12l9 4 9-4" />
+        <path d="M3 17l9 4 9-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'AI generates personalized outbound hooks',
+    description:
+      'Each hook uses a different tone and channel — LinkedIn DM, email, or cold call — mapped to the buyer persona.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get hooks ranked by reply likelihood',
+    description:
+      'The hook most likely to land is flagged first so you can send it without second-guessing.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
 
 const STAGES = [
   {
@@ -411,13 +492,7 @@ export default function LinkedInHookPage() {
 
   return (
     <div className="linkedin-hook">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="lh-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -431,50 +506,45 @@ export default function LinkedInHookPage() {
             Paste a LinkedIn post. We detect the trigger, profile the persona, and write three
             ready-to-send hooks — each with a different angle and channel.
           </p>
-          <div className="meta-tags">
-            <span>· Trigger Detection</span>
-            <span>· 3 Hook Variants</span>
-            <span>· Best Angle</span>
-            <span>· Channel Match</span>
-          </div>
         </section>
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
-                </span>
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <>
+                      <span className="hide-sm">
+                        <span className="stat-key">tok</span>{' '}
+                        <span className="stat-val">
+                          {(tokens.in + tokens.out).toLocaleString()}
+                        </span>
+                      </span>
+                      <span className="pr-sep hide-sm" />
+                    </>
+                  )}
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-              <div className="prr">
-                {tokens && (
-                  <>
-                    <span className="hide-sm">
-                      <span className="stat-key">tok</span>{' '}
-                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
-                    </span>
-                    <span className="pr-sep hide-sm" />
-                  </>
-                )}
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="panel-body">
               {/* IDLE */}
@@ -487,7 +557,6 @@ export default function LinkedInHookPage() {
                       key={`p-${shakePost}`}
                       className={`textarea-box${postError ? 'error' : ''}`}
                     >
-                      <span className="prompt">$</span>
                       <textarea
                         ref={textareaRef}
                         placeholder={`Just raised our Series A...\nHiring 10 engineers in Q3...\nWhy I stopped using spreadsheets for sales...`}
@@ -536,7 +605,7 @@ export default function LinkedInHookPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -563,67 +632,101 @@ export default function LinkedInHookPage() {
               {/* RESULT */}
               <section className={`lh-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
-                  <>
-                    <div ref={resultPanelRef}>
-                      <div className="result-head">
-                        <span className="title">Hooks ready — {result.post_author}</span>
-                        <span className="ts-label">{resultTs}</span>
-                      </div>
+                  <EmailGate
+                    miniAppSlug="linkedin-post-outbound-hook"
+                    pattern="upfront"
+                    initialInput={{ post_text: postText.trim() }}
+                  >
+                    {({ submitToApi }) => (
+                      <>
+                        <SubmitOnce
+                          submit={submitToApi}
+                          input={{ post_text: postText.trim() }}
+                          output={result}
+                        />
+                        <div ref={resultPanelRef}>
+                          <div className="result-head">
+                            <span className="title">Hooks ready — {result.post_author}</span>
+                            <span className="ts-label">{resultTs}</span>
+                          </div>
 
-                      <div className="trigger-block">
-                        <div className="trigger-eyebrow">
-                          {'// Outbound trigger'}
-                          <span className="trigger-type-badge">{result.trigger_type}</span>
+                          <div className="trigger-block">
+                            <div className="trigger-eyebrow">
+                              {'// Outbound trigger'}
+                              <span className="trigger-type-badge">{result.trigger_type}</span>
+                            </div>
+                            <p className="trigger-text">{result.trigger}</p>
+                            <div className="trigger-meta">
+                              <span>Target: {result.target_persona}</span>
+                              <span>Summary: {result.post_summary}</span>
+                            </div>
+                          </div>
+
+                          <div className="section-header">
+                            <span>{'// Outbound hooks'}</span>
+                            <span className="count">{result.hooks.length} generated</span>
+                          </div>
+                          <div className="hooks">
+                            {result.hooks.map((h, i) => (
+                              <HookCard key={i} hook={h} isBest={i === result.best_hook_index} />
+                            ))}
+                          </div>
                         </div>
-                        <p className="trigger-text">{result.trigger}</p>
-                        <div className="trigger-meta">
-                          <span>Target: {result.target_persona}</span>
-                          <span>Summary: {result.post_summary}</span>
-                        </div>
-                      </div>
 
-                      <div className="section-header">
-                        <span>{'// Outbound hooks'}</span>
-                        <span className="count">{result.hooks.length} generated</span>
-                      </div>
-                      <div className="hooks">
-                        {result.hooks.map((h, i) => (
-                          <HookCard key={i} hook={h} isBest={i === result.best_hook_index} />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : ''}
-                      </span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopyAll}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? (
-                            <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
-                            </>
-                          ) : (
-                            <>
+                        <div className="result-footer">
+                          <span className="token-pill">
+                            {tokens
+                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                              : ''}
+                          </span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              type="button"
+                              onClick={handleCopyAll}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'copying' ? (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M20 6L9 17l-5-5" />
+                                  </svg>
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                  </svg>
+                                  Copy all
+                                </>
+                              )}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPng}
+                              disabled={exportState !== 'idle'}
+                            >
                               <svg
                                 width="12"
                                 height="12"
@@ -634,76 +737,55 @@ export default function LinkedInHookPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="M21 15l-5-5L5 21" />
                               </svg>
-                              Copy all
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          New post
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                              {exportState === 'png' ? '…' : 'PNG'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPdf}
+                              disabled={exportState !== 'idle'}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <path d="M14 2v6h6" />
+                                <path d="M12 18v-6M9 15l3 3 3-3" />
+                              </svg>
+                              {exportState === 'pdf' ? '…' : 'PDF'}
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              New post
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </EmailGate>
                 )}
               </section>
 
@@ -732,38 +814,15 @@ export default function LinkedInHookPage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Trigger'}</div>
-            <div className="name">Signal extraction</div>
-            <div className="desc">
-              Identifies the specific moment in the post that creates an opening — opinion, news,
-              pain, or achievement.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Persona'}</div>
-            <div className="name">Buyer profiling</div>
-            <div className="desc">
-              Maps the post context to the most likely buyer persona worth reaching out to first.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Hooks'}</div>
-            <div className="name">3 unique angles</div>
-            <div className="desc">
-              Each hook uses a different tone and channel — LinkedIn DM, email, or cold call.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Best pick'}</div>
-            <div className="name">Ranked opener</div>
-            <div className="desc">
-              The hook most likely to get a reply is flagged, so you can move fast without
-              second-guessing.
-            </div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From a single post to <span className="accent">ranked hooks</span>
+            </>
+          }
+          subtitle="No login, no install. Four steps from paste to a ready-to-send opener."
+          steps={HOOK_STEPS}
+        />
       </main>
 
       <Footer />

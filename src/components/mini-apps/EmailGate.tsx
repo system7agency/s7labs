@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { clearLeadCookies, getLeadFromBrowser } from '@/lib/leads/cookies'
+import { useCallback, useMemo, useState } from 'react'
+
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
+
 import styles from './EmailGate.module.css'
 
 type Enrichment = {
@@ -33,24 +34,11 @@ type SubmitResponse = {
   error?: string
 }
 
-function redactEmail(email: string): string {
-  const at = email.indexOf('@')
-  if (at < 1) return email
-  const user = email.slice(0, at)
-  const domain = email.slice(at + 1)
-  const visible = user.slice(0, Math.min(2, user.length))
-  const dot = domain.indexOf('.')
-  const domainHead = dot > 0 ? domain.slice(0, 1) : domain
-  return `${visible}••@${domainHead}•••`
-}
-
 export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput }: Props) {
-  const [hydrated, setHydrated] = useState(false)
   const [email, setEmail] = useState('')
   const [leadId, setLeadId] = useState('')
   const [submissionId, setSubmissionId] = useState<string | null>(null)
   const [gatePassed, setGatePassed] = useState(false)
-  const [recognized, setRecognized] = useState(false)
   const [showOptional, setShowOptional] = useState(false)
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
@@ -58,21 +46,6 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
   const [emailInput, setEmailInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Cookies are only available on the client, so we must read them after mount.
-    // The setState calls here are the intended hydration step, not a cascade.
-    /* eslint-disable react-hooks/set-state-in-effect */
-    const { email: cookieEmail, leadId: cookieLeadId } = getLeadFromBrowser()
-    if (cookieEmail && cookieLeadId) {
-      setEmail(cookieEmail)
-      setLeadId(cookieLeadId)
-      setGatePassed(true)
-      setRecognized(true)
-    }
-    setHydrated(true)
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, [])
 
   const submitToApi = useCallback(
     async (input: object, output?: object) => {
@@ -100,16 +73,6 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
     },
     [email, miniAppSlug, submissionId]
   )
-
-  const handleSwitchUser = useCallback(() => {
-    clearLeadCookies()
-    setEmail('')
-    setLeadId('')
-    setGatePassed(false)
-    setRecognized(false)
-    setSubmissionId(null)
-    setEmailInput('')
-  }, [])
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -149,7 +112,6 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
         setLeadId(json.leadId)
         if (json.submissionId) setSubmissionId(json.submissionId)
         setGatePassed(true)
-        setRecognized(false)
       } catch {
         setErrorMsg("Couldn't save your info — try again")
       } finally {
@@ -164,25 +126,8 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
     [email, leadId, submitToApi]
   )
 
-  if (!hydrated) {
-    // Avoid SSR/CSR mismatch — render nothing until cookies are read
-    return null
-  }
-
   if (gatePassed) {
-    return (
-      <>
-        {recognized ? (
-          <div className={styles.welcomeBar} role="status">
-            <span>Recognized · {redactEmail(email)}</span>
-            <button type="button" className={styles.switch} onClick={handleSwitchUser}>
-              Switch user
-            </button>
-          </div>
-        ) : null}
-        {children(renderCtx)}
-      </>
-    )
+    return <>{children(renderCtx)}</>
   }
 
   const gate = (

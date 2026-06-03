@@ -1,13 +1,96 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, FieldIssue, SanityResult } from '@/app/api/mini-apps/crm-sanity/route'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
+
+const SANITY_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Paste a CRM record',
+    description:
+      'Any format — JSON dump, CSV row, or just a copy/paste from your CRM detail view. We accept it all.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M7 13h8" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We parse the fields and structure',
+    description:
+      'Emails, phones, URLs, dates, names — every value is normalised and checked against expected patterns.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 4h6v6H4z" />
+        <path d="M14 4h6v6h-6z" />
+        <path d="M4 14h6v6H4z" />
+        <path d="M14 14h6v6h-6z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'AI evaluates against CRM hygiene best practices',
+    description:
+      'Format validity, completeness, consistency, and duplicate risk — scored against what good ops teams actually enforce.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get your sanity score and field-by-field fixes',
+    description:
+      'Overall hygiene grade, severity-flagged issues, and concrete fixes for every field that needs attention.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
 
 const STAGES = [
   {
@@ -371,13 +454,7 @@ export default function CrmSanityPage() {
 
   return (
     <div className="crm-sanity">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="cs-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -391,50 +468,45 @@ export default function CrmSanityPage() {
             Paste any CRM record — contact, account, lead, or deal. We score every field, flag
             issues by severity, and give you exact fixes in seconds.
           </p>
-          <div className="meta-tags">
-            <span>· Quality Score</span>
-            <span>· Issue Flags</span>
-            <span>· Exact Fixes</span>
-            <span>· Duplicate Risk</span>
-          </div>
         </section>
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
-                </span>
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <>
+                      <span className="hide-sm">
+                        <span className="stat-key">tok</span>{' '}
+                        <span className="stat-val">
+                          {(tokens.in + tokens.out).toLocaleString()}
+                        </span>
+                      </span>
+                      <span className="pr-sep hide-sm" />
+                    </>
+                  )}
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-              <div className="prr">
-                {tokens && (
-                  <>
-                    <span className="hide-sm">
-                      <span className="stat-key">tok</span>{' '}
-                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
-                    </span>
-                    <span className="pr-sep hide-sm" />
-                  </>
-                )}
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="panel-body">
               {/* IDLE */}
@@ -449,7 +521,6 @@ export default function CrmSanityPage() {
                       key={`r-${shakeInput}`}
                       className={`textarea-box${inputError ? 'error' : ''}`}
                     >
-                      <span className="prompt">$</span>
                       <textarea
                         ref={textareaRef}
                         placeholder={PLACEHOLDER}
@@ -499,7 +570,7 @@ export default function CrmSanityPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -526,139 +597,177 @@ export default function CrmSanityPage() {
               {/* RESULT */}
               <section className={`cs-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
-                  <>
-                    <div ref={resultPanelRef}>
-                      <div className="result-head">
-                        <span className="title">Sanity check complete — {result.record_type}</span>
-                        <span className="ts-label">{resultTs}</span>
-                      </div>
+                  <EmailGate
+                    miniAppSlug="crm-field-sanity-check"
+                    pattern="upfront"
+                    initialInput={{ record_text: recordText.trim() }}
+                  >
+                    {({ submitToApi }) => (
+                      <>
+                        <SubmitOnce
+                          submit={submitToApi}
+                          input={{ record_text: recordText.trim() }}
+                          output={result}
+                        />
+                        <div ref={resultPanelRef}>
+                          <div className="result-head">
+                            <span className="title">
+                              Sanity check complete — {result.record_type}
+                            </span>
+                            <span className="ts-label">{resultTs}</span>
+                          </div>
 
-                      <div className="score-row">
-                        <div className={`score-card ${scoreClass(result.quality_score)}`}>
-                          <div className="sc-label">Quality Score</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.quality_score}</span>
-                            <span className="sc-small">/100</span>
-                          </div>
-                          <div className="sc-delta">
-                            Grade {result.grade} — {gradeLabel(result.grade)}
-                          </div>
-                        </div>
-                        <div
-                          className={`score-card ${criticalCount > 0 ? 'bad' : warningCount > 0 ? 'mid' : 'good'}`}
-                        >
-                          <div className="sc-label">Issues</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.issues.length}</span>
-                          </div>
-                          <div className="sc-delta">
-                            {criticalCount} critical · {warningCount} warnings
-                          </div>
-                        </div>
-                        <div
-                          className={`score-card ${result.duplicate_risk === 'high' ? 'bad' : result.duplicate_risk === 'medium' ? 'mid' : 'good'}`}
-                        >
-                          <div className="sc-label">Dup Risk</div>
-                          <div className="sc-value">
-                            <span
-                              className="sc-big"
-                              style={{ fontSize: '28px', textTransform: 'capitalize' }}
+                          <div className="score-row">
+                            <div className={`score-card ${scoreClass(result.quality_score)}`}>
+                              <div className="sc-label">Quality Score</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.quality_score}</span>
+                                <span className="sc-small">/100</span>
+                              </div>
+                              <div className="sc-delta">
+                                Grade {result.grade} — {gradeLabel(result.grade)}
+                              </div>
+                            </div>
+                            <div
+                              className={`score-card ${criticalCount > 0 ? 'bad' : warningCount > 0 ? 'mid' : 'good'}`}
                             >
-                              {result.duplicate_risk}
-                            </span>
+                              <div className="sc-label">Issues</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.issues.length}</span>
+                              </div>
+                              <div className="sc-delta">
+                                {criticalCount} critical · {warningCount} warnings
+                              </div>
+                            </div>
+                            <div
+                              className={`score-card ${result.duplicate_risk === 'high' ? 'bad' : result.duplicate_risk === 'medium' ? 'mid' : 'good'}`}
+                            >
+                              <div className="sc-label">Dup Risk</div>
+                              <div className="sc-value">
+                                <span
+                                  className="sc-big"
+                                  style={{ fontSize: '28px', textTransform: 'capitalize' }}
+                                >
+                                  {result.duplicate_risk}
+                                </span>
+                              </div>
+                              <div className="sc-delta">
+                                {result.clean_fields.length} clean fields
+                              </div>
+                            </div>
                           </div>
-                          <div className="sc-delta">{result.clean_fields.length} clean fields</div>
-                        </div>
-                      </div>
 
-                      <div className="summary-block">
-                        <div className="summary-eyebrow">{'// Summary'}</div>
-                        <p className="summary-text">{result.summary}</p>
-                      </div>
+                          <div className="summary-block">
+                            <div className="summary-eyebrow">{'// Summary'}</div>
+                            <p className="summary-text">{result.summary}</p>
+                          </div>
 
-                      {result.issues.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Issues detected'}</span>
-                            <span>{result.issues.length} total</span>
-                          </div>
-                          <div className="issues">
-                            {result.issues.map((issue, i) => (
-                              <IssueCard key={i} issue={issue} />
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      {result.clean_fields.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Clean fields'}</span>
-                          </div>
-                          <div className="clean-fields">
-                            {result.clean_fields.map((f) => (
-                              <span key={f} className="clean-tag">
-                                {f}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      <div className="section-header">
-                        <span>{'// Duplicate risk'}</span>
-                      </div>
-                      <div className={`dup-block dup-${result.duplicate_risk}`}>
-                        <div className="dup-icon">
-                          {result.duplicate_risk === 'high'
-                            ? '⚠️'
-                            : result.duplicate_risk === 'medium'
-                              ? '🔍'
-                              : '✓'}
-                        </div>
-                        <div className="dup-body">
-                          <div className="dup-label">
-                            Risk level
-                            <span className={`dup-risk-badge ${result.duplicate_risk}`}>
-                              {result.duplicate_risk}
-                            </span>
-                          </div>
-                          <p className="dup-reason">{result.duplicate_reason}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : ''}
-                      </span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? (
+                          {result.issues.length > 0 && (
                             <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
+                              <div className="section-header">
+                                <span>{'// Issues detected'}</span>
+                                <span>{result.issues.length} total</span>
+                              </div>
+                              <div className="issues">
+                                {result.issues.map((issue, i) => (
+                                  <IssueCard key={i} issue={issue} />
+                                ))}
+                              </div>
                             </>
-                          ) : (
+                          )}
+
+                          {result.clean_fields.length > 0 && (
                             <>
+                              <div className="section-header">
+                                <span>{'// Clean fields'}</span>
+                              </div>
+                              <div className="clean-fields">
+                                {result.clean_fields.map((f) => (
+                                  <span key={f} className="clean-tag">
+                                    {f}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          <div className="section-header">
+                            <span>{'// Duplicate risk'}</span>
+                          </div>
+                          <div className={`dup-block dup-${result.duplicate_risk}`}>
+                            <div className="dup-icon">
+                              {result.duplicate_risk === 'high'
+                                ? '⚠️'
+                                : result.duplicate_risk === 'medium'
+                                  ? '🔍'
+                                  : '✓'}
+                            </div>
+                            <div className="dup-body">
+                              <div className="dup-label">
+                                Risk level
+                                <span className={`dup-risk-badge ${result.duplicate_risk}`}>
+                                  {result.duplicate_risk}
+                                </span>
+                              </div>
+                              <p className="dup-reason">{result.duplicate_reason}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="result-footer">
+                          <span className="token-pill">
+                            {tokens
+                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                              : ''}
+                          </span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              type="button"
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'copying' ? (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M20 6L9 17l-5-5" />
+                                  </svg>
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                  </svg>
+                                  Copy
+                                </>
+                              )}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPng}
+                              disabled={exportState !== 'idle'}
+                            >
                               <svg
                                 width="12"
                                 height="12"
@@ -669,76 +778,55 @@ export default function CrmSanityPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="M21 15l-5-5L5 21" />
                               </svg>
-                              Copy
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          Check another
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                              {exportState === 'png' ? '…' : 'PNG'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPdf}
+                              disabled={exportState !== 'idle'}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <path d="M14 2v6h6" />
+                                <path d="M12 18v-6M9 15l3 3 3-3" />
+                              </svg>
+                              {exportState === 'pdf' ? '…' : 'PDF'}
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              Check another
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </EmailGate>
                 )}
               </section>
 
@@ -767,40 +855,15 @@ export default function CrmSanityPage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Format'}</div>
-            <div className="name">Format validation</div>
-            <div className="desc">
-              Email, phone, URL, and date formats checked against expected patterns for each field
-              type.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Completeness'}</div>
-            <div className="name">Missing fields</div>
-            <div className="desc">
-              Every empty or null value flagged by severity — critical for required fields, warnings
-              for enrichment gaps.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Consistency'}</div>
-            <div className="name">Data consistency</div>
-            <div className="desc">
-              Capitalisation, naming conventions, and cross-field logic checked so your CRM stays
-              clean at scale.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Duplicates'}</div>
-            <div className="name">Duplicate risk</div>
-            <div className="desc">
-              Generic emails, common names, and missing unique identifiers flagged before they
-              pollute your pipeline.
-            </div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From record to <span className="accent">clean CRM</span> in seconds
+            </>
+          }
+          subtitle="No login, no install. Four steps from paste to field-level fixes."
+          steps={SANITY_STEPS}
+        />
       </main>
 
       <Footer />

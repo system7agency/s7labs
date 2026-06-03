@@ -38,6 +38,39 @@ export function CardThumb({ thumb }: CardThumbProps) {
           </div>
         </div>
       )
+    case 'aio':
+      return (
+        <div className="card-thumb thumb-aio">
+          <div className="aio-search">
+            <span className="aio-search-dot" />
+            <span className="aio-search-line" />
+          </div>
+          <div className="aio-summary">
+            <span className="aio-sm-line aio-sm-main" />
+            <span className="aio-sm-line" />
+            <span className="aio-sm-line" />
+          </div>
+          <div className="aio-cites">
+            <span className="aio-cite aio-cite-rival" />
+            <span className="aio-cite aio-cite-empty" />
+            <span className="aio-cite" />
+          </div>
+        </div>
+      )
+    case 'avs':
+      return (
+        <div className="card-thumb thumb-avs">
+          <div className="avs-gauge">
+            <span className="avs-gauge-num">72</span>
+          </div>
+          <div className="avs-segments">
+            <span className="avs-seg avs-seg-1" />
+            <span className="avs-seg avs-seg-2" />
+            <span className="avs-seg avs-seg-3" />
+            <span className="avs-seg avs-seg-4" />
+          </div>
+        </div>
+      )
     case 'sov':
       return (
         <div className="card-thumb thumb-sov">

@@ -1,14 +1,96 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, BriefResult, Signal } from '@/app/api/mini-apps/job-brief/route'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
 type InputMode = 'url' | 'text'
+
+const BRIEF_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Paste a job posting URL or text',
+    description:
+      'Public listings work great. Internal postings — just paste the text directly. Either way, no scraping you need to set up.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M7 13h8" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We extract requirements, tech stack, and budget signals',
+    description:
+      'Every responsibility, named tool, and seniority cue is decoded into something a salesperson can actually use.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 7l9-4 9 4-9 4-9-4z" />
+        <path d="M3 12l9 4 9-4" />
+        <path d="M3 17l9 4 9-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'AI infers pain points and the best sales angle',
+    description:
+      'What this hire tells you about what is broken or overloaded — and the specific angle that lands with this buyer.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get your sales brief with the ideal contact',
+    description:
+      'Executive summary, tech fingerprint, pain points, budget signals — plus the role + persona to reach out to first.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
 
 const STAGES = [
   {
@@ -380,13 +462,7 @@ export default function JobBriefPage() {
 
   return (
     <div className="job-brief">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="jb-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -400,50 +476,45 @@ export default function JobBriefPage() {
             Drop a job posting URL or paste the text. We decode what the company is actually
             building, what&apos;s broken, and exactly how to sell into them right now.
           </p>
-          <div className="meta-tags">
-            <span>· Pain Points</span>
-            <span>· Tech Stack</span>
-            <span>· Budget Signals</span>
-            <span>· Sales Angle</span>
-          </div>
         </section>
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
-                </span>
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <>
+                      <span className="hide-sm">
+                        <span className="stat-key">tok</span>{' '}
+                        <span className="stat-val">
+                          {(tokens.in + tokens.out).toLocaleString()}
+                        </span>
+                      </span>
+                      <span className="pr-sep hide-sm" />
+                    </>
+                  )}
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-              <div className="prr">
-                {tokens && (
-                  <>
-                    <span className="hide-sm">
-                      <span className="stat-key">tok</span>{' '}
-                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
-                    </span>
-                    <span className="pr-sep hide-sm" />
-                  </>
-                )}
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="panel-body">
               {/* IDLE */}
@@ -487,7 +558,6 @@ export default function JobBriefPage() {
                         key={`u-${shakeInput}`}
                         className={`input-box${inputError ? 'error' : ''}`}
                       >
-                        <span className="prompt">$</span>
                         <input
                           ref={urlInputRef}
                           type="url"
@@ -509,7 +579,6 @@ export default function JobBriefPage() {
                         key={`t-${shakeInput}`}
                         className={`textarea-box${inputError ? 'error' : ''}`}
                       >
-                        <span className="prompt">$</span>
                         <textarea
                           placeholder={`We're hiring a Senior RevOps Manager...\nYou'll own our Salesforce instance...\nRequirements: 5+ years in Revenue Operations...`}
                           value={text}
@@ -562,7 +631,7 @@ export default function JobBriefPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -589,125 +658,159 @@ export default function JobBriefPage() {
               {/* RESULT */}
               <section className={`jb-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
-                  <>
-                    <div ref={resultPanelRef}>
-                      <div className="result-head">
-                        <span className="title">Brief ready — {result.company}</span>
-                        <span className="ts-label">{resultTs}</span>
-                      </div>
-
-                      <div className="summary-block">
-                        <div className="summary-eyebrow">
-                          {'// Executive summary'}
-                          <div className="role-badges">
-                            <span className={`badge urgency-${result.urgency}`}>
-                              {result.urgency} urgency
-                            </span>
-                            <span className="badge dept">{result.department}</span>
-                            <span className="badge">
-                              {SENIORITY_LABEL[result.seniority] ?? result.seniority}
-                            </span>
+                  <EmailGate
+                    miniAppSlug="job-posting-sales-brief"
+                    pattern="upfront"
+                    initialInput={inputMode === 'url' ? { url: url.trim() } : { text: text.trim() }}
+                  >
+                    {({ submitToApi }) => (
+                      <>
+                        <SubmitOnce
+                          submit={submitToApi}
+                          input={inputMode === 'url' ? { url: url.trim() } : { text: text.trim() }}
+                          output={result}
+                        />
+                        <div ref={resultPanelRef}>
+                          <div className="result-head">
+                            <span className="title">Brief ready — {result.company}</span>
+                            <span className="ts-label">{resultTs}</span>
                           </div>
-                        </div>
-                        <p className="summary-text">{result.summary}</p>
-                      </div>
 
-                      <div className="angle-block">
-                        <div className="angle-eyebrow">{'// Best sales angle'}</div>
-                        <p className="angle-text">{result.best_angle}</p>
-                        <div className="contact-row">
-                          Ideal first contact: <strong>{result.ideal_contact}</strong>
-                        </div>
-                      </div>
+                          <div className="summary-block">
+                            <div className="summary-eyebrow">
+                              {'// Executive summary'}
+                              <div className="role-badges">
+                                <span className={`badge urgency-${result.urgency}`}>
+                                  {result.urgency} urgency
+                                </span>
+                                <span className="badge dept">{result.department}</span>
+                                <span className="badge">
+                                  {SENIORITY_LABEL[result.seniority] ?? result.seniority}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="summary-text">{result.summary}</p>
+                          </div>
 
-                      {result.tech_stack.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Tech stack'}</span>
-                            <span>{result.tech_stack.length} tools</span>
+                          <div className="angle-block">
+                            <div className="angle-eyebrow">{'// Best sales angle'}</div>
+                            <p className="angle-text">{result.best_angle}</p>
+                            <div className="contact-row">
+                              Ideal first contact: <strong>{result.ideal_contact}</strong>
+                            </div>
                           </div>
-                          <div className="tag-cloud">
-                            {result.tech_stack.map((t) => (
-                              <span key={t} className="tag tech">
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
 
-                      {result.pain_points.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Implied pain points'}</span>
-                          </div>
-                          <div className="tag-cloud">
-                            {result.pain_points.map((p) => (
-                              <span key={p} className="tag pain">
-                                {p}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      {result.budget_indicators.length > 0 && (
-                        <>
-                          <div className="section-header">
-                            <span>{'// Budget indicators'}</span>
-                          </div>
-                          <div className="tag-cloud" style={{ marginBottom: '20px' }}>
-                            {result.budget_indicators.map((b) => (
-                              <span key={b} className="tag budget">
-                                {b}
-                              </span>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      <div className="section-header">
-                        <span>{'// Sales signals'}</span>
-                        <span>{result.signals.length} found</span>
-                      </div>
-                      <div className="signals">
-                        {result.signals.map((s, i) => (
-                          <SignalCard key={i} signal={s} />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : ''}
-                      </span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? (
+                          {result.tech_stack.length > 0 && (
                             <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
+                              <div className="section-header">
+                                <span>{'// Tech stack'}</span>
+                                <span>{result.tech_stack.length} tools</span>
+                              </div>
+                              <div className="tag-cloud">
+                                {result.tech_stack.map((t) => (
+                                  <span key={t} className="tag tech">
+                                    {t}
+                                  </span>
+                                ))}
+                              </div>
                             </>
-                          ) : (
+                          )}
+
+                          {result.pain_points.length > 0 && (
                             <>
+                              <div className="section-header">
+                                <span>{'// Implied pain points'}</span>
+                              </div>
+                              <div className="tag-cloud">
+                                {result.pain_points.map((p) => (
+                                  <span key={p} className="tag pain">
+                                    {p}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          {result.budget_indicators.length > 0 && (
+                            <>
+                              <div className="section-header">
+                                <span>{'// Budget indicators'}</span>
+                              </div>
+                              <div className="tag-cloud" style={{ marginBottom: '20px' }}>
+                                {result.budget_indicators.map((b) => (
+                                  <span key={b} className="tag budget">
+                                    {b}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          <div className="section-header">
+                            <span>{'// Sales signals'}</span>
+                            <span>{result.signals.length} found</span>
+                          </div>
+                          <div className="signals">
+                            {result.signals.map((s, i) => (
+                              <SignalCard key={i} signal={s} />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="result-footer">
+                          <span className="token-pill">
+                            {tokens
+                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                              : ''}
+                          </span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              type="button"
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
+                            >
+                              {exportState === 'copying' ? (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M20 6L9 17l-5-5" />
+                                  </svg>
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                  </svg>
+                                  Copy
+                                </>
+                              )}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPng}
+                              disabled={exportState !== 'idle'}
+                            >
                               <svg
                                 width="12"
                                 height="12"
@@ -718,76 +821,55 @@ export default function JobBriefPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="M21 15l-5-5L5 21" />
                               </svg>
-                              Copy
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          New brief
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                              {exportState === 'png' ? '…' : 'PNG'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPdf}
+                              disabled={exportState !== 'idle'}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <path d="M14 2v6h6" />
+                                <path d="M12 18v-6M9 15l3 3 3-3" />
+                              </svg>
+                              {exportState === 'pdf' ? '…' : 'PDF'}
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              New brief
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </EmailGate>
                 )}
               </section>
 
@@ -816,40 +898,15 @@ export default function JobBriefPage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Signals'}</div>
-            <div className="name">Sales intelligence</div>
-            <div className="desc">
-              Every requirement and responsibility decoded into a buying signal — what it means for
-              your pitch.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Stack'}</div>
-            <div className="name">Tech fingerprint</div>
-            <div className="desc">
-              Named tools pulled from the posting so you know exactly what they&apos;re running and
-              where the gaps are.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Pain'}</div>
-            <div className="name">Implied problems</div>
-            <div className="desc">
-              What this hire tells you about what&apos;s broken, overloaded, or missing in their
-              current setup.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Angle'}</div>
-            <div className="name">Ready-to-use pitch</div>
-            <div className="desc">
-              A specific sales angle crafted from the posting — not a template, a brief built for
-              this company.
-            </div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From job posting to <span className="accent">ready-to-pitch brief</span>
+            </>
+          }
+          subtitle="No login, no install. Four steps from paste to a sales-ready brief."
+          steps={BRIEF_STEPS}
+        />
       </main>
 
       <Footer />

@@ -484,6 +484,18 @@
   letter-spacing: 0.1em;
 }
 
+.agentic-readiness .idle-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agentic-readiness .result-actions-pre-gate {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
 .agentic-readiness .submit-row {
   display: flex;
   justify-content: flex-end;

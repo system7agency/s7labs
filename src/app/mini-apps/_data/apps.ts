@@ -12,6 +12,8 @@ export type AppThumb =
   | 'stack'
   | 'sov'
   | 'agentic'
+  | 'aio'
+  | 'avs'
 
 export type MiniApp = {
   id: string
@@ -31,6 +33,9 @@ export type MiniApp = {
     build_potential: string
   }
   interest_context: string
+  /** Developer initials. Shown on the card only in non-production builds
+   * (i.e. `npm run dev`) so the team can see who owns each app at a glance. */
+  author?: string
 }
 
 export const CATEGORIES = [
@@ -77,7 +82,70 @@ export const APPS: MiniApp[] = [
     interest_context: 'agentic-readiness',
   },
   {
+    id: 'ai-overview-tracker',
+    name: 'AI Overview Tracker',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'gtm'],
+    short_description:
+      'Not a rank tracker. Checks which keywords trigger a Google AI Overview, who gets cited, and whether your brand shows up — free snapshot, full per-keyword breakdown by email.',
+    tags: ['ai overview', 'seo', 'citations', 'gtm', 'aio', 'ai'],
+    thumb: 'aio',
+    launch_url: '/mini-apps/ai-overview-tracker',
+    learn_more: {
+      what_it_does:
+        'Runs your keywords through Google search, detects which ones trigger an AI Overview, and checks who gets cited in the AI answer — including whether your brand is there. It shows your AI Overview trigger rate, citation rate, and blind spots free, then unlocks the full per-keyword citation breakdown by email.',
+      how_it_works: {
+        inputs: ['your domain', 'up to 5 keywords', 'market/location'],
+        outputs: [
+          'AI Overview trigger rate',
+          'citation rate',
+          'blind spots and ghost keywords',
+          'per-keyword citation breakdown',
+          'who gets cited instead of you',
+          '3 ways to get cited',
+        ],
+      },
+      who_its_for:
+        "Brands, marketers, and agencies who need to know if Google's AI answers cite them — the gap rank trackers don't show.",
+      build_potential:
+        'Track citation share over time, competitor leaderboards, and scheduled weekly re-checks with change alerts.',
+    },
+    interest_context: 'ai-overview-tracker',
+  },
+  {
+    id: 'ai-visibility-score',
+    name: 'AI Visibility Score',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'gtm'],
+    short_description:
+      'One 0-100 score for how visible your brand is to AI — built from presence in AI answers, citations, entity clarity, and drift. See your score and the four sub-scores, then unlock what is dragging it down.',
+    tags: ['ai visibility', 'aeo', 'citations', 'entity', 'gtm', 'ai'],
+    thumb: 'avs',
+    launch_url: '/mini-apps/ai-visibility-score',
+    learn_more: {
+      what_it_does:
+        'Calculates a single AI Visibility Score (0-100) for a domain from four parts — presence in AI answers, citations as a source, entity clarity, and drift — and shows the score and sub-scores, then unlocks a short read of what is pulling the score down.',
+      how_it_works: {
+        inputs: ['your domain'],
+        outputs: [
+          'AI Visibility Score (0-100)',
+          'four sub-scores',
+          'what is dragging it down',
+          'what to fix',
+        ],
+      },
+      who_its_for:
+        'Brands, marketers, and agencies who want one defensible number for how visible they are to AI — and a metric to be measured against over time.',
+      build_potential:
+        'The internal version gives free fix recommendations and a paid roadmap, tracks AVS over time per client from stored snapshots, and turns drift into an alerting trend.',
+    },
+    interest_context: 'ai-visibility-score',
+  },
+  {
     id: 'share-of-voice',
+    author: 'SK',
     name: 'AI Share of Voice Scorer',
     status: 'live',
     category: 'Software / AI',
@@ -109,6 +177,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'tech-stack-recommender',
+    author: 'SK',
     name: 'Tech Stack Recommender',
     status: 'live',
     category: 'Software / AI',
@@ -141,6 +210,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'automation-blueprint',
+    author: 'SK',
     name: 'Automation Blueprint',
     status: 'live',
     category: 'Automations / AI',
@@ -173,6 +243,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'website-roast',
+    author: 'YA',
     name: 'Website Roast Bot',
     status: 'live',
     category: 'AI / GTM',
@@ -204,6 +275,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'crm-sanity',
+    author: 'YA',
     name: 'CRM Field Sanity Check',
     status: 'live',
     category: 'AI / Operations',
@@ -229,6 +301,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'job-brief',
+    author: 'YA',
     name: 'Job Posting to Sales Brief',
     status: 'live',
     category: 'AI / Operations',
@@ -254,6 +327,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'linkedin-hook',
+    author: 'YA',
     name: 'LinkedIn Post to Outbound Hook',
     status: 'live',
     category: 'AI / Operations',
@@ -278,7 +352,34 @@ export const APPS: MiniApp[] = [
     interest_context: 'linkedin-hook',
   },
   {
+    id: 'email-finder',
+    author: 'YA',
+    name: 'Email Finder',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Enter a name and company. Get back a verified work email with a confidence score and the metadata to back it up.',
+    tags: ['email', 'finder', 'apollo', 'outbound', 'ai'],
+    thumb: 'hook',
+    launch_url: '/mini-apps/email-finder',
+    learn_more: {
+      what_it_does:
+        'Matches a person against Apollo’s 200M+ contact database using their name and company (domain or LinkedIn URL). Returns the verified business email, confidence score, title, and LinkedIn URL — ready to drop into a sequencer.',
+      how_it_works: {
+        inputs: ['full name', 'company domain or LinkedIn URL'],
+        outputs: ['verified email', 'confidence score', 'title', 'company domain', 'linkedin url'],
+      },
+      who_its_for:
+        'SDRs, AEs, founders, and recruiters who need a working email address for a specific person — without paying for a full Apollo seat.',
+      build_potential:
+        'Could become a Chrome extension that finds emails inline on LinkedIn, or batch lookup for an uploaded list of names.',
+    },
+    interest_context: 'email-finder',
+  },
+  {
     id: 'outbound-radar',
+    author: 'YA',
     name: 'Outbound Trigger Radar',
     status: 'live',
     category: 'AI / Operations',
@@ -304,6 +405,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'pricing-diagnostic',
+    author: 'YA',
     name: 'Pricing Page Diagnostic',
     status: 'live',
     category: 'AI / Utilities',
@@ -328,6 +430,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'proposal-engine',
+    author: 'SK',
     name: 'Proposal Draft Engine',
     status: 'live',
     category: 'AI / Utilities',

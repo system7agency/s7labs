@@ -2,10 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 
+import { clsx } from 'clsx'
 import './page-styles.css'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 
 import type {
   ApiResponse,
@@ -419,14 +423,7 @@ export default function PricingDiagnosticPage() {
 
   return (
     <div className="pricing-diag">
-      {/* Background layers */}
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="pd-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -441,52 +438,47 @@ export default function PricingDiagnosticPage() {
             Drop in any URL — yours or a competitor&apos;s. We scrape it, parse the plan structure,
             and return an AI teardown of where it&apos;s leaking trust.
           </p>
-          <div className="meta-tags">
-            <span>· Friction Score</span>
-            <span>· Clarity Grade</span>
-            <span>· Buyer Inference</span>
-            <span>· 3 Improvements</span>
-          </div>
         </section>
 
         {/* Panel */}
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
-            {/* Panel readouts bar */}
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
-                </span>
+            {/* Panel readouts bar — only during run/result for technical credibility */}
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <>
+                      <span className="hide-sm">
+                        <span className="stat-key">tok</span>{' '}
+                        <span className="stat-val">
+                          {(tokens.in + tokens.out).toLocaleString()}
+                        </span>
+                      </span>
+                      <span className="pr-sep hide-sm" />
+                    </>
+                  )}
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-              <div className="prr">
-                {tokens && (
-                  <>
-                    <span className="hide-sm">
-                      <span className="stat-key">tok</span>{' '}
-                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
-                    </span>
-                    <span className="pr-sep hide-sm" />
-                  </>
-                )}
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="panel-body">
               {/* IDLE */}
@@ -499,7 +491,6 @@ export default function PricingDiagnosticPage() {
                   onSubmit={handleSubmit}
                   autoComplete="off"
                 >
-                  <span className="prompt">$</span>
                   <input
                     ref={urlInputRef}
                     type="text"
@@ -563,7 +554,7 @@ export default function PricingDiagnosticPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -590,103 +581,140 @@ export default function PricingDiagnosticPage() {
               {/* RESULT */}
               <section className={`pd-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
-                  <>
-                    <div ref={resultPanelRef}>
-                      <div className="result-head">
-                        <span className="title">Diagnostic complete</span>
-                        <span className="ts-label">{resultTs}</span>
-                      </div>
-
-                      <div className="score-row">
-                        <div className={`score-card ${frictionClass(result.friction_score)}`}>
-                          <div className="sc-label">Friction Score</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.friction_score}</span>
-                            <span className="sc-small">/10</span>
+                  <EmailGate
+                    miniAppSlug="pricing-diagnostic"
+                    pattern="upfront"
+                    initialInput={{ url: result.url }}
+                  >
+                    {({ submitToApi }) => (
+                      <>
+                        <SubmitOnce
+                          submit={submitToApi}
+                          input={{ url: result.url }}
+                          output={result}
+                        />
+                        <div ref={resultPanelRef}>
+                          <div className="result-head">
+                            <span className="title">Diagnostic complete</span>
+                            <span className="ts-label">{resultTs}</span>
                           </div>
-                          <div className="sc-delta">{frictionDelta(result.friction_score)}</div>
-                        </div>
-                        <div className={`score-card ${gradeClass(result.clarity_grade)}`}>
-                          <div className="sc-label">Clarity Grade</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.clarity_grade}</span>
-                          </div>
-                          <div className="sc-delta">{gradeDelta(result.clarity_grade)}</div>
-                        </div>
-                        <div className={`score-card ${legibilityClass(result.plan_legibility)}`}>
-                          <div className="sc-label">Plan Legibility</div>
-                          <div className="sc-value">
-                            <span className="sc-big" style={{ fontSize: '28px' }}>
-                              {result.plan_legibility}
-                            </span>
-                          </div>
-                          <div className="sc-delta">{legDelta(result.plan_legibility)}</div>
-                        </div>
-                      </div>
 
-                      <div className="buyer-block">
-                        <div className="buyer-eyebrow">{'// Who this actually targets'}</div>
-                        <p className="buyer-text">{result.buyer_inference}</p>
-                      </div>
+                          <div className="score-row">
+                            <div className={`score-card ${frictionClass(result.friction_score)}`}>
+                              <div className="sc-label">Friction Score</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.friction_score}</span>
+                                <span className="sc-small">/10</span>
+                              </div>
+                              <div className="sc-delta">{frictionDelta(result.friction_score)}</div>
+                            </div>
+                            <div className={`score-card ${gradeClass(result.clarity_grade)}`}>
+                              <div className="sc-label">Clarity Grade</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.clarity_grade}</span>
+                              </div>
+                              <div className="sc-delta">{gradeDelta(result.clarity_grade)}</div>
+                            </div>
+                            <div
+                              className={`score-card ${legibilityClass(result.plan_legibility)}`}
+                            >
+                              <div className="sc-label">Plan Legibility</div>
+                              <div className="sc-value">
+                                <span className="sc-big" style={{ fontSize: '28px' }}>
+                                  {result.plan_legibility}
+                                </span>
+                              </div>
+                              <div className="sc-delta">{legDelta(result.plan_legibility)}</div>
+                            </div>
+                          </div>
 
-                      {result.flags.length > 0 && (
-                        <>
+                          <div className="buyer-block">
+                            <div className="buyer-eyebrow">{'// Who this actually targets'}</div>
+                            <p className="buyer-text">{result.buyer_inference}</p>
+                          </div>
+
+                          {result.flags.length > 0 && (
+                            <>
+                              <div className="section-header">
+                                <span>{'// Issues found'}</span>
+                                <span className="count">{result.flags.length} flagged</span>
+                              </div>
+                              <div className="flags">
+                                {result.flags.map((f, i) => (
+                                  <span key={i} className="flag">
+                                    {f}
+                                  </span>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
                           <div className="section-header">
-                            <span>{'// Issues found'}</span>
-                            <span className="count">{result.flags.length} flagged</span>
+                            <span>{'// Top 3 improvements'}</span>
+                            <span className="count">ranked by impact</span>
                           </div>
-                          <div className="flags">
-                            {result.flags.map((f, i) => (
-                              <span key={i} className="flag">
-                                {f}
-                              </span>
+                          <div className="improvements">
+                            {result.improvements.map((item) => (
+                              <ImpCard key={item.rank} item={item} />
                             ))}
                           </div>
-                        </>
-                      )}
+                        </div>
+                        {/* end resultPanelRef */}
 
-                      <div className="section-header">
-                        <span>{'// Top 3 improvements'}</span>
-                        <span className="count">ranked by impact</span>
-                      </div>
-                      <div className="improvements">
-                        {result.improvements.map((item) => (
-                          <ImpCard key={item.rank} item={item} />
-                        ))}
-                      </div>
-                    </div>
-                    {/* end resultPanelRef */}
-
-                    <div className="result-footer">
-                      <span className="url-pill">
-                        <span>{trimUrl(result.url)}</span>
-                      </span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                          title="Copy as text"
-                        >
-                          {exportState === 'copying' ? (
-                            <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
-                            </>
-                          ) : (
-                            <>
+                        <div className="result-footer">
+                          <span className="url-pill">
+                            <span>{trimUrl(result.url)}</span>
+                          </span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              type="button"
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
+                              title="Copy as text"
+                            >
+                              {exportState === 'copying' ? (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M20 6L9 17l-5-5" />
+                                  </svg>
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                  </svg>
+                                  Copy
+                                </>
+                              )}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPng}
+                              disabled={exportState !== 'idle'}
+                              title="Download as PNG"
+                            >
                               <svg
                                 width="12"
                                 height="12"
@@ -697,78 +725,56 @@ export default function PricingDiagnosticPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="M21 15l-5-5L5 21" />
                               </svg>
-                              Copy
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                          title="Download as PNG"
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                          title="Download as PDF"
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          Run another
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                              {exportState === 'png' ? '…' : 'PNG'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPdf}
+                              disabled={exportState !== 'idle'}
+                              title="Download as PDF"
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <path d="M14 2v6h6" />
+                                <path d="M12 18v-6M9 15l3 3 3-3" />
+                              </svg>
+                              {exportState === 'pdf' ? '…' : 'PDF'}
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              Run another
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </EmailGate>
                 )}
               </section>
 
@@ -797,28 +803,138 @@ export default function PricingDiagnosticPage() {
           </div>
         </div>
 
-        {/* Info strip */}
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Structure'}</div>
-            <div className="name">Plan hierarchy &amp; tiers</div>
-            <div className="desc">How clearly the page maps plans to buyer segments.</div>
+        {/* How it works */}
+        <section className="how-it-works">
+          <div className="hiw-head">
+            <span className="hiw-eyebrow">How it works</span>
+            <h2>
+              From URL to teardown in <span className="accent">under a minute</span>
+            </h2>
+            <p>No login, no install. Four steps from paste to ranked fixes.</p>
           </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Friction'}</div>
-            <div className="name">Path-to-purchase</div>
-            <div className="desc">Hidden CTAs, contact-gates, and silent assumptions.</div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Copy'}</div>
-            <div className="name">Plain-language fit</div>
-            <div className="desc">Whether a first-time visitor can self-qualify in 30s.</div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Signal'}</div>
-            <div className="name">Trust &amp; social proof</div>
-            <div className="desc">Presence and placement of logos, quotes, guarantees.</div>
-          </div>
+
+          <ol className="hiw-steps">
+            <li className="hiw-step" data-side="left">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 01</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="5" width="18" height="14" rx="2" />
+                      <path d="M3 9h18" />
+                      <path d="M7 13h8" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>Paste your pricing page URL</h3>
+                    <p>
+                      Yours, a competitor&apos;s, or any public pricing page you want to benchmark.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li className="hiw-step" data-side="right">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 02</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 7l9-4 9 4-9 4-9-4z" />
+                      <path d="M3 12l9 4 9-4" />
+                      <path d="M3 17l9 4 9-4" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>We scrape and parse the page</h3>
+                    <p>Plan tiers, CTAs, gates, copy, and trust signals — extracted in seconds.</p>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li className="hiw-step" data-side="left">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 03</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>AI evaluates four conversion dimensions</h3>
+                    <p>
+                      Structure, friction, copy, and signal — scored against what actually converts.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+
+            <li className="hiw-step" data-side="right">
+              <div className="hiw-rail">
+                <span className="hiw-dot" />
+              </div>
+              <div className="hiw-card">
+                <span className="hiw-step-label">Step 04</span>
+                <div className="hiw-card-row">
+                  <div className="hiw-icon" aria-hidden>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M9 11l3 3 8-8" />
+                      <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+                    </svg>
+                  </div>
+                  <div className="hiw-text">
+                    <h3>Get your scores and the 3 quickest fixes</h3>
+                    <p>
+                      Friction Score, Clarity Grade, Plan Legibility — plus top improvements ranked
+                      by impact.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ol>
         </section>
       </main>
 

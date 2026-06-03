@@ -1,13 +1,95 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, RadarResult, Signal } from '@/app/api/mini-apps/outbound-radar/route'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
+
+const RADAR_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Enter a company name and domain',
+    description:
+      'That is the entire setup. No API keys, no integrations — just the company you want to outbound to.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M7 13h8" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We scan the homepage, about, and careers',
+    description:
+      'Real-time scrape of the surfaces that reveal hiring plans, tech stack, expansion, and recent news.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 7l9-4 9 4-9 4-9-4z" />
+        <path d="M3 12l9 4 9-4" />
+        <path d="M3 17l9 4 9-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'AI detects buy signals across categories',
+    description:
+      'Hiring, expansion, tech changes, funding, leadership moves — each ranked by strength and recency.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get your intent score, urgency, and outreach angle',
+    description:
+      'A 0–10 intent score, urgency level, the persona to target, and a tailored opener — ready to send.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
 
 const STAGES = [
   {
@@ -369,13 +451,7 @@ export default function OutboundRadarPage() {
 
   return (
     <div className="outbound-radar">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="or-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -389,50 +465,45 @@ export default function OutboundRadarPage() {
             Enter a company name and domain. We scan their site for buying signals — hiring sprees,
             new products, expansions — and turn them into a scored outreach brief.
           </p>
-          <div className="meta-tags">
-            <span>· Intent Score</span>
-            <span>· Buy Signals</span>
-            <span>· Outreach Angle</span>
-            <span>· Best Persona</span>
-          </div>
         </section>
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
-                </span>
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <>
+                      <span className="hide-sm">
+                        <span className="stat-key">tok</span>{' '}
+                        <span className="stat-val">
+                          {(tokens.in + tokens.out).toLocaleString()}
+                        </span>
+                      </span>
+                      <span className="pr-sep hide-sm" />
+                    </>
+                  )}
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-              <div className="prr">
-                {tokens && (
-                  <>
-                    <span className="hide-sm">
-                      <span className="stat-key">tok</span>{' '}
-                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
-                    </span>
-                    <span className="pr-sep hide-sm" />
-                  </>
-                )}
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="panel-body">
               {/* IDLE */}
@@ -446,7 +517,6 @@ export default function OutboundRadarPage() {
                         key={`c-${shakeCompany}`}
                         className={`input-box${companyError ? 'error' : ''}`}
                       >
-                        <span className="prompt">$</span>
                         <input
                           ref={companyInputRef}
                           type="text"
@@ -467,7 +537,6 @@ export default function OutboundRadarPage() {
                         key={`d-${shakeDomain}`}
                         className={`input-box${domainError ? 'error' : ''}`}
                       >
-                        <span className="prompt">@</span>
                         <input
                           type="text"
                           placeholder="acme.com"
@@ -519,7 +588,7 @@ export default function OutboundRadarPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -546,94 +615,128 @@ export default function OutboundRadarPage() {
               {/* RESULT */}
               <section className={`or-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
-                  <>
-                    <div ref={resultPanelRef}>
-                      <div className="result-head">
-                        <span className="title">Radar complete — {result.company}</span>
-                        <span className="ts-label">{resultTs}</span>
-                      </div>
-
-                      <div className="score-row">
-                        <div className={`score-card ${intentClass(result.intent_score)}`}>
-                          <div className="sc-label">Intent Score</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.intent_score}</span>
-                            <span className="sc-small">/10</span>
+                  <EmailGate
+                    miniAppSlug="outbound-trigger-radar"
+                    pattern="upfront"
+                    initialInput={{ company: company.trim(), domain: domain.trim() }}
+                  >
+                    {({ submitToApi }) => (
+                      <>
+                        <SubmitOnce
+                          submit={submitToApi}
+                          input={{ company: company.trim(), domain: domain.trim() }}
+                          output={result}
+                        />
+                        <div ref={resultPanelRef}>
+                          <div className="result-head">
+                            <span className="title">Radar complete — {result.company}</span>
+                            <span className="ts-label">{resultTs}</span>
                           </div>
-                          <div className="sc-delta">{intentDelta(result.intent_score)}</div>
+
+                          <div className="score-row">
+                            <div className={`score-card ${intentClass(result.intent_score)}`}>
+                              <div className="sc-label">Intent Score</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.intent_score}</span>
+                                <span className="sc-small">/10</span>
+                              </div>
+                              <div className="sc-delta">{intentDelta(result.intent_score)}</div>
+                            </div>
+                            <div className={`score-card ${result.urgency}`}>
+                              <div className="sc-label">Urgency</div>
+                              <div className="sc-value">
+                                <span
+                                  className="sc-big"
+                                  style={{ fontSize: '32px', textTransform: 'capitalize' }}
+                                >
+                                  {result.urgency}
+                                </span>
+                              </div>
+                              <div className="sc-delta">{urgencyDelta(result.urgency)}</div>
+                            </div>
+                            <div className="score-card medium">
+                              <div className="sc-label">Signals</div>
+                              <div className="sc-value">
+                                <span className="sc-big">{result.signals.length}</span>
+                              </div>
+                              <div className="sc-delta">
+                                {result.signals.filter((s) => s.strength === 'strong').length}{' '}
+                                strong detected
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="angle-block">
+                            <div className="angle-eyebrow">{'// Outreach angle'}</div>
+                            <p className="angle-text">{result.outreach_angle}</p>
+                            <div className="persona-row">
+                              Best first contact: <strong>{result.best_persona}</strong>
+                            </div>
+                          </div>
+
+                          <div className="section-header">
+                            <span>{'// Buy signals detected'}</span>
+                            <span className="count">{result.signals.length} found</span>
+                          </div>
+                          <div className="signals">
+                            {result.signals.map((s, i) => (
+                              <SignalCard key={i} signal={s} />
+                            ))}
+                          </div>
                         </div>
-                        <div className={`score-card ${result.urgency}`}>
-                          <div className="sc-label">Urgency</div>
-                          <div className="sc-value">
-                            <span
-                              className="sc-big"
-                              style={{ fontSize: '32px', textTransform: 'capitalize' }}
+
+                        <div className="result-footer">
+                          <span className="url-pill">
+                            <span>{result.domain}</span>
+                          </span>
+                          <div className="export-actions">
+                            <button
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              type="button"
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
                             >
-                              {result.urgency}
-                            </span>
-                          </div>
-                          <div className="sc-delta">{urgencyDelta(result.urgency)}</div>
-                        </div>
-                        <div className="score-card medium">
-                          <div className="sc-label">Signals</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{result.signals.length}</span>
-                          </div>
-                          <div className="sc-delta">
-                            {result.signals.filter((s) => s.strength === 'strong').length} strong
-                            detected
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="angle-block">
-                        <div className="angle-eyebrow">{'// Outreach angle'}</div>
-                        <p className="angle-text">{result.outreach_angle}</p>
-                        <div className="persona-row">
-                          Best first contact: <strong>{result.best_persona}</strong>
-                        </div>
-                      </div>
-
-                      <div className="section-header">
-                        <span>{'// Buy signals detected'}</span>
-                        <span className="count">{result.signals.length} found</span>
-                      </div>
-                      <div className="signals">
-                        {result.signals.map((s, i) => (
-                          <SignalCard key={i} signal={s} />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="result-footer">
-                      <span className="url-pill">
-                        <span>{result.domain}</span>
-                      </span>
-                      <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? (
-                            <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
-                            </>
-                          ) : (
-                            <>
+                              {exportState === 'copying' ? (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M20 6L9 17l-5-5" />
+                                  </svg>
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                  </svg>
+                                  Copy
+                                </>
+                              )}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPng}
+                              disabled={exportState !== 'idle'}
+                            >
                               <svg
                                 width="12"
                                 height="12"
@@ -644,76 +747,55 @@ export default function OutboundRadarPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <path d="M21 15l-5-5L5 21" />
                               </svg>
-                              Copy
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          Scan another
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                              {exportState === 'png' ? '…' : 'PNG'}
+                            </button>
+                            <button
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              type="button"
+                              onClick={handleDownloadPdf}
+                              disabled={exportState !== 'idle'}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                <path d="M14 2v6h6" />
+                                <path d="M12 18v-6M9 15l3 3 3-3" />
+                              </svg>
+                              {exportState === 'pdf' ? '…' : 'PDF'}
+                            </button>
+                            <button className="run-again" type="button" onClick={handleReset}>
+                              Scan another
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </EmailGate>
                 )}
               </section>
 
@@ -742,32 +824,15 @@ export default function OutboundRadarPage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Hiring'}</div>
-            <div className="name">Job posting signals</div>
-            <div className="desc">
-              Open roles that reveal budget, team growth, and tech investment.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Expansion'}</div>
-            <div className="name">Growth indicators</div>
-            <div className="desc">
-              New markets, products, or offices that signal buying capacity.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Tech'}</div>
-            <div className="name">Stack changes</div>
-            <div className="desc">New tools, migrations, or partnerships that open a wedge.</div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 News'}</div>
-            <div className="name">Recent announcements</div>
-            <div className="desc">Funding rounds, leadership changes, and press coverage.</div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From company name to <span className="accent">ranked buy signals</span>
+            </>
+          }
+          subtitle="No login, no install. Four steps from input to a ready-to-send outreach angle."
+          steps={RADAR_STEPS}
+        />
       </main>
 
       <Footer />
