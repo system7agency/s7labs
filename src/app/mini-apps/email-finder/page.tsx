@@ -15,6 +15,16 @@ import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, EmailFinderResult } from '@/app/api/mini-apps/email-finder/route'
 import { PageScripts } from './PageScripts'
 
+// ---------- feature flag ----------
+
+/**
+ * Flip to `true` once APOLLO_API_KEY is provisioned with a paid plan that
+ * includes the /people/match endpoint. Until then the form is read-only and
+ * users see a "coming soon" notice instead of hitting the API and getting a
+ * 502.
+ */
+const APP_ENABLED = false
+
 // ---------- helpers ----------
 
 const DOMAIN_RE = /^(?:[a-z0-9-]+\.)+[a-z]{2,}$/i
@@ -586,6 +596,7 @@ export default function EmailFinderPage() {
   const handleSubmit = useCallback(
     (e: FormEvent) => {
       e.preventDefault()
+      if (!APP_ENABLED) return
       const trimmedName = name.trim()
       const trimmedCompany = company.trim()
       const next: IdleErrors = {}
@@ -698,9 +709,21 @@ export default function EmailFinderPage() {
                       </div>
                     </div>
 
+                    {!APP_ENABLED ? (
+                      <div className="ef-coming-soon" role="status">
+                        <span className="ef-coming-soon-dot" />
+                        Coming soon — Apollo API access in review. Form is read-only for now.
+                      </div>
+                    ) : null}
+
                     <div className="ef-submit-row">
-                      <button type="submit" className="ef-submit-btn">
-                        Find Email
+                      <button
+                        type="submit"
+                        className="ef-submit-btn"
+                        disabled={!APP_ENABLED}
+                        aria-disabled={!APP_ENABLED}
+                      >
+                        {APP_ENABLED ? 'Find Email' : 'Coming soon'}
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"
