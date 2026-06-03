@@ -11,6 +11,7 @@ export type AppThumb =
   | 'blueprint'
   | 'stack'
   | 'sov'
+  | 'aio'
   | 'avs'
 
 export type MiniApp = {
@@ -47,6 +48,38 @@ export const CATEGORIES = [
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'ai-overview-tracker',
+    name: 'AI Overview Tracker',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'gtm'],
+    short_description:
+      'Not a rank tracker. Checks which keywords trigger a Google AI Overview, who gets cited, and whether your brand shows up — free snapshot, full per-keyword breakdown by email.',
+    tags: ['ai overview', 'seo', 'citations', 'gtm', 'aio', 'ai'],
+    thumb: 'aio',
+    launch_url: '/mini-apps/ai-overview-tracker',
+    learn_more: {
+      what_it_does:
+        'Runs your keywords through Google search, detects which ones trigger an AI Overview, and checks who gets cited in the AI answer — including whether your brand is there. It shows your AI Overview trigger rate, citation rate, and blind spots free, then unlocks the full per-keyword citation breakdown by email.',
+      how_it_works: {
+        inputs: ['your domain', 'up to 5 keywords', 'market/location'],
+        outputs: [
+          'AI Overview trigger rate',
+          'citation rate',
+          'blind spots and ghost keywords',
+          'per-keyword citation breakdown',
+          'who gets cited instead of you',
+          '3 ways to get cited',
+        ],
+      },
+      who_its_for:
+        "Brands, marketers, and agencies who need to know if Google's AI answers cite them — the gap rank trackers don't show.",
+      build_potential:
+        'Track citation share over time, competitor leaderboards, and scheduled weekly re-checks with change alerts.',
+    },
+    interest_context: 'ai-overview-tracker',
+  },
   {
     id: 'ai-visibility-score',
     name: 'AI Visibility Score',
