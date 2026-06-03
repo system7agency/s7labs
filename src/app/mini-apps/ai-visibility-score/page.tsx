@@ -1,10 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { AVSApiResponse, AVSResult } from '@/app/api/mini-apps/ai-visibility-score/route'
 import { PageScripts } from './PageScripts'
@@ -13,6 +16,84 @@ type AppState = 'idle' | 'loading' | 'result' | 'error'
 
 const DOMAIN_RE = /^([a-z0-9-]+\.)+[a-z]{2,}$/i
 const STAGE_MS = 5000
+
+const AVS_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Enter your domain',
+    description:
+      'We infer your brand and category, then frame buyer-intent questions for AI engines.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M7 13h8" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We ask the AIs',
+    description:
+      'Claude plus optional ChatGPT, Perplexity, and Google AI Overview — coverage shown on each sub-score.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 7l9-4 9 4-9 4-9-4z" />
+        <path d="M3 12l9 4 9-4" />
+        <path d="M3 17l9 4 9-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Four sub-scores, one AVS',
+    description:
+      'Presence 35%, Citations 30%, Entity Clarity 20%, Drift 15% — fixed methodology every run.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get your score and short read',
+    description:
+      'A 0–100 AVS, four sub-scores, and a plain-language breakdown of what is dragging visibility down.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
+
 const STAGES = [
   {
     num: '01',
@@ -78,15 +159,9 @@ function buildPlainText(r: AVSResult): string {
   return lines.join('\n')
 }
 
-function AvsShareableBlock({
-  result,
-  captureRef,
-}: {
-  result: AVSResult
-  captureRef?: RefObject<HTMLDivElement | null>
-}) {
+function AvsResultBody({ result }: { result: AVSResult }) {
   return (
-    <div ref={captureRef} className="shareable-block">
+    <div className="shareable-block">
       <div className="avs-hero">
         <div className="avs-hero-top">
           <div>
@@ -138,7 +213,7 @@ export default function AiVisibilityScorePage() {
   const [clock, setClock] = useState('—')
 
   const domainInputRef = useRef<HTMLInputElement | null>(null)
-  const shareableRef = useRef<HTMLDivElement | null>(null)
+  const resultPanelRef = useRef<HTMLDivElement | null>(null)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const rafRef = useRef<number | null>(null)
   const runStartRef = useRef(0)
@@ -289,8 +364,25 @@ export default function AiVisibilityScorePage() {
     setTokens(null)
   }, [clearTimers])
 
+  const handleCopy = useCallback(async () => {
+    if (!result) return
+    setExportState('copying')
+    try {
+      await navigator.clipboard.writeText(buildPlainText(result))
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = buildPlainText(result)
+      ta.style.cssText = 'position:fixed;opacity:0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    setTimeout(() => setExportState('idle'), 1800)
+  }, [result])
+
   const captureShareable = useCallback(async () => {
-    const el = shareableRef.current
+    const el = resultPanelRef.current
     if (!el) return null
     const { default: html2canvas } = await import('html2canvas')
     const capture = html2canvas(el, {
@@ -331,7 +423,7 @@ export default function AiVisibilityScorePage() {
   }, [])
 
   const handleDownloadPng = useCallback(async () => {
-    if (!result) return
+    if (!resultPanelRef.current || !result) return
     setExportState('png')
     try {
       const canvas = await captureShareable()
@@ -348,7 +440,7 @@ export default function AiVisibilityScorePage() {
   }, [result, captureShareable, downloadCanvasPng])
 
   const handleDownloadPdf = useCallback(async () => {
-    if (!result) return
+    if (!resultPanelRef.current || !result) return
     setExportState('pdf')
     try {
       const canvas = await captureShareable()
@@ -373,16 +465,11 @@ export default function AiVisibilityScorePage() {
   }, [result, captureShareable])
 
   const leadInput = { domain: normalizeDomainInput(domain) }
+  const loadingDomain = normalizeDomainInput(domain) || 'domain'
 
   return (
-    <div className="ai-visibility-score pricing-diag">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="avs-spotlight" />
-      <div className="bg-layer bg-grain" />
+    <div className="ai-visibility-score">
+      <AuroraBackground />
 
       <Header />
 
@@ -400,17 +487,16 @@ export default function AiVisibilityScorePage() {
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
             {appState !== 'idle' && (
               <div className="panel-readouts">
                 <div className="prl">
                   <span>
                     <span className="stat-key">sys</span>{' '}
                     <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
                   </span>
                 </div>
                 <div className="prr">
@@ -438,54 +524,52 @@ export default function AiVisibilityScorePage() {
             )}
 
             <div className="panel-body">
-              <section className={`pd-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={`avs-state${appState === 'idle' ? 'active' : ''}`}>
                 <div className="idle-label">Enter your domain</div>
-                <form
-                  key={shakeKey}
-                  className={`url-input${domainError ? 'error' : ''}`}
-                  noValidate
-                  onSubmit={handleSubmit}
-                >
-                  <input
-                    ref={domainInputRef}
-                    type="text"
-                    placeholder="yourbrand.com"
-                    value={domain}
-                    disabled={submitting}
-                    onChange={(e) => {
-                      setDomain(e.target.value)
-                      if (domainError) setDomainError(null)
-                    }}
-                  />
-                  <button type="submit" aria-label="Get score" disabled={submitting}>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 12h14" />
-                      <path d="M13 5l7 7-7 7" />
-                    </svg>
-                  </button>
+                <form noValidate onSubmit={handleSubmit} autoComplete="off">
+                  <div className="input-field">
+                    <label>Domain</label>
+                    <div key={`d-${shakeKey}`} className={`input-box${domainError ? 'error' : ''}`}>
+                      <input
+                        ref={domainInputRef}
+                        type="text"
+                        placeholder="yourbrand.com"
+                        value={domain}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setDomain(e.target.value)
+                          if (domainError) setDomainError(null)
+                        }}
+                      />
+                    </div>
+                    {domainError && <div className="field-error">{domainError}</div>}
+                  </div>
+                  <div className="submit-row">
+                    <button type="submit" className="submit-btn" disabled={submitting}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
+                      </svg>
+                      Get visibility score
+                    </button>
+                  </div>
                 </form>
-                <div className={`helper${domainError ? 'error' : ''}`}>
-                  <span>
-                    {domainError ??
-                      'Press enter or the arrow — scores presence, citations, entity & drift.'}
-                  </span>
-                </div>
               </section>
 
-              <section className={`pd-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={`avs-state${appState === 'loading' ? 'active' : ''}`}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
                 <div className="loading-header">
                   <span>
-                    Scoring <strong>{normalizeDomainInput(domain) || 'domain'}</strong>
+                    Scoring <strong>{loadingDomain}</strong>
                   </span>
                   <span>{loadingPct}</span>
                 </div>
@@ -496,10 +580,21 @@ export default function AiVisibilityScorePage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
+                          <span className="stage-status-icon">
+                            <svg viewBox="0 0 12 12" fill="none">
+                              <path
+                                d="M2 6.5l2.5 2.5L10 3"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </span>
                         </div>
                         <div className="stage-title">{s.title}</div>
                         <div className="stage-log">{stageLogs[i]}</div>
@@ -509,65 +604,81 @@ export default function AiVisibilityScorePage() {
                 </div>
               </section>
 
-              <section className={`pd-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={`avs-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
                   <EmailGate
                     miniAppSlug="ai-visibility-score"
-                    pattern="after-teaser"
+                    pattern="upfront"
                     initialInput={leadInput}
-                    teaser={<AvsShareableBlock result={result} />}
                   >
                     {({ submitToApi }) => (
                       <>
                         <SubmitOnce submit={submitToApi} input={leadInput} output={result} />
-                        <AvsShareableBlock result={result} captureRef={shareableRef} />
-                        <div className="short-read-block">
-                          <div className="section-header">
-                            {"// what's dragging your score down"}
-                          </div>
-                          <p className="biggest-drag">
-                            <span>{result.biggest_drag.sub_score}</span> — {result.biggest_drag.why}
-                          </p>
-                          {result.short_read.map((item) => (
-                            <div key={item.sub_score} className="short-read-item">
-                              <h4>{item.sub_score}</h4>
-                              <p>{item.diagnosis}</p>
+                        <div ref={resultPanelRef}>
+                          <AvsResultBody result={result} />
+                          <div className="short-read-block">
+                            <div className="section-header">
+                              {"// what's dragging your score down"}
                             </div>
-                          ))}
+                            <p className="biggest-drag">
+                              <span>{result.biggest_drag.sub_score}</span> —{' '}
+                              {result.biggest_drag.why}
+                            </p>
+                            {result.short_read.map((item) => (
+                              <div key={item.sub_score} className="short-read-item">
+                                <h4>{item.sub_score}</h4>
+                                <p>{item.diagnosis}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                         <div className="result-footer">
                           <span className="token-pill">
-                            {(result.tokens_in + result.tokens_out).toLocaleString()} tokens
+                            {tokens
+                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                              : ''}
                           </span>
                           <span className="result-ts hide-sm">{resultTs}</span>
                           <div className="export-actions">
                             <button
                               type="button"
                               className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                              onClick={async () => {
-                                setExportState('copying')
-                                await navigator.clipboard.writeText(buildPlainText(result))
-                                setTimeout(() => setExportState('idle'), 900)
-                              }}
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
                             >
-                              Copy
+                              {exportState === 'copying' ? 'Copied' : 'Copy'}
                             </button>
                             <button
                               type="button"
                               className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
                               onClick={() => void handleDownloadPng()}
+                              disabled={exportState !== 'idle'}
                             >
-                              PNG
+                              {exportState === 'png' ? '…' : 'PNG'}
                             </button>
                             <button
                               type="button"
                               className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
                               onClick={() => void handleDownloadPdf()}
+                              disabled={exportState !== 'idle'}
                             >
-                              PDF
+                              {exportState === 'pdf' ? '…' : 'PDF'}
                             </button>
                             <button type="button" className="run-again" onClick={handleReset}>
                               Score another
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
                             </button>
                           </div>
                         </div>
@@ -577,7 +688,20 @@ export default function AiVisibilityScorePage() {
                 )}
               </section>
 
-              <section className={`pd-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section className={`avs-state error-state${appState === 'error' ? 'active' : ''}`}>
+                <div className="err-icon">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+                  </svg>
+                </div>
                 <h2 className="err-title">Score failed</h2>
                 <p className="err-msg">{errorMsg}</p>
                 <button type="button" className="err-btn" onClick={handleReset}>
@@ -588,107 +712,15 @@ export default function AiVisibilityScorePage() {
           </div>
         </div>
 
-        <section className="how-it-works">
-          <div className="hiw-head">
-            <span className="hiw-eyebrow">How it works</span>
-            <h2>
-              How the <span className="accent">AI Visibility Score</span> works
-            </h2>
-            <p>
-              One headline number from four fixed parts — presence, citations, entity clarity, and
-              drift.
-            </p>
-          </div>
-          <ol className="hiw-steps">
-            <li className="hiw-step" data-side="left">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 01</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                      <rect x="3" y="5" width="18" height="14" rx="2" />
-                      <path d="M7 9h10" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>Enter your domain</h3>
-                    <p>We infer your brand and category, then frame buyer-intent questions.</p>
-                  </div>
-                </div>
-              </div>
-            </li>
-            <li className="hiw-step" data-side="right">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 02</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                      <circle cx="12" cy="12" r="8" />
-                      <path d="M8 12h8M12 8v8" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>We ask the AIs</h3>
-                    <p>
-                      Claude plus optional ChatGPT, Perplexity, and Google AI Overview — coverage
-                      shown honestly on each sub-score.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-            <li className="hiw-step" data-side="left">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 03</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                      <path d="M4 6h16M4 12h10M4 18h6" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>Four sub-scores, one AVS</h3>
-                    <p>
-                      Presence 35%, Citations 30%, Entity Clarity 20%, Drift 15% — fixed
-                      methodology.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-            <li className="hiw-step" data-side="right">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 04</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                      <path d="M12 3v18M3 12h18" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>Unlock the short read</h3>
-                    <p>
-                      See your AVS and four parts free; email unlocks what is dragging the score
-                      down.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-          </ol>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From domain to AVS in <span className="accent">under a minute</span>
+            </>
+          }
+          subtitle="One headline score from four fixed parts — presence, citations, entity clarity, and drift."
+          steps={AVS_STEPS}
+        />
       </main>
 
       <Footer />
