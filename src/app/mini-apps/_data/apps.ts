@@ -31,6 +31,9 @@ export type MiniApp = {
     build_potential: string
   }
   interest_context: string
+  /** Developer initials. Shown on the card only in non-production builds
+   * (i.e. `npm run dev`) so the team can see who owns each app at a glance. */
+  author?: string
 }
 
 export const CATEGORIES = [
@@ -76,6 +79,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'share-of-voice',
+    author: 'SK',
     name: 'AI Share of Voice Scorer',
     status: 'live',
     category: 'Software / AI',
@@ -107,6 +111,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'tech-stack-recommender',
+    author: 'SK',
     name: 'Tech Stack Recommender',
     status: 'live',
     category: 'Software / AI',
@@ -139,6 +144,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'automation-blueprint',
+    author: 'SK',
     name: 'Automation Blueprint',
     status: 'live',
     category: 'Automations / AI',
@@ -171,6 +177,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'website-roast',
+    author: 'YA',
     name: 'Website Roast Bot',
     status: 'live',
     category: 'AI / GTM',
@@ -202,6 +209,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'crm-sanity',
+    author: 'YA',
     name: 'CRM Field Sanity Check',
     status: 'live',
     category: 'AI / Operations',
@@ -227,6 +235,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'job-brief',
+    author: 'YA',
     name: 'Job Posting to Sales Brief',
     status: 'live',
     category: 'AI / Operations',
@@ -252,6 +261,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'linkedin-hook',
+    author: 'YA',
     name: 'LinkedIn Post to Outbound Hook',
     status: 'live',
     category: 'AI / Operations',
@@ -276,7 +286,34 @@ export const APPS: MiniApp[] = [
     interest_context: 'linkedin-hook',
   },
   {
+    id: 'email-finder',
+    author: 'YA',
+    name: 'Email Finder',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Enter a name and company. Get back a verified work email with a confidence score and the metadata to back it up.',
+    tags: ['email', 'finder', 'apollo', 'outbound', 'ai'],
+    thumb: 'hook',
+    launch_url: '/mini-apps/email-finder',
+    learn_more: {
+      what_it_does:
+        'Matches a person against Apollo’s 200M+ contact database using their name and company (domain or LinkedIn URL). Returns the verified business email, confidence score, title, and LinkedIn URL — ready to drop into a sequencer.',
+      how_it_works: {
+        inputs: ['full name', 'company domain or LinkedIn URL'],
+        outputs: ['verified email', 'confidence score', 'title', 'company domain', 'linkedin url'],
+      },
+      who_its_for:
+        'SDRs, AEs, founders, and recruiters who need a working email address for a specific person — without paying for a full Apollo seat.',
+      build_potential:
+        'Could become a Chrome extension that finds emails inline on LinkedIn, or batch lookup for an uploaded list of names.',
+    },
+    interest_context: 'email-finder',
+  },
+  {
     id: 'outbound-radar',
+    author: 'YA',
     name: 'Outbound Trigger Radar',
     status: 'live',
     category: 'AI / Operations',
@@ -302,6 +339,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'pricing-diagnostic',
+    author: 'YA',
     name: 'Pricing Page Diagnostic',
     status: 'live',
     category: 'AI / Utilities',
@@ -326,6 +364,7 @@ export const APPS: MiniApp[] = [
   },
   {
     id: 'proposal-engine',
+    author: 'SK',
     name: 'Proposal Draft Engine',
     status: 'live',
     category: 'AI / Utilities',

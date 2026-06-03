@@ -90,9 +90,11 @@
 
 .how-it-works .hiw-rail {
   grid-column: 2;
+  align-self: stretch;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 30px;
   z-index: 1;
 }
 .how-it-works .hiw-dot {
