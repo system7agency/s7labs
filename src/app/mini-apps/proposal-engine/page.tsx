@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -562,7 +561,7 @@ export default function ProposalEnginePage() {
                     return (
                       <div
                         key={s.num}
-                        className={clsx('stage', { active: isActive, done: isDone })}
+                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
