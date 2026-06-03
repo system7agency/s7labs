@@ -11,6 +11,7 @@ export type AppThumb =
   | 'blueprint'
   | 'stack'
   | 'sov'
+  | 'avs'
 
 export type MiniApp = {
   id: string
@@ -46,6 +47,36 @@ export const CATEGORIES = [
 ] as const
 
 export const APPS: MiniApp[] = [
+  {
+    id: 'ai-visibility-score',
+    name: 'AI Visibility Score',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'gtm'],
+    short_description:
+      'One 0-100 score for how visible your brand is to AI — built from presence in AI answers, citations, entity clarity, and drift. See your score and the four sub-scores, then unlock what is dragging it down.',
+    tags: ['ai visibility', 'aeo', 'citations', 'entity', 'gtm', 'ai'],
+    thumb: 'avs',
+    launch_url: '/mini-apps/ai-visibility-score',
+    learn_more: {
+      what_it_does:
+        'Calculates a single AI Visibility Score (0-100) for a domain from four parts — presence in AI answers, citations as a source, entity clarity, and drift — and shows the score and sub-scores, then unlocks a short read of what is pulling the score down.',
+      how_it_works: {
+        inputs: ['your domain'],
+        outputs: [
+          'AI Visibility Score (0-100)',
+          'four sub-scores',
+          'what is dragging it down',
+          'what to fix',
+        ],
+      },
+      who_its_for:
+        'Brands, marketers, and agencies who want one defensible number for how visible they are to AI — and a metric to be measured against over time.',
+      build_potential:
+        'The internal version gives free fix recommendations and a paid roadmap, tracks AVS over time per client from stored snapshots, and turns drift into an alerting trend.',
+    },
+    interest_context: 'ai-visibility-score',
+  },
   {
     id: 'share-of-voice',
     author: 'SK',
