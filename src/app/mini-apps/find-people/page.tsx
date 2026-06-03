@@ -666,12 +666,14 @@ export default function FindPeoplePage() {
                       </div>
                     </div>
 
+                    {!APP_ENABLED ? (
+                      <div className="fp-coming-soon" role="status">
+                        <span className="fp-coming-soon-dot" />
+                        Coming soon — Apollo API access in review. Form is read-only for now.
+                      </div>
+                    ) : null}
+
                     <div className="fp-submit-row">
-                      {!APP_ENABLED ? (
-                        <span className="fp-disabled-hint">{'// FINAL WIRING IN PROGRESS'}</span>
-                      ) : (
-                        <span />
-                      )}
                       <button
                         type="submit"
                         className="fp-submit-btn"
