@@ -349,10 +349,18 @@
   gap: 12px;
   margin-bottom: 16px;
 }
+
+.ai-visibility-score .idle-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .ai-visibility-score .input-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-bottom: 0;
 }
 .ai-visibility-score .input-field label {
   font-family: var(--mono);
@@ -380,7 +388,7 @@
 }
 .ai-visibility-score .input-box.error {
   border-color: var(--error);
-  animation: or-shake 0.35s ease;
+  animation: avs-shake 0.35s ease;
 }
 @keyframes avs-shake {
   0%,
@@ -432,6 +440,8 @@
 .ai-visibility-score .submit-row {
   display: flex;
   justify-content: flex-end;
+  margin-top: 0;
+  padding-top: 0;
 }
 .ai-visibility-score .submit-btn {
   border: 0;

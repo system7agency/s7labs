@@ -526,7 +526,7 @@ export default function AiVisibilityScorePage() {
             <div className="panel-body">
               <section className={`avs-state${appState === 'idle' ? 'active' : ''}`}>
                 <div className="idle-label">Enter your domain</div>
-                <form noValidate onSubmit={handleSubmit} autoComplete="off">
+                <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
                     <label>Domain</label>
                     <div key={`d-${shakeKey}`} className={`input-box${domainError ? 'error' : ''}`}>
