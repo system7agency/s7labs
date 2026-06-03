@@ -1,27 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
-
+/**
+ * Per-page client effects.
+ *
+ * Background animation (aurora canvas + cursor spotlight) is handled by
+ * <AuroraBackground />. "How it works" fade-up is handled internally by
+ * <HowItWorks />. Kept as a no-op placeholder so the page import keeps
+ * working and future page-specific effects have an obvious home.
+ */
 export function PageScripts() {
-  useEffect(() => {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReduced) return
-
-    const spot = document.getElementById('or-spotlight')
-    if (!spot) return
-
-    const ac = new AbortController()
-    window.addEventListener(
-      'pointermove',
-      (e) => {
-        spot.style.setProperty('--mx', e.clientX + 'px')
-        spot.style.setProperty('--my', e.clientY + 'px')
-      },
-      { signal: ac.signal, passive: true }
-    )
-
-    return () => ac.abort()
-  }, [])
-
   return null
 }

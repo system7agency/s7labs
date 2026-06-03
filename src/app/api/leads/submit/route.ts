@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
-import { LEAD_COOKIE_MAX_AGE_SECONDS, LEAD_EMAIL_COOKIE, LEAD_ID_COOKIE } from '@/lib/leads/cookies'
 import { EMAIL_REGEX, isDisposableEmail } from '@/lib/leads/disposable'
 import { checkRateLimit, getClientIp } from '@/lib/leads/rateLimit'
 
@@ -136,23 +135,10 @@ export async function POST(request: Request) {
     return errorResponse('Something went wrong', 500)
   }
 
-  const response = NextResponse.json({
+  return NextResponse.json({
     ok: true,
     leadId,
     submissionId: submission.id,
     isReturningLead,
   })
-
-  const isProd = process.env.NODE_ENV === 'production'
-  const cookieOpts = {
-    httpOnly: false,
-    sameSite: 'lax' as const,
-    secure: isProd,
-    path: '/',
-    maxAge: LEAD_COOKIE_MAX_AGE_SECONDS,
-  }
-  response.cookies.set(LEAD_EMAIL_COOKIE, email, cookieOpts)
-  response.cookies.set(LEAD_ID_COOKIE, leadId, cookieOpts)
-
-  return response
 }
