@@ -255,6 +255,32 @@ export const APPS: MiniApp[] = [
     interest_context: 'linkedin-hook',
   },
   {
+    id: 'email-finder',
+    author: 'YA',
+    name: 'Email Finder',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Enter a name and company. Get back a verified work email with a confidence score and the metadata to back it up.',
+    tags: ['email', 'finder', 'apollo', 'outbound', 'ai'],
+    thumb: 'hook',
+    launch_url: '/mini-apps/email-finder',
+    learn_more: {
+      what_it_does:
+        'Matches a person against Apollo’s 200M+ contact database using their name and company (domain or LinkedIn URL). Returns the verified business email, confidence score, title, and LinkedIn URL — ready to drop into a sequencer.',
+      how_it_works: {
+        inputs: ['full name', 'company domain or LinkedIn URL'],
+        outputs: ['verified email', 'confidence score', 'title', 'company domain', 'linkedin url'],
+      },
+      who_its_for:
+        'SDRs, AEs, founders, and recruiters who need a working email address for a specific person — without paying for a full Apollo seat.',
+      build_potential:
+        'Could become a Chrome extension that finds emails inline on LinkedIn, or batch lookup for an uploaded list of names.',
+    },
+    interest_context: 'email-finder',
+  },
+  {
     id: 'outbound-radar',
     author: 'YA',
     name: 'Outbound Trigger Radar',
