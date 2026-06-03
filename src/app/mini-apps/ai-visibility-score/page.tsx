@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -76,6 +76,45 @@ function buildPlainText(r: AVSResult): string {
     ...r.short_read.map((s) => `  ${s.sub_score}: ${s.diagnosis}`),
   ]
   return lines.join('\n')
+}
+
+function AvsShareableBlock({
+  result,
+  captureRef,
+}: {
+  result: AVSResult
+  captureRef?: RefObject<HTMLDivElement | null>
+}) {
+  return (
+    <div ref={captureRef} className="shareable-block">
+      <div className="avs-hero">
+        <div className="avs-hero-top">
+          <div>
+            <div className={`avs-number ${gradeClass(result.grade)}`}>{result.avs}</div>
+            <div className="avs-of">/100</div>
+          </div>
+          <span className={`grade-badge ${gradeClass(result.grade)}`}>{result.grade}</span>
+        </div>
+        <p className="avs-one-liner">&ldquo;{result.one_liner}&rdquo;</p>
+        <div className="avs-meta">
+          <span className="type-pill">{result.brand}</span>
+          <span className="type-pill">{result.category}</span>
+        </div>
+      </div>
+      <div className="subscore-grid">
+        {result.sub_scores.map((s) => (
+          <div key={s.key} className={`subscore-card ${gradeClass(s.grade)}`}>
+            <div className="subscore-name">{s.name}</div>
+            <div>
+              <span className="subscore-value">{s.score}</span>
+              <span className="subscore-grade">{s.grade}</span>
+            </div>
+            <div className="coverage-note">{s.coverage}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function AiVisibilityScorePage() {
@@ -404,44 +443,12 @@ export default function AiVisibilityScorePage() {
                     miniAppSlug="ai-visibility-score"
                     pattern="after-teaser"
                     initialInput={leadInput}
-                    teaser={
-                      <div ref={shareableRef} className="shareable-block">
-                        <div className="avs-hero">
-                          <div className="avs-hero-top">
-                            <div>
-                              <div className={`avs-number ${gradeClass(result.grade)}`}>
-                                {result.avs}
-                              </div>
-                              <div className="avs-of">/100</div>
-                            </div>
-                            <span className={`grade-badge ${gradeClass(result.grade)}`}>
-                              {result.grade}
-                            </span>
-                          </div>
-                          <p className="avs-one-liner">&ldquo;{result.one_liner}&rdquo;</p>
-                          <div className="avs-meta">
-                            <span className="type-pill">{result.brand}</span>
-                            <span className="type-pill">{result.category}</span>
-                          </div>
-                        </div>
-                        <div className="subscore-grid">
-                          {result.sub_scores.map((s) => (
-                            <div key={s.key} className={`subscore-card ${gradeClass(s.grade)}`}>
-                              <div className="subscore-name">{s.name}</div>
-                              <div>
-                                <span className="subscore-value">{s.score}</span>
-                                <span className="subscore-grade">{s.grade}</span>
-                              </div>
-                              <div className="coverage-note">{s.coverage}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    }
+                    teaser={<AvsShareableBlock result={result} />}
                   >
                     {({ submitToApi }) => (
                       <>
                         <SubmitOnce submit={submitToApi} input={leadInput} output={result} />
+                        <AvsShareableBlock result={result} captureRef={shareableRef} />
                         <div className="short-read-block">
                           <div className="section-header">
                             {"// what's dragging your score down"}
