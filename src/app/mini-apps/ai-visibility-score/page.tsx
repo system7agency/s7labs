@@ -9,16 +9,19 @@ import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
-import type { ApiResponse, Hook, HookResult } from '@/app/api/mini-apps/linkedin-hook/route'
+import type { AVSApiResponse, AVSResult } from '@/app/api/mini-apps/ai-visibility-score/route'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
 
-const HOOK_STEPS: HowItWorksStep[] = [
+const DOMAIN_RE = /^([a-z0-9-]+\.)+[a-z]{2,}$/i
+const STAGE_MS = 5000
+
+const AVS_STEPS: HowItWorksStep[] = [
   {
-    title: 'Paste a LinkedIn post',
+    title: 'Enter your domain',
     description:
-      'Any public post — yours, your prospect’s, or a thought-leader you want to bring into your outreach.',
+      'We infer your brand and category, then frame buyer-intent questions for AI engines.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -28,15 +31,16 @@ const HOOK_STEPS: HowItWorksStep[] = [
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <path d="M8 11v6M8 7h.01M12 17v-4M16 17v-3a2 2 0 10-4 0" />
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M7 13h8" />
       </svg>
     ),
   },
   {
-    title: 'We extract the trigger, author, and signals',
+    title: 'We ask the AIs',
     description:
-      'Opinion, news, pain, or achievement — the specific moment in the post that creates an opening for outreach.',
+      'Claude plus optional ChatGPT, Perplexity, and Google AI Overview — coverage shown on each sub-score.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -53,9 +57,9 @@ const HOOK_STEPS: HowItWorksStep[] = [
     ),
   },
   {
-    title: 'AI generates personalized outbound hooks',
+    title: 'Four sub-scores, one AVS',
     description:
-      'Each hook uses a different tone and channel — LinkedIn DM, email, or cold call — mapped to the buyer persona.',
+      'Presence 35%, Citations 30%, Entity Clarity 20%, Drift 15% — fixed methodology every run.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -66,14 +70,14 @@ const HOOK_STEPS: HowItWorksStep[] = [
         strokeLinejoin="round"
       >
         <circle cx="12" cy="12" r="3" />
-        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
       </svg>
     ),
   },
   {
-    title: 'Get hooks ranked by reply likelihood',
+    title: 'Get your score and short read',
     description:
-      'The hook most likely to land is flagged first so you can send it without second-guessing.',
+      'A 0–100 AVS, four sub-scores, and a plain-language breakdown of what is dragging visibility down.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -93,159 +97,112 @@ const HOOK_STEPS: HowItWorksStep[] = [
 const STAGES = [
   {
     num: '01',
-    title: 'Reading the post',
-    logs: ['parsing text', 'extracting context', 'content ready'],
+    title: 'Reading the brand',
+    logs: ['identifying the brand', 'finding the category', 'framing the questions'],
   },
   {
     num: '02',
-    title: 'Identifying trigger',
-    logs: ['scanning for signals', 'classifying intent', 'trigger found'],
+    title: 'Asking the AIs',
+    logs: ['checking presence', 'checking citations', 'reading the answers'],
   },
   {
     num: '03',
-    title: 'Profiling persona',
-    logs: ['mapping buyer role', 'scoring fit', 'persona locked'],
+    title: 'Testing entity clarity',
+    logs: ['scanning structured data', 'probing what AI knows', 'checking drift'],
   },
   {
     num: '04',
-    title: 'Writing hooks',
-    logs: ['drafting angles', 'crafting openers', 'hooks ready'],
+    title: 'Scoring visibility',
+    logs: ['weighting the four parts', 'grading', 'score ready'],
   },
 ]
-const STAGE_MS = 4000
 
-const CHANNEL_LABEL: Record<string, string> = {
-  'linkedin-dm': 'LinkedIn DM',
-  email: 'Email',
-  'cold-call': 'Cold Call',
+function normalizeDomainInput(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/.*$/, '')
 }
-const CHANNEL_CLASS: Record<string, string> = {
-  'linkedin-dm': 'channel-li',
-  email: 'channel-email',
-  'cold-call': 'channel-call',
+
+function gradeClass(grade: string): string {
+  const g = grade.toLowerCase()
+  if (g === 'a' || g === 'b') return 'grade-a'
+  if (g === 'c') return 'grade-c'
+  return 'grade-d'
 }
 
 function fmtTs(d: Date) {
   const p = (n: number) => String(n).padStart(2, '0')
-  return `REPORT · ${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} · ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`
+  return `AVS · ${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} · ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`
 }
 
-function buildPlainText(r: HookResult): string {
-  return [
-    `LinkedIn Post to Outbound Hook`,
+function buildPlainText(r: AVSResult): string {
+  const lines = [
+    `AI Visibility Score — ${r.domain}`,
+    `Brand: ${r.brand} · ${r.category}`,
     '='.repeat(60),
     '',
-    `Author   : ${r.post_author}`,
-    `Trigger  : ${r.trigger}`,
-    `Type     : ${r.trigger_type}`,
-    `Persona  : ${r.target_persona}`,
+    `AVS: ${r.avs}/100 (${r.grade})`,
+    `"${r.one_liner}"`,
     '',
-    '// HOOKS',
-    ...r.hooks.map((h, i) =>
-      [
-        `[Hook ${i + 1}${i === r.best_hook_index ? ' — BEST' : ''}] ${h.angle} · ${CHANNEL_LABEL[h.channel] ?? h.channel}`,
-        `Opening : ${h.opening_line}`,
-        `Follow-up: ${h.follow_up}`,
-      ].join('\n')
-    ),
+    '// SUB-SCORES',
+    ...r.sub_scores.map((s) => `  ${s.name}: ${s.score}/100 (${s.grade}) — ${s.coverage}`),
     '',
-    `Tokens: ${(r.tokens_in + r.tokens_out).toLocaleString()} (${r.tokens_in.toLocaleString()} in / ${r.tokens_out.toLocaleString()} out)`,
-    'Generated by S7 Labs LinkedIn Post to Outbound Hook',
-  ].join('\n')
+    '// BIGGEST DRAG',
+    `${r.biggest_drag.sub_score}: ${r.biggest_drag.why}`,
+    '',
+    '// SHORT READ',
+    ...r.short_read.map((s) => `  ${s.sub_score}: ${s.diagnosis}`),
+  ]
+  return lines.join('\n')
 }
 
-function HookCard({ hook, isBest }: { hook: Hook; isBest: boolean }) {
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = useCallback(async () => {
-    const text = `${hook.opening_line}\n\n${hook.follow_up}`
-    try {
-      await navigator.clipboard.writeText(text)
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = text
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
-  }, [hook])
-
+function AvsResultBody({ result }: { result: AVSResult }) {
   return (
-    <div className={`hook-card${isBest ? 'best' : ''}`}>
-      <div className="hook-card-header">
-        <span className="hook-angle">{`// ${hook.angle}`}</span>
-        <div className="hook-badges">
-          {isBest && <span className="badge best-badge">Best</span>}
-          <span className={`badge ${CHANNEL_CLASS[hook.channel] ?? ''}`}>
-            {CHANNEL_LABEL[hook.channel] ?? hook.channel}
-          </span>
-          <span className="badge">{hook.tone}</span>
+    <div className="shareable-block">
+      <div className="avs-hero">
+        <div className="avs-hero-top">
+          <div>
+            <div className={`avs-number ${gradeClass(result.grade)}`}>{result.avs}</div>
+            <div className="avs-of">/100</div>
+          </div>
+          <span className={`grade-badge ${gradeClass(result.grade)}`}>{result.grade}</span>
+        </div>
+        <p className="avs-one-liner">&ldquo;{result.one_liner}&rdquo;</p>
+        <div className="avs-meta">
+          <span className="type-pill">{result.brand}</span>
+          <span className="type-pill">{result.category}</span>
         </div>
       </div>
-      <button
-        type="button"
-        className={`hook-copy-btn${copied ? 'copied' : ''}`}
-        onClick={handleCopy}
-        aria-label="Copy hook"
-      >
-        {copied ? (
-          <>
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-            Copied
-          </>
-        ) : (
-          <>
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="9" y="9" width="13" height="13" rx="2" />
-              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-            </svg>
-            Copy
-          </>
-        )}
-      </button>
-      <p className="hook-opening">{hook.opening_line}</p>
-      <div className="hook-followup-label">{'// Follow-up'}</div>
-      <p className="hook-followup">{hook.follow_up}</p>
+      <div className="subscore-grid">
+        {result.sub_scores.map((s) => (
+          <div key={s.key} className={`subscore-card ${gradeClass(s.grade)}`}>
+            <div className="subscore-name">{s.name}</div>
+            <div>
+              <span className="subscore-value">{s.score}</span>
+              <span className="subscore-grade">{s.grade}</span>
+            </div>
+            <div className="coverage-note">{s.coverage}</div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
-export default function LinkedInHookPage() {
+export default function AiVisibilityScorePage() {
   const [appState, setAppState] = useState<AppState>('idle')
-  const [postText, setPostText] = useState('')
-  const [postError, setPostError] = useState<string | null>(null)
-  const [shakePost, setShakePost] = useState(0)
+  const [domain, setDomain] = useState('')
+  const [domainError, setDomainError] = useState<string | null>(null)
+  const [shakeKey, setShakeKey] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-  const [result, setResult] = useState<HookResult | null>(null)
+  const [result, setResult] = useState<AVSResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [resultTs, setResultTs] = useState('')
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
-
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
   const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
@@ -255,7 +212,7 @@ export default function LinkedInHookPage() {
   const [sysState, setSysState] = useState('idle')
   const [clock, setClock] = useState('—')
 
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const domainInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const rafRef = useRef<number | null>(null)
@@ -274,7 +231,7 @@ export default function LinkedInHookPage() {
 
   useEffect(() => {
     if (appState === 'idle') {
-      const t = setTimeout(() => textareaRef.current?.focus(), 200)
+      const t = setTimeout(() => domainInputRef.current?.focus(), 200)
       return () => clearTimeout(t)
     }
   }, [appState])
@@ -287,7 +244,6 @@ export default function LinkedInHookPage() {
       rafRef.current = null
     }
   }, [])
-
   useEffect(() => () => clearTimers(), [clearTimers])
 
   const startLoadingAnimation = useCallback(() => {
@@ -320,21 +276,6 @@ export default function LinkedInHookPage() {
             n[i] = stage.logs[0] ?? ''
             return n
           })
-          stage.logs.forEach((log, li) => {
-            if (li === 0) return
-            timersRef.current.push(
-              setTimeout(
-                () => {
-                  setStageLogs((prev) => {
-                    const n = [...prev]
-                    n[i] = log
-                    return n
-                  })
-                },
-                (li * STAGE_MS) / stage.logs.length
-              )
-            )
-          })
         }, i * STAGE_MS)
       )
       timersRef.current.push(
@@ -357,29 +298,29 @@ export default function LinkedInHookPage() {
     async (e: FormEvent) => {
       e.preventDefault()
       if (submitting) return
-
-      if (!postText.trim() || postText.trim().length < 30) {
-        setPostError('Paste the full LinkedIn post text (at least 30 characters).')
-        setShakePost((k) => k + 1)
+      const normalized = normalizeDomainInput(domain)
+      if (!DOMAIN_RE.test(normalized)) {
+        setDomainError('Enter a valid domain.')
+        setShakeKey((k) => k + 1)
         return
       }
-
-      setPostError(null)
+      setDomainError(null)
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
-      setSysState('running')
+      setTokens(null)
       setAppState('loading')
+      setSysState('running')
       startLoadingAnimation()
 
-      let data: ApiResponse
+      let data: AVSApiResponse
       try {
-        const res = await fetch('/api/mini-apps/linkedin-hook', {
+        const res = await fetch('/api/mini-apps/ai-visibility-score', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ post_text: postText.trim() }),
+          body: JSON.stringify({ domain: normalized }),
         })
-        data = (await res.json()) as ApiResponse
+        data = (await res.json()) as AVSApiResponse
       } catch {
         clearTimers()
         setErrorMsg('Network error. Please check your connection and try again.')
@@ -390,14 +331,13 @@ export default function LinkedInHookPage() {
       }
 
       clearTimers()
-      const elapsed = ((performance.now() - runStartRef.current) / 1000).toFixed(1) + 's'
-      setLatency(elapsed)
+      setLatency(((performance.now() - runStartRef.current) / 1000).toFixed(1) + 's')
       setProgressPct(100)
       setLoadingPct('100%')
 
       if (data.ok) {
         setDoneStages([0, 1, 2, 3])
-        await new Promise((r) => setTimeout(r, 400))
+        await new Promise((r) => setTimeout(r, 350))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
         setResultTs(fmtTs(new Date()))
@@ -410,7 +350,7 @@ export default function LinkedInHookPage() {
       }
       setSubmitting(false)
     },
-    [postText, submitting, startLoadingAnimation, clearTimers]
+    [submitting, domain, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -418,15 +358,13 @@ export default function LinkedInHookPage() {
     setAppState('idle')
     setResult(null)
     setErrorMsg('')
-    setPostError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
-    setProgressPct(0)
     setTokens(null)
   }, [clearTimers])
 
-  const handleCopyAll = useCallback(async () => {
+  const handleCopy = useCallback(async () => {
     if (!result) return
     setExportState('copying')
     try {
@@ -443,39 +381,74 @@ export default function LinkedInHookPage() {
     setTimeout(() => setExportState('idle'), 1800)
   }, [result])
 
+  const captureShareable = useCallback(async () => {
+    const el = resultPanelRef.current
+    if (!el) return null
+    const { default: html2canvas } = await import('html2canvas')
+    const capture = html2canvas(el, {
+      backgroundColor: '#101014',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      onclone: (_doc, cloned) => {
+        let node: HTMLElement | null = cloned
+        while (node) {
+          node.style.backdropFilter = 'none'
+          node.style.setProperty('-webkit-backdrop-filter', 'none')
+          node = node.parentElement
+        }
+      },
+    })
+    const timeoutMs = 30_000
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      return await Promise.race([
+        capture,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Screenshot capture timed out')), timeoutMs)
+        }),
+      ])
+    } finally {
+      if (timer) clearTimeout(timer)
+    }
+  }, [])
+
+  const downloadCanvasPng = useCallback((canvas: HTMLCanvasElement, filename: string) => {
+    const link = document.createElement('a')
+    link.download = filename
+    link.href = canvas.toDataURL('image/png')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }, [])
+
   const handleDownloadPng = useCallback(async () => {
     if (!resultPanelRef.current || !result) return
     setExportState('png')
     try {
-      const { default: html2canvas } = await import('html2canvas')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
-      const a = document.createElement('a')
-      a.download = `linkedin-hook-${result.post_author.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`
-      a.href = canvas.toDataURL('image/png')
-      a.click()
+      const canvas = await captureShareable()
+      if (!canvas) {
+        console.error('[ai-visibility-score] PNG export: capture target not found')
+        return
+      }
+      downloadCanvasPng(canvas, `avs-${result.domain}.png`)
     } catch (e) {
-      console.error(e)
+      console.error('[ai-visibility-score] PNG export failed', e)
+    } finally {
+      setExportState('idle')
     }
-    setExportState('idle')
-  }, [result])
+  }, [result, captureShareable, downloadCanvasPng])
 
   const handleDownloadPdf = useCallback(async () => {
     if (!resultPanelRef.current || !result) return
     setExportState('pdf')
     try {
-      const { default: html2canvas } = await import('html2canvas')
+      const canvas = await captureShareable()
+      if (!canvas) {
+        console.error('[ai-visibility-score] PDF export: capture target not found')
+        return
+      }
       const { jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
       const imgW = 190
       const imgH = (canvas.height / canvas.width) * imgW
       const pdf = new jsPDF({
@@ -483,28 +456,32 @@ export default function LinkedInHookPage() {
         unit: 'mm',
       })
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-      pdf.save(`linkedin-hook-${result.post_author.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`)
+      pdf.save(`avs-${result.domain}.pdf`)
     } catch (e) {
-      console.error(e)
+      console.error('[ai-visibility-score] PDF export failed', e)
+    } finally {
+      setExportState('idle')
     }
-    setExportState('idle')
-  }, [result])
+  }, [result, captureShareable])
+
+  const leadInput = { domain: normalizeDomainInput(domain) }
+  const loadingDomain = normalizeDomainInput(domain) || 'domain'
 
   return (
-    <div className="linkedin-hook">
+    <div className="ai-visibility-score">
       <AuroraBackground />
 
       <Header />
 
       <main className="shell">
         <section className="hero">
-          <span className="eyebrow">LinkedIn Post to Outbound Hook</span>
+          <span className="eyebrow">AI Visibility Score</span>
           <h1>
-            Turn any post into a <span className="accent">personalised opener.</span>
+            One number for how <span className="accent">visible you are to AI</span>
           </h1>
           <p>
-            Paste a LinkedIn post. We detect the trigger, profile the persona, and write three
-            ready-to-send hooks — each with a different angle and channel.
+            A single 0–100 AVS built from presence in AI answers, citations, entity clarity, and
+            drift — the metric to measure yourself against over time.
           </p>
         </section>
 
@@ -547,29 +524,25 @@ export default function LinkedInHookPage() {
             )}
 
             <div className="panel-body">
-              {/* IDLE */}
-              <section className={`lh-state${appState === 'idle' ? 'active' : ''}`}>
-                <div className="idle-label">LinkedIn post text</div>
-                <form noValidate onSubmit={handleSubmit} autoComplete="off">
-                  <div className="textarea-field">
-                    <label>Paste the full post</label>
-                    <div
-                      key={`p-${shakePost}`}
-                      className={`textarea-box${postError ? 'error' : ''}`}
-                    >
-                      <textarea
-                        ref={textareaRef}
-                        placeholder={`Just raised our Series A...\nHiring 10 engineers in Q3...\nWhy I stopped using spreadsheets for sales...`}
-                        value={postText}
+              <section className={`avs-state${appState === 'idle' ? 'active' : ''}`}>
+                <div className="idle-label">Enter your domain</div>
+                <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
+                  <div className="input-field">
+                    <label>Domain</label>
+                    <div key={`d-${shakeKey}`} className={`input-box${domainError ? 'error' : ''}`}>
+                      <input
+                        ref={domainInputRef}
+                        type="text"
+                        placeholder="yourbrand.com"
+                        value={domain}
                         disabled={submitting}
                         onChange={(e) => {
-                          setPostText(e.target.value)
-                          if (postError) setPostError(null)
+                          setDomain(e.target.value)
+                          if (domainError) setDomainError(null)
                         }}
                       />
                     </div>
-                    {postError && <div className="field-error">{postError}</div>}
-                    <div className="char-count">{postText.length} chars</div>
+                    {domainError && <div className="field-error">{domainError}</div>}
                   </div>
                   <div className="submit-row">
                     <button type="submit" className="submit-btn" disabled={submitting}>
@@ -581,21 +554,23 @@ export default function LinkedInHookPage() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
                       </svg>
-                      Generate hooks
+                      Get visibility score
                     </button>
                   </div>
                 </form>
               </section>
 
-              {/* LOADING */}
-              <section className={`lh-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={`avs-state${appState === 'loading' ? 'active' : ''}`}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
                 <div className="loading-header">
-                  <span>Analysing post</span>
+                  <span>
+                    Scoring <strong>{loadingDomain}</strong>
+                  </span>
                   <span>{loadingPct}</span>
                 </div>
                 <div className="stages">
@@ -629,144 +604,68 @@ export default function LinkedInHookPage() {
                 </div>
               </section>
 
-              {/* RESULT */}
-              <section className={`lh-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={`avs-state${appState === 'result' ? 'active' : ''}`}>
                 {result && (
                   <EmailGate
-                    miniAppSlug="linkedin-post-outbound-hook"
+                    miniAppSlug="ai-visibility-score"
                     pattern="upfront"
-                    initialInput={{ post_text: postText.trim() }}
+                    initialInput={leadInput}
                   >
                     {({ submitToApi }) => (
                       <>
-                        <SubmitOnce
-                          submit={submitToApi}
-                          input={{ post_text: postText.trim() }}
-                          output={result}
-                        />
+                        <SubmitOnce submit={submitToApi} input={leadInput} output={result} />
                         <div ref={resultPanelRef}>
-                          <div className="result-head">
-                            <span className="title">Hooks ready — {result.post_author}</span>
-                            <span className="ts-label">{resultTs}</span>
-                          </div>
-
-                          <div className="trigger-block">
-                            <div className="trigger-eyebrow">
-                              {'// Outbound trigger'}
-                              <span className="trigger-type-badge">{result.trigger_type}</span>
+                          <AvsResultBody result={result} />
+                          <div className="short-read-block">
+                            <div className="section-header">
+                              {"// what's dragging your score down"}
                             </div>
-                            <p className="trigger-text">{result.trigger}</p>
-                            <div className="trigger-meta">
-                              <span>Target: {result.target_persona}</span>
-                              <span>Summary: {result.post_summary}</span>
-                            </div>
-                          </div>
-
-                          <div className="section-header">
-                            <span>{'// Outbound hooks'}</span>
-                            <span className="count">{result.hooks.length} generated</span>
-                          </div>
-                          <div className="hooks">
-                            {result.hooks.map((h, i) => (
-                              <HookCard key={i} hook={h} isBest={i === result.best_hook_index} />
+                            <p className="biggest-drag">
+                              <span>{result.biggest_drag.sub_score}</span> —{' '}
+                              {result.biggest_drag.why}
+                            </p>
+                            {result.short_read.map((item) => (
+                              <div key={item.sub_score} className="short-read-item">
+                                <h4>{item.sub_score}</h4>
+                                <p>{item.diagnosis}</p>
+                              </div>
                             ))}
                           </div>
                         </div>
-
                         <div className="result-footer">
                           <span className="token-pill">
                             {tokens
                               ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
                               : ''}
                           </span>
+                          <span className="result-ts hide-sm">{resultTs}</span>
                           <div className="export-actions">
                             <button
-                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
                               type="button"
-                              onClick={handleCopyAll}
+                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                              onClick={handleCopy}
                               disabled={exportState !== 'idle'}
                             >
-                              {exportState === 'copying' ? (
-                                <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M20 6L9 17l-5-5" />
-                                  </svg>
-                                  Copied
-                                </>
-                              ) : (
-                                <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                                  </svg>
-                                  Copy all
-                                </>
-                              )}
+                              {exportState === 'copying' ? 'Copied' : 'Copy'}
                             </button>
                             <button
-                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
                               type="button"
-                              onClick={handleDownloadPng}
+                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                              onClick={() => void handleDownloadPng()}
                               disabled={exportState !== 'idle'}
                             >
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <rect x="3" y="3" width="18" height="18" rx="2" />
-                                <circle cx="8.5" cy="8.5" r="1.5" />
-                                <path d="M21 15l-5-5L5 21" />
-                              </svg>
                               {exportState === 'png' ? '…' : 'PNG'}
                             </button>
                             <button
-                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
                               type="button"
-                              onClick={handleDownloadPdf}
+                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                              onClick={() => void handleDownloadPdf()}
                               disabled={exportState !== 'idle'}
                             >
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                                <path d="M14 2v6h6" />
-                                <path d="M12 18v-6M9 15l3 3 3-3" />
-                              </svg>
                               {exportState === 'pdf' ? '…' : 'PDF'}
                             </button>
-                            <button className="run-again" type="button" onClick={handleReset}>
-                              New post
+                            <button type="button" className="run-again" onClick={handleReset}>
+                              Score another
                               <svg
                                 width="12"
                                 height="12"
@@ -789,8 +688,7 @@ export default function LinkedInHookPage() {
                 )}
               </section>
 
-              {/* ERROR */}
-              <section className={`lh-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section className={`avs-state error-state${appState === 'error' ? 'active' : ''}`}>
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"
@@ -804,9 +702,9 @@ export default function LinkedInHookPage() {
                     <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
                   </svg>
                 </div>
-                <h2 className="err-title">Analysis failed</h2>
+                <h2 className="err-title">Score failed</h2>
                 <p className="err-msg">{errorMsg}</p>
-                <button className="err-btn" type="button" onClick={handleReset}>
+                <button type="button" className="err-btn" onClick={handleReset}>
                   Try again
                 </button>
               </section>
@@ -817,11 +715,11 @@ export default function LinkedInHookPage() {
         <HowItWorks
           title={
             <>
-              From a single post to <span className="accent">ranked hooks</span>
+              From domain to AVS in <span className="accent">under a minute</span>
             </>
           }
-          subtitle="No login, no install. Four steps from paste to a ready-to-send opener."
-          steps={HOOK_STEPS}
+          subtitle="One headline score from four fixed parts — presence, citations, entity clarity, and drift."
+          steps={AVS_STEPS}
         />
       </main>
 

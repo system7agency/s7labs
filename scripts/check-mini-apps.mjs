@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console -- CLI script, console output is the UI */
 /**
  * check-mini-apps.mjs
  *
@@ -86,7 +87,14 @@ function extractSlug(source) {
 }
 
 function hasHowItWorks(source) {
-  return /className=["']how-it-works["']/.test(source) && /<h2[\s>]/.test(source)
+  // Either a direct <section className="how-it-works"> with an <h2>,
+  // or use of the shared <HowItWorks> component.
+  const directSection =
+    /className=["']how-it-works["']/.test(source) && /<h2[\s>]/.test(source)
+  const sharedComponent =
+    /from\s+['"]@\/components\/mini-apps\/HowItWorks['"]/.test(source) &&
+    /<HowItWorks[\s>]/.test(source)
+  return directSection || sharedComponent
 }
 
 function hasEmailGateImport(source) {

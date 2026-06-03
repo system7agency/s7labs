@@ -37,6 +37,20 @@ export function CardThumb({ thumb }: CardThumbProps) {
           </div>
         </div>
       )
+    case 'avs':
+      return (
+        <div className="card-thumb thumb-avs">
+          <div className="avs-gauge">
+            <span className="avs-gauge-num">72</span>
+          </div>
+          <div className="avs-segments">
+            <span className="avs-seg avs-seg-1" />
+            <span className="avs-seg avs-seg-2" />
+            <span className="avs-seg avs-seg-3" />
+            <span className="avs-seg avs-seg-4" />
+          </div>
+        </div>
+      )
     case 'sov':
       return (
         <div className="card-thumb thumb-sov">

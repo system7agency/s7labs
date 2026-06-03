@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 
+import { clsx } from 'clsx'
 import './page-styles.css'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 
@@ -421,14 +423,7 @@ export default function PricingDiagnosticPage() {
 
   return (
     <div className="pricing-diag">
-      {/* Background layers */}
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="pd-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -559,7 +554,7 @@ export default function PricingDiagnosticPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>

@@ -1,16 +1,96 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, BriefResult, Signal } from '@/app/api/mini-apps/job-brief/route'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
 type InputMode = 'url' | 'text'
+
+const BRIEF_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Paste a job posting URL or text',
+    description:
+      'Public listings work great. Internal postings — just paste the text directly. Either way, no scraping you need to set up.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M7 13h8" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We extract requirements, tech stack, and budget signals',
+    description:
+      'Every responsibility, named tool, and seniority cue is decoded into something a salesperson can actually use.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 7l9-4 9 4-9 4-9-4z" />
+        <path d="M3 12l9 4 9-4" />
+        <path d="M3 17l9 4 9-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'AI infers pain points and the best sales angle',
+    description:
+      'What this hire tells you about what is broken or overloaded — and the specific angle that lands with this buyer.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get your sales brief with the ideal contact',
+    description:
+      'Executive summary, tech fingerprint, pain points, budget signals — plus the role + persona to reach out to first.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
 
 const STAGES = [
   {
@@ -382,13 +462,7 @@ export default function JobBriefPage() {
 
   return (
     <div className="job-brief">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="jb-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -402,50 +476,45 @@ export default function JobBriefPage() {
             Drop a job posting URL or paste the text. We decode what the company is actually
             building, what&apos;s broken, and exactly how to sell into them right now.
           </p>
-          <div className="meta-tags">
-            <span>· Pain Points</span>
-            <span>· Tech Stack</span>
-            <span>· Budget Signals</span>
-            <span>· Sales Angle</span>
-          </div>
         </section>
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
-                </span>
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <>
+                      <span className="hide-sm">
+                        <span className="stat-key">tok</span>{' '}
+                        <span className="stat-val">
+                          {(tokens.in + tokens.out).toLocaleString()}
+                        </span>
+                      </span>
+                      <span className="pr-sep hide-sm" />
+                    </>
+                  )}
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-              <div className="prr">
-                {tokens && (
-                  <>
-                    <span className="hide-sm">
-                      <span className="stat-key">tok</span>{' '}
-                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
-                    </span>
-                    <span className="pr-sep hide-sm" />
-                  </>
-                )}
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="panel-body">
               {/* IDLE */}
@@ -489,7 +558,6 @@ export default function JobBriefPage() {
                         key={`u-${shakeInput}`}
                         className={`input-box${inputError ? 'error' : ''}`}
                       >
-                        <span className="prompt">$</span>
                         <input
                           ref={urlInputRef}
                           type="url"
@@ -511,7 +579,6 @@ export default function JobBriefPage() {
                         key={`t-${shakeInput}`}
                         className={`textarea-box${inputError ? 'error' : ''}`}
                       >
-                        <span className="prompt">$</span>
                         <textarea
                           placeholder={`We're hiring a Senior RevOps Manager...\nYou'll own our Salesforce instance...\nRequirements: 5+ years in Revenue Operations...`}
                           value={text}
@@ -564,7 +631,7 @@ export default function JobBriefPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -831,40 +898,15 @@ export default function JobBriefPage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Signals'}</div>
-            <div className="name">Sales intelligence</div>
-            <div className="desc">
-              Every requirement and responsibility decoded into a buying signal — what it means for
-              your pitch.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Stack'}</div>
-            <div className="name">Tech fingerprint</div>
-            <div className="desc">
-              Named tools pulled from the posting so you know exactly what they&apos;re running and
-              where the gaps are.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Pain'}</div>
-            <div className="name">Implied problems</div>
-            <div className="desc">
-              What this hire tells you about what&apos;s broken, overloaded, or missing in their
-              current setup.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Angle'}</div>
-            <div className="name">Ready-to-use pitch</div>
-            <div className="desc">
-              A specific sales angle crafted from the posting — not a template, a brief built for
-              this company.
-            </div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From job posting to <span className="accent">ready-to-pitch brief</span>
+            </>
+          }
+          subtitle="No login, no install. Four steps from paste to a sales-ready brief."
+          steps={BRIEF_STEPS}
+        />
       </main>
 
       <Footer />

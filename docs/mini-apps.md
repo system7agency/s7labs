@@ -87,15 +87,34 @@ If the slug isn't in the table, lead capture fails at runtime with
 
 ### 3. Include a "How it works" section
 
-Every mini-app page must include a `<section className="how-it-works">`
-with an `<h2>`. This is where you explain to first-time visitors what the
-tool does and what they'll get back.
+Every mini-app page must include a "How it works" section that explains
+what the tool does and what visitors get back. Easiest path is the shared
+component:
 
-The reference pattern lives in
+```tsx
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+
+const STEPS: HowItWorksStep[] = [
+  { title: '...', description: '...', icon: <svg>...</svg> },
+  // 4 steps total is the convention
+]
+
+// inside the page render, somewhere before </main>:
+<HowItWorks
+  title={<>From X to <span className="accent">Y</span></>}
+  subtitle="One-line subtitle."
+  steps={STEPS}
+/>
+```
+
+The component handles the alternating timeline, animations, and responsive
+behaviour. The CSS uses each mini-app's existing palette variables
+(`--blue`, `--text`, `--text-muted`, `--border`) so it looks consistent.
+
+If you need a non-standard layout, the CI check also accepts a direct
+`<section className="how-it-works">` block with an `<h2>` — see
 [`pricing-diagnostic/page.tsx`](../src/app/mini-apps/pricing-diagnostic/page.tsx)
-— copy the JSX and the corresponding styles from `page-styles.css`. The
-scroll-triggered entrance animation is wired up in `PageScripts.tsx` via
-an `IntersectionObserver`; reuse that pattern.
+for the reference pattern.
 
 ## Running the check locally
 
