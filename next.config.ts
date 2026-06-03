@@ -1,8 +1,29 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { withSentryConfig } from '@sentry/nextjs'
 import type { NextConfig } from 'next'
 
+const projectRoot = path.dirname(fileURLToPath(import.meta.url))
+const tailwindcssPath = path.join(projectRoot, 'node_modules/tailwindcss')
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    // Parent folder (/Users/mac/Orbiqon) also has a lockfile; pin root here so
+    // PostCSS/Tailwind and client bundles resolve from s7labs/node_modules.
+    root: projectRoot,
+    resolveAlias: {
+      tailwindcss: tailwindcssPath,
+    },
+  },
+  outputFileTracingRoot: projectRoot,
+  webpack(config) {
+    config.resolve ??= {}
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      tailwindcss: tailwindcssPath,
+    }
+    return config
+  },
 }
 
 export default withSentryConfig(nextConfig, {

@@ -290,15 +290,87 @@ export default function AiVisibilityScorePage() {
   }, [clearTimers])
 
   const captureShareable = useCallback(async () => {
-    if (!shareableRef.current) return null
+    const el = shareableRef.current
+    if (!el) return null
     const { default: html2canvas } = await import('html2canvas')
-    return html2canvas(shareableRef.current, {
+    const capture = html2canvas(el, {
       backgroundColor: '#101014',
       scale: 2,
       useCORS: true,
       logging: false,
+      onclone: (_doc, cloned) => {
+        let node: HTMLElement | null = cloned
+        while (node) {
+          node.style.backdropFilter = 'none'
+          node.style.setProperty('-webkit-backdrop-filter', 'none')
+          node = node.parentElement
+        }
+      },
     })
+    const timeoutMs = 30_000
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      return await Promise.race([
+        capture,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Screenshot capture timed out')), timeoutMs)
+        }),
+      ])
+    } finally {
+      if (timer) clearTimeout(timer)
+    }
   }, [])
+
+  const downloadCanvasPng = useCallback((canvas: HTMLCanvasElement, filename: string) => {
+    const link = document.createElement('a')
+    link.download = filename
+    link.href = canvas.toDataURL('image/png')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }, [])
+
+  const handleDownloadPng = useCallback(async () => {
+    if (!result) return
+    setExportState('png')
+    try {
+      const canvas = await captureShareable()
+      if (!canvas) {
+        console.error('[ai-visibility-score] PNG export: capture target not found')
+        return
+      }
+      downloadCanvasPng(canvas, `avs-${result.domain}.png`)
+    } catch (e) {
+      console.error('[ai-visibility-score] PNG export failed', e)
+    } finally {
+      setExportState('idle')
+    }
+  }, [result, captureShareable, downloadCanvasPng])
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!result) return
+    setExportState('pdf')
+    try {
+      const canvas = await captureShareable()
+      if (!canvas) {
+        console.error('[ai-visibility-score] PDF export: capture target not found')
+        return
+      }
+      const { jsPDF } = await import('jspdf')
+      const imgW = 190
+      const imgH = (canvas.height / canvas.width) * imgW
+      const pdf = new jsPDF({
+        orientation: imgH > imgW ? 'portrait' : 'landscape',
+        unit: 'mm',
+      })
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
+      pdf.save(`avs-${result.domain}.pdf`)
+    } catch (e) {
+      console.error('[ai-visibility-score] PDF export failed', e)
+    } finally {
+      setExportState('idle')
+    }
+  }, [result, captureShareable])
 
   const leadInput = { domain: normalizeDomainInput(domain) }
 
@@ -483,46 +555,14 @@ export default function AiVisibilityScorePage() {
                             <button
                               type="button"
                               className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                              onClick={async () => {
-                                setExportState('png')
-                                const canvas = await captureShareable()
-                                if (canvas) {
-                                  const a = document.createElement('a')
-                                  a.download = `avs-${result.domain}.png`
-                                  a.href = canvas.toDataURL('image/png')
-                                  a.click()
-                                }
-                                setExportState('idle')
-                              }}
+                              onClick={() => void handleDownloadPng()}
                             >
                               PNG
                             </button>
                             <button
                               type="button"
                               className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                              onClick={async () => {
-                                setExportState('pdf')
-                                const canvas = await captureShareable()
-                                if (canvas) {
-                                  const { jsPDF } = await import('jspdf')
-                                  const imgW = 190
-                                  const imgH = (canvas.height / canvas.width) * imgW
-                                  const pdf = new jsPDF({
-                                    orientation: imgH > imgW ? 'portrait' : 'landscape',
-                                    unit: 'mm',
-                                  })
-                                  pdf.addImage(
-                                    canvas.toDataURL('image/png'),
-                                    'PNG',
-                                    10,
-                                    10,
-                                    imgW,
-                                    imgH
-                                  )
-                                  pdf.save(`avs-${result.domain}.pdf`)
-                                }
-                                setExportState('idle')
-                              }}
+                              onClick={() => void handleDownloadPdf()}
                             >
                               PDF
                             </button>

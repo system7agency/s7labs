@@ -1,4 +1,5 @@
-@import 'tailwindcss';
+/* Relative import avoids wrong workspace root when a parent folder has its own lockfile. */
+@import '../../node_modules/tailwindcss/index.css';
 
 @theme {
   /* Fonts (set via next/font in layout.tsx — these are fallbacks) */
