@@ -1,10 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { KeywordStatus, ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/aio-types'
 import { parseScanApiResponse } from '@/lib/mini-apps/aio-types'
 import { GatedBreakdown } from './GatedBreakdown'
@@ -15,6 +18,79 @@ type AppState = 'idle' | 'loading' | 'result' | 'error'
 const DOMAIN_RE = /^([a-z0-9-]+\.)+[a-z]{2,}$/i
 const STAGE_MS = 5000
 const MAX_KEYWORDS = 5
+
+const AIO_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Add your domain and keywords',
+    description: 'Up to five buyer searches you care about, plus your target market.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M7 9h10M7 13h6" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We run live Google searches',
+    description: 'Each keyword is queried with AI Overview detection — not a rank position report.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3-3" />
+      </svg>
+    ),
+  },
+  {
+    title: 'See your free snapshot',
+    description:
+      'Citation rate, AI Overview trigger rate, blind spots, and a per-keyword status strip — before you share your email.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 19V5l8 4 8-4v14" />
+        <path d="M12 9v10" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Unlock the full breakdown',
+    description:
+      'Every cited domain per keyword, citation leaders, and three ways to start getting cited in AI answers.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 3v18M3 12h18" />
+      </svg>
+    ),
+  },
+]
+
 const STAGES = [
   {
     num: '01',
@@ -305,26 +381,99 @@ export default function AiOverviewTrackerPage() {
     setTokens(null)
   }, [clearTimers])
 
+  const handleCopy = useCallback(async () => {
+    if (!free) return
+    setExportState('copying')
+    try {
+      await navigator.clipboard.writeText(buildPlainText(free, gated))
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = buildPlainText(free, gated)
+      ta.style.cssText = 'position:fixed;opacity:0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    setTimeout(() => setExportState('idle'), 1800)
+  }, [free, gated])
+
   const captureShareable = useCallback(async () => {
-    if (!shareableRef.current) return null
+    const el = shareableRef.current
+    if (!el) return null
     const { default: html2canvas } = await import('html2canvas')
-    return html2canvas(shareableRef.current, {
+    const capture = html2canvas(el, {
       backgroundColor: '#101014',
       scale: 2,
       useCORS: true,
       logging: false,
+      onclone: (_doc, cloned) => {
+        let node: HTMLElement | null = cloned
+        while (node) {
+          node.style.backdropFilter = 'none'
+          node.style.setProperty('-webkit-backdrop-filter', 'none')
+          node = node.parentElement
+        }
+      },
     })
+    const timeoutMs = 30_000
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      return await Promise.race([
+        capture,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('Screenshot capture timed out')), timeoutMs)
+        }),
+      ])
+    } finally {
+      if (timer) clearTimeout(timer)
+    }
   }, [])
 
+  const handleDownloadPng = useCallback(async () => {
+    if (!shareableRef.current || !free) return
+    setExportState('png')
+    try {
+      const canvas = await captureShareable()
+      if (!canvas) return
+      const link = document.createElement('a')
+      link.download = `aio-${free.domain}.png`
+      link.href = canvas.toDataURL('image/png')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (e) {
+      console.error('[ai-overview-tracker] PNG export failed', e)
+    } finally {
+      setExportState('idle')
+    }
+  }, [free, captureShareable])
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!shareableRef.current || !free) return
+    setExportState('pdf')
+    try {
+      const canvas = await captureShareable()
+      if (!canvas) return
+      const { jsPDF } = await import('jspdf')
+      const imgW = 190
+      const imgH = (canvas.height / canvas.width) * imgW
+      const pdf = new jsPDF({
+        orientation: imgH > imgW ? 'portrait' : 'landscape',
+        unit: 'mm',
+      })
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
+      pdf.save(`aio-${free.domain}.pdf`)
+    } catch (e) {
+      console.error('[ai-overview-tracker] PDF export failed', e)
+    } finally {
+      setExportState('idle')
+    }
+  }, [free, captureShareable])
+
   return (
-    <div className="share-of-voice ai-overview-tracker">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="aot-spotlight" />
-      <div className="bg-layer bg-grain" />
+    <div className="ai-overview-tracker">
+      <AuroraBackground />
       <Header />
       <main className="shell">
         <section className="hero">
@@ -340,37 +489,41 @@ export default function AiOverviewTrackerPage() {
 
         <div className="panel-wrap panel-wrap-wide">
           <div className="panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-            <div className="panel-readouts">
-              <div className="prl">
-                <span>
-                  <span className="stat-key">sys</span> <span className="stat-val">{sysState}</span>
-                </span>
-              </div>
-              <div className="prr">
-                {tokens && (
-                  <span className="hide-sm">
-                    <span className="stat-key">tok</span>{' '}
-                    <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
+            {appState !== 'idle' && (
+              <div className="panel-readouts">
+                <div className="prl">
+                  <span>
+                    <span className="stat-key">sys</span>{' '}
+                    <span className="stat-val">{sysState}</span>
                   </span>
-                )}
-                <span className="pr-sep hide-sm" />
-                <span className="hide-sm">
-                  <span className="stat-key">lat</span> <span className="stat-val">{latency}</span>
-                </span>
-                <span className="pr-sep hide-sm" />
-                <span>
-                  <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
-                </span>
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">eng</span> <span className="stat-val">v1.0</span>
+                  </span>
+                </div>
+                <div className="prr">
+                  {tokens && (
+                    <span className="hide-sm">
+                      <span className="stat-key">tok</span>{' '}
+                      <span className="stat-val">{(tokens.in + tokens.out).toLocaleString()}</span>
+                    </span>
+                  )}
+                  <span className="pr-sep hide-sm" />
+                  <span className="hide-sm">
+                    <span className="stat-key">lat</span>{' '}
+                    <span className="stat-val">{latency}</span>
+                  </span>
+                  <span className="pr-sep hide-sm" />
+                  <span>
+                    <span className="stat-key">ts</span> <span className="stat-val">{clock}</span>
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
             <div className="panel-body">
-              <section className={`sov-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={`aio-state${appState === 'idle' ? 'active' : ''}`}>
                 <div className="idle-label">Not a rank tracker — this checks AI citations</div>
-                <form noValidate onSubmit={handleSubmit}>
+                <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
                     <label>Your domain</label>
                     <div
@@ -427,12 +580,23 @@ export default function AiOverviewTrackerPage() {
                   </div>
                   <div className="submit-row">
                     <button type="submit" className="submit-btn" disabled={submitting}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="M21 21l-4.35-4.35" />
+                      </svg>
                       Check my AI Overview visibility
                     </button>
                   </div>
                 </form>
               </section>
-              <section className={`sov-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={`aio-state${appState === 'loading' ? 'active' : ''}`}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -447,10 +611,21 @@ export default function AiOverviewTrackerPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
+                          <span className="stage-status-icon">
+                            <svg viewBox="0 0 12 12" fill="none">
+                              <path
+                                d="M2 6.5l2.5 2.5L10 3"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </span>
                         </div>
                         <div className="stage-title">{s.title}</div>
                         <div className="stage-log">{stageLogs[i]}</div>
@@ -459,7 +634,7 @@ export default function AiOverviewTrackerPage() {
                   })}
                 </div>
               </section>
-              <section className={`sov-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={`aio-state${appState === 'result' ? 'active' : ''}`}>
                 {free && scanId && (
                   <EmailGate
                     miniAppSlug="ai-overview-tracker"
@@ -546,61 +721,44 @@ export default function AiOverviewTrackerPage() {
                           <span className="result-ts hide-sm">{resultTs}</span>
                           <div className="export-actions">
                             <button
+                              type="button"
                               className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                              onClick={async () => {
-                                setExportState('copying')
-                                await navigator.clipboard.writeText(buildPlainText(free, gated))
-                                setTimeout(() => setExportState('idle'), 900)
-                              }}
+                              onClick={handleCopy}
+                              disabled={exportState !== 'idle'}
                             >
-                              Copy
+                              {exportState === 'copying' ? 'Copied' : 'Copy'}
                             </button>
                             <button
+                              type="button"
                               className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                              onClick={async () => {
-                                setExportState('png')
-                                const canvas = await captureShareable()
-                                if (canvas) {
-                                  const a = document.createElement('a')
-                                  a.download = `aio-${free.domain}.png`
-                                  a.href = canvas.toDataURL('image/png')
-                                  a.click()
-                                }
-                                setExportState('idle')
-                              }}
+                              onClick={() => void handleDownloadPng()}
+                              disabled={exportState !== 'idle'}
                             >
-                              PNG
+                              {exportState === 'png' ? '…' : 'PNG'}
                             </button>
                             <button
+                              type="button"
                               className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                              onClick={async () => {
-                                setExportState('pdf')
-                                const canvas = await captureShareable()
-                                if (canvas) {
-                                  const { jsPDF } = await import('jspdf')
-                                  const imgW = 190
-                                  const imgH = (canvas.height / canvas.width) * imgW
-                                  const pdf = new jsPDF({
-                                    orientation: imgH > imgW ? 'portrait' : 'landscape',
-                                    unit: 'mm',
-                                  })
-                                  pdf.addImage(
-                                    canvas.toDataURL('image/png'),
-                                    'PNG',
-                                    10,
-                                    10,
-                                    imgW,
-                                    imgH
-                                  )
-                                  pdf.save(`aio-${free.domain}.pdf`)
-                                }
-                                setExportState('idle')
-                              }}
+                              onClick={() => void handleDownloadPdf()}
+                              disabled={exportState !== 'idle'}
                             >
-                              PDF
+                              {exportState === 'pdf' ? '…' : 'PDF'}
                             </button>
                             <button className="run-again" type="button" onClick={handleReset}>
                               Check again
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M5 12h14" />
+                                <path d="M13 5l7 7-7 7" />
+                              </svg>
                             </button>
                           </div>
                         </div>
@@ -621,7 +779,20 @@ export default function AiOverviewTrackerPage() {
                   </div>
                 )}
               </section>
-              <section className={`sov-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section className={`aio-state error-state${appState === 'error' ? 'active' : ''}`}>
+                <div className="err-icon">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+                  </svg>
+                </div>
                 <h2 className="err-title">Scan failed</h2>
                 <p className="err-msg">{errorMsg}</p>
                 <button className="err-btn" type="button" onClick={handleReset}>
@@ -632,140 +803,15 @@ export default function AiOverviewTrackerPage() {
           </div>
         </div>
 
-        <section className="how-it-works">
-          <div className="hiw-head">
-            <span className="hiw-eyebrow">How it works</span>
-            <h2>
+        <HowItWorks
+          title={
+            <>
               From keywords to citation gaps in <span className="accent">under a minute</span>
-            </h2>
-            <p>
-              No login. Paste your domain and buyer keywords — we check live Google results for AI
-              Overviews and who gets cited.
-            </p>
-          </div>
-
-          <ol className="hiw-steps">
-            <li className="hiw-step" data-side="left">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 01</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3" y="5" width="18" height="14" rx="2" />
-                      <path d="M7 9h10M7 13h6" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>Add your domain and keywords</h3>
-                    <p>Up to five buyer searches you care about, plus your target market.</p>
-                  </div>
-                </div>
-              </div>
-            </li>
-
-            <li className="hiw-step" data-side="right">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 02</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="11" cy="11" r="7" />
-                      <path d="M20 20l-3-3" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>We run live Google searches</h3>
-                    <p>
-                      Each keyword is queried with AI Overview detection — not a rank position
-                      report.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-
-            <li className="hiw-step" data-side="left">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 03</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 19V5l8 4 8-4v14" />
-                      <path d="M12 9v10" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>See your free snapshot</h3>
-                    <p>
-                      Citation rate, AI Overview trigger rate, blind spots, and a per-keyword status
-                      strip — before you share your email.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-
-            <li className="hiw-step" data-side="right">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 04</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M12 3v18M3 12h18" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>Unlock the full breakdown</h3>
-                    <p>
-                      Every cited domain per keyword, citation leaders, and three ways to start
-                      getting cited in AI answers.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-          </ol>
-        </section>
+            </>
+          }
+          subtitle="No login. Paste your domain and buyer keywords — we check live Google results for AI Overviews and who gets cited."
+          steps={AIO_STEPS}
+        />
       </main>
       <Footer />
       <PageScripts />
