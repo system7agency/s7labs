@@ -38,8 +38,26 @@ export const ZERO_COST: CostBreakdown = {
   costUsd: 0,
 }
 
+/**
+ * Resolve pricing for a model name. Tries exact match first, then strips a
+ * trailing -YYYYMMDD date stamp (Anthropic returns e.g. "claude-opus-4-5" as
+ * "claude-opus-4-5-20251101" in the response), then tries progressively shorter
+ * prefixes. Returns null if nothing matches.
+ */
+function resolvePricing(model: string): { input: number; output: number } | null {
+  if (MODEL_PRICING[model]) return MODEL_PRICING[model]!
+  const undated = model.replace(/-\d{8}$/, '')
+  if (undated !== model && MODEL_PRICING[undated]) return MODEL_PRICING[undated]!
+  const parts = undated.split('-')
+  for (let i = parts.length - 1; i >= 2; i--) {
+    const prefix = parts.slice(0, i).join('-')
+    if (MODEL_PRICING[prefix]) return MODEL_PRICING[prefix]!
+  }
+  return null
+}
+
 export function calculateCost(usage: ModelUsage): CostBreakdown {
-  const pricing = MODEL_PRICING[usage.model]
+  const pricing = resolvePricing(usage.model)
   if (!pricing) {
     console.warn(`[llm/cost] No pricing config for model "${usage.model}". Returning 0 cost.`)
     return {
