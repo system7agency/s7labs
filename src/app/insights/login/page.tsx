@@ -77,16 +77,11 @@ function LoginInner() {
     <div className="insights is-login">
       <div className="ins-bg-stack" aria-hidden>
         <div className="ins-bg-orb" />
-        <div className="ins-bg-dots" />
       </div>
-      <div className="ins-bg-grain" aria-hidden />
 
       <div className="ins-login-wrap">
         <div className="ins-login-card">
-          <span className="ins-card-corner-bl" aria-hidden />
-          <span className="ins-card-corner-br" aria-hidden />
-
-          <span className="ins-login-eyebrow">{'// S7 LABS · INSIGHTS · LOGIN'}</span>
+          <span className="ins-login-eyebrow">S7 Labs · Insights</span>
           <h1>Sign in to continue.</h1>
           <p>
             Magic-link auth. Enter your allowlisted email — we&apos;ll send you a one-time link that
@@ -140,7 +135,7 @@ function LoginInner() {
             </button>
           </form>
 
-          <div className="ins-login-meta">{'// powered by s7'}</div>
+          <div className="ins-login-meta">Powered by S7</div>
         </div>
       </div>
     </div>

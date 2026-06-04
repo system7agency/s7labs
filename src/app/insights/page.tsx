@@ -27,17 +27,15 @@ export default async function InsightsPage() {
     <div className="insights">
       <div className="ins-bg-stack" aria-hidden>
         <div className="ins-bg-orb" />
-        <div className="ins-bg-dots" />
       </div>
-      <div className="ins-bg-grain" aria-hidden />
 
       <main className="ins-shell">
         <header className="ins-topbar">
           <div className="ins-brand">
-            <span className="ins-brand-label">{'// S7 LABS · INSIGHTS'}</span>
+            <h1 className="ins-brand-title">Insights</h1>
             <span className="ins-brand-sub">
               <span className="ins-pulse" aria-hidden />
-              Insights · Live
+              Live · S7 Labs
             </span>
           </div>
           <div className="ins-topbar-right">
@@ -50,22 +48,22 @@ export default async function InsightsPage() {
         </header>
 
         <section className="ins-row-metrics">
-          <MetricCard id="01" title="Total spend" />
-          <MetricCard id="02" title="Total leads" />
-          <MetricCard id="03" title="Submissions" />
-          <MetricCard id="04" title="Conversion rate" />
+          <MetricCard title="Total spend" />
+          <MetricCard title="Total leads" />
+          <MetricCard title="Submissions" />
+          <MetricCard title="Conversion rate" />
         </section>
 
         <section className="ins-row-charts">
-          <ChartPlaceholder id="05" title="Daily spend" />
-          <ChartPlaceholder id="06" title="Spend by mini-app" />
+          <ChartPlaceholder title="Daily spend" />
+          <ChartPlaceholder title="Spend by mini-app" />
         </section>
 
         <section className="ins-row-activity">
-          <ActivityPlaceholder id="07" title="Recent activity" />
+          <ActivityPlaceholder title="Recent activity" />
         </section>
 
-        <footer className="ins-footer">{'// powered by s7 · v0'}</footer>
+        <footer className="ins-footer">Powered by S7 · v0</footer>
       </main>
     </div>
   )

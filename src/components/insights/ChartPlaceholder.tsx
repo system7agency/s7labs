@@ -1,19 +1,13 @@
 type Props = {
-  id: string
   title: string
   message?: string
 }
 
-export function ChartPlaceholder({ id, title, message }: Props) {
+export function ChartPlaceholder({ title, message }: Props) {
   return (
     <article className="ins-card">
-      <span className="ins-card-corner-bl" aria-hidden />
-      <span className="ins-card-corner-br" aria-hidden />
-      <header className="ins-card-head">
-        <span className="ins-card-id">{id}</span>
-        <span className="ins-card-title">{title}</span>
-      </header>
-      <div className="ins-placeholder-body">{message ?? '// chart · coming soon'}</div>
+      <h2 className="ins-card-title">{title}</h2>
+      <div className="ins-placeholder-body">{message ?? 'Chart coming soon.'}</div>
     </article>
   )
 }
