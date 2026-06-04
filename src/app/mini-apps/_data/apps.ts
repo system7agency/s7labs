@@ -378,6 +378,37 @@ export const APPS: MiniApp[] = [
     interest_context: 'email-finder',
   },
   {
+    id: 'find-people',
+    author: 'YA',
+    name: 'Find People',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Enter a company. Get a live roster of employees with their roles, departments, and LinkedIn URLs.',
+    tags: ['people', 'finder', 'apollo', 'outbound', 'abm', 'ai'],
+    thumb: 'sov',
+    launch_url: '/mini-apps/find-people',
+    learn_more: {
+      what_it_does:
+        'Pulls an employee roster for any company from a 200M+ contact graph and lets you filter by seniority and department. Designed for buying-committee mapping, ABM list building, and outbound targeting — without paying for a full Apollo seat.',
+      how_it_works: {
+        inputs: ['company name or domain'],
+        outputs: [
+          'employee roster',
+          'seniority + department filters',
+          'LinkedIn URLs',
+          'pagination',
+        ],
+      },
+      who_its_for:
+        'SDRs, AEs, founders, and recruiters who need a fast picture of who actually works at a target company before they start outreach.',
+      build_potential:
+        'Could become a Chrome extension that surfaces the roster inline on a company’s website, or batch lookup for an uploaded list of accounts.',
+    },
+    interest_context: 'find-people',
+  },
+  {
     id: 'outbound-radar',
     author: 'YA',
     name: 'Outbound Trigger Radar',
