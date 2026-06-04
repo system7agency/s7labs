@@ -201,6 +201,12 @@ export default function OutboundRadarPage() {
   const [sysState, setSysState] = useState('idle')
   const [clock, setClock] = useState('—')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
+  const [cost, setCost] = useState<{
+    model: string
+    inputTokens: number
+    outputTokens: number
+    costUsd: number
+  } | null>(null)
 
   const companyInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -359,6 +365,7 @@ export default function OutboundRadarPage() {
         await new Promise((r) => setTimeout(r, 400))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
+        if (data.cost) setCost(data.cost)
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
@@ -384,6 +391,7 @@ export default function OutboundRadarPage() {
     setLatency('—')
     setProgressPct(0)
     setTokens(null)
+    setCost(null)
   }, [clearTimers])
 
   const handleCopy = useCallback(async () => {
@@ -626,6 +634,7 @@ export default function OutboundRadarPage() {
                           submit={submitToApi}
                           input={{ company: company.trim(), domain: domain.trim() }}
                           output={result}
+                          cost={cost ?? undefined}
                         />
                         <div ref={resultPanelRef}>
                           <div className="result-head">

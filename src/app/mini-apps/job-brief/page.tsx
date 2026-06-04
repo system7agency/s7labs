@@ -198,6 +198,12 @@ export default function JobBriefPage() {
   const [resultTs, setResultTs] = useState('')
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
+  const [cost, setCost] = useState<{
+    model: string
+    inputTokens: number
+    outputTokens: number
+    costUsd: number
+  } | null>(null)
 
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -373,6 +379,7 @@ export default function JobBriefPage() {
         await new Promise((r) => setTimeout(r, 400))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
+        if (data.cost) setCost(data.cost)
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
@@ -397,6 +404,7 @@ export default function JobBriefPage() {
     setLatency('—')
     setProgressPct(0)
     setTokens(null)
+    setCost(null)
   }, [clearTimers])
 
   const handleCopy = useCallback(async () => {
@@ -669,6 +677,7 @@ export default function JobBriefPage() {
                           submit={submitToApi}
                           input={inputMode === 'url' ? { url: url.trim() } : { text: text.trim() }}
                           output={result}
+                          cost={cost ?? undefined}
                         />
                         <div ref={resultPanelRef}>
                           <div className="result-head">
