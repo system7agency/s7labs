@@ -1,11 +1,10 @@
 name: Mini-apps convention check
 
 on:
+  # Run on every PR so the required status check always reports.
+  # The script is diff-scoped: PRs that don't touch any mini-app page.tsx
+  # exit immediately with "nothing to check".
   pull_request:
-    paths:
-      - 'src/app/mini-apps/**'
-      - 'scripts/check-mini-apps.mjs'
-      - '.github/workflows/mini-apps-check.yml'
 
 jobs:
   check:
