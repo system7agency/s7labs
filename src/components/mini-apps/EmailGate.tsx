@@ -12,10 +12,17 @@ type Enrichment = {
   role?: string
 }
 
+type SubmitCost = {
+  model: string
+  inputTokens: number
+  outputTokens: number
+  costUsd: number
+}
+
 type RenderContext = {
   email: string
   leadId: string
-  submitToApi: (input: object, output?: object) => Promise<void>
+  submitToApi: (input: object, output?: object, cost?: SubmitCost) => Promise<void>
 }
 
 type Props = {
@@ -48,13 +55,13 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const submitToApi = useCallback(
-    async (input: object, output?: object) => {
+    async (input: object, output?: object, cost?: SubmitCost) => {
       if (!email) return
       if (output !== undefined && submissionId) {
         const res = await fetch('/api/leads/complete', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ submissionId, output }),
+          body: JSON.stringify({ submissionId, output, ...(cost ? { cost } : {}) }),
         })
         if (!res.ok) {
           console.error('[EmailGate] complete failed', await res.text())
