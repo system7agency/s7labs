@@ -51,7 +51,6 @@ const DEPARTMENTS: Array<'All' | Department> = [
   'Operations',
   'Other',
 ]
-const PAGE_SIZE = 3 // First 3 visible before email gate
 const PAGE_INCREMENT = 25
 
 const STAGES = [
@@ -213,8 +212,7 @@ function LookupRunner({
   // Filter + pagination state
   const [seniority, setSeniority] = useState<string>('All')
   const [department, setDepartment] = useState<string>('All')
-  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE)
-  const [emailVerified, setEmailVerified] = useState(false)
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_INCREMENT)
 
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const rafRef = useRef<number | null>(null)
@@ -352,8 +350,7 @@ function LookupRunner({
   }, [result, seniority, department])
 
   const visiblePeople = filteredPeople.slice(0, visibleCount)
-  const blurredPeople = !emailVerified ? filteredPeople.slice(PAGE_SIZE, PAGE_SIZE + 6) : []
-  const canLoadMore = emailVerified && visibleCount < filteredPeople.length && visibleCount < 100
+  const canLoadMore = visibleCount < filteredPeople.length && visibleCount < 100
 
   return (
     <div className="panel-body">
@@ -419,7 +416,7 @@ function LookupRunner({
                 active={seniority}
                 onChange={(v) => {
                   setSeniority(v)
-                  setVisibleCount(PAGE_SIZE)
+                  setVisibleCount(PAGE_INCREMENT)
                 }}
               />
               <FilterPills
@@ -428,7 +425,7 @@ function LookupRunner({
                 active={department}
                 onChange={(v) => {
                   setDepartment(v)
-                  setVisibleCount(PAGE_SIZE)
+                  setVisibleCount(PAGE_INCREMENT)
                 }}
               />
             </div>
@@ -439,56 +436,21 @@ function LookupRunner({
               ))}
             </div>
 
-            {!emailVerified && filteredPeople.length > PAGE_SIZE ? (
-              <div className="fp-gate-zone blurred">
-                <div className="fp-blur-list">
-                  {blurredPeople.length > 0
-                    ? blurredPeople.map((p, i) => (
-                        <EmployeeCard key={`blur-${i}`} person={p} linkable={false} />
-                      ))
-                    : null}
-                </div>
-                <div className="fp-gate-overlay">
-                  <div className="fp-gate-card">
-                    <div className="fp-gate-eyebrow">{'// Email gate'}</div>
-                    <h3 className="fp-gate-title">
-                      Enter your email to see all {filteredPeople.length} employees
-                    </h3>
-                    <EmailGate miniAppSlug="find-people" pattern="upfront" initialInput={input}>
-                      {({ submitToApi: inner }) => {
-                        // Once children renders, gate has passed. Mark verified
-                        // and record completion to /api/leads/complete.
-                        return (
-                          <GatePass
-                            onReady={() => {
-                              setEmailVerified(true)
-                              setVisibleCount(Math.min(PAGE_INCREMENT, filteredPeople.length))
-                              void inner(input, result)
-                            }}
-                          />
-                        )
-                      }}
-                    </EmailGate>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="fp-list-footer">
-                <span className="fp-pagination-info">
-                  {visiblePeople.length} of {filteredPeople.length} shown
-                </span>
-                <button
-                  type="button"
-                  className="fp-load-more"
-                  disabled={!canLoadMore}
-                  onClick={() =>
-                    setVisibleCount((c) => Math.min(c + PAGE_INCREMENT, filteredPeople.length, 100))
-                  }
-                >
-                  {canLoadMore ? 'Load more' : 'No more results'}
-                </button>
-              </div>
-            )}
+            <div className="fp-list-footer">
+              <span className="fp-pagination-info">
+                {visiblePeople.length} of {filteredPeople.length} shown
+              </span>
+              <button
+                type="button"
+                className="fp-load-more"
+                disabled={!canLoadMore}
+                onClick={() =>
+                  setVisibleCount((c) => Math.min(c + PAGE_INCREMENT, filteredPeople.length, 100))
+                }
+              >
+                {canLoadMore ? 'Load more' : 'No more results'}
+              </button>
+            </div>
 
             <div className="fp-list-footer">
               <button type="button" className="fp-load-more" onClick={onReset}>
@@ -546,18 +508,6 @@ function LookupRunner({
       </section>
     </div>
   )
-}
-
-// Helper that fires onReady exactly once when rendered (after EmailGate passes).
-function GatePass({ onReady }: { onReady: () => void }) {
-  const fired = useRef(false)
-  useEffect(() => {
-    if (fired.current) return
-    fired.current = true
-    onReady()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-  return null
 }
 
 // ---------- main page ----------
@@ -625,13 +575,15 @@ export default function FindPeoplePage() {
         <div className="panel-wrap">
           <div className="panel">
             {submittedInput ? (
-              <LookupRunner
-                input={submittedInput}
-                submitToApi={async () => {
-                  /* Inner submitToApi is provided by the per-render EmailGate. */
-                }}
-                onReset={handleReset}
-              />
+              <EmailGate miniAppSlug="find-people" pattern="upfront" initialInput={submittedInput}>
+                {({ submitToApi }) => (
+                  <LookupRunner
+                    input={submittedInput}
+                    submitToApi={submitToApi}
+                    onReset={handleReset}
+                  />
+                )}
+              </EmailGate>
             ) : (
               <div className="panel-body">
                 <section className="fp-state active">
