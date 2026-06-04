@@ -284,7 +284,7 @@ export const APPS: MiniApp[] = [
     id: 'find-people',
     author: 'YA',
     name: 'Find People',
-    status: 'coming-soon',
+    status: 'live',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
