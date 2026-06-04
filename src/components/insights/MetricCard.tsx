@@ -1,3 +1,5 @@
+import { clsx } from 'clsx'
+
 type Props = {
   id: string
   title: string
@@ -15,7 +17,7 @@ export function MetricCard({ id, title, value, deltaLabel }: Props) {
         <span className="ins-card-id">{id}</span>
         <span className="ins-card-title">{title}</span>
       </header>
-      <div className={`ins-metric-value${value ? '' : 'placeholder'}`}>{display}</div>
+      <div className={clsx('ins-metric-value', { placeholder: !value })}>{display}</div>
       <div className="ins-metric-delta">{deltaLabel ?? '// no data yet'}</div>
     </article>
   )

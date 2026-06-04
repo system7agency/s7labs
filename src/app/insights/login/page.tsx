@@ -3,6 +3,8 @@
 import { Suspense, useCallback, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
+import { clsx } from 'clsx'
+
 import { isAllowed } from '@/lib/insights/allowlist'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
@@ -110,13 +112,14 @@ function LoginInner() {
                   setMessage(null)
                 }
               }}
-              className={`ins-login-input${inputError ? 'error' : ''}`}
+              className={clsx('ins-login-input', { error: inputError })}
             />
             {message ? (
               <div
-                className={`ins-login-help${
-                  status === 'error' ? 'error' : status === 'sent' ? 'success' : ''
-                }`}
+                className={clsx('ins-login-help', {
+                  error: status === 'error',
+                  success: status === 'sent',
+                })}
               >
                 {message}
               </div>
