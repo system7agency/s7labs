@@ -1,16 +1,20 @@
 'use client'
 
 import { Suspense, useCallback, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { clsx } from 'clsx'
 
 import { isAllowed } from '@/lib/insights/allowlist'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
-type Status = 'idle' | 'sending' | 'sent' | 'error'
+type Mode = 'password' | 'reset'
+type Status = 'idle' | 'busy' | 'error' | 'reset-sent'
 
-function initialStateFromUrl(err: string | null): { status: Status; message: string | null } {
+function initialStateFromUrl(err: string | null): {
+  status: Status
+  message: string | null
+} {
   if (err === 'not_authorized') {
     return {
       status: 'error',
@@ -20,58 +24,112 @@ function initialStateFromUrl(err: string | null): { status: Status; message: str
   if (err === 'auth_failed') {
     return {
       status: 'error',
-      message: 'Magic link expired or invalid. Request a new one.',
+      message: 'Reset link expired or invalid. Request a new one.',
     }
   }
   return { status: 'idle', message: null }
 }
 
 function LoginInner() {
+  const router = useRouter()
   const params = useSearchParams()
   const initialError = params.get('error')
   const initial = initialStateFromUrl(initialError)
+
+  const [mode, setMode] = useState<Mode>('password')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [status, setStatus] = useState<Status>(initial.status)
   const [message, setMessage] = useState<string | null>(initial.message)
 
-  const handleSubmit = useCallback(
+  const resetMessage = useCallback(() => {
+    if (status === 'error') {
+      setStatus('idle')
+      setMessage(null)
+    }
+  }, [status])
+
+  const handleSignIn = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
-      const trimmed = email.trim().toLowerCase()
-      if (!trimmed) {
+      const trimmedEmail = email.trim().toLowerCase()
+
+      if (!trimmedEmail) {
         setStatus('error')
         setMessage('Enter your email.')
         return
       }
-      if (!isAllowed(trimmed)) {
+      if (!isAllowed(trimmedEmail)) {
+        setStatus('error')
+        setMessage('Email not authorized.')
+        return
+      }
+      if (!password) {
+        setStatus('error')
+        setMessage('Enter your password.')
+        return
+      }
+
+      setStatus('busy')
+      setMessage(null)
+
+      const supabase = getSupabaseBrowserClient()
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      })
+
+      if (error) {
+        setStatus('error')
+        setMessage(error.message || 'Incorrect email or password.')
+        return
+      }
+
+      router.replace('/insights')
+      router.refresh()
+    },
+    [email, password, router]
+  )
+
+  const handleSendReset = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      const trimmedEmail = email.trim().toLowerCase()
+
+      if (!trimmedEmail) {
+        setStatus('error')
+        setMessage('Enter your email.')
+        return
+      }
+      if (!isAllowed(trimmedEmail)) {
         setStatus('error')
         setMessage('Email not authorized.')
         return
       }
 
-      setStatus('sending')
+      setStatus('busy')
       setMessage(null)
 
       const supabase = getSupabaseBrowserClient()
       const origin = typeof window !== 'undefined' ? window.location.origin : ''
-      const { error } = await supabase.auth.signInWithOtp({
-        email: trimmed,
-        options: { emailRedirectTo: `${origin}/auth/callback?next=/insights` },
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo: `${origin}/auth/callback?next=/insights/reset-password`,
       })
 
       if (error) {
         setStatus('error')
-        setMessage(error.message ?? 'Could not send magic link. Try again.')
+        setMessage(error.message || 'Could not send reset email. Try again.')
         return
       }
 
-      setStatus('sent')
-      setMessage('Check your email — we sent you a magic link. It expires in 1 hour.')
+      setStatus('reset-sent')
+      setMessage('Check your email — we sent you a link to set a new password.')
     },
     [email]
   )
 
   const inputError = status === 'error'
+  const disabled = status === 'busy' || status === 'reset-sent'
 
   return (
     <div className="insights is-login">
@@ -82,13 +140,18 @@ function LoginInner() {
       <div className="ins-login-wrap">
         <div className="ins-login-card">
           <span className="ins-login-eyebrow">S7 Labs · Insights</span>
-          <h1>Sign in to continue.</h1>
+          <h1>{mode === 'password' ? 'Sign in to continue.' : 'Reset your password.'}</h1>
           <p>
-            Magic-link auth. Enter your allowlisted email — we&apos;ll send you a one-time link that
-            signs you in for the session.
+            {mode === 'password'
+              ? 'Enter your allowlisted email and password.'
+              : "We'll email you a link to set a new password. The link expires in 1 hour."}
           </p>
 
-          <form onSubmit={handleSubmit} noValidate autoComplete="off">
+          <form
+            onSubmit={mode === 'password' ? handleSignIn : handleSendReset}
+            noValidate
+            autoComplete="off"
+          >
             <label className="ins-login-label" htmlFor="login-email">
               Email
             </label>
@@ -99,41 +162,80 @@ function LoginInner() {
               autoComplete="email"
               placeholder="you@system7.ai"
               value={email}
-              disabled={status === 'sending' || status === 'sent'}
+              disabled={disabled}
               onChange={(e) => {
                 setEmail(e.target.value)
-                if (status === 'error') {
-                  setStatus('idle')
-                  setMessage(null)
-                }
+                resetMessage()
               }}
               className={clsx('ins-login-input', { error: inputError })}
             />
+
+            {mode === 'password' ? (
+              <>
+                <label
+                  className="ins-login-label"
+                  htmlFor="login-password"
+                  style={{ marginTop: 14 }}
+                >
+                  Password
+                </label>
+                <input
+                  id="login-password"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={password}
+                  disabled={disabled}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    resetMessage()
+                  }}
+                  className={clsx('ins-login-input', { error: inputError })}
+                />
+              </>
+            ) : null}
+
             {message ? (
               <div
                 className={clsx('ins-login-help', {
                   error: status === 'error',
-                  success: status === 'sent',
+                  success: status === 'reset-sent',
                 })}
               >
                 {message}
               </div>
             ) : (
-              <div className="ins-login-help">One link per request. Don&apos;t share it.</div>
+              <div className="ins-login-help">
+                {mode === 'password'
+                  ? 'First time here? Use “Forgot password?” to set one.'
+                  : 'Allowlisted addresses only.'}
+              </div>
             )}
 
-            <button
-              type="submit"
-              className="ins-login-btn"
-              disabled={status === 'sending' || status === 'sent'}
-            >
-              {status === 'sending'
-                ? 'Sending…'
-                : status === 'sent'
+            <button type="submit" className="ins-login-btn" disabled={disabled}>
+              {status === 'busy'
+                ? mode === 'password'
+                  ? 'Signing in…'
+                  : 'Sending…'
+                : status === 'reset-sent'
                   ? 'Sent — check your inbox'
-                  : 'Send magic link'}
+                  : mode === 'password'
+                    ? 'Sign in'
+                    : 'Send reset link'}
             </button>
           </form>
+
+          <button
+            type="button"
+            className="ins-login-link"
+            onClick={() => {
+              setMode((m) => (m === 'password' ? 'reset' : 'password'))
+              setStatus('idle')
+              setMessage(null)
+            }}
+          >
+            {mode === 'password' ? 'Forgot password?' : '← Back to sign in'}
+          </button>
 
           <div className="ins-login-meta">Powered by S7</div>
         </div>
