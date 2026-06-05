@@ -33,7 +33,7 @@ export type ActivityRow = {
   id: string
   miniAppSlug: string
   miniAppName: string
-  emailRedacted: string
+  email: string
   costUsd: number | null
   status: 'pending' | 'processing' | 'completed' | 'failed'
   createdAt: string
@@ -225,7 +225,7 @@ export type SubmissionListRow = {
   id: string
   miniAppSlug: string
   miniAppName: string
-  emailRedacted: string
+  email: string
   modelUsed: string | null
   costUsd: number | null
   status: 'pending' | 'processing' | 'completed' | 'failed'
@@ -265,18 +265,11 @@ export const getSubmissionsList = (limit = 50) =>
         }
       }
 
-      const redact = (email: string | null): string => {
-        if (!email) return '—'
-        const at = email.indexOf('@')
-        if (at < 1) return email
-        return `${email.slice(0, 1)}••@${email.slice(at + 1)}`
-      }
-
       return rows.map((r) => ({
         id: r.id,
         miniAppSlug: r.mini_app_slug,
         miniAppName: names.get(r.mini_app_slug) ?? r.mini_app_slug,
-        emailRedacted: redact(r.email),
+        email: r.email ?? '—',
         modelUsed: r.model_used,
         costUsd: r.cost_usd == null ? null : asNumber(r.cost_usd),
         status: r.status,
@@ -289,7 +282,7 @@ export const getSubmissionsList = (limit = 50) =>
 
 export type LeadListRow = {
   id: string
-  emailRedacted: string
+  email: string
   firstSource: string | null
   submissionCount: number
   totalCostUsd: number
@@ -335,18 +328,11 @@ export const getLeadsList = (limit = 50) =>
         stats.set(s.lead_id, prev)
       }
 
-      const redact = (email: string | null): string => {
-        if (!email) return '—'
-        const at = email.indexOf('@')
-        if (at < 1) return email
-        return `${email.slice(0, 1)}••@${email.slice(at + 1)}`
-      }
-
       return leadRows.map((l) => {
         const s = stats.get(l.id) ?? { count: 0, cost: 0 }
         return {
           id: l.id,
-          emailRedacted: redact(l.email),
+          email: l.email ?? '—',
           firstSource: l.first_source,
           submissionCount: s.count,
           totalCostUsd: s.cost,
@@ -390,18 +376,11 @@ export const getRecentActivity = (limit = 10) =>
         }
       }
 
-      const redact = (email: string | null): string => {
-        if (!email) return '—'
-        const at = email.indexOf('@')
-        if (at < 1) return email
-        return `${email.slice(0, 1)}••@${email.slice(at + 1)}`
-      }
-
       return rows.map((r) => ({
         id: r.id,
         miniAppSlug: r.mini_app_slug,
         miniAppName: names.get(r.mini_app_slug) ?? r.mini_app_slug,
-        emailRedacted: redact(r.email),
+        email: r.email ?? '—',
         costUsd: r.cost_usd == null ? null : asNumber(r.cost_usd),
         status: r.status,
         createdAt: r.created_at,

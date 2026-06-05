@@ -48,8 +48,8 @@ export function ActivityFeed({ title, rows, error }: Props) {
             <span className="ins-activity-app" title={r.miniAppName}>
               {r.miniAppName}
             </span>
-            <span className="ins-activity-email" title={r.emailRedacted}>
-              {r.emailRedacted}
+            <span className="ins-activity-email" title={r.email}>
+              {r.email}
             </span>
             <span className="ins-activity-cost">
               {r.costUsd == null ? '—' : formatCurrency(r.costUsd)}

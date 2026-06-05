@@ -41,7 +41,7 @@ export default async function LeadsPage() {
             </div>
             {rows.map((l) => (
               <div className="ins-leads-row" role="listitem" key={l.id}>
-                <span className="ins-leads-email">{l.emailRedacted}</span>
+                <span className="ins-leads-email">{l.email}</span>
                 <span className="ins-leads-source">{l.firstSource ?? '—'}</span>
                 <span className="ins-leads-num">{formatInteger(l.submissionCount)}</span>
                 <span className="ins-leads-num">

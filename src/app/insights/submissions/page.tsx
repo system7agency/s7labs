@@ -47,7 +47,7 @@ export default async function SubmissionsPage() {
                   {formatRelativeTime(r.createdAt)}
                 </span>
                 <span className="ins-submissions-app">{r.miniAppName}</span>
-                <span className="ins-submissions-email">{r.emailRedacted}</span>
+                <span className="ins-submissions-email">{r.email}</span>
                 <span className="ins-submissions-model" title={r.modelUsed ?? ''}>
                   {formatModel(r.modelUsed)}
                 </span>
