@@ -12,7 +12,7 @@ import { createMiddlewareClient } from '@/lib/supabase/ssr'
  *
  * /insights/login is exempt so we don't loop.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   if (pathname === '/insights/login' || pathname.startsWith('/insights/login/')) {
     return NextResponse.next()
