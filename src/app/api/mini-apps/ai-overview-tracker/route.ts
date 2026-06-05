@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { saveAioScan, type AioScanRecord } from '@/lib/mini-apps/aio-storage'
@@ -285,6 +286,7 @@ export async function POST(request: Request) {
     const anthropic = new Anthropic({ apiKey: anthropicKey })
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-5',
+      system: STYLE_SYSTEM_PROMPT,
       max_tokens: 2000,
       messages: [{ role: 'user', content: CLAUDE_PROMPT(domain, location.name, keywordRows) }],
     })

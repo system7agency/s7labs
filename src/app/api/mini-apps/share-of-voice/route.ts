@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { brandsMentionedInText, excerpt, type TrackedBrand } from '@/lib/mini-apps/brand-mentions'
@@ -199,6 +200,7 @@ export async function POST(request: Request) {
     const anthropic = new Anthropic({ apiKey: anthropicKey })
     const setupMessage = await anthropic.messages.create({
       model: CLAUDE_SETUP_MODEL,
+      system: STYLE_SYSTEM_PROMPT,
       max_tokens: 1500,
       messages: [{ role: 'user', content: SETUP_PROMPT(allDomains) }],
     })

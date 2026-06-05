@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -130,6 +131,7 @@ export async function POST(request: Request) {
     const anthropic = new Anthropic({ apiKey: anthropicKey })
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-5',
+      system: STYLE_SYSTEM_PROMPT,
       max_tokens: 3000,
       messages: [{ role: 'user', content: CLAUDE_PROMPT(brief) }],
     })
