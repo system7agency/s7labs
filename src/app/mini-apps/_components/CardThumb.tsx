@@ -232,5 +232,16 @@ export function CardThumb({ thumb }: CardThumbProps) {
           </div>
         </div>
       )
+    case 'emailopt':
+      return (
+        <div className="card-thumb thumb-emailopt">
+          <div className="eo-envelope">
+            <span className="eo-flap" />
+            <span className="eo-line" style={{ width: '70%' }} />
+            <span className="eo-line" style={{ width: '55%' }} />
+            <span className="eo-line eo-line-hi" style={{ width: '40%' }} />
+          </div>
+        </div>
+      )
   }
 }
