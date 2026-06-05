@@ -529,7 +529,10 @@ export default function AiVisibilityScorePage() {
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
                     <label>Domain</label>
-                    <div key={`d-${shakeKey}`} className={`input-box${domainError ? 'error' : ''}`}>
+                    <div
+                      key={`d-${shakeKey}`}
+                      className={clsx('input-box', { error: domainError })}
+                    >
                       <input
                         ref={domainInputRef}
                         type="text"

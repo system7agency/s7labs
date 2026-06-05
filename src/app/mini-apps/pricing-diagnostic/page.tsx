@@ -494,7 +494,7 @@ export default function PricingDiagnosticPage() {
                 <div className="idle-label">Input target URL</div>
                 <form
                   key={shakeKey}
-                  className={`url-input${urlError ? 'error' : ''}`}
+                  className={clsx('url-input', { error: urlError })}
                   noValidate
                   onSubmit={handleSubmit}
                   autoComplete="off"
@@ -525,7 +525,7 @@ export default function PricingDiagnosticPage() {
                     </svg>
                   </button>
                 </form>
-                <div className={`helper${urlError ? 'error' : ''}`}>
+                <div className={clsx('helper', { error: urlError })}>
                   <span>{urlError ?? "Paste your own pricing page or a competitor's"}</span>
                   <span className="examples">
                     <span

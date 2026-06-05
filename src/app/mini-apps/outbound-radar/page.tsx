@@ -523,7 +523,7 @@ export default function OutboundRadarPage() {
                       <label>Company name</label>
                       <div
                         key={`c-${shakeCompany}`}
-                        className={`input-box${companyError ? 'error' : ''}`}
+                        className={clsx('input-box', { error: companyError })}
                       >
                         <input
                           ref={companyInputRef}
@@ -543,7 +543,7 @@ export default function OutboundRadarPage() {
                       <label>Domain</label>
                       <div
                         key={`d-${shakeDomain}`}
-                        className={`input-box${domainError ? 'error' : ''}`}
+                        className={clsx('input-box', { error: domainError })}
                       >
                         <input
                           type="text"

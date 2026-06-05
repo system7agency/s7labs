@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -589,7 +590,7 @@ export default function ShareOfVoicePage() {
                     <label>Your domain</label>
                     <div
                       key={`yd-${shakeDomain}`}
-                      className={`input-box${domainError ? 'error' : ''}`}
+                      className={clsx('input-box', { error: domainError })}
                     >
                       <span className="prompt">@</span>
                       <input
@@ -611,7 +612,7 @@ export default function ShareOfVoicePage() {
                     {competitors.map((c, i) => (
                       <div key={i} className="input-field domain-row">
                         <label>Competitor {competitors.length > 1 ? i + 1 : ''}</label>
-                        <div className={`input-box${competitorError ? 'error' : ''}`}>
+                        <div className={clsx('input-box', { error: competitorError })}>
                           <span className="prompt">@</span>
                           <input
                             type="text"
@@ -768,7 +769,7 @@ export default function ShareOfVoicePage() {
                           </p>
                           <form noValidate onSubmit={handleUnlock} className="gate-form">
                             <div
-                              className={`input-box gate-email-box${unlockError ? 'error' : ''}`}
+                              className={clsx('input-box gate-email-box', { error: unlockError })}
                             >
                               <input
                                 type="email"

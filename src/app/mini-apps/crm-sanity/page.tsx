@@ -527,7 +527,7 @@ export default function CrmSanityPage() {
                     </label>
                     <div
                       key={`r-${shakeInput}`}
-                      className={`textarea-box${inputError ? 'error' : ''}`}
+                      className={clsx('textarea-box', { error: inputError })}
                     >
                       <textarea
                         ref={textareaRef}

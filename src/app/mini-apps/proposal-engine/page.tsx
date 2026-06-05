@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -490,7 +491,7 @@ export default function ProposalEnginePage() {
                     <label>Brief or RFP text</label>
                     <div
                       key={`t-${shakeInput}`}
-                      className={`textarea-box${inputError ? 'error' : ''}`}
+                      className={clsx('textarea-box', { error: inputError })}
                     >
                       <span className="prompt">$</span>
                       <textarea

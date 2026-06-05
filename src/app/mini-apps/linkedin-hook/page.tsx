@@ -563,7 +563,7 @@ export default function LinkedInHookPage() {
                     <label>Paste the full post</label>
                     <div
                       key={`p-${shakePost}`}
-                      className={`textarea-box${postError ? 'error' : ''}`}
+                      className={clsx('textarea-box', { error: postError })}
                     >
                       <textarea
                         ref={textareaRef}

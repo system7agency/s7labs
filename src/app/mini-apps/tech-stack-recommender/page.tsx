@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -488,7 +489,7 @@ export default function TechStackRecommenderPage() {
                     <label>Project brief</label>
                     <div
                       key={`b-${shakeInput}`}
-                      className={`textarea-box textarea-tall${inputError ? 'error' : ''}`}
+                      className={clsx('textarea-box textarea-tall', { error: inputError })}
                     >
                       <span className="prompt">$</span>
                       <textarea

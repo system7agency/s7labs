@@ -528,7 +528,7 @@ export default function AiOverviewTrackerPage() {
                     <label>Your domain</label>
                     <div
                       key={`d-${shakeInput}`}
-                      className={`input-box${domainError ? 'error' : ''}`}
+                      className={clsx('input-box', { error: domainError })}
                     >
                       <span className="prompt">@</span>
                       <input
@@ -547,7 +547,7 @@ export default function AiOverviewTrackerPage() {
                   </div>
                   <div className="input-field">
                     <label>Keywords to check (up to 5)</label>
-                    <div className={`textarea-box${keywordsError ? 'error' : ''}`}>
+                    <div className={clsx('textarea-box', { error: keywordsError })}>
                       <span className="prompt">#</span>
                       <textarea
                         placeholder={

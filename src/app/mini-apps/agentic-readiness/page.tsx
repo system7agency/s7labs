@@ -563,7 +563,7 @@ export default function AgenticReadinessPage() {
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
                     <label>Website URL</label>
-                    <div key={`u-${shakeInput}`} className={`input-box${urlError ? 'error' : ''}`}>
+                    <div key={`u-${shakeInput}`} className={clsx('input-box', { error: urlError })}>
                       <span className="prompt">$</span>
                       <input
                         ref={urlInputRef}

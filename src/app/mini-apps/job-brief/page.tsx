@@ -564,7 +564,7 @@ export default function JobBriefPage() {
                       <label>Job posting URL</label>
                       <div
                         key={`u-${shakeInput}`}
-                        className={`input-box${inputError ? 'error' : ''}`}
+                        className={clsx('input-box', { error: inputError })}
                       >
                         <input
                           ref={urlInputRef}
@@ -585,7 +585,7 @@ export default function JobBriefPage() {
                       <label>Job description text</label>
                       <div
                         key={`t-${shakeInput}`}
-                        className={`textarea-box${inputError ? 'error' : ''}`}
+                        className={clsx('textarea-box', { error: inputError })}
                       >
                         <textarea
                           placeholder={`We're hiring a Senior RevOps Manager...\nYou'll own our Salesforce instance...\nRequirements: 5+ years in Revenue Operations...`}
