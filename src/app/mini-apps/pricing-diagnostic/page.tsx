@@ -494,54 +494,45 @@ export default function PricingDiagnosticPage() {
                 <div className="idle-label">Input target URL</div>
                 <form
                   key={shakeKey}
-                  className={clsx('url-input', { error: urlError })}
+                  className="pd-form"
                   noValidate
                   onSubmit={handleSubmit}
                   autoComplete="off"
                 >
-                  <input
-                    ref={urlInputRef}
-                    type="text"
-                    placeholder="https://your-product.com/pricing"
-                    spellCheck={false}
-                    value={url}
-                    disabled={submitting}
-                    onChange={(e) => {
-                      setUrl(e.target.value)
-                      if (urlError) setUrlError(null)
-                    }}
-                  />
-                  <button type="submit" aria-label="Run diagnostic" disabled={submitting}>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 12h14" />
-                      <path d="M13 5l7 7-7 7" />
-                    </svg>
-                  </button>
+                  <div className={clsx('pd-input-box', { error: urlError })}>
+                    <input
+                      ref={urlInputRef}
+                      type="text"
+                      placeholder="https://your-product.com/pricing"
+                      spellCheck={false}
+                      value={url}
+                      disabled={submitting}
+                      onChange={(e) => {
+                        setUrl(e.target.value)
+                        if (urlError) setUrlError(null)
+                      }}
+                    />
+                  </div>
+                  <div className={clsx('pd-helper', { error: urlError })}>
+                    {urlError ?? 'Paste your pricing URL'}
+                  </div>
+                  <div className="pd-submit-row">
+                    <button type="submit" className="pd-submit-btn" disabled={submitting}>
+                      Find Diagnostic
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="M13 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </form>
-                <div className={clsx('helper', { error: urlError })}>
-                  <span>{urlError ?? "Paste your own pricing page or a competitor's"}</span>
-                  <span className="examples">
-                    <span
-                      className="chip-example"
-                      onClick={() => setUrl('https://linear.app/pricing')}
-                    >
-                      linear.app
-                    </span>
-                    <span
-                      className="chip-example"
-                      onClick={() => setUrl('https://vercel.com/pricing')}
-                    >
-                      vercel.com
-                    </span>
-                  </span>
-                </div>
               </section>
 
               {/* LOADING */}
