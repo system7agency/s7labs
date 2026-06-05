@@ -1,12 +1,8 @@
-import { redirect } from 'next/navigation'
-
 import { ActivityFeed } from '@/components/insights/ActivityFeed'
 import { DailySpendChart } from '@/components/insights/DailySpendChart'
 import { DateRangePicker } from '@/components/insights/DateRangePicker'
 import { MetricCard } from '@/components/insights/MetricCard'
-import { SignOutButton } from '@/components/insights/SignOutButton'
 import { SpendByMiniAppChart } from '@/components/insights/SpendByMiniAppChart'
-import { isAllowed } from '@/lib/insights/allowlist'
 import { type DateRange, isDateRange } from '@/lib/insights/date-ranges'
 import { formatCurrency, formatDelta, formatInteger, formatPercent } from '@/lib/insights/format'
 import {
@@ -18,7 +14,6 @@ import {
   getTotalSpend,
   getTotalSubmissions,
 } from '@/lib/insights/queries'
-import { createRouteHandlerClient } from '@/lib/supabase/ssr'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,22 +29,11 @@ async function settle<T>(p: Promise<T>): Promise<Settled<T>> {
   }
 }
 
-export default async function InsightsPage({
+export default async function OverviewPage({
   searchParams,
 }: {
   searchParams: Promise<{ range?: string }>
 }) {
-  // Double-check the user — middleware already gates this.
-  const supabase = await createRouteHandlerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect('/insights/login')
-  if (!isAllowed(user.email)) {
-    await supabase.auth.signOut()
-    redirect('/insights/login?error=not_authorized')
-  }
-
   const params = await searchParams
   const range: DateRange = isDateRange(params.range) ? params.range : '30d'
 
@@ -84,79 +68,58 @@ export default async function InsightsPage({
     : undefined
 
   return (
-    <div className="insights">
-      <div className="ins-bg-stack" aria-hidden>
-        <div className="ins-bg-orb" />
-      </div>
+    <>
+      <header className="ins-page-head">
+        <div className="ins-page-titleblock">
+          <h1 className="ins-page-title">Overview</h1>
+          <p className="ins-page-subtitle">Spend, leads, and conversion at a glance.</p>
+        </div>
+        <DateRangePicker />
+      </header>
 
-      <main className="ins-shell">
-        <header className="ins-topbar">
-          <div className="ins-brand">
-            <h1 className="ins-brand-title">Insights</h1>
-            <span className="ins-brand-sub">
-              <span className="ins-pulse" aria-hidden />
-              Live · S7 Labs
-            </span>
-          </div>
-          <div className="ins-topbar-right">
-            <DateRangePicker />
-            <span className="ins-user-email" title={user.email ?? ''}>
-              {user.email}
-            </span>
-            <SignOutButton />
-          </div>
-        </header>
+      <section className="ins-row-metrics">
+        <MetricCard
+          title="Total spend"
+          value={spendValue !== '—' ? spendValue : null}
+          delta={spendDelta}
+          error={!spend.ok}
+        />
+        <MetricCard
+          title="Total leads"
+          value={leadsValue !== '—' ? leadsValue : null}
+          delta={leadsDelta}
+          error={!leads.ok}
+        />
+        <MetricCard
+          title="Submissions"
+          value={subsValue !== '—' ? subsValue : null}
+          delta={subsDelta}
+          error={!subs.ok}
+        />
+        <MetricCard
+          title="Conversion rate"
+          value={convValue !== '—' ? convValue : null}
+          delta={convDelta}
+          error={!conv.ok}
+        />
+      </section>
 
-        <section className="ins-row-metrics">
-          <MetricCard
-            title="Total spend"
-            value={spendValue !== '—' ? spendValue : null}
-            delta={spendDelta}
-            error={!spend.ok}
-          />
-          <MetricCard
-            title="Total leads"
-            value={leadsValue !== '—' ? leadsValue : null}
-            delta={leadsDelta}
-            error={!leads.ok}
-          />
-          <MetricCard
-            title="Submissions"
-            value={subsValue !== '—' ? subsValue : null}
-            delta={subsDelta}
-            error={!subs.ok}
-          />
-          <MetricCard
-            title="Conversion rate"
-            value={convValue !== '—' ? convValue : null}
-            delta={convDelta}
-            error={!conv.ok}
-          />
-        </section>
+      <section className="ins-row-charts">
+        <DailySpendChart title="Daily spend" data={daily.ok ? daily.value : []} error={!daily.ok} />
+        <SpendByMiniAppChart
+          title="Spend by mini-app"
+          data={byApp.ok ? byApp.value : []}
+          error={!byApp.ok}
+        />
+      </section>
 
-        <section className="ins-row-charts">
-          <DailySpendChart
-            title="Daily spend"
-            data={daily.ok ? daily.value : []}
-            error={!daily.ok}
-          />
-          <SpendByMiniAppChart
-            title="Spend by mini-app"
-            data={byApp.ok ? byApp.value : []}
-            error={!byApp.ok}
-          />
-        </section>
-
-        <section className="ins-row-activity">
-          <ActivityFeed
-            title="Recent activity"
-            rows={activity.ok ? activity.value : []}
-            error={!activity.ok}
-          />
-        </section>
-
-        <footer className="ins-footer">Powered by S7 · v0</footer>
-      </main>
-    </div>
+      <section className="ins-row-activity">
+        <ActivityFeed
+          title="Recent activity"
+          rows={activity.ok ? activity.value : []}
+          error={!activity.ok}
+        />
+      </section>
+    </>
   )
 }

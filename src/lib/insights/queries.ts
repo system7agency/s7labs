@@ -219,6 +219,143 @@ export const getSpendByMiniApp = (range: DateRange) =>
     { revalidate: 30, tags: ['insights'] }
   )()
 
+// ----- list views (Submissions / Leads pages) -----
+
+export type SubmissionListRow = {
+  id: string
+  miniAppSlug: string
+  miniAppName: string
+  emailRedacted: string
+  costUsd: number | null
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  createdAt: string
+}
+
+export const getSubmissionsList = (limit = 50) =>
+  unstable_cache(
+    async (): Promise<SubmissionListRow[]> => {
+      const supabase = getSupabaseServerClient()
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('id, mini_app_slug, email, cost_usd, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      if (error) throw new Error(`getSubmissionsList: ${error.message}`)
+
+      const rows = (data ?? []) as Array<{
+        id: string
+        mini_app_slug: string
+        email: string | null
+        cost_usd: number | string | null
+        status: SubmissionListRow['status']
+        created_at: string
+      }>
+
+      const slugs = [...new Set(rows.map((r) => r.mini_app_slug))]
+      const names = new Map<string, string>()
+      if (slugs.length > 0) {
+        const { data: nameRows } = await supabase
+          .from('mini_apps')
+          .select('slug, name')
+          .in('slug', slugs)
+        for (const row of (nameRows ?? []) as Array<{ slug: string; name: string }>) {
+          names.set(row.slug, row.name)
+        }
+      }
+
+      const redact = (email: string | null): string => {
+        if (!email) return '—'
+        const at = email.indexOf('@')
+        if (at < 1) return email
+        return `${email.slice(0, 1)}••@${email.slice(at + 1)}`
+      }
+
+      return rows.map((r) => ({
+        id: r.id,
+        miniAppSlug: r.mini_app_slug,
+        miniAppName: names.get(r.mini_app_slug) ?? r.mini_app_slug,
+        emailRedacted: redact(r.email),
+        costUsd: r.cost_usd == null ? null : asNumber(r.cost_usd),
+        status: r.status,
+        createdAt: r.created_at,
+      }))
+    },
+    ['insights:submissions-list', String(limit)],
+    { revalidate: 30, tags: ['insights'] }
+  )()
+
+export type LeadListRow = {
+  id: string
+  emailRedacted: string
+  firstSource: string | null
+  submissionCount: number
+  totalCostUsd: number
+  firstSeenAt: string
+  lastSeenAt: string
+}
+
+export const getLeadsList = (limit = 50) =>
+  unstable_cache(
+    async (): Promise<LeadListRow[]> => {
+      const supabase = getSupabaseServerClient()
+      const { data: leads, error } = await supabase
+        .from('leads')
+        .select('id, email, first_source, first_seen_at, last_seen_at')
+        .order('last_seen_at', { ascending: false })
+        .limit(limit)
+      if (error) throw new Error(`getLeadsList: ${error.message}`)
+      const leadRows = (leads ?? []) as Array<{
+        id: string
+        email: string | null
+        first_source: string | null
+        first_seen_at: string
+        last_seen_at: string
+      }>
+      if (leadRows.length === 0) return []
+
+      // Aggregate submissions per lead.
+      const leadIds = leadRows.map((l) => l.id)
+      const { data: subs, error: subsErr } = await supabase
+        .from('submissions')
+        .select('lead_id, cost_usd')
+        .in('lead_id', leadIds)
+      if (subsErr) throw new Error(`getLeadsList(subs): ${subsErr.message}`)
+
+      const stats = new Map<string, { count: number; cost: number }>()
+      for (const s of (subs ?? []) as Array<{
+        lead_id: string
+        cost_usd: number | string | null
+      }>) {
+        const prev = stats.get(s.lead_id) ?? { count: 0, cost: 0 }
+        prev.count += 1
+        prev.cost += asNumber(s.cost_usd)
+        stats.set(s.lead_id, prev)
+      }
+
+      const redact = (email: string | null): string => {
+        if (!email) return '—'
+        const at = email.indexOf('@')
+        if (at < 1) return email
+        return `${email.slice(0, 1)}••@${email.slice(at + 1)}`
+      }
+
+      return leadRows.map((l) => {
+        const s = stats.get(l.id) ?? { count: 0, cost: 0 }
+        return {
+          id: l.id,
+          emailRedacted: redact(l.email),
+          firstSource: l.first_source,
+          submissionCount: s.count,
+          totalCostUsd: s.cost,
+          firstSeenAt: l.first_seen_at,
+          lastSeenAt: l.last_seen_at,
+        }
+      })
+    },
+    ['insights:leads-list', String(limit)],
+    { revalidate: 30, tags: ['insights'] }
+  )()
+
 export const getRecentActivity = (limit = 10) =>
   unstable_cache(
     async (): Promise<ActivityRow[]> => {
