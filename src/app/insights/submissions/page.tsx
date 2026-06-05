@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
 
-import { formatCurrency, formatRelativeTime } from '@/lib/insights/format'
+import { formatCurrency, formatModel, formatRelativeTime } from '@/lib/insights/format'
 import { getSubmissionsList } from '@/lib/insights/queries'
 
 export const dynamic = 'force-dynamic'
@@ -32,22 +32,26 @@ export default async function SubmissionsPage() {
         ) : rows.length === 0 ? (
           <div className="ins-placeholder-body">No submissions yet.</div>
         ) : (
-          <div className="ins-activity" role="list">
-            <div className="ins-activity-head" aria-hidden>
+          <div className="ins-submissions" role="list">
+            <div className="ins-submissions-head" aria-hidden>
               <span>Time</span>
               <span>Mini-app</span>
               <span>Email</span>
-              <span className="ins-activity-cost-col">Cost</span>
-              <span className="ins-activity-status-col">Status</span>
+              <span>Model</span>
+              <span className="ins-submissions-num-col">Cost</span>
+              <span className="ins-submissions-status-col">Status</span>
             </div>
             {rows.map((r) => (
-              <div className="ins-activity-row" role="listitem" key={r.id}>
-                <span className="ins-activity-time" title={new Date(r.createdAt).toISOString()}>
+              <div className="ins-submissions-row" role="listitem" key={r.id}>
+                <span className="ins-submissions-time" title={new Date(r.createdAt).toISOString()}>
                   {formatRelativeTime(r.createdAt)}
                 </span>
-                <span className="ins-activity-app">{r.miniAppName}</span>
-                <span className="ins-activity-email">{r.emailRedacted}</span>
-                <span className="ins-activity-cost">
+                <span className="ins-submissions-app">{r.miniAppName}</span>
+                <span className="ins-submissions-email">{r.emailRedacted}</span>
+                <span className="ins-submissions-model" title={r.modelUsed ?? ''}>
+                  {formatModel(r.modelUsed)}
+                </span>
+                <span className="ins-submissions-cost">
                   {r.costUsd == null ? '—' : formatCurrency(r.costUsd)}
                 </span>
                 <span className={clsx('ins-activity-status', `is-${r.status}`)}>{r.status}</span>

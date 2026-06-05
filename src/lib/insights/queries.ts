@@ -226,6 +226,7 @@ export type SubmissionListRow = {
   miniAppSlug: string
   miniAppName: string
   emailRedacted: string
+  modelUsed: string | null
   costUsd: number | null
   status: 'pending' | 'processing' | 'completed' | 'failed'
   createdAt: string
@@ -237,7 +238,7 @@ export const getSubmissionsList = (limit = 50) =>
       const supabase = getSupabaseServerClient()
       const { data, error } = await supabase
         .from('submissions')
-        .select('id, mini_app_slug, email, cost_usd, status, created_at')
+        .select('id, mini_app_slug, email, model_used, cost_usd, status, created_at')
         .order('created_at', { ascending: false })
         .limit(limit)
       if (error) throw new Error(`getSubmissionsList: ${error.message}`)
@@ -246,6 +247,7 @@ export const getSubmissionsList = (limit = 50) =>
         id: string
         mini_app_slug: string
         email: string | null
+        model_used: string | null
         cost_usd: number | string | null
         status: SubmissionListRow['status']
         created_at: string
@@ -275,6 +277,7 @@ export const getSubmissionsList = (limit = 50) =>
         miniAppSlug: r.mini_app_slug,
         miniAppName: names.get(r.mini_app_slug) ?? r.mini_app_slug,
         emailRedacted: redact(r.email),
+        modelUsed: r.model_used,
         costUsd: r.cost_usd == null ? null : asNumber(r.cost_usd),
         status: r.status,
         createdAt: r.created_at,

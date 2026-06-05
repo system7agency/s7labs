@@ -48,6 +48,27 @@ export function redactEmail(email: string | null | undefined): string {
   return `${head}••@${domain}`
 }
 
+/**
+ * Shorten a model id for table display.
+ * "claude-opus-4-5-20251101" → "Opus 4.5"
+ * "claude-sonnet-4-20250514" → "Sonnet 4"
+ * "claude-haiku-4-5-20251001" → "Haiku 4.5"
+ * Unknown ids fall back to the raw value.
+ */
+export function formatModel(model: string | null | undefined): string {
+  if (!model) return '—'
+  const lower = model.toLowerCase()
+  // Strip leading "claude-" and trailing date stamp.
+  const stripped = lower.replace(/^claude-/, '').replace(/-\d{8}$/, '')
+  // Match "<family>-<major>(-<minor>)" and pretty-print.
+  const m = stripped.match(/^(opus|sonnet|haiku)-(\d+)(?:-(\d+))?/)
+  if (!m) return model
+  const family = m[1]!.charAt(0).toUpperCase() + m[1]!.slice(1)
+  const major = m[2]!
+  const minor = m[3]
+  return minor ? `${family} ${major}.${minor}` : `${family} ${major}`
+}
+
 export function formatRelativeTime(iso: string | Date): string {
   const d = typeof iso === 'string' ? new Date(iso) : iso
   const diffMs = Date.now() - d.getTime()
