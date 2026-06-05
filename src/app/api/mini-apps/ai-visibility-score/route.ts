@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { scrapeEntitySignals } from '@/lib/mini-apps/avs-entity'
@@ -162,6 +163,7 @@ export async function POST(request: Request) {
 
     const setupMsg = await anthropic.messages.create({
       model: CLAUDE_SETUP_MODEL,
+      system: STYLE_SYSTEM_PROMPT,
       max_tokens: 1200,
       messages: [{ role: 'user', content: SETUP_PROMPT(domain, brandOverride) }],
     })
@@ -249,6 +251,7 @@ export async function POST(request: Request) {
     const entityScrapeP = scrapeEntitySignals(domain, controller.signal)
     const entityProbeP = anthropic.messages.create({
       model: CLAUDE_ANSWER_MODEL,
+      system: STYLE_SYSTEM_PROMPT,
       max_tokens: 400,
       messages: [
         {
@@ -264,6 +267,7 @@ export async function POST(request: Request) {
         anthropic.messages
           .create({
             model: CLAUDE_ANSWER_MODEL,
+            system: STYLE_SYSTEM_PROMPT,
             max_tokens: 500,
             messages: [{ role: 'user', content: brandQuestion }],
           })
@@ -383,6 +387,7 @@ export async function POST(request: Request) {
 
     const interpretMsg = await anthropic.messages.create({
       model: INTERPRET_MODEL,
+      system: STYLE_SYSTEM_PROMPT,
       max_tokens: 1500,
       messages: [
         {

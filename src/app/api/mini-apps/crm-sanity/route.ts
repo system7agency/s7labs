@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { NextResponse } from 'next/server'
 
 import { calculateCost, type CostBreakdown, usageFromAnthropic } from '@/lib/llm/cost'
@@ -107,6 +108,7 @@ export async function POST(request: Request) {
 
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-5',
+      system: STYLE_SYSTEM_PROMPT,
       max_tokens: 1600,
       messages: [{ role: 'user', content: CLAUDE_PROMPT(recordText) }],
     })

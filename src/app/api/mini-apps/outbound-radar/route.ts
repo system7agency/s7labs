@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { FirecrawlAppV1 as FirecrawlApp } from '@mendable/firecrawl-js'
 import { NextResponse } from 'next/server'
 
@@ -161,6 +162,7 @@ export async function POST(request: Request) {
 
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-5',
+      system: STYLE_SYSTEM_PROMPT,
       max_tokens: 1500,
       messages: [{ role: 'user', content: CLAUDE_PROMPT(combinedContent, company, domain) }],
     })
