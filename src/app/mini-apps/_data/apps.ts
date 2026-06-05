@@ -14,6 +14,7 @@ export type AppThumb =
   | 'agentic'
   | 'aio'
   | 'avs'
+  | 'bulkemail'
 
 export type MiniApp = {
   id: string
@@ -376,6 +377,36 @@ export const APPS: MiniApp[] = [
         'Could become a Chrome extension that finds emails inline on LinkedIn, or batch lookup for an uploaded list of names.',
     },
     interest_context: 'email-finder',
+  },
+  {
+    id: 'bulk-email-finder',
+    name: 'Bulk Email Finder',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Upload a CSV of names and companies — get back a downloadable list with verified work emails appended (free: 50 rows per run).',
+    tags: ['email', 'bulk', 'csv', 'apollo', 'outbound', 'ai'],
+    thumb: 'bulkemail',
+    launch_url: '/mini-apps/bulk-email-finder',
+    learn_more: {
+      what_it_does:
+        'Parses a CSV of prospects, maps name and company columns, enriches each row with a verified business email and verification status, then lets you download the enriched file.',
+      how_it_works: {
+        inputs: ['CSV with name + company columns'],
+        outputs: [
+          'verified email per row',
+          'verification status',
+          'downloadable enriched CSV',
+          'found / not found summary',
+        ],
+      },
+      who_its_for:
+        'SDRs and recruiters with a prospect list who need emails in bulk without manually running single lookups.',
+      build_potential:
+        'Could integrate with CRM import, scheduled re-verification, and higher row limits for paid tiers.',
+    },
+    interest_context: 'bulk-email-finder',
   },
   {
     id: 'find-people',
