@@ -232,5 +232,16 @@ export function CardThumb({ thumb }: CardThumbProps) {
           </div>
         </div>
       )
+    case 'roi':
+      return (
+        <div className="card-thumb thumb-roi">
+          <div className="roi-bars">
+            <span className="roi-bar roi-bar-1" />
+            <span className="roi-bar roi-bar-2" />
+            <span className="roi-bar roi-bar-3" />
+          </div>
+          <span className="roi-readout">4.2x</span>
+        </div>
+      )
   }
 }
