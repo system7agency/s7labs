@@ -3581,6 +3581,40 @@
   color: rgba(255, 255, 255, 0.25);
 }
 
+/* Tech Stack Finder thumb */
+.mini-apps-lab .thumb-techfind {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 14px;
+}
+.mini-apps-lab .tf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  width: 72%;
+}
+.mini-apps-lab .tf-tile {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.mini-apps-lab .tf-tile-1 {
+  background: rgba(79, 140, 255, 0.25);
+}
+.mini-apps-lab .tf-tile-2 {
+  background: rgba(4, 227, 238, 0.2);
+}
+.mini-apps-lab .tf-tile-3 {
+  background: rgba(147, 112, 219, 0.2);
+}
+.mini-apps-lab .tf-tile-4 {
+  background: rgba(245, 166, 35, 0.2);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mini-apps-lab *,
   .mini-apps-lab *::before,

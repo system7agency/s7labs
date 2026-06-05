@@ -15,6 +15,7 @@ export type AppThumb =
   | 'aio'
   | 'avs'
   | 'bulkemail'
+  | 'techfind'
 
 export type MiniApp = {
   id: string
@@ -143,6 +144,31 @@ export const APPS: MiniApp[] = [
         'The internal version gives free fix recommendations and a paid roadmap, tracks AVS over time per client from stored snapshots, and turns drift into an alerting trend.',
     },
     interest_context: 'ai-visibility-score',
+  },
+  {
+    id: 'tech-stack-finder',
+    name: 'Tech Stack Finder',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'gtm', 'software'],
+    short_description:
+      'Enter a company domain and get its technology stack grouped by category — analytics, CMS, hosting, CRM, ads, and more.',
+    tags: ['tech stack', 'enrichment', 'competitive intel', 'gtm', 'ai'],
+    thumb: 'techfind',
+    launch_url: '/mini-apps/tech-stack-finder',
+    learn_more: {
+      what_it_does:
+        'Fingerprints a company website and returns detected technologies organized into standard categories with logos — useful for competitive research and outbound personalization.',
+      how_it_works: {
+        inputs: ['company domain'],
+        outputs: ['categorized tech stack', 'technology logos', 'total technologies detected'],
+      },
+      who_its_for:
+        'SDRs, marketers, and agencies researching prospects or competitors who need to know what tools a company runs before pitching.',
+      build_potential:
+        'Could diff stacks over time, alert on competitor tech changes, and personalize outreach based on detected tools.',
+    },
+    interest_context: 'tech-stack-finder',
   },
   {
     id: 'share-of-voice',
