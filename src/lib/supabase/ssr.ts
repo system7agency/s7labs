@@ -18,7 +18,17 @@ export async function createRouteHandlerClient() {
           return cookieStore.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+          // In Server Components / layouts, cookie writes are not allowed —
+          // Next.js throws. The session refresh still happens in middleware,
+          // so this is a safe no-op here. In Route Handlers and Server
+          // Actions the write succeeds normally.
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            /* read-only cookie context */
+          }
         },
       },
     }
