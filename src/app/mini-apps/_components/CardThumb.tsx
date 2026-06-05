@@ -213,5 +213,57 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="pr-badge">S7</span>
         </div>
       )
+    case 'emailopt':
+      return (
+        <div className="card-thumb thumb-emailopt">
+          <div className="eo-envelope">
+            <span className="eo-flap" />
+            <span className="eo-line" style={{ width: '70%' }} />
+            <span className="eo-line" style={{ width: '55%' }} />
+            <span className="eo-line eo-line-hi" style={{ width: '40%' }} />
+          </div>
+        </div>
+      )
+    case 'roi':
+      return (
+        <div className="card-thumb thumb-roi">
+          <div className="roi-bars">
+            <span className="roi-bar roi-bar-1" />
+            <span className="roi-bar roi-bar-2" />
+            <span className="roi-bar roi-bar-3" />
+          </div>
+          <span className="roi-readout">4.2x</span>
+        </div>
+      )
+    case 'techfind':
+      return (
+        <div className="card-thumb thumb-techfind">
+          <div className="tf-grid">
+            <span className="tf-tile tf-tile-1" />
+            <span className="tf-tile tf-tile-2" />
+            <span className="tf-tile tf-tile-3" />
+            <span className="tf-tile tf-tile-4" />
+          </div>
+        </div>
+      )
+    case 'bulkemail':
+      return (
+        <div className="card-thumb thumb-bulkemail">
+          <div className="be-rows">
+            <span className="be-row">
+              <span className="be-cell" />
+              <span className="be-check be-ok">✓</span>
+            </span>
+            <span className="be-row">
+              <span className="be-cell" />
+              <span className="be-check be-ok">✓</span>
+            </span>
+            <span className="be-row">
+              <span className="be-cell" />
+              <span className="be-check be-miss">—</span>
+            </span>
+          </div>
+        </div>
+      )
   }
 }

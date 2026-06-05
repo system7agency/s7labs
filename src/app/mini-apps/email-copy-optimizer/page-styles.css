@@ -1,0 +1,459 @@
+.eco-page {
+  --bg: #07080c;
+  --surface: rgba(16, 19, 28, 0.85);
+  --surface-soft: rgba(255, 255, 255, 0.02);
+  --border: rgba(255, 255, 255, 0.1);
+  --text: #eef2ff;
+  --text-muted: #98a3bf;
+  --accent: #5f8cff;
+  --accent-soft: rgba(95, 140, 255, 0.22);
+  --danger: #ff6b86;
+  --warning: #f7bd58;
+  --success: #63d6a1;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.eco-page * {
+  box-sizing: border-box;
+}
+
+.eco-page .shell {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: 52px 20px 84px;
+}
+
+.eco-page .hero {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.eco-page .eyebrow {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.eco-page .hero h1 {
+  margin: 16px auto 12px;
+  max-width: 760px;
+  font-size: clamp(34px, 6vw, 58px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+
+.eco-page .hero .accent {
+  color: var(--accent);
+}
+
+.eco-page .hero p {
+  margin: 0 auto;
+  max-width: 560px;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.eco-page .panel {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+.eco-page .panel-readouts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.eco-page .readout-key {
+  color: #7483a5;
+}
+
+.eco-page .readout-value {
+  color: var(--text);
+}
+
+.eco-page .readout-sep {
+  width: 1px;
+  height: 11px;
+  background: var(--border);
+}
+
+.eco-page .panel-body {
+  padding: 22px;
+}
+
+.eco-page .view {
+  display: none;
+}
+
+.eco-page .view.active {
+  display: block;
+}
+
+.eco-page .idle-form {
+  display: grid;
+  gap: 8px;
+}
+
+.eco-page .idle-form label,
+.eco-page .chip-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eco-page .idle-form input,
+.eco-page .idle-form textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  font: inherit;
+  padding: 12px 13px;
+}
+
+.eco-page .idle-form textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+
+.eco-page .body-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.eco-page .field-error {
+  margin: 2px 0 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.eco-page .context-toggle {
+  justify-self: start;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.eco-page .context-wrap {
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.eco-page .tone-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.eco-page .tone-chip {
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.eco-page .tone-chip.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.eco-page .form-actions {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.eco-page .primary-btn,
+.eco-page .secondary-btn {
+  border-radius: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font: inherit;
+}
+
+.eco-page .primary-btn {
+  background: linear-gradient(180deg, #739cff, #4f7cf0);
+  color: #fff;
+  border-color: #5d8cff;
+}
+
+.eco-page .secondary-btn {
+  background: transparent;
+  color: var(--text);
+}
+
+.eco-page .loading-stage {
+  padding: 8px 4px;
+}
+
+.eco-page .loading-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eco-page .loading-stage ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.eco-page .loading-stage li {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 12px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.eco-page .loading-stage li.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(95, 140, 255, 0.12);
+}
+
+.eco-page .loading-stage li.done {
+  border-color: rgba(99, 214, 161, 0.35);
+}
+
+.eco-page .result-hero {
+  display: grid;
+  gap: 12px;
+}
+
+.eco-page .result-title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eco-page .result-score {
+  margin: 0;
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  font-weight: 600;
+}
+
+.eco-page .issues {
+  display: grid;
+  gap: 10px;
+}
+
+.eco-page .issue-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.eco-page .issue-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.eco-page .issue-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.eco-page .issue-card p {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.eco-page .severity-chip {
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.eco-page .severity-chip.high {
+  background: rgba(255, 107, 134, 0.18);
+  color: #ffc0cc;
+}
+
+.eco-page .severity-chip.medium {
+  background: rgba(247, 189, 88, 0.18);
+  color: #ffd88a;
+}
+
+.eco-page .severity-chip.low {
+  background: rgba(99, 214, 161, 0.16);
+  color: #a2e8c9;
+}
+
+.eco-page .variations-grid {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.eco-page .variation-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.eco-page .variation-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.eco-page .variation-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.eco-page .variation-head button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.eco-page .variation-subject {
+  margin: 10px 0 8px;
+  font-weight: 600;
+}
+
+.eco-page .variation-body {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.eco-page .change-list {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.eco-page .change-item {
+  border-left: 2px solid var(--accent);
+  padding-left: 10px;
+}
+
+.eco-page .change-text {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.eco-page .change-reason {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.eco-page .result-footer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.eco-page .result-footer button,
+.eco-page .result-footer a {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  padding: 9px 12px;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.eco-page .error-view {
+  text-align: center;
+  padding: 20px 0 8px;
+}
+
+.eco-page .error-view h2 {
+  margin: 0 0 10px;
+}
+
+.eco-page .error-view p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.eco-page .error-view button {
+  margin-top: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 9px 14px;
+  cursor: pointer;
+}
+
+.eco-page .how-it-works {
+  margin-top: 78px;
+}
+
+@media (max-width: 768px) {
+  .eco-page .panel-readouts {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .eco-page .panel-body {
+    padding: 16px;
+  }
+}

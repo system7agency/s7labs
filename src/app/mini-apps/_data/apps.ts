@@ -14,6 +14,10 @@ export type AppThumb =
   | 'agentic'
   | 'aio'
   | 'avs'
+  | 'emailopt'
+  | 'roi'
+  | 'techfind'
+  | 'bulkemail'
 
 export type MiniApp = {
   id: string
@@ -142,6 +146,130 @@ export const APPS: MiniApp[] = [
         'The internal version gives free fix recommendations and a paid roadmap, tracks AVS over time per client from stored snapshots, and turns drift into an alerting trend.',
     },
     interest_context: 'ai-visibility-score',
+  },
+  {
+    id: 'email-copy-optimizer',
+    name: 'Email Copy Optimizer',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Paste a cold email and get three optimized rewrites — each with a different angle, annotated changes, and a quality diagnosis.',
+    tags: ['email', 'copywriting', 'outbound', 'cold email', 'ai'],
+    thumb: 'emailopt',
+    launch_url: '/mini-apps/email-copy-optimizer',
+    learn_more: {
+      what_it_does:
+        'Reads your cold email subject and body, scores weak points, and rewrites it into three distinct variations (e.g. direct, curiosity-led, value-first) with annotated explanations of what changed and why.',
+      how_it_works: {
+        inputs: ['email subject', 'email body', 'optional goal / audience / tone'],
+        outputs: [
+          'quality score and issues list',
+          '3 optimized variations',
+          'annotated changes per variation',
+          'copy-to-clipboard per variation',
+        ],
+      },
+      who_its_for:
+        'SDRs, AEs, and founders who want stronger cold email copy without spending an hour rewriting the same message three ways.',
+      build_potential:
+        'Could learn from reply rates, A/B test variations in a sequencer, and generate follow-up sequences from the winning angle.',
+    },
+    interest_context: 'email-copy-optimizer',
+  },
+  {
+    id: 'roi-calculator',
+    name: 'ROI Calculator',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Model outbound campaign inputs and see expected pipeline, closed revenue, ROI multiple, and cost per meeting — live as you move the sliders.',
+    tags: ['roi', 'outbound', 'pipeline', 'calculator', 'gtm'],
+    thumb: 'roi',
+    launch_url: '/mini-apps/roi-calculator',
+    learn_more: {
+      what_it_does:
+        'Takes leads contacted, reply rate, meeting conversion, close rate, average deal size, and campaign cost — then calculates pipeline value, expected revenue, ROI, and cost efficiency metrics with a visual funnel breakdown.',
+      how_it_works: {
+        inputs: [
+          'leads contacted',
+          'reply rate %',
+          'meeting conversion %',
+          'deal close rate %',
+          'avg deal size',
+          'campaign cost',
+        ],
+        outputs: [
+          'pipeline value',
+          'expected closed revenue',
+          'ROI multiple',
+          'cost per meeting',
+          'cost per deal',
+          'what-if sensitivity line',
+        ],
+      },
+      who_its_for:
+        'RevOps leaders, founders, and GTM teams who need a quick, defensible ROI model before scaling outbound spend.',
+      build_potential:
+        'Could save scenarios per client, benchmark against industry averages, and connect to live CRM data for actual vs projected.',
+    },
+    interest_context: 'roi-calculator',
+  },
+  {
+    id: 'tech-stack-finder',
+    name: 'Tech Stack Finder',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'gtm', 'software'],
+    short_description:
+      'Enter a company domain and get its technology stack grouped by category — analytics, CMS, hosting, CRM, ads, and more.',
+    tags: ['tech stack', 'enrichment', 'competitive intel', 'gtm', 'ai'],
+    thumb: 'techfind',
+    launch_url: '/mini-apps/tech-stack-finder',
+    learn_more: {
+      what_it_does:
+        'Fingerprints a company website and returns detected technologies organized into standard categories with logos — useful for competitive research and outbound personalization.',
+      how_it_works: {
+        inputs: ['company domain'],
+        outputs: ['categorized tech stack', 'technology logos', 'total technologies detected'],
+      },
+      who_its_for:
+        'SDRs, marketers, and agencies researching prospects or competitors who need to know what tools a company runs before pitching.',
+      build_potential:
+        'Could diff stacks over time, alert on competitor tech changes, and personalize outreach based on detected tools.',
+    },
+    interest_context: 'tech-stack-finder',
+  },
+  {
+    id: 'bulk-email-finder',
+    name: 'Bulk Email Finder',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Upload a CSV of names and companies — get back a downloadable list with verified work emails appended (free: 50 rows per run).',
+    tags: ['email', 'bulk', 'csv', 'apollo', 'outbound', 'ai'],
+    thumb: 'bulkemail',
+    launch_url: '/mini-apps/bulk-email-finder',
+    learn_more: {
+      what_it_does:
+        'Parses a CSV of prospects, maps name and company columns, enriches each row with a verified business email and verification status, then lets you download the enriched file.',
+      how_it_works: {
+        inputs: ['CSV with name + company columns'],
+        outputs: [
+          'verified email per row',
+          'verification status',
+          'downloadable enriched CSV',
+          'found / not found summary',
+        ],
+      },
+      who_its_for:
+        'SDRs and recruiters with a prospect list who need emails in bulk without manually running single lookups.',
+      build_potential:
+        'Could integrate with CRM import, scheduled re-verification, and higher row limits for paid tiers.',
+    },
+    interest_context: 'bulk-email-finder',
   },
   {
     id: 'share-of-voice',
