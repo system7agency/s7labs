@@ -398,3 +398,12 @@
     justify-content: space-between;
   }
 }
+
+.gtm-flywheel .input-box input:-webkit-autofill,
+.gtm-flywheel .input-box input:-webkit-autofill:hover,
+.gtm-flywheel .input-box input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
+}
