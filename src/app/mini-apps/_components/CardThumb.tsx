@@ -201,6 +201,17 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="rd-sweep" />
         </div>
       )
+    case 'intents':
+      return (
+        <div className="card-thumb thumb-intents">
+          <span className="is-ring is-ring-1" />
+          <span className="is-ring is-ring-2" />
+          <span className="is-pulse" />
+          <span className="is-dot is-dot-1" />
+          <span className="is-dot is-dot-2" />
+          <span className="is-dot is-dot-3" />
+        </div>
+      )
     case 'proposal':
       return (
         <div className="card-thumb thumb-proposal">

@@ -15,6 +15,7 @@ export type AppThumb =
   | 'aio'
   | 'avs'
   | 'bulkemail'
+  | 'intents'
 
 export type MiniApp = {
   id: string
@@ -438,6 +439,37 @@ export const APPS: MiniApp[] = [
         'Could become a Chrome extension that surfaces the roster inline on a company’s website, or batch lookup for an uploaded list of accounts.',
     },
     interest_context: 'find-people',
+  },
+  {
+    id: 'intent-signals',
+    author: 'YA',
+    name: 'Intent Signals',
+    status: 'live',
+    category: 'AI / Operations',
+    cats: ['ai', 'operations', 'gtm'],
+    short_description:
+      'Enter a company domain. Get ranked buying intent signals — hiring, funding, leadership, tech — with sources and a ready outreach angle.',
+    tags: ['intent', 'signals', 'outbound', 'hiring', 'gtm', 'ai'],
+    thumb: 'intents',
+    launch_url: '/mini-apps/intent-signals',
+    learn_more: {
+      what_it_does:
+        'Scans public sources for hiring spikes, news events, and tech adoption signals, then ranks them into an intent score with a suggested outreach opener — assembled from public data, not enterprise intent vendors.',
+      how_it_works: {
+        inputs: ['company domain'],
+        outputs: [
+          'intent score (0-100)',
+          'ranked signal feed with sources',
+          'strength chips (hot / warm / background)',
+          'suggested outreach angle',
+        ],
+      },
+      who_its_for:
+        'SDRs, AEs, and founders who want evidence-based context on whether a target account is "in motion" before outreach.',
+      build_potential:
+        'Collector architecture supports swapping in paid intent vendors; could merge with Outbound Trigger Radar and add scheduled re-scans.',
+    },
+    interest_context: 'intent-signals',
   },
   {
     id: 'outbound-radar',
