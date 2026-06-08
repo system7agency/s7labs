@@ -128,6 +128,7 @@ Annual Revenue: $12M`
     cardName: 'AI Overview',
     apiRoute: '/api/mini-apps/ai-overview-tracker',
     formAnchor: 'input:not([type="email"])',
+    killswitched: true,
     fillValid: async (page) => {
       await page.locator('input:not([type="email"])').first().fill('linear.app')
       const kw = page.locator('textarea').first()
