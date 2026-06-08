@@ -26,45 +26,80 @@ script scopes itself to **only the mini-apps whose `page.tsx` was changed in
 the PR** — unrelated stragglers don't block your PR. Run it locally without
 `GITHUB_BASE_REF` set to check every mini-app in the repo.
 
-### 1. Wrap the result in `<EmailGate>`
+### 1. Use the inline email gate pattern
 
-The full result rendering of the page must live inside an `EmailGate`. This
-is what captures the visitor's email and writes the submission to Supabase.
+The visitor's email must be captured **before** the model call, not after.
+This protects against credit waste when a visitor enters a disposable or
+free-provider email and bails at the gate. The pattern:
+
+- Inline a `Work email` field in the main form, alongside the app's other
+  inputs. Use the `EMAIL_REGEX` from `@/lib/leads/disposable` for
+  client-side format validation.
+- On submit, validate both inputs locally, then **first** POST to
+  `/api/leads/submit` with `{ email, miniAppSlug, input }`. The server
+  rejects disposable + free-provider emails before any model token is
+  spent. Bail and surface the error on the email field if it fails.
+- Only on success, fire the actual `/api/mini-apps/<slug>` model call.
+- On model success, fire-and-forget POST to `/api/leads/complete` with
+  `{ submissionId, output, cost? }` to mark the submission complete.
+
+Reference: [`pricing-diagnostic/page.tsx`](../src/app/mini-apps/pricing-diagnostic/page.tsx)
+is the gold standard. [`crm-sanity/page.tsx`](../src/app/mini-apps/crm-sanity/page.tsx)
+is the closest reference for textarea-input apps.
+
+Sketch of `handleSubmit`:
 
 ```tsx
-import { EmailGate } from '@/components/mini-apps/EmailGate'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
-
-// inside the result branch of your state machine:
-{
-  result && (
-    <EmailGate
-      miniAppSlug="your-slug"
-      pattern="upfront"
-      initialInput={
-        {
-          /* whatever the user submitted */
-        }
-      }
-    >
-      {({ submitToApi }) => (
-        <>
-          <SubmitOnce
-            submit={submitToApi}
-            input={
-              {
-                /* same as initialInput */
-              }
-            }
-            output={result}
-          />
-          {/* existing result JSX */}
-        </>
-      )}
-    </EmailGate>
-  )
+// 1. Local validation
+if (!input || !EMAIL_REGEX.test(email)) {
+  setEmailError('Please enter a valid email.')
+  return
 }
+
+// 2. Save lead FIRST — server enforces disposable + free-provider blocks
+let submissionId: string | null = null
+const res = await fetch('/api/leads/submit', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({
+    email,
+    miniAppSlug: 'your-slug',
+    input: {
+      /* what the user submitted */
+    },
+  }),
+})
+const json = await res.json()
+if (!res.ok || !json.ok || !json.submissionId) {
+  setEmailError(json.error || "Couldn't save your info. Try again.")
+  return
+}
+submissionId = json.submissionId
+
+// 3. Now fire the model
+const modelRes = await fetch('/api/mini-apps/your-slug', { ... })
+
+// 4. After model success, mark the submission complete (fire-and-forget)
+fetch('/api/leads/complete', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({
+    submissionId,
+    output: data.data,
+    ...(data.cost ? { cost: data.cost } : {}),
+  }),
+}).catch((err) => console.error('[your-slug] leads/complete', err))
 ```
+
+The CI check enforces the inline pattern by requiring an import of
+`EMAIL_REGEX` from `@/lib/leads/disposable` AND a literal string
+`/api/leads/submit` in the page source, plus a `miniAppSlug: '<slug>'`
+field somewhere in the file that matches an active row in the
+`mini_apps` Supabase table.
+
+The old `<EmailGate>` overlay component still exists in the codebase but
+is **no longer the convention** — all live mini-apps have been migrated
+to the inline pattern. Don't introduce new uses.
 
 ### 2. Register the slug in the `mini_apps` Supabase table
 
