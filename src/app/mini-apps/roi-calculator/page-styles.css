@@ -371,3 +371,14 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.roi-calculator .input-box input:-webkit-autofill,
+.roi-calculator .input-box input:-webkit-autofill:hover,
+.roi-calculator .input-box input:-webkit-autofill:focus,
+.roi-calculator .input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
+}
