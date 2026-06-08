@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useRef, useState, type DragEvent } from 'react'
+import { clsx } from 'clsx'
 
 import {
   addEdge,
@@ -26,8 +27,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 
 type MotionType =
@@ -229,7 +229,7 @@ function parseHash(hash: string): { nodes: Node<FlywheelNodeData>[]; edges: Edge
 function FlywheelNode({ data, selected }: NodeProps<Node<FlywheelNodeData>>) {
   return (
     <div
-      className={`fly-node${selected ? 'selected' : ''}`}
+      className={clsx('fly-node', { selected })}
       style={{ '--node-accent': data.accent } as React.CSSProperties}
     >
       <Handle type="target" position={Position.Top} className="fly-handle" />
@@ -269,11 +269,23 @@ function MotionChip({
 
 function ExportPanel({
   shareMessage,
+  exportUnlocked,
+  email,
+  emailError,
+  shakeEmail,
+  exportSubmitting,
+  onEmailChange,
   onShare,
   onDownloadPng,
   onCopyLink,
 }: {
   shareMessage: string | null
+  exportUnlocked: boolean
+  email: string
+  emailError: string | null
+  shakeEmail: number
+  exportSubmitting: boolean
+  onEmailChange: (value: string) => void
   onShare: () => void
   onDownloadPng: () => void
   onCopyLink: () => void
@@ -282,16 +294,39 @@ function ExportPanel({
     <div className="export-card">
       <div className="export-head">
         <h3>Export</h3>
-        <p>Free to play. Unlock once to export and share.</p>
+        <p>
+          {exportUnlocked
+            ? 'Export unlocked for this session.'
+            : 'Free to play. Enter your work email to export and share.'}
+        </p>
       </div>
+      {!exportUnlocked && (
+        <div className="input-field">
+          <label>
+            Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+          </label>
+          <div key={`e-${shakeEmail}`} className={clsx('input-box', { error: emailError })}>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@company.com"
+              value={email}
+              disabled={exportSubmitting}
+              onChange={(e) => onEmailChange(e.target.value)}
+            />
+          </div>
+          {emailError && <div className="field-error">{emailError}</div>}
+        </div>
+      )}
       <div className="export-actions">
-        <button type="button" onClick={onShare}>
+        <button type="button" onClick={onShare} disabled={exportSubmitting}>
           Share link
         </button>
-        <button type="button" onClick={onDownloadPng}>
+        <button type="button" onClick={onDownloadPng} disabled={exportSubmitting}>
           Download PNG
         </button>
-        <button type="button" onClick={onCopyLink}>
+        <button type="button" onClick={onCopyLink} disabled={exportSubmitting}>
           Copy link
         </button>
       </div>
@@ -314,6 +349,11 @@ export default function GtmFlywheelPage() {
   const [instance, setInstance] = useState<ReactFlowInstance<Node<FlywheelNodeData>, Edge> | null>(
     null
   )
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
+  const [exportUnlocked, setExportUnlocked] = useState(false)
+  const [exportSubmitting, setExportSubmitting] = useState(false)
 
   const canvasRef = useRef<HTMLDivElement | null>(null)
 
@@ -471,6 +511,75 @@ export default function GtmFlywheelPage() {
     [edges.length, nodes.length]
   )
 
+  const ensureExportUnlocked = useCallback(async (): Promise<boolean> => {
+    if (exportUnlocked) return true
+
+    const emailClean = email.trim().toLowerCase()
+    let valid = true
+    if (!emailClean) {
+      setEmailError('Please enter your work email.')
+      setShakeEmail((k) => k + 1)
+      valid = false
+    } else if (!EMAIL_REGEX.test(emailClean)) {
+      setEmailError('Please enter a valid email.')
+      setShakeEmail((k) => k + 1)
+      valid = false
+    }
+    if (!valid) return false
+
+    setExportSubmitting(true)
+    setEmailError(null)
+    try {
+      const res = await fetch('/api/leads/submit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email: emailClean,
+          miniAppSlug: 'gtm-flywheel',
+          input: exportInput,
+          output: exportOutput,
+        }),
+      })
+      const json = (await res.json()) as { ok?: boolean; error?: string }
+      if (!res.ok || !json.ok) {
+        setEmailError(json.error || "Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        return false
+      }
+      setExportUnlocked(true)
+      return true
+    } catch {
+      setEmailError("Couldn't save your info. Try again.")
+      setShakeEmail((k) => k + 1)
+      return false
+    } finally {
+      setExportSubmitting(false)
+    }
+  }, [exportUnlocked, email, exportInput, exportOutput])
+
+  const handleShareLinkGated = useCallback(async () => {
+    if (!(await ensureExportUnlocked())) return
+    await handleShareLink()
+  }, [ensureExportUnlocked, handleShareLink])
+
+  const handleCopyLinkGated = useCallback(async () => {
+    if (!(await ensureExportUnlocked())) return
+    await handleCopyLink()
+  }, [ensureExportUnlocked, handleCopyLink])
+
+  const handleDownloadPngGated = useCallback(async () => {
+    if (!(await ensureExportUnlocked())) return
+    await handleDownloadPng()
+  }, [ensureExportUnlocked, handleDownloadPng])
+
+  const handleEmailChange = useCallback(
+    (value: string) => {
+      setEmail(value)
+      if (emailError) setEmailError(null)
+    },
+    [emailError]
+  )
+
   return (
     <div className="gtm-flywheel">
       <AuroraBackground />
@@ -524,19 +633,18 @@ export default function GtmFlywheelPage() {
             </div>
 
             <div className="export-panel">
-              <EmailGate miniAppSlug="gtm-flywheel" pattern="upfront" initialInput={exportInput}>
-                {({ submitToApi }) => (
-                  <>
-                    <SubmitOnce submit={submitToApi} input={exportInput} output={exportOutput} />
-                    <ExportPanel
-                      shareMessage={shareMessage}
-                      onShare={() => void handleShareLink()}
-                      onDownloadPng={() => void handleDownloadPng()}
-                      onCopyLink={() => void handleCopyLink()}
-                    />
-                  </>
-                )}
-              </EmailGate>
+              <ExportPanel
+                shareMessage={shareMessage}
+                exportUnlocked={exportUnlocked}
+                email={email}
+                emailError={emailError}
+                shakeEmail={shakeEmail}
+                exportSubmitting={exportSubmitting}
+                onEmailChange={handleEmailChange}
+                onShare={() => void handleShareLinkGated()}
+                onDownloadPng={() => void handleDownloadPngGated()}
+                onCopyLink={() => void handleCopyLinkGated()}
+              />
             </div>
           </div>
         </section>
@@ -575,7 +683,7 @@ export default function GtmFlywheelPage() {
         {mobileLibraryOpen ? 'Close motions' : 'Open motions'}
       </button>
 
-      <div className={`mobile-library${mobileLibraryOpen ? 'open' : ''}`}>
+      <div className={clsx('mobile-library', { open: mobileLibraryOpen })}>
         <div className="mobile-library-head">
           <strong>Motion library</strong>
           <button type="button" onClick={() => setMobileLibraryOpen(false)}>
