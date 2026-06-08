@@ -232,5 +232,13 @@ export function CardThumb({ thumb }: CardThumbProps) {
           </div>
         </div>
       )
+    case 'liprofile':
+      return (
+        <div className="card-thumb thumb-liprofile">
+          <span className="lp-ring" />
+          <span className="lp-avatar" />
+          <span className="lp-score">72</span>
+        </div>
+      )
   }
 }

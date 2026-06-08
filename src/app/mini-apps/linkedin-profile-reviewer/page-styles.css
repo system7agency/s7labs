@@ -1,0 +1,611 @@
+.linkedin-profile-reviewer {
+  --bg: #060608;
+  --surface-1: #101014;
+  --surface-2: #17171c;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text: #f2f3f5;
+  --text-dim: #9799a4;
+  --text-muted: #666975;
+  --text-faint: #444754;
+  --blue: #4f8cff;
+  --cyan: #04e3ee;
+  --success: #4fcf8a;
+  --warning: #f5a623;
+  --danger: #ff5c7a;
+  --mono:
+    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+  --sans:
+    var(--font-sans), 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
+    Arial, sans-serif;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.linkedin-profile-reviewer * {
+  box-sizing: border-box;
+}
+
+.linkedin-profile-reviewer .shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  padding: 24px 24px 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.linkedin-profile-reviewer .hero {
+  width: min(100%, 700px);
+  text-align: center;
+  margin-top: 48px;
+  margin-bottom: 34px;
+}
+
+.linkedin-profile-reviewer .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+}
+
+.linkedin-profile-reviewer .eyebrow::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 10px var(--blue);
+}
+
+.linkedin-profile-reviewer .hero h1 {
+  font-size: clamp(36px, 6.4vw, 58px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  margin: 20px 0 16px;
+  font-weight: 500;
+}
+
+.linkedin-profile-reviewer .hero .accent {
+  color: transparent;
+  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 85%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  font-style: italic;
+}
+
+.linkedin-profile-reviewer .hero p {
+  max-width: 550px;
+  margin: 0 auto;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+.linkedin-profile-reviewer .panel-wrap {
+  width: min(100%, 760px);
+}
+
+.linkedin-profile-reviewer .panel {
+  background: linear-gradient(180deg, rgba(23, 23, 28, 0.88), rgba(14, 14, 18, 0.88));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 24px 70px -24px rgba(0, 0, 0, 0.7);
+}
+
+.linkedin-profile-reviewer .panel-readouts {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+}
+
+.linkedin-profile-reviewer .pr-left,
+.linkedin-profile-reviewer .pr-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.linkedin-profile-reviewer .stat-key {
+  color: var(--text-faint);
+}
+
+.linkedin-profile-reviewer .stat-val {
+  color: var(--text-dim);
+}
+
+.linkedin-profile-reviewer .pr-sep {
+  width: 1px;
+  height: 10px;
+  background: var(--border-strong);
+}
+
+.linkedin-profile-reviewer .panel-body {
+  padding: 24px;
+}
+
+.linkedin-profile-reviewer .state {
+  display: none;
+}
+
+.linkedin-profile-reviewer .state.active {
+  display: block;
+}
+
+.linkedin-profile-reviewer .mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.linkedin-profile-reviewer .mode-btn {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  padding: 11px 12px;
+  cursor: pointer;
+}
+
+.linkedin-profile-reviewer .mode-btn.active {
+  border-color: rgba(79, 140, 255, 0.45);
+  color: var(--blue);
+  background: rgba(79, 140, 255, 0.08);
+}
+
+.linkedin-profile-reviewer .field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.linkedin-profile-reviewer .field label {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+}
+
+.linkedin-profile-reviewer .field input,
+.linkedin-profile-reviewer .field textarea {
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  background: #08090d;
+  color: var(--text);
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 14px;
+  outline: none;
+}
+
+.linkedin-profile-reviewer .field textarea {
+  min-height: 160px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.linkedin-profile-reviewer .field input:focus,
+.linkedin-profile-reviewer .field textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.15);
+}
+
+.linkedin-profile-reviewer .field input.error,
+.linkedin-profile-reviewer .field textarea.error {
+  border-color: var(--danger);
+}
+
+.linkedin-profile-reviewer .helper {
+  margin: 0;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.linkedin-profile-reviewer .field-error {
+  margin: 10px 0 0;
+  color: var(--danger);
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+
+.linkedin-profile-reviewer .submit-btn,
+.linkedin-profile-reviewer .primary-btn {
+  margin-top: 16px;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, #5a96ff 0%, #3a78f0 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 24px -8px rgba(79, 140, 255, 0.7);
+}
+
+.linkedin-profile-reviewer .submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.linkedin-profile-reviewer .progress-track {
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.linkedin-profile-reviewer .progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--blue));
+  transition: width 0.35s ease;
+}
+
+.linkedin-profile-reviewer .loading-header {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.linkedin-profile-reviewer .stages {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.linkedin-profile-reviewer .stage {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.012);
+}
+
+.linkedin-profile-reviewer .stage.active {
+  border-color: rgba(79, 140, 255, 0.55);
+  box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.18);
+}
+
+.linkedin-profile-reviewer .stage.done {
+  opacity: 0.6;
+}
+
+.linkedin-profile-reviewer .stage-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.linkedin-profile-reviewer .stage-log {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.linkedin-profile-reviewer .result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.linkedin-profile-reviewer .ts {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.linkedin-profile-reviewer .score-pill {
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.linkedin-profile-reviewer .score-pill.good,
+.linkedin-profile-reviewer .section-score.good {
+  color: var(--success);
+}
+
+.linkedin-profile-reviewer .score-pill.mid,
+.linkedin-profile-reviewer .section-score.mid {
+  color: var(--warning);
+}
+
+.linkedin-profile-reviewer .score-pill.bad,
+.linkedin-profile-reviewer .section-score.bad {
+  color: var(--danger);
+}
+
+.linkedin-profile-reviewer .result-summary {
+  margin: 0 0 18px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.linkedin-profile-reviewer .section-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.linkedin-profile-reviewer .section-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.012);
+}
+
+.linkedin-profile-reviewer .section-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.linkedin-profile-reviewer .section-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.linkedin-profile-reviewer .section-score {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.linkedin-profile-reviewer .section-verdict {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.linkedin-profile-reviewer .section-feedback {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+.linkedin-profile-reviewer .actions-block {
+  margin-top: 18px;
+}
+
+.linkedin-profile-reviewer .actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.linkedin-profile-reviewer .actions-sub {
+  color: var(--text-faint);
+}
+
+.linkedin-profile-reviewer .actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.linkedin-profile-reviewer .action-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.008));
+}
+
+.linkedin-profile-reviewer .action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.linkedin-profile-reviewer .action-rank {
+  font-family: var(--mono);
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.linkedin-profile-reviewer .impact-chip {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border: 1px solid;
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 9px;
+}
+
+.linkedin-profile-reviewer .impact-chip.high {
+  color: var(--blue);
+  border-color: rgba(79, 140, 255, 0.35);
+  background: rgba(79, 140, 255, 0.08);
+}
+
+.linkedin-profile-reviewer .impact-chip.mid {
+  color: var(--warning);
+  border-color: rgba(245, 166, 35, 0.35);
+  background: rgba(245, 166, 35, 0.08);
+}
+
+.linkedin-profile-reviewer .impact-chip.low {
+  color: var(--success);
+  border-color: rgba(79, 207, 138, 0.35);
+  background: rgba(79, 207, 138, 0.08);
+}
+
+.linkedin-profile-reviewer .action-card h3 {
+  margin: 0 0 7px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.linkedin-profile-reviewer .action-card p {
+  margin: 0;
+  color: var(--text-dim);
+  line-height: 1.55;
+  font-size: 13px;
+}
+
+.linkedin-profile-reviewer .result-footer {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.linkedin-profile-reviewer .ghost-btn,
+.linkedin-profile-reviewer .primary-link {
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-dim);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.linkedin-profile-reviewer .ghost-btn.done {
+  border-color: rgba(79, 207, 138, 0.45);
+  color: var(--success);
+}
+
+.linkedin-profile-reviewer .ghost-btn:hover,
+.linkedin-profile-reviewer .primary-link:hover {
+  color: var(--text);
+  border-color: var(--blue);
+}
+
+.linkedin-profile-reviewer .primary-link {
+  color: var(--blue);
+}
+
+.linkedin-profile-reviewer .token-note {
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.linkedin-profile-reviewer .state.error {
+  text-align: center;
+}
+
+.linkedin-profile-reviewer .state.error h2 {
+  margin: 0 0 8px;
+  font-size: 21px;
+}
+
+.linkedin-profile-reviewer .state.error p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.linkedin-profile-reviewer .error-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.linkedin-profile-reviewer .how-it-works {
+  margin-top: 84px;
+  width: min(100%, 920px);
+}
+
+.linkedin-profile-reviewer .how-it-works .accent {
+  color: transparent;
+  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+@media (max-width: 760px) {
+  .linkedin-profile-reviewer .shell {
+    padding: 16px 18px 100px;
+  }
+
+  .linkedin-profile-reviewer .panel-body {
+    padding: 18px;
+  }
+
+  .linkedin-profile-reviewer .stages,
+  .linkedin-profile-reviewer .section-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .linkedin-profile-reviewer .hide-sm {
+    display: none;
+  }
+
+  .linkedin-profile-reviewer .hero h1 {
+    font-size: 36px;
+  }
+}
