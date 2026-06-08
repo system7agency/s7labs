@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { NextResponse } from 'next/server'
 
-import { calculateCost, type CostBreakdown, sumUsage } from '@/lib/llm/cost'
+import { calculateCost, type CostBreakdown } from '@/lib/llm/cost'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -262,11 +262,7 @@ Return corrected JSON only, still following the exact schema and rules.
       const retry = await runClaude(anthropic, retryPrompt)
       retry.parsed.tokens_in = retry.tokensIn
       retry.parsed.tokens_out = retry.tokensOut
-      const usage = sumUsage([
-        { model: CAMPAIGN_MODEL, inputTokens: firstPass.tokensIn, outputTokens: firstPass.tokensOut },
-        { model: CAMPAIGN_MODEL, inputTokens: retry.tokensIn, outputTokens: retry.tokensOut },
-      ])
-      const cost = calculateCost(usage)
+      const cost = costFromPass(retry.tokensIn, retry.tokensOut)
       return jsonResponse({ ok: true, data: retry.parsed, cost }, 200)
     } catch {
       const message =
