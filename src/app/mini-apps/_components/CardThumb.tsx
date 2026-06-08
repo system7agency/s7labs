@@ -213,5 +213,24 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="pr-badge">S7</span>
         </div>
       )
+    case 'bulkemail':
+      return (
+        <div className="card-thumb thumb-bulkemail">
+          <div className="be-rows">
+            <span className="be-row">
+              <span className="be-cell" />
+              <span className="be-check be-ok">✓</span>
+            </span>
+            <span className="be-row">
+              <span className="be-cell" />
+              <span className="be-check be-ok">✓</span>
+            </span>
+            <span className="be-row">
+              <span className="be-cell" />
+              <span className="be-check be-miss">—</span>
+            </span>
+          </div>
+        </div>
+      )
   }
 }
