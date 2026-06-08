@@ -7,9 +7,8 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
   ApiResponse,
@@ -162,6 +161,10 @@ export default function LinkedInProfileReviewerPage() {
   const [url, setUrl] = useState('')
   const [profileText, setProfileText] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
+  const [shakeInput, setShakeInput] = useState(0)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
   const [errorCode, setErrorCode] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -169,13 +172,6 @@ export default function LinkedInProfileReviewerPage() {
   const [resultTs, setResultTs] = useState('')
   const [copyState, setCopyState] = useState<'idle' | 'done'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
-  const [cost, setCost] = useState<{
-    model: string
-    inputTokens: number
-    outputTokens: number
-    costUsd: number
-  } | null>(null)
-
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
   const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
@@ -303,7 +299,7 @@ export default function LinkedInProfileReviewerPage() {
     setLoadingPct('0%')
     setLatency('—')
     setTokens(null)
-    setCost(null)
+    setEmailError(null)
   }, [clearTimers])
 
   const handleSubmit = useCallback(
@@ -313,21 +309,73 @@ export default function LinkedInProfileReviewerPage() {
 
       const trimmedUrl = url.trim()
       const trimmedText = profileText.trim()
+      let valid = true
 
       if (mode === 'url') {
         if (!trimmedUrl) {
           setInputError('Paste a LinkedIn profile URL to continue.')
-          return
+          setShakeInput((k) => k + 1)
+          valid = false
         }
       } else if (trimmedText.length < 100 || trimmedText.length > 8000) {
         setInputError('Paste between 100 and 8000 characters of profile text.')
-        return
+        setShakeInput((k) => k + 1)
+        valid = false
       }
 
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
+
       setInputError(null)
+      setEmailError(null)
       setErrorCode(null)
       setErrorMsg('')
       setSubmitting(true)
+      setResult(null)
+
+      let submissionId: string | null = null
+      try {
+        const leadRes = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'linkedin-profile-reviewer',
+            input: {
+              mode,
+              url: trimmedUrl || undefined,
+              profileText: trimmedText || undefined,
+            },
+          }),
+        })
+        const leadJson = (await leadRes.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!leadRes.ok || !leadJson.ok || !leadJson.submissionId) {
+          setEmailError(leadJson.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = leadJson.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setAppState('loading')
       startLoadingAnimation()
 
@@ -354,8 +402,17 @@ export default function LinkedInProfileReviewerPage() {
           setResult(data.data)
           setResultTs(fmtTs(new Date()))
           setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
-          if (data.cost) setCost(data.cost)
           setAppState('result')
+
+          fetch('/api/leads/complete', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              submissionId,
+              output: data.data,
+              ...(data.cost ? { cost: data.cost } : {}),
+            }),
+          }).catch((err) => console.error('[linkedin-profile-reviewer] leads/complete', err))
         } else {
           setErrorCode(data.code ?? null)
           setErrorMsg(data.message)
@@ -370,11 +427,8 @@ export default function LinkedInProfileReviewerPage() {
         setSubmitting(false)
       }
     },
-    [mode, profileText, startLoadingAnimation, submitting, url, clearTimers]
+    [mode, profileText, email, startLoadingAnimation, submitting, url, clearTimers]
   )
-
-  const initialInput =
-    mode === 'url' ? { mode, url: url.trim() } : { mode, profileText: profileText.trim() }
 
   return (
     <div className="linkedin-profile-reviewer">
@@ -438,7 +492,7 @@ export default function LinkedInProfileReviewerPage() {
 
                 <form noValidate onSubmit={handleSubmit}>
                   {mode === 'url' ? (
-                    <div className="field">
+                    <div key={`u-${shakeInput}`} className="field">
                       <label htmlFor="linkedin-url">Profile URL</label>
                       <input
                         id="linkedin-url"
@@ -453,7 +507,7 @@ export default function LinkedInProfileReviewerPage() {
                       <p className="helper">Only individual profile URLs are supported.</p>
                     </div>
                   ) : (
-                    <div className="field">
+                    <div key={`t-${shakeInput}`} className="field">
                       <label htmlFor="profile-text">Profile text</label>
                       <textarea
                         id="profile-text"
@@ -469,6 +523,27 @@ export default function LinkedInProfileReviewerPage() {
                   )}
 
                   {inputError && <p className="field-error">{inputError}</p>}
+
+                  <div key={`e-${shakeEmail}`} className="field" style={{ marginTop: 14 }}>
+                    <label htmlFor="work-email">
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <input
+                      id="work-email"
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      className={clsx({ error: !!emailError })}
+                      value={email}
+                      disabled={submitting}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        if (emailError) setEmailError(null)
+                      }}
+                    />
+                    {emailError && <p className="field-error">{emailError}</p>}
+                  </div>
 
                   <button className="submit-btn" type="submit" disabled={submitting}>
                     Review profile
@@ -503,93 +578,79 @@ export default function LinkedInProfileReviewerPage() {
 
               <section className={clsx('state', { active: appState === 'result' })}>
                 {result && (
-                  <EmailGate
-                    miniAppSlug="linkedin-profile-reviewer"
-                    pattern="upfront"
-                    initialInput={initialInput}
-                  >
-                    {({ submitToApi }) => (
-                      <>
-                        <SubmitOnce
-                          submit={submitToApi}
-                          input={initialInput}
-                          output={result}
-                          cost={cost ?? undefined}
-                        />
-                        <div className="result-head">
-                          <span className="ts">{resultTs}</span>
-                          <span className={clsx('score-pill', scoreClass(result.score))}>
-                            Score {result.score}/100
-                          </span>
-                        </div>
-                        <p className="result-summary">{result.summary}</p>
+                  <>
+                    <div className="result-head">
+                      <span className="ts">{resultTs}</span>
+                      <span className={clsx('score-pill', scoreClass(result.score))}>
+                        Score {result.score}/100
+                      </span>
+                    </div>
+                    <p className="result-summary">{result.summary}</p>
 
-                        <div className="section-grid">
-                          {result.sections.map((section) => (
-                            <article key={section.name} className="section-card">
-                              <div className="section-row">
-                                <span className="section-name">{section.name}</span>
-                                <span className={clsx('section-score', scoreClass(section.score))}>
-                                  {section.score}
-                                </span>
-                              </div>
-                              <p className="section-verdict">{section.verdict}</p>
-                              <p className="section-feedback">{section.feedback}</p>
-                            </article>
-                          ))}
-                        </div>
-
-                        <div className="actions-block">
-                          <div className="actions-header">
-                            <span>{'// Top 5 actions'}</span>
-                            <span className="actions-sub">ranked by impact</span>
+                    <div className="section-grid">
+                      {result.sections.map((section) => (
+                        <article key={section.name} className="section-card">
+                          <div className="section-row">
+                            <span className="section-name">{section.name}</span>
+                            <span className={clsx('section-score', scoreClass(section.score))}>
+                              {section.score}
+                            </span>
                           </div>
-                          <div className="actions-list">
-                            {result.topActions.map((item) => (
-                              <article key={item.rank} className="action-card">
-                                <div className="action-row">
-                                  <span className="action-rank">0{item.rank}</span>
-                                  <span className={clsx('impact-chip', impactClass(item.impact))}>
-                                    {item.impact}
-                                  </span>
-                                </div>
-                                <h3>{item.action}</h3>
-                                <p>{item.rationale}</p>
-                              </article>
-                            ))}
-                          </div>
-                        </div>
+                          <p className="section-verdict">{section.verdict}</p>
+                          <p className="section-feedback">{section.feedback}</p>
+                        </article>
+                      ))}
+                    </div>
 
-                        <div className="result-footer">
-                          <button type="button" className="ghost-btn" onClick={resetToInput}>
-                            Review another
-                          </button>
-                          <button
-                            type="button"
-                            className={clsx('ghost-btn', { done: copyState === 'done' })}
-                            onClick={handleCopy}
-                          >
-                            {copyState === 'done' ? 'Copied' : 'Copy review'}
-                          </button>
-                          <a
-                            className="primary-link"
-                            href="https://www.system7.ai/contact"
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Book a call
-                          </a>
-                        </div>
+                    <div className="actions-block">
+                      <div className="actions-header">
+                        <span>{'// Top 5 actions'}</span>
+                        <span className="actions-sub">ranked by impact</span>
+                      </div>
+                      <div className="actions-list">
+                        {result.topActions.map((item) => (
+                          <article key={item.rank} className="action-card">
+                            <div className="action-row">
+                              <span className="action-rank">0{item.rank}</span>
+                              <span className={clsx('impact-chip', impactClass(item.impact))}>
+                                {item.impact}
+                              </span>
+                            </div>
+                            <h3>{item.action}</h3>
+                            <p>{item.rationale}</p>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
 
-                        {tokens && (
-                          <p className="token-note">
-                            {(tokens.in + tokens.out).toLocaleString()} tokens used (
-                            {tokens.in.toLocaleString()} in / {tokens.out.toLocaleString()} out)
-                          </p>
-                        )}
-                      </>
+                    <div className="result-footer">
+                      <button type="button" className="ghost-btn" onClick={resetToInput}>
+                        Review another
+                      </button>
+                      <button
+                        type="button"
+                        className={clsx('ghost-btn', { done: copyState === 'done' })}
+                        onClick={handleCopy}
+                      >
+                        {copyState === 'done' ? 'Copied' : 'Copy review'}
+                      </button>
+                      <a
+                        className="primary-link"
+                        href="https://www.system7.ai/contact"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Book a call
+                      </a>
+                    </div>
+
+                    {tokens && (
+                      <p className="token-note">
+                        {(tokens.in + tokens.out).toLocaleString()} tokens used (
+                        {tokens.in.toLocaleString()} in / {tokens.out.toLocaleString()} out)
+                      </p>
                     )}
-                  </EmailGate>
+                  </>
                 )}
               </section>
 
