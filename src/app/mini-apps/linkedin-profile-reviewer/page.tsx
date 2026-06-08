@@ -171,7 +171,6 @@ export default function LinkedInProfileReviewerPage() {
   const [result, setResult] = useState<ProfileReviewResult | null>(null)
   const [resultTs, setResultTs] = useState('')
   const [copyState, setCopyState] = useState<'idle' | 'done'>('idle')
-  const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
   const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
@@ -298,7 +297,6 @@ export default function LinkedInProfileReviewerPage() {
     setProgressPct(0)
     setLoadingPct('0%')
     setLatency('—')
-    setTokens(null)
     setEmailError(null)
   }, [clearTimers])
 
@@ -401,7 +399,6 @@ export default function LinkedInProfileReviewerPage() {
           setDoneStages([0, 1, 2, 3])
           setResult(data.data)
           setResultTs(fmtTs(new Date()))
-          setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
           setAppState('result')
 
           fetch('/api/leads/complete', {
@@ -643,13 +640,6 @@ export default function LinkedInProfileReviewerPage() {
                         Book a call
                       </a>
                     </div>
-
-                    {tokens && (
-                      <p className="token-note">
-                        {(tokens.in + tokens.out).toLocaleString()} tokens used (
-                        {tokens.in.toLocaleString()} in / {tokens.out.toLocaleString()} out)
-                      </p>
-                    )}
                   </>
                 )}
               </section>

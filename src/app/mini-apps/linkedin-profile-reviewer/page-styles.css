@@ -216,6 +216,15 @@
   line-height: 1.55;
 }
 
+.linkedin-profile-reviewer .field input:-webkit-autofill,
+.linkedin-profile-reviewer .field input:-webkit-autofill:hover,
+.linkedin-profile-reviewer .field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 .linkedin-profile-reviewer .field input:focus,
 .linkedin-profile-reviewer .field textarea:focus {
   border-color: var(--blue);
