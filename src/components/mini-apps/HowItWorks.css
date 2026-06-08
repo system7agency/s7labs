@@ -117,10 +117,12 @@
     0 0 22px rgba(79, 140, 255, 0.5);
 }
 
+/* Text always reads left-to-right for readability. Side differentiation
+   comes from the card position (left vs right column of the grid) and
+   the icon position via flex row-reverse on left-side cards. */
 .how-it-works .hiw-step[data-side='left'] .hiw-card {
   grid-column: 1;
   margin-right: 18px;
-  text-align: right;
 }
 .how-it-works .hiw-step[data-side='right'] .hiw-card {
   grid-column: 3;

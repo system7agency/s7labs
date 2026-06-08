@@ -8,9 +8,8 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type { ApiResponse, EmailFinderResult } from '@/app/api/mini-apps/email-finder/route'
 import { PageScripts } from './PageScripts'
@@ -131,7 +130,7 @@ const HIW_STEPS: HowItWorksStep[] = [
   {
     title: 'Get the verified email with one click to copy',
     description:
-      'Name, title, company domain, and LinkedIn URL come back alongside — ready to drop into your sequencer.',
+      'Name, title, company domain, and LinkedIn URL come back alongside, ready to drop into your sequencer.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -156,11 +155,11 @@ type LookupInput = { name: string; company: string }
 
 function LookupRunner({
   input,
-  submitToApi,
+  submissionId,
   onReset,
 }: {
   input: LookupInput
-  submitToApi: (i: object, o?: object) => Promise<void>
+  submissionId: string
   onReset: () => void
 }) {
   const [state, setState] = useState<LookupState>('loading')
@@ -302,7 +301,11 @@ function LookupRunner({
           setSysState('complete')
           setState('no-result')
           // Record the no-result submission too
-          void submitToApi(input, { result: null })
+          fetch('/api/leads/complete', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ submissionId, output: { result: null } }),
+          }).catch((err) => console.error('[email-finder] leads/complete', err))
           return
         }
 
@@ -310,7 +313,11 @@ function LookupRunner({
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setState('result')
-        void submitToApi(input, data.result)
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ submissionId, output: data.result }),
+        }).catch((err) => console.error('[email-finder] leads/complete', err))
       } catch {
         if (cancelled) return
         clearTimers()
@@ -381,8 +388,6 @@ function LookupRunner({
       <section className={clsx('ef-state', { active: state === 'result' })}>
         {result && (
           <>
-            <SubmitOnce submit={submitToApi} input={input} output={result} />
-
             <div className="result-head">
               <span className="title">Email found</span>
               <span className="ts-label">{resultTs}</span>
@@ -532,7 +537,7 @@ function LookupRunner({
       </section>
 
       {/* Error */}
-      <section className={clsx('ef-state error-state', { active: state === 'error' })}>
+      <section className={clsx('ef-state', 'error-state', { active: state === 'error' })}>
         <div className="err-icon">
           <svg
             viewBox="0 0 24 24"
@@ -580,9 +585,14 @@ type IdleErrors = { name?: string; company?: string }
 export default function EmailFinderPage() {
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
   const [errors, setErrors] = useState<IdleErrors>({})
   const [shakeKey, setShakeKey] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
   const [submittedInput, setSubmittedInput] = useState<LookupInput | null>(null)
+  const [submissionId, setSubmissionId] = useState<string | null>(null)
 
   const nameRef = useRef<HTMLInputElement | null>(null)
 
@@ -594,33 +604,95 @@ export default function EmailFinderPage() {
   }, [submittedInput])
 
   const handleSubmit = useCallback(
-    (e: FormEvent) => {
+    async (e: FormEvent) => {
       e.preventDefault()
       if (!APP_ENABLED) return
+      if (submitting) return
       const trimmedName = name.trim()
       const trimmedCompany = company.trim()
+      const trimmedEmail = email.trim().toLowerCase()
       const next: IdleErrors = {}
-      if (trimmedName.length < 2) next.name = 'Please enter a full name.'
-      else if (trimmedName.length > 100) next.name = 'Name is too long.'
-      if (!trimmedCompany) next.company = 'Please enter a company.'
-      else if (!isValidCompany(trimmedCompany))
+      let hasError = false
+      if (trimmedName.length < 2) {
+        next.name = 'Please enter a full name.'
+        hasError = true
+      } else if (trimmedName.length > 100) {
+        next.name = 'Name is too long.'
+        hasError = true
+      }
+      if (!trimmedCompany) {
+        next.company = 'Please enter a company.'
+        hasError = true
+      } else if (!isValidCompany(trimmedCompany)) {
         next.company = 'Use a domain (stripe.com) or a LinkedIn company URL.'
-      if (next.name || next.company) {
+        hasError = true
+      }
+      let localEmailError: string | null = null
+      if (!trimmedEmail) {
+        localEmailError = 'Please enter your work email.'
+        hasError = true
+      } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+        localEmailError = 'Please enter a valid email.'
+        hasError = true
+      }
+      setEmailError(localEmailError)
+      if (hasError) {
         setErrors(next)
         setShakeKey((k) => k + 1)
+        if (localEmailError) setShakeEmail((k) => k + 1)
         return
       }
       setErrors({})
-      setSubmittedInput({ name: trimmedName, company: trimmedCompany })
+
+      const lookupInput: LookupInput = { name: trimmedName, company: trimmedCompany }
+
+      setSubmitting(true)
+
+      // 1) Save the lead first.
+      let newSubmissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: trimmedEmail,
+            miniAppSlug: 'email-finder',
+            input: lookupInput,
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        newSubmissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
+      setSubmissionId(newSubmissionId)
+      setSubmittedInput(lookupInput)
+      setSubmitting(false)
     },
-    [name, company]
+    [name, company, email, submitting]
   )
 
   const handleReset = useCallback(() => {
     setSubmittedInput(null)
+    setSubmissionId(null)
     setName('')
     setCompany('')
     setErrors({})
+    setEmailError(null)
   }, [])
 
   return (
@@ -638,23 +710,19 @@ export default function EmailFinderPage() {
           </h1>
           <p>
             Drop in a name and company. We hit Apollo’s people database in real time and hand back a
-            verified address with a confidence score — ready to drop into your sequencer.
+            verified address with a confidence score, ready to drop into your sequencer.
           </p>
         </section>
 
         {/* Panel */}
         <div className="panel-wrap">
           <div className="panel">
-            {submittedInput ? (
-              <EmailGate miniAppSlug="email-finder" pattern="upfront" initialInput={submittedInput}>
-                {({ submitToApi }) => (
-                  <LookupRunner
-                    input={submittedInput}
-                    submitToApi={submitToApi}
-                    onReset={handleReset}
-                  />
-                )}
-              </EmailGate>
+            {submittedInput && submissionId ? (
+              <LookupRunner
+                input={submittedInput}
+                submissionId={submissionId}
+                onReset={handleReset}
+              />
             ) : (
               <div className="panel-body">
                 <section className="ef-state active">
@@ -709,19 +777,43 @@ export default function EmailFinderPage() {
                       </div>
                     </div>
 
+                    <div className="input-field" style={{ marginTop: 14 }}>
+                      <label>
+                        Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                      </label>
+                      <div
+                        key={`e-${shakeEmail}`}
+                        className={clsx('input-box', { error: emailError })}
+                      >
+                        <input
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          placeholder="you@company.com"
+                          value={email}
+                          disabled={submitting || !APP_ENABLED}
+                          onChange={(e) => {
+                            setEmail(e.target.value)
+                            if (emailError) setEmailError(null)
+                          }}
+                        />
+                      </div>
+                      {emailError && <div className="field-error">{emailError}</div>}
+                    </div>
+
                     {!APP_ENABLED ? (
                       <div className="ef-coming-soon" role="status">
                         <span className="ef-coming-soon-dot" />
-                        Coming soon — Apollo API access in review. Form is read-only for now.
+                        Coming soon. Apollo API access in review. Form is read-only for now.
                       </div>
                     ) : null}
 
-                    <div className="ef-submit-row">
+                    <div className="ef-submit-row" style={{ marginTop: 18 }}>
                       <button
                         type="submit"
                         className="ef-submit-btn"
-                        disabled={!APP_ENABLED}
-                        aria-disabled={!APP_ENABLED}
+                        disabled={!APP_ENABLED || submitting}
+                        aria-disabled={!APP_ENABLED || submitting}
                       >
                         {APP_ENABLED ? 'Find Email' : 'Coming soon'}
                         <svg

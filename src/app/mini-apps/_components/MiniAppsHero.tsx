@@ -48,7 +48,7 @@ export function MiniAppsHero({ onSuggest }: MiniAppsHeroProps) {
 
           <p className="hero-sub">
             Explore live mini-apps built by System7. Each one is a compact product you can open,
-            test and learn from — showing how useful software can solve specific problems, connect
+            test and learn from, showing how useful software can solve specific problems, connect
             ideas and turn capability into something tangible.
           </p>
 

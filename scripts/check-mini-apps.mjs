@@ -7,9 +7,13 @@
  * `src/app/mini-apps/**`. See `docs/mini-apps.md`.
  *
  * For each mini-app page (src/app/mini-apps/<folder>/page.tsx) we check:
- *   1. The page wraps its result in <EmailGate miniAppSlug="...">.
- *   2. The slug from that wrap exists in Supabase `mini_apps` with status='active'.
- *   3. The page renders a `How it works` section (className="how-it-works").
+ *   1. The page uses the inline email gate pattern — imports EMAIL_REGEX
+ *      from @/lib/leads/disposable AND POSTs to /api/leads/submit with a
+ *      `miniAppSlug: '<slug>'` field in the body.
+ *   2. The slug from that POST exists in Supabase `mini_apps` with
+ *      status='active'.
+ *   3. The page renders a "How it works" section — either the shared
+ *      <HowItWorks> component or a direct <section className="how-it-works">.
  *
  * Env vars required:
  *   NEXT_PUBLIC_SUPABASE_URL
@@ -81,8 +85,9 @@ function getChangedFolderNames() {
 // --- per-page static checks -----------------------------------------------
 
 function extractSlug(source) {
-  // Matches <EmailGate ... miniAppSlug="<slug>" ... >  (order-agnostic, single or double quoted)
-  const m = source.match(/<EmailGate[\s\S]*?miniAppSlug=["']([^"']+)["']/)
+  // Inline pattern: a POST body to /api/leads/submit with `miniAppSlug: '<slug>'`.
+  // Matches both `miniAppSlug: 'slug'` and `miniAppSlug: "slug"`.
+  const m = source.match(/miniAppSlug:\s*["']([a-z0-9-]+)["']/)
   return m ? m[1] : null
 }
 
@@ -97,8 +102,13 @@ function hasHowItWorks(source) {
   return directSection || sharedComponent
 }
 
-function hasEmailGateImport(source) {
-  return /from\s+['"]@\/components\/mini-apps\/EmailGate['"]/.test(source)
+function hasInlineEmailGate(source) {
+  // The inline email gate pattern uses EMAIL_REGEX for client-side validation
+  // and POSTs to /api/leads/submit before any model call.
+  return (
+    /from\s+['"]@\/lib\/leads\/disposable['"]/.test(source) &&
+    /['"]\/api\/leads\/submit['"]/.test(source)
+  )
 }
 
 // --- supabase query --------------------------------------------------------
@@ -155,17 +165,18 @@ for (const folder of folders) {
   const pageSource = readFileSync(join(folder, 'page.tsx'), 'utf8')
   const problems = []
 
-  if (!hasEmailGateImport(pageSource) || !pageSource.includes('<EmailGate')) {
+  if (!hasInlineEmailGate(pageSource)) {
     problems.push(
-      `must wrap its result section in <EmailGate miniAppSlug="..."> ` +
-        `(import from @/components/mini-apps/EmailGate). See ${DOC_LINK}.`
+      `must use the inline email gate pattern: import EMAIL_REGEX from ` +
+        `@/lib/leads/disposable AND POST to /api/leads/submit BEFORE the ` +
+        `model call. See ${DOC_LINK}.`
     )
   }
 
   const slug = extractSlug(pageSource)
   if (!slug) {
     problems.push(
-      `<EmailGate miniAppSlug="..."> not found or slug not extractable. See ${DOC_LINK}.`
+      `miniAppSlug: '<slug>' not found in the /api/leads/submit body. See ${DOC_LINK}.`
     )
   } else if (!activeSlugs.has(slug)) {
     problems.push(

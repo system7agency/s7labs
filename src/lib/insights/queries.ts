@@ -1,6 +1,16 @@
 import 'server-only'
 
-import { unstable_cache } from 'next/cache'
+// Insights queries are NOT cached — the dashboard is admin-only and low-traffic,
+// so we'd rather pay the DB round-trip on every render than show stale rows.
+// Shim mirrors unstable_cache's call shape so the existing structure stays.
+function noCache<T>(
+  fn: () => Promise<T>,
+  _keyParts?: ReadonlyArray<string>,
+  _opts?: { revalidate?: number; tags?: string[] }
+): () => Promise<T> {
+  return fn
+}
+const unstable_cache = noCache
 
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 
@@ -29,13 +39,29 @@ export type MiniAppSpend = {
   submissionCount: number
 }
 
+// Display status. Adds `abandoned` (derived) for pending rows that never
+// completed within a reasonable window — most often the user closed the
+// tab between leads/submit and leads/complete, or the model call failed.
+export type DisplayStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'abandoned'
+
+const ABANDONED_AFTER_MS = 5 * 60 * 1000
+
+function deriveDisplayStatus(
+  raw: 'pending' | 'processing' | 'completed' | 'failed',
+  createdAt: string
+): DisplayStatus {
+  if (raw !== 'pending') return raw
+  const ageMs = Date.now() - new Date(createdAt).getTime()
+  return ageMs > ABANDONED_AFTER_MS ? 'abandoned' : 'pending'
+}
+
 export type ActivityRow = {
   id: string
   miniAppSlug: string
   miniAppName: string
   email: string
   costUsd: number | null
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  status: DisplayStatus
   createdAt: string
 }
 
@@ -228,57 +254,121 @@ export type SubmissionListRow = {
   email: string
   modelUsed: string | null
   costUsd: number | null
-  status: 'pending' | 'processing' | 'completed' | 'failed'
+  status: DisplayStatus
   createdAt: string
 }
 
-export const getSubmissionsList = (limit = 50) =>
-  unstable_cache(
-    async (): Promise<SubmissionListRow[]> => {
-      const supabase = getSupabaseServerClient()
-      const { data, error } = await supabase
-        .from('submissions')
-        .select('id, mini_app_slug, email, model_used, cost_usd, status, created_at')
-        .order('created_at', { ascending: false })
-        .limit(limit)
-      if (error) throw new Error(`getSubmissionsList: ${error.message}`)
+export type SubmissionsSortBy = 'createdAt' | 'cost' | 'miniApp' | 'email' | 'status'
+export type SortDir = 'asc' | 'desc'
 
-      const rows = (data ?? []) as Array<{
-        id: string
-        mini_app_slug: string
-        email: string | null
-        model_used: string | null
-        cost_usd: number | string | null
-        status: SubmissionListRow['status']
-        created_at: string
-      }>
+const SUBMISSIONS_SORT_COLUMN: Record<SubmissionsSortBy, string> = {
+  createdAt: 'created_at',
+  cost: 'cost_usd',
+  miniApp: 'mini_app_slug',
+  email: 'email',
+  status: 'status',
+}
 
-      const slugs = [...new Set(rows.map((r) => r.mini_app_slug))]
-      const names = new Map<string, string>()
-      if (slugs.length > 0) {
-        const { data: nameRows } = await supabase
-          .from('mini_apps')
-          .select('slug, name')
-          .in('slug', slugs)
-        for (const row of (nameRows ?? []) as Array<{ slug: string; name: string }>) {
-          names.set(row.slug, row.name)
-        }
-      }
+export type SubmissionsQueryParams = {
+  page: number
+  pageSize: number
+  search?: string
+  sortBy?: SubmissionsSortBy
+  sortDir?: SortDir
+}
+export type SubmissionsQueryResult = {
+  rows: SubmissionListRow[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
 
-      return rows.map((r) => ({
-        id: r.id,
-        miniAppSlug: r.mini_app_slug,
-        miniAppName: names.get(r.mini_app_slug) ?? r.mini_app_slug,
-        email: r.email ?? '—',
-        modelUsed: r.model_used,
-        costUsd: r.cost_usd == null ? null : asNumber(r.cost_usd),
-        status: r.status,
-        createdAt: r.created_at,
-      }))
-    },
-    ['insights:submissions-list', String(limit)],
-    { revalidate: 30, tags: ['insights'] }
-  )()
+const MAX_PAGE_SIZE = 100
+
+function clampPageSize(n: number): number {
+  if (!Number.isFinite(n) || n <= 0) return 25
+  return Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(n)))
+}
+function clampPage(n: number): number {
+  if (!Number.isFinite(n) || n <= 0) return 1
+  return Math.max(1, Math.floor(n))
+}
+
+export const getSubmissionsList = async (
+  params: SubmissionsQueryParams
+): Promise<SubmissionsQueryResult> => {
+  const supabase = getSupabaseServerClient()
+  const pageSize = clampPageSize(params.pageSize)
+  const page = clampPage(params.page)
+  const sortBy: SubmissionsSortBy = params.sortBy ?? 'createdAt'
+  const sortDir: SortDir = params.sortDir === 'asc' ? 'asc' : 'desc'
+  const search = (params.search ?? '').trim()
+
+  let q = supabase
+    .from('submissions')
+    .select('id, mini_app_slug, email, model_used, cost_usd, status, created_at', {
+      count: 'exact',
+    })
+
+  if (search.length > 0) {
+    // Escape % and _ to keep them literal, then wildcard wrap.
+    const safe = search.replace(/[%_]/g, (m) => `\\${m}`)
+    const pattern = `%${safe}%`
+    q = q.or(`email.ilike.${pattern},mini_app_slug.ilike.${pattern}`)
+  }
+
+  q = q.order(SUBMISSIONS_SORT_COLUMN[sortBy], { ascending: sortDir === 'asc' })
+  if (sortBy !== 'createdAt') {
+    // Stable tiebreak so paginated rows are deterministic.
+    q = q.order('created_at', { ascending: false })
+  }
+
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+  q = q.range(from, to)
+
+  const { data, error, count } = await q
+  if (error) throw new Error(`getSubmissionsList: ${error.message}`)
+
+  const rows = (data ?? []) as Array<{
+    id: string
+    mini_app_slug: string
+    email: string | null
+    model_used: string | null
+    cost_usd: number | string | null
+    status: 'pending' | 'processing' | 'completed' | 'failed'
+    created_at: string
+  }>
+
+  const slugs = [...new Set(rows.map((r) => r.mini_app_slug))]
+  const names = new Map<string, string>()
+  if (slugs.length > 0) {
+    const { data: nameRows } = await supabase
+      .from('mini_apps')
+      .select('slug, name')
+      .in('slug', slugs)
+    for (const row of (nameRows ?? []) as Array<{ slug: string; name: string }>) {
+      names.set(row.slug, row.name)
+    }
+  }
+
+  const mapped: SubmissionListRow[] = rows.map((r) => ({
+    id: r.id,
+    miniAppSlug: r.mini_app_slug,
+    miniAppName: names.get(r.mini_app_slug) ?? r.mini_app_slug,
+    email: r.email ?? '—',
+    modelUsed: r.model_used,
+    costUsd: r.cost_usd == null ? null : asNumber(r.cost_usd),
+    status: deriveDisplayStatus(r.status, r.created_at),
+    createdAt: r.created_at,
+  }))
+
+  const total = count ?? mapped.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+
+  return { rows: mapped, total, page, pageSize, totalPages }
+}
 
 export type LeadListRow = {
   id: string
@@ -290,60 +380,131 @@ export type LeadListRow = {
   lastSeenAt: string
 }
 
-export const getLeadsList = (limit = 50) =>
-  unstable_cache(
-    async (): Promise<LeadListRow[]> => {
-      const supabase = getSupabaseServerClient()
-      const { data: leads, error } = await supabase
-        .from('leads')
-        .select('id, email, first_source, first_seen_at, last_seen_at')
-        .order('last_seen_at', { ascending: false })
-        .limit(limit)
-      if (error) throw new Error(`getLeadsList: ${error.message}`)
-      const leadRows = (leads ?? []) as Array<{
-        id: string
-        email: string | null
-        first_source: string | null
-        first_seen_at: string
-        last_seen_at: string
-      }>
-      if (leadRows.length === 0) return []
+export type LeadsSortBy =
+  | 'email'
+  | 'firstSource'
+  | 'submissionCount'
+  | 'totalCost'
+  | 'firstSeenAt'
+  | 'lastSeenAt'
 
-      // Aggregate submissions per lead.
-      const leadIds = leadRows.map((l) => l.id)
-      const { data: subs, error: subsErr } = await supabase
-        .from('submissions')
-        .select('lead_id, cost_usd')
-        .in('lead_id', leadIds)
-      if (subsErr) throw new Error(`getLeadsList(subs): ${subsErr.message}`)
+// Sortable columns that map directly to base-table columns. The aggregate
+// columns (submissionCount, totalCost) sort the in-memory leads list rather
+// than the base query — see below.
+const LEADS_BASE_SORT_COLUMN: Partial<Record<LeadsSortBy, string>> = {
+  email: 'email',
+  firstSource: 'first_source',
+  firstSeenAt: 'first_seen_at',
+  lastSeenAt: 'last_seen_at',
+}
 
-      const stats = new Map<string, { count: number; cost: number }>()
-      for (const s of (subs ?? []) as Array<{
-        lead_id: string
-        cost_usd: number | string | null
-      }>) {
-        const prev = stats.get(s.lead_id) ?? { count: 0, cost: 0 }
-        prev.count += 1
-        prev.cost += asNumber(s.cost_usd)
-        stats.set(s.lead_id, prev)
-      }
+export type LeadsQueryParams = {
+  page: number
+  pageSize: number
+  search?: string
+  sortBy?: LeadsSortBy
+  sortDir?: SortDir
+}
+export type LeadsQueryResult = {
+  rows: LeadListRow[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
 
-      return leadRows.map((l) => {
-        const s = stats.get(l.id) ?? { count: 0, cost: 0 }
-        return {
-          id: l.id,
-          email: l.email ?? '—',
-          firstSource: l.first_source,
-          submissionCount: s.count,
-          totalCostUsd: s.cost,
-          firstSeenAt: l.first_seen_at,
-          lastSeenAt: l.last_seen_at,
-        }
-      })
-    },
-    ['insights:leads-list', String(limit)],
-    { revalidate: 30, tags: ['insights'] }
-  )()
+export const getLeadsList = async (params: LeadsQueryParams): Promise<LeadsQueryResult> => {
+  const supabase = getSupabaseServerClient()
+  const pageSize = clampPageSize(params.pageSize)
+  const page = clampPage(params.page)
+  const sortBy: LeadsSortBy = params.sortBy ?? 'lastSeenAt'
+  const sortDir: SortDir = params.sortDir === 'asc' ? 'asc' : 'desc'
+  const search = (params.search ?? '').trim()
+
+  let q = supabase
+    .from('leads')
+    .select('id, email, first_source, first_seen_at, last_seen_at', { count: 'exact' })
+
+  if (search.length > 0) {
+    const safe = search.replace(/[%_]/g, (m) => `\\${m}`)
+    q = q.ilike('email', `%${safe}%`)
+  }
+
+  // For non-aggregate sorts, push order to the DB and paginate there.
+  // For aggregate sorts (submissionCount, totalCost) we order by last_seen_at
+  // at the DB layer (so the page is at least deterministic), fetch the page,
+  // then re-sort that page in memory by the aggregate value.
+  const baseSortCol = LEADS_BASE_SORT_COLUMN[sortBy] ?? 'last_seen_at'
+  const baseAscending = LEADS_BASE_SORT_COLUMN[sortBy] ? sortDir === 'asc' : false
+  q = q.order(baseSortCol, { ascending: baseAscending })
+  if (baseSortCol !== 'last_seen_at') {
+    q = q.order('last_seen_at', { ascending: false })
+  }
+
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+  q = q.range(from, to)
+
+  const { data: leads, error, count } = await q
+  if (error) throw new Error(`getLeadsList: ${error.message}`)
+  const leadRows = (leads ?? []) as Array<{
+    id: string
+    email: string | null
+    first_source: string | null
+    first_seen_at: string
+    last_seen_at: string
+  }>
+
+  const total = count ?? leadRows.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+
+  if (leadRows.length === 0) {
+    return { rows: [], total, page, pageSize, totalPages }
+  }
+
+  // Aggregate submissions for the visible page of leads only.
+  const leadIds = leadRows.map((l) => l.id)
+  const { data: subs, error: subsErr } = await supabase
+    .from('submissions')
+    .select('lead_id, cost_usd')
+    .in('lead_id', leadIds)
+  if (subsErr) throw new Error(`getLeadsList(subs): ${subsErr.message}`)
+
+  const stats = new Map<string, { count: number; cost: number }>()
+  for (const s of (subs ?? []) as Array<{
+    lead_id: string
+    cost_usd: number | string | null
+  }>) {
+    const prev = stats.get(s.lead_id) ?? { count: 0, cost: 0 }
+    prev.count += 1
+    prev.cost += asNumber(s.cost_usd)
+    stats.set(s.lead_id, prev)
+  }
+
+  let mapped: LeadListRow[] = leadRows.map((l) => {
+    const s = stats.get(l.id) ?? { count: 0, cost: 0 }
+    return {
+      id: l.id,
+      email: l.email ?? '—',
+      firstSource: l.first_source,
+      submissionCount: s.count,
+      totalCostUsd: s.cost,
+      firstSeenAt: l.first_seen_at,
+      lastSeenAt: l.last_seen_at,
+    }
+  })
+
+  if (sortBy === 'submissionCount' || sortBy === 'totalCost') {
+    const dir = sortDir === 'asc' ? 1 : -1
+    mapped = [...mapped].sort((a, b) => {
+      const av = sortBy === 'submissionCount' ? a.submissionCount : a.totalCostUsd
+      const bv = sortBy === 'submissionCount' ? b.submissionCount : b.totalCostUsd
+      return (av - bv) * dir
+    })
+  }
+
+  return { rows: mapped, total, page, pageSize, totalPages }
+}
 
 export const getRecentActivity = (limit = 10) =>
   unstable_cache(
@@ -360,7 +521,7 @@ export const getRecentActivity = (limit = 10) =>
         mini_app_slug: string
         email: string | null
         cost_usd: number | string | null
-        status: ActivityRow['status']
+        status: 'pending' | 'processing' | 'completed' | 'failed'
         created_at: string
       }>
 
@@ -382,7 +543,7 @@ export const getRecentActivity = (limit = 10) =>
         miniAppName: names.get(r.mini_app_slug) ?? r.mini_app_slug,
         email: r.email ?? '—',
         costUsd: r.cost_usd == null ? null : asNumber(r.cost_usd),
-        status: r.status,
+        status: deriveDisplayStatus(r.status, r.created_at),
         createdAt: r.created_at,
       }))
     },

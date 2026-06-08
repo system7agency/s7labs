@@ -1,9 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type {
   ApiResponse,
   BlueprintResult,
@@ -39,6 +43,83 @@ const STAGES = [
   },
 ]
 const STAGE_MS = 5000
+
+const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Describe the process in plain English',
+    description:
+      'No integrations to wire up front. Just describe what you do manually today, the same way you would explain it to a teammate.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M7 13h8" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We render the flowchart',
+    description:
+      'A Mermaid diagram you can show on a sales call: steps, branches, and handoffs included.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 7l9-4 9 4-9 4-9-4z" />
+        <path d="M3 12l9 4 9-4" />
+        <path d="M3 17l9 4 9-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Compare Make vs n8n vs Zapier',
+    description:
+      'Honest fit scores for each platform on this exact process, with a clear recommendation.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get a starter scaffold',
+    description:
+      'A JSON scaffold to start building in Make or n8n. Not import-ready, but a real head start.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
 
 const EXAMPLES = [
   {
@@ -144,7 +225,7 @@ function StepCard({ step }: { step: BlueprintStep }) {
 
 function ToolCard({ tool, recommended }: { tool: ToolOption; recommended: boolean }) {
   return (
-    <div className={`tool-card${recommended ? 'is-recommended' : ''}`}>
+    <div className={clsx('tool-card', { 'is-recommended': recommended })}>
       {recommended && <span className="recommended-pill">Recommended</span>}
       <div className="tool-card-header">
         <span className="tool-name">{tool.name}</span>
@@ -162,6 +243,9 @@ export default function AutomationBlueprintPage() {
   const [processText, setProcessText] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
   const [shakeInput, setShakeInput] = useState(0)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<BlueprintResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -284,18 +368,63 @@ export default function AutomationBlueprintPage() {
       e.preventDefault()
       if (submitting) return
 
+      let valid = true
       const trimmed = processText.trim()
       if (!trimmed || trimmed.length < MIN_CHARS) {
         setInputError('Describe the process in a bit more detail so we can map it.')
         setShakeInput((k) => k + 1)
-        return
+        valid = false
       }
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
 
       setInputError(null)
+      setEmailError(null)
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
       setDiagramFailed(false)
+
+      // Step A: save lead FIRST
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'automation-blueprint',
+            input: { process: trimmed },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       startLoadingAnimation()
@@ -330,6 +459,15 @@ export default function AutomationBlueprintPage() {
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: data.data,
+          }),
+        }).catch((err) => console.error('[automation-blueprint] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -337,7 +475,7 @@ export default function AutomationBlueprintPage() {
       }
       setSubmitting(false)
     },
-    [processText, submitting, startLoadingAnimation, clearTimers]
+    [processText, email, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -346,6 +484,7 @@ export default function AutomationBlueprintPage() {
     setResult(null)
     setErrorMsg('')
     setInputError(null)
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
@@ -435,13 +574,7 @@ export default function AutomationBlueprintPage() {
 
   return (
     <div className="automation-blueprint">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="ab-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -453,7 +586,7 @@ export default function AutomationBlueprintPage() {
           </h1>
           <p>
             Paste any manual process in plain English. Get a visual automation flow, tool
-            recommendation, time saved, and a starter config — built for live pitch demos.
+            recommendation, time saved, and a starter config, built for live pitch demos.
           </p>
           <div className="meta-tags">
             <span>· Make / n8n / Zapier</span>
@@ -501,16 +634,15 @@ export default function AutomationBlueprintPage() {
             </div>
 
             <div className="panel-body">
-              <section className={`ab-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={clsx('ab-state', { active: appState === 'idle' })}>
                 <div className="idle-label">Describe a manual process you do over and over</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="textarea-field">
                     <label>Your workflow in plain English</label>
                     <div
                       key={`p-${shakeInput}`}
-                      className={`textarea-box textarea-tall${inputError ? 'error' : ''}`}
+                      className={clsx('textarea-box textarea-tall', { error: inputError })}
                     >
-                      <span className="prompt">$</span>
                       <textarea
                         ref={textareaRef}
                         rows={7}
@@ -542,7 +674,30 @@ export default function AutomationBlueprintPage() {
                       </button>
                     ))}
                   </div>
-                  <div className="submit-row">
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError && <div className="field-error">{emailError}</div>}
+                  </div>
+                  <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
@@ -560,7 +715,7 @@ export default function AutomationBlueprintPage() {
                 </form>
               </section>
 
-              <section className={`ab-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('ab-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -575,7 +730,7 @@ export default function AutomationBlueprintPage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -599,7 +754,7 @@ export default function AutomationBlueprintPage() {
                 </div>
               </section>
 
-              <section className={`ab-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('ab-state', { active: appState === 'result' })}>
                 {result && (
                   <>
                     <div ref={resultPanelRef}>
@@ -696,10 +851,10 @@ export default function AutomationBlueprintPage() {
                         {configOpen && (
                           <div className="config-block">
                             <div className="config-block-header">
-                              <span className="config-hint">Scaffold only — not import-ready</span>
+                              <span className="config-hint">Scaffold only. Not import-ready</span>
                               <button
                                 type="button"
-                                className={`config-copy-btn${configCopied ? 'copied' : ''}`}
+                                className={clsx('config-copy-btn', { copied: configCopied })}
                                 onClick={handleCopyConfig}
                               >
                                 {configCopied ? 'Copied' : 'Copy'}
@@ -737,7 +892,7 @@ export default function AutomationBlueprintPage() {
                       <span className="result-ts hide-sm">{resultTs}</span>
                       <div className="export-actions">
                         <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                          className={clsx('export-btn', { done: exportState === 'copying' })}
                           type="button"
                           onClick={handleCopy}
                           disabled={exportState !== 'idle'}
@@ -745,7 +900,7 @@ export default function AutomationBlueprintPage() {
                           {exportState === 'copying' ? 'Copied' : 'Copy'}
                         </button>
                         <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                          className={clsx('export-btn', { loading: exportState === 'png' })}
                           type="button"
                           onClick={handleDownloadPng}
                           disabled={exportState !== 'idle'}
@@ -753,7 +908,7 @@ export default function AutomationBlueprintPage() {
                           {exportState === 'png' ? '…' : 'PNG'}
                         </button>
                         <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
                           type="button"
                           onClick={handleDownloadPdf}
                           disabled={exportState !== 'idle'}
@@ -782,7 +937,9 @@ export default function AutomationBlueprintPage() {
                 )}
               </section>
 
-              <section className={`ab-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section
+                className={clsx('ab-state', 'error-state', { active: appState === 'error' })}
+              >
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"
@@ -806,39 +963,15 @@ export default function AutomationBlueprintPage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Describe'}</div>
-            <div className="name">Plain English in</div>
-            <div className="desc">
-              No integrations to wire up front — just describe what you do manually today.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Visualise'}</div>
-            <div className="name">Rendered flowchart</div>
-            <div className="desc">
-              A Mermaid diagram you can show on a sales call — steps, branches, and handoffs
-              included.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Compare'}</div>
-            <div className="name">Make vs n8n vs Zapier</div>
-            <div className="desc">
-              Honest fit scores for each platform on this exact process, with a clear
-              recommendation.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Build'}</div>
-            <div className="name">Starter scaffold</div>
-            <div className="desc">
-              A JSON scaffold to start building in Make or n8n — not import-ready, but a real head
-              start.
-            </div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From process to <span className="accent">blueprint</span> in under a minute
+            </>
+          }
+          subtitle="No login, no install. Four steps from paste to a ranked plan."
+          steps={HOW_IT_WORKS_STEPS}
+        />
       </main>
 
       <Footer />

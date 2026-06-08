@@ -17,6 +17,8 @@ export type FieldIssue = {
   fix: string
 }
 
+export type InputFormat = 'keyvalue' | 'csv' | 'json' | 'freetext'
+
 export type SanityResult = {
   record_type: string
   quality_score: number
@@ -26,6 +28,8 @@ export type SanityResult = {
   clean_fields: string[]
   duplicate_risk: 'high' | 'medium' | 'low' | 'none'
   duplicate_reason: string
+  input_format: InputFormat
+  cleaned_record: string
   tokens_in: number
   tokens_out: number
 }
@@ -38,9 +42,15 @@ const CLAUDE_PROMPT = (recordText: string) => `
 You are a CRM data quality expert. Analyse the following CRM record data and return a structured sanity check report.
 
 CRM RECORD:
-${recordText.slice(0, 6000)}
+${recordText}
 
-Return ONLY valid JSON in this exact shape — no markdown, no explanation:
+First, detect the input format of the CRM record. It is one of:
+- "keyvalue": lines like "Field Name: value" or "field_name: value"
+- "csv": a CSV header row followed by a CSV data row (commas separate columns)
+- "json": a JSON object starting with "{"
+- "freetext": a natural-language description, no structured field markers
+
+Return ONLY valid JSON in this exact shape, no markdown, no explanation:
 {
   "record_type": <what type of CRM record this appears to be, e.g. "Contact", "Account", "Lead", "Deal", "Opportunity">,
   "quality_score": <integer 0-100, overall data quality score>,
@@ -52,12 +62,14 @@ Return ONLY valid JSON in this exact shape — no markdown, no explanation:
       "value": <the current value, or "empty" if missing>,
       "issue": <concise description of the problem>,
       "severity": <"critical" | "warning" | "suggestion">,
-      "fix": <specific actionable fix — what the value should be or how to correct it>
+      "fix": <specific actionable fix: what the value should be or how to correct it>
     }
   ],
   "clean_fields": <array of field names that look correct and complete>,
   "duplicate_risk": <"high" | "medium" | "low" | "none">,
-  "duplicate_reason": <1 sentence explaining why there may or may not be a duplicate risk — e.g. generic email domain, common name, missing unique identifiers>
+  "duplicate_reason": <1 sentence explaining why there may or may not be a duplicate risk, e.g. generic email domain, common name, missing unique identifiers>,
+  "input_format": <"keyvalue" | "csv" | "json" | "freetext">,
+  "cleaned_record": <the FULL record rewritten with every flagged issue applied, in the SAME format as the input. See cleaned_record rules below.>
 }
 
 Severity guide:
@@ -65,12 +77,24 @@ Severity guide:
 - warning: incomplete, inconsistent capitalisation, suspicious value, format mismatch
 - suggestion: enrichment opportunity, best-practice improvement, optional but useful
 
-Rules:
-- Only flag real issues — don't invent problems if the data looks fine.
+cleaned_record rules (read carefully, this is what the user copies back into their CRM):
+- Output the FULL record, not just the changed fields. Every field from the original must appear.
+- Apply EVERY fix from the "issues" array. Use the "fix" value (or your best guess of the corrected value) as the new value. Do not invent new fields.
+- Preserve the original input format exactly:
+  - keyvalue: same "Field Name: value" lines, same separator style, same field order.
+  - csv: same header order, same column order, one data row. Comma-separated. Quote values that contain commas.
+  - json: same JSON shape, same key order, valid JSON (parseable by JSON.parse).
+  - freetext: rewrite as a single coherent paragraph in the same tone as the original, with the corrected values used inline.
+- For fields you cannot confidently correct (e.g. truly unknowable values like Lead Source for a brand-new lead), leave the original value untouched and do NOT mark a fake fix.
+- The cleaned_record MUST be a single string. Use \\n for line breaks. Do NOT include markdown fences, comments, or any wrapping text.
+- The cleaned_record must be drop-in usable: a salesperson copies it and pastes it back into their CRM verbatim.
+
+Other rules:
+- Only flag real issues. Do not invent problems if the data looks fine.
 - If a field is empty or missing, that is always at least a warning.
 - Check email format, phone format, URL format, name capitalisation, company name consistency.
 - clean_fields should list fields that have no issues at all.
-- If fewer than 3 issues exist, that is fine — quality is high.
+- If fewer than 3 issues exist, that is fine. Quality is high.
 `
 
 function jsonResponse(body: ApiResponse, status: number) {
@@ -102,6 +126,19 @@ export async function POST(request: Request) {
   if (recordText.length < 20) {
     return jsonResponse({ ok: false, message: 'Record too short. Paste the full field data.' }, 422)
   }
+  // Hard upper cap. One CRM record at a time. Anything bigger is either a paste
+  // of multiple records or the wrong tool. Reject explicitly so we don't burn
+  // tokens on misuse and the user knows why.
+  const MAX_RECORD_CHARS = 4000
+  if (recordText.length > MAX_RECORD_CHARS) {
+    return jsonResponse(
+      {
+        ok: false,
+        message: `Record too long (${recordText.length} chars). Paste one record at a time. Max ${MAX_RECORD_CHARS}.`,
+      },
+      413
+    )
+  }
 
   try {
     const anthropic = new Anthropic({ apiKey: anthropicKey })
@@ -109,7 +146,7 @@ export async function POST(request: Request) {
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-5',
       system: STYLE_SYSTEM_PROMPT,
-      max_tokens: 1600,
+      max_tokens: 2400,
       messages: [{ role: 'user', content: CLAUDE_PROMPT(recordText) }],
     })
 

@@ -205,12 +205,9 @@
 }
 
 .pricing-diag .hero h1 .accent {
-  color: transparent;
-  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-style: italic;
-  font-weight: 400;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 
 .pricing-diag .hero p {
@@ -367,6 +364,14 @@
   border-radius: 50%;
   background: var(--cyan);
   box-shadow: 0 0 8px var(--cyan);
+}
+.pricing-diag .pd-form .idle-label {
+  margin-top: 14px;
+}
+.pricing-diag .required-mark {
+  color: var(--error, #ff5c7a);
+  font-size: 13px;
+  letter-spacing: 0;
 }
 
 .pricing-diag .url-input {
@@ -1145,12 +1150,9 @@
   margin-inline: auto;
 }
 .pricing-diag .hiw-head h2 .accent {
-  font-style: italic;
-  color: var(--blue);
-  background: linear-gradient(135deg, #4f8cff, #7aa9ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 .pricing-diag .hiw-head p {
   font-size: 15px;
@@ -1431,4 +1433,102 @@
   .pricing-diag .bg-spotlight {
     display: none;
   }
+}
+
+/* ============== IDLE FORM (clean two-row layout) ============== */
+
+.pricing-diag .pd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pricing-diag .pd-input-box {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+.pricing-diag .pd-input-box:focus-within {
+  border-color: rgba(79, 140, 255, 0.55);
+  background: rgba(79, 140, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12);
+}
+.pricing-diag .pd-input-box.error {
+  border-color: rgba(255, 92, 122, 0.6);
+}
+.pricing-diag .pd-input-box input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 14px 16px;
+  letter-spacing: -0.005em;
+}
+.pricing-diag .pd-input-box input::placeholder {
+  color: var(--text-faint);
+}
+.pricing-diag .pd-input-box input:disabled {
+  color: var(--text-muted);
+}
+.pricing-diag .pd-helper {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.pricing-diag .pd-helper.error {
+  color: var(--error);
+}
+.pricing-diag .pd-submit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.pricing-diag .pd-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #5a98ff, #4f8cff);
+  color: #060608;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 200ms ease,
+    opacity 200ms ease;
+  box-shadow: 0 6px 22px -8px rgba(79, 140, 255, 0.7);
+}
+.pricing-diag .pd-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -10px rgba(79, 140, 255, 0.9);
+}
+.pricing-diag .pd-submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.pricing-diag .pd-submit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.pricing-diag .pd-input-box input:-webkit-autofill,
+.pricing-diag .pd-input-box input:-webkit-autofill:hover,
+.pricing-diag .pd-input-box input:-webkit-autofill:focus,
+.pricing-diag .pd-input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-1) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
 }

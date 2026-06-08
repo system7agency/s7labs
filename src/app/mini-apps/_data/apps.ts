@@ -282,15 +282,15 @@ export const APPS: MiniApp[] = [
     category: 'AI / Operations',
     cats: ['ai', 'operations'],
     short_description:
-      'Paste any CRM record. Get a data quality score, issue flags by severity, exact fixes, and duplicate risk in seconds.',
+      'Paste one CRM record. Get a data quality score, issue flags by severity, exact fixes, and duplicate risk in seconds.',
     tags: ['crm', 'data quality', 'hygiene', 'salesforce', 'hubspot', 'ai'],
     thumb: 'sanity',
     launch_url: '/mini-apps/crm-sanity',
     learn_more: {
       what_it_does:
-        'Reads any pasted CRM record — contact, account, lead, or deal — and returns a 0–100 quality score, a list of issues ranked by severity (critical / warning / suggestion), an exact fix for each issue, clean field list, and a duplicate risk assessment.',
+        'Reads one pasted CRM record (a contact, account, lead, or deal) and returns a 0–100 quality score, a list of issues ranked by severity (critical / warning / suggestion), an exact fix for each issue, clean field list, and a duplicate risk assessment. One record at a time, not bulk.',
       how_it_works: {
-        inputs: ['crm record (any format — key:value, CSV, JSON, free text)'],
+        inputs: ['one crm record (any format: key:value, CSV row, JSON, free text)'],
         outputs: ['quality score', 'grade', 'issues + fixes', 'clean fields', 'duplicate risk'],
       },
       who_its_for:

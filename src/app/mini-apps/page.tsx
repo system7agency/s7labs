@@ -7,9 +7,9 @@ import { MiniAppsPageClient } from './_components/MiniAppsPageClient'
 import { PageScripts } from './PageScripts'
 
 export const metadata = {
-  title: 'Mini Apps — S7 Labs',
+  title: 'Mini Apps · S7 Labs',
   description:
-    'Explore live mini-apps built by System7. Each one is a compact product you can open, test and learn from — a marketplace of small software products that show how useful software can solve specific problems.',
+    'Explore live mini-apps built by System7. Each one is a compact product you can open, test and learn from. A marketplace of small software products that show how useful software can solve specific problems.',
 }
 
 export default function MiniAppsPage() {

@@ -6,7 +6,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type {
   CheckStatus,
@@ -47,7 +47,7 @@ const STAGE_MS = 5000
 const AGENTIC_STEPS: HowItWorksStep[] = [
   {
     title: 'Enter your site URL',
-    description: 'We fetch the page like an agent would — HTML, robots.txt, and render signals.',
+    description: 'We fetch the page like an agent would: HTML, robots.txt, and render signals.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -66,7 +66,7 @@ const AGENTIC_STEPS: HowItWorksStep[] = [
   {
     title: 'Six readiness checks',
     description:
-      'Structured data, content clarity, crawl access, render dependency, actions, and identity — scored for machine use.',
+      'Structured data, content clarity, crawl access, render dependency, actions, and identity, scored for machine use.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -102,7 +102,7 @@ const AGENTIC_STEPS: HowItWorksStep[] = [
   {
     title: 'Unlock the full checklist',
     description:
-      'Every fix, prioritised action plan, and quick wins — gated by email like our other mini-apps.',
+      'Every fix, prioritised action plan, and quick wins, gated by email like our other mini-apps.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -193,6 +193,9 @@ export default function AgenticReadinessPage() {
   const [url, setUrl] = useState('')
   const [urlError, setUrlError] = useState<string | null>(null)
   const [shakeInput, setShakeInput] = useState(0)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [scanId, setScanId] = useState<string | null>(null)
   const [free, setFree] = useState<ScanFree | null>(null)
@@ -329,24 +332,71 @@ export default function AgenticReadinessPage() {
     [clearTimers]
   )
 
+  const submissionIdRef = useRef<string | null>(null)
+
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
       if (submitting) return
 
+      let valid = true
       const normalized = normalizeUrlInput(url)
       if (!normalized) {
         setUrlError('Enter a valid URL.')
         setShakeInput((k) => k + 1)
-        return
+        valid = false
       }
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid || !normalized) return
 
       setUrlError(null)
+      setEmailError(null)
       setSubmitting(true)
       setFree(null)
       setGated(null)
       setScanId(null)
       setErrorMsg('')
+
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'agentic-readiness',
+            input: { url: normalized },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+        submissionIdRef.current = submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       const host = new URL(normalized).hostname
@@ -382,6 +432,15 @@ export default function AgenticReadinessPage() {
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: { free: data.free, scanId: data.scanId },
+          }),
+        }).catch((err) => console.error('[agentic-readiness] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -389,7 +448,7 @@ export default function AgenticReadinessPage() {
       }
       setSubmitting(false)
     },
-    [url, submitting, startLoadingAnimation, clearTimers]
+    [url, email, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -399,6 +458,7 @@ export default function AgenticReadinessPage() {
     setGated(null)
     setScanId(null)
     setErrorMsg('')
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
@@ -508,8 +568,8 @@ export default function AgenticReadinessPage() {
             Can an AI agent <span className="accent">actually use your site?</span>
           </h1>
           <p>
-            We scrape your site like an agent would — structured data, crawl rules, render
-            dependency, and machine-readable actions — then score how ready you are for the agentic
+            We scrape your site like an agent would (structured data, crawl rules, render
+            dependency, and machine-readable actions) then score how ready you are for the agentic
             web.
           </p>
           <div className="meta-tags">
@@ -563,8 +623,7 @@ export default function AgenticReadinessPage() {
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
                     <label>Website URL</label>
-                    <div key={`u-${shakeInput}`} className={`input-box${urlError ? 'error' : ''}`}>
-                      <span className="prompt">$</span>
+                    <div key={`u-${shakeInput}`} className={clsx('input-box', { error: urlError })}>
                       <input
                         ref={urlInputRef}
                         type="text"
@@ -579,7 +638,30 @@ export default function AgenticReadinessPage() {
                     </div>
                     {urlError && <div className="field-error">{urlError}</div>}
                   </div>
-                  <div className="submit-row">
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError && <div className="field-error">{emailError}</div>}
+                  </div>
+                  <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
@@ -642,135 +724,135 @@ export default function AgenticReadinessPage() {
 
               <section className={clsx('ar-state', { active: appState === 'result' })}>
                 {free && scanId && (
-                  <EmailGate
-                    miniAppSlug="agentic-readiness"
-                    pattern="after-teaser"
-                    initialInput={leadInput}
-                    teaser={
-                      <div ref={shareableRef} className="shareable-block">
-                        <div className="one-liner-block">
-                          <p className="one-liner-text">&ldquo;{free.one_liner}&rdquo;</p>
-                          <div className="one-liner-meta">
-                            <span className="project-name">{free.site_name}</span>
-                            <span className="type-pill">{free.readiness_label}</span>
-                          </div>
-                          <p className="estimate-note">{free.url}</p>
+                  <>
+                    <div ref={shareableRef} className="shareable-block">
+                      <div className="one-liner-block">
+                        <p className="one-liner-text">&ldquo;{free.one_liner}&rdquo;</p>
+                        <div className="one-liner-meta">
+                          <span className="project-name">{free.site_name}</span>
+                          <span className="type-pill">{free.readiness_label}</span>
                         </div>
-
-                        <div className="score-row">
-                          <div
-                            className={`score-card overall-card ${gradeClass(free.overall_grade)}`}
-                          >
-                            <div className="sc-label">Overall readiness</div>
-                            <div className="overall-score-row">
-                              <span className="overall-score-num">{free.overall_score}</span>
-                              <span className="overall-score-denom">/100</span>
-                              <span className={`overall-grade ${gradeClass(free.overall_grade)}`}>
-                                {free.overall_grade}
-                              </span>
-                            </div>
-                            <div className="sc-delta">{free.readiness_label}</div>
-                          </div>
-                          <div className="score-card checks-card">
-                            <div className="sc-label">6 checks</div>
-                            <ul className="checks-list">
-                              {free.checks_summary.map((c) => (
-                                <li key={c.name} className="checks-list-row">
-                                  <StatusDot status={c.status} />
-                                  <span className="checks-list-name">{c.name}</span>
-                                  <span
-                                    className={`checks-list-status ${statusDotClass(c.status)}`}
-                                  >
-                                    {c.status}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-
-                        {free.free_blockers.length > 0 && (
-                          <>
-                            <div className="section-header">
-                              <span>{'// biggest blockers'}</span>
-                            </div>
-                            <div className="blockers-list">
-                              {free.free_blockers.map((b) => (
-                                <div key={b.name} className="blocker-row">
-                                  <div className="blocker-name">{b.name}</div>
-                                  <p className="blocker-finding">{b.finding}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </>
-                        )}
+                        <p className="estimate-note">{free.url}</p>
                       </div>
-                    }
-                  >
-                    {({ email, submitToApi }) => (
-                      <>
-                        <GatedBreakdown
-                          scanId={scanId}
-                          email={email}
-                          free={free}
-                          leadInput={leadInput}
-                          submitToApi={submitToApi}
-                          onTokens={handleTokens}
-                          onGatedLoaded={handleGatedLoaded}
-                        />
-                        <div className="result-footer">
-                          <span className="token-pill">
-                            {tokens
-                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                              : 'Loading…'}
-                          </span>
-                          <span className="result-ts hide-sm">{resultTs}</span>
-                          <div className="export-actions">
-                            <button
-                              type="button"
-                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                              onClick={handleCopy}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'copying' ? 'Copied' : 'Copy'}
-                            </button>
-                            <button
-                              type="button"
-                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                              onClick={() => void handleDownloadPng()}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'png' ? '…' : 'PNG'}
-                            </button>
-                            <button
-                              type="button"
-                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                              onClick={() => void handleDownloadPdf()}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'pdf' ? '…' : 'PDF'}
-                            </button>
-                            <button type="button" className="run-again" onClick={handleReset}>
-                              Check another site
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M5 12h14" />
-                                <path d="M13 5l7 7-7 7" />
-                              </svg>
-                            </button>
+
+                      <div className="score-row">
+                        <div
+                          className={`score-card overall-card ${gradeClass(free.overall_grade)}`}
+                        >
+                          <div className="sc-label">Overall readiness</div>
+                          <div className="overall-score-row">
+                            <span className="overall-score-num">{free.overall_score}</span>
+                            <span className="overall-score-denom">/100</span>
+                            <span className={`overall-grade ${gradeClass(free.overall_grade)}`}>
+                              {free.overall_grade}
+                            </span>
                           </div>
+                          <div className="sc-delta">{free.readiness_label}</div>
                         </div>
-                      </>
-                    )}
-                  </EmailGate>
+                        <div className="score-card checks-card">
+                          <div className="sc-label">6 checks</div>
+                          <ul className="checks-list">
+                            {free.checks_summary.map((c) => (
+                              <li key={c.name} className="checks-list-row">
+                                <StatusDot status={c.status} />
+                                <span className="checks-list-name">{c.name}</span>
+                                <span className={`checks-list-status ${statusDotClass(c.status)}`}>
+                                  {c.status}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      {free.free_blockers.length > 0 && (
+                        <>
+                          <div className="section-header">
+                            <span>{'// biggest blockers'}</span>
+                          </div>
+                          <div className="blockers-list">
+                            {free.free_blockers.map((b) => (
+                              <div key={b.name} className="blocker-row">
+                                <div className="blocker-name">{b.name}</div>
+                                <p className="blocker-finding">{b.finding}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <GatedBreakdown
+                      scanId={scanId}
+                      email={email}
+                      free={free}
+                      leadInput={leadInput}
+                      submitToApi={async (_input, output) => {
+                        const submissionId = submissionIdRef.current
+                        if (!submissionId || !output) return
+                        try {
+                          await fetch('/api/leads/complete', {
+                            method: 'POST',
+                            headers: { 'content-type': 'application/json' },
+                            body: JSON.stringify({ submissionId, output }),
+                          })
+                        } catch (err) {
+                          console.error('[agentic-readiness] gated leads/complete', err)
+                        }
+                      }}
+                      onTokens={handleTokens}
+                      onGatedLoaded={handleGatedLoaded}
+                    />
+                    <div className="result-footer">
+                      <span className="token-pill">
+                        {tokens
+                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                          : 'Loading…'}
+                      </span>
+                      <span className="result-ts hide-sm">{resultTs}</span>
+                      <div className="export-actions">
+                        <button
+                          type="button"
+                          className={clsx('export-btn', { done: exportState === 'copying' })}
+                          onClick={handleCopy}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'copying' ? 'Copied' : 'Copy'}
+                        </button>
+                        <button
+                          type="button"
+                          className={clsx('export-btn', { loading: exportState === 'png' })}
+                          onClick={() => void handleDownloadPng()}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'png' ? '…' : 'PNG'}
+                        </button>
+                        <button
+                          type="button"
+                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
+                          onClick={() => void handleDownloadPdf()}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'pdf' ? '…' : 'PDF'}
+                        </button>
+                        <button type="button" className="run-again" onClick={handleReset}>
+                          Check another site
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M5 12h14" />
+                            <path d="M13 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {free && (
@@ -818,7 +900,7 @@ export default function AgenticReadinessPage() {
               From URL to readiness in <span className="accent">under a minute</span>
             </>
           }
-          subtitle="Six checks for the agentic web — blockers free, full checklist and fix plan by email."
+          subtitle="Six checks for the agentic web. Blockers free, full checklist and fix plan by email."
           steps={AGENTIC_STEPS}
         />
       </main>

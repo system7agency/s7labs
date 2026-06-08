@@ -111,7 +111,7 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
         })
         const json = (await res.json()) as SubmitResponse
         if (!res.ok || !json.ok || !json.leadId) {
-          setErrorMsg(json.error || "Couldn't save your info — try again")
+          setErrorMsg(json.error || "Couldn't save your info. Try again")
           setSubmitting(false)
           return
         }
@@ -120,7 +120,7 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
         if (json.submissionId) setSubmissionId(json.submissionId)
         setGatePassed(true)
       } catch {
-        setErrorMsg("Couldn't save your info — try again")
+        setErrorMsg("Couldn't save your info. Try again")
       } finally {
         setSubmitting(false)
       }

@@ -6,9 +6,8 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, BriefResult, Signal } from '@/app/api/mini-apps/job-brief/route'
 import { PageScripts } from './PageScripts'
 
@@ -19,7 +18,7 @@ const BRIEF_STEPS: HowItWorksStep[] = [
   {
     title: 'Paste a job posting URL or text',
     description:
-      'Public listings work great. Internal postings — just paste the text directly. Either way, no scraping you need to set up.',
+      'Public listings work great. Internal postings, just paste the text directly. Either way, no scraping you need to set up.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -57,7 +56,7 @@ const BRIEF_STEPS: HowItWorksStep[] = [
   {
     title: 'AI infers pain points and the best sales angle',
     description:
-      'What this hire tells you about what is broken or overloaded — and the specific angle that lands with this buyer.',
+      'What this hire tells you about what is broken or overloaded, and the specific angle that lands with this buyer.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -75,7 +74,7 @@ const BRIEF_STEPS: HowItWorksStep[] = [
   {
     title: 'Get your sales brief with the ideal contact',
     description:
-      'Executive summary, tech fingerprint, pain points, budget signals — plus the role + persona to reach out to first.',
+      'Executive summary, tech fingerprint, pain points, budget signals, plus the role + persona to reach out to first.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -198,12 +197,9 @@ export default function JobBriefPage() {
   const [resultTs, setResultTs] = useState('')
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
-  const [cost, setCost] = useState<{
-    model: string
-    inputTokens: number
-    outputTokens: number
-    costUsd: number
-  } | null>(null)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -324,25 +320,73 @@ export default function JobBriefPage() {
 
       const trimUrl = url.trim()
       const trimText = text.trim()
+      let valid = true
 
       if (inputMode === 'url') {
         if (!trimUrl || !/^https?:\/\//i.test(trimUrl)) {
           setInputError('Enter a valid job posting URL starting with https://')
           setShakeInput((k) => k + 1)
-          return
+          valid = false
         }
       } else {
         if (!trimText || trimText.length < 50) {
           setInputError('Paste the full job description (at least 50 characters).')
           setShakeInput((k) => k + 1)
-          return
+          valid = false
         }
       }
 
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
+
       setInputError(null)
+      setEmailError(null)
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
+
+      const inputPayload = inputMode === 'url' ? { url: trimUrl } : { text: trimText }
+
+      // Save lead first. Bail BEFORE the Anthropic call on bad email.
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'job-posting-sales-brief',
+            input: inputPayload,
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       const label =
@@ -356,7 +400,7 @@ export default function JobBriefPage() {
         const res = await fetch('/api/mini-apps/job-brief', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(inputMode === 'url' ? { url: trimUrl } : { text: trimText }),
+          body: JSON.stringify(inputPayload),
         })
         data = (await res.json()) as ApiResponse
       } catch {
@@ -379,10 +423,19 @@ export default function JobBriefPage() {
         await new Promise((r) => setTimeout(r, 400))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
-        if (data.cost) setCost(data.cost)
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: data.data,
+            ...(data.cost ? { cost: data.cost } : {}),
+          }),
+        }).catch((err) => console.error('[job-brief] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -390,7 +443,7 @@ export default function JobBriefPage() {
       }
       setSubmitting(false)
     },
-    [url, text, inputMode, submitting, startLoadingAnimation, clearTimers]
+    [url, text, inputMode, email, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -399,12 +452,12 @@ export default function JobBriefPage() {
     setResult(null)
     setErrorMsg('')
     setInputError(null)
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
     setProgressPct(0)
     setTokens(null)
-    setCost(null)
   }, [clearTimers])
 
   const handleCopy = useCallback(async () => {
@@ -526,7 +579,7 @@ export default function JobBriefPage() {
 
             <div className="panel-body">
               {/* IDLE */}
-              <section className={`jb-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={clsx('jb-state', { active: appState === 'idle' })}>
                 <div className="idle-label">Job posting source</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   {/* Mode toggle */}
@@ -564,7 +617,7 @@ export default function JobBriefPage() {
                       <label>Job posting URL</label>
                       <div
                         key={`u-${shakeInput}`}
-                        className={`input-box${inputError ? 'error' : ''}`}
+                        className={clsx('input-box', { error: inputError })}
                       >
                         <input
                           ref={urlInputRef}
@@ -585,7 +638,7 @@ export default function JobBriefPage() {
                       <label>Job description text</label>
                       <div
                         key={`t-${shakeInput}`}
-                        className={`textarea-box${inputError ? 'error' : ''}`}
+                        className={clsx('textarea-box', { error: inputError })}
                       >
                         <textarea
                           placeholder={`We're hiring a Senior RevOps Manager...\nYou'll own our Salesforce instance...\nRequirements: 5+ years in Revenue Operations...`}
@@ -602,7 +655,30 @@ export default function JobBriefPage() {
                     </div>
                   )}
 
-                  <div className="submit-row">
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError && <div className="field-error">{emailError}</div>}
+                  </div>
+                  <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
@@ -622,7 +698,7 @@ export default function JobBriefPage() {
               </section>
 
               {/* LOADING */}
-              <section className={`jb-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('jb-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -664,226 +740,214 @@ export default function JobBriefPage() {
               </section>
 
               {/* RESULT */}
-              <section className={`jb-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('jb-state', { active: appState === 'result' })}>
                 {result && (
-                  <EmailGate
-                    miniAppSlug="job-posting-sales-brief"
-                    pattern="upfront"
-                    initialInput={inputMode === 'url' ? { url: url.trim() } : { text: text.trim() }}
-                  >
-                    {({ submitToApi }) => (
-                      <>
-                        <SubmitOnce
-                          submit={submitToApi}
-                          input={inputMode === 'url' ? { url: url.trim() } : { text: text.trim() }}
-                          output={result}
-                          cost={cost ?? undefined}
-                        />
-                        <div ref={resultPanelRef}>
-                          <div className="result-head">
-                            <span className="title">Brief ready — {result.company}</span>
-                            <span className="ts-label">{resultTs}</span>
+                  <>
+                    <div ref={resultPanelRef}>
+                      <div className="result-head">
+                        <span className="title">Brief ready: {result.company}</span>
+                        <span className="ts-label">{resultTs}</span>
+                      </div>
+
+                      <div className="summary-block">
+                        <div className="summary-eyebrow">
+                          {'// Executive summary'}
+                          <div className="role-badges">
+                            <span className={`badge urgency-${result.urgency}`}>
+                              {result.urgency} urgency
+                            </span>
+                            <span className="badge dept">{result.department}</span>
+                            <span className="badge">
+                              {SENIORITY_LABEL[result.seniority] ?? result.seniority}
+                            </span>
                           </div>
+                        </div>
+                        <p className="summary-text">{result.summary}</p>
+                      </div>
 
-                          <div className="summary-block">
-                            <div className="summary-eyebrow">
-                              {'// Executive summary'}
-                              <div className="role-badges">
-                                <span className={`badge urgency-${result.urgency}`}>
-                                  {result.urgency} urgency
-                                </span>
-                                <span className="badge dept">{result.department}</span>
-                                <span className="badge">
-                                  {SENIORITY_LABEL[result.seniority] ?? result.seniority}
-                                </span>
-                              </div>
-                            </div>
-                            <p className="summary-text">{result.summary}</p>
-                          </div>
+                      <div className="angle-block">
+                        <div className="angle-eyebrow">{'// Best sales angle'}</div>
+                        <p className="angle-text">{result.best_angle}</p>
+                        <div className="contact-row">
+                          Ideal first contact: <strong>{result.ideal_contact}</strong>
+                        </div>
+                      </div>
 
-                          <div className="angle-block">
-                            <div className="angle-eyebrow">{'// Best sales angle'}</div>
-                            <p className="angle-text">{result.best_angle}</p>
-                            <div className="contact-row">
-                              Ideal first contact: <strong>{result.ideal_contact}</strong>
-                            </div>
-                          </div>
-
-                          {result.tech_stack.length > 0 && (
-                            <>
-                              <div className="section-header">
-                                <span>{'// Tech stack'}</span>
-                                <span>{result.tech_stack.length} tools</span>
-                              </div>
-                              <div className="tag-cloud">
-                                {result.tech_stack.map((t) => (
-                                  <span key={t} className="tag tech">
-                                    {t}
-                                  </span>
-                                ))}
-                              </div>
-                            </>
-                          )}
-
-                          {result.pain_points.length > 0 && (
-                            <>
-                              <div className="section-header">
-                                <span>{'// Implied pain points'}</span>
-                              </div>
-                              <div className="tag-cloud">
-                                {result.pain_points.map((p) => (
-                                  <span key={p} className="tag pain">
-                                    {p}
-                                  </span>
-                                ))}
-                              </div>
-                            </>
-                          )}
-
-                          {result.budget_indicators.length > 0 && (
-                            <>
-                              <div className="section-header">
-                                <span>{'// Budget indicators'}</span>
-                              </div>
-                              <div className="tag-cloud" style={{ marginBottom: '20px' }}>
-                                {result.budget_indicators.map((b) => (
-                                  <span key={b} className="tag budget">
-                                    {b}
-                                  </span>
-                                ))}
-                              </div>
-                            </>
-                          )}
-
+                      {result.tech_stack.length > 0 && (
+                        <>
                           <div className="section-header">
-                            <span>{'// Sales signals'}</span>
-                            <span>{result.signals.length} found</span>
+                            <span>{'// Tech stack'}</span>
+                            <span>{result.tech_stack.length} tools</span>
                           </div>
-                          <div className="signals">
-                            {result.signals.map((s, i) => (
-                              <SignalCard key={i} signal={s} />
+                          <div className="tag-cloud">
+                            {result.tech_stack.map((t) => (
+                              <span key={t} className="tag tech">
+                                {t}
+                              </span>
                             ))}
                           </div>
-                        </div>
+                        </>
+                      )}
 
-                        <div className="result-footer">
-                          <span className="token-pill">
-                            {tokens
-                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                              : ''}
-                          </span>
-                          <div className="export-actions">
-                            <button
-                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                              type="button"
-                              onClick={handleCopy}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'copying' ? (
-                                <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M20 6L9 17l-5-5" />
-                                  </svg>
-                                  Copied
-                                </>
-                              ) : (
-                                <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                                  </svg>
-                                  Copy
-                                </>
-                              )}
-                            </button>
-                            <button
-                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                              type="button"
-                              onClick={handleDownloadPng}
-                              disabled={exportState !== 'idle'}
-                            >
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <rect x="3" y="3" width="18" height="18" rx="2" />
-                                <circle cx="8.5" cy="8.5" r="1.5" />
-                                <path d="M21 15l-5-5L5 21" />
-                              </svg>
-                              {exportState === 'png' ? '…' : 'PNG'}
-                            </button>
-                            <button
-                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                              type="button"
-                              onClick={handleDownloadPdf}
-                              disabled={exportState !== 'idle'}
-                            >
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                                <path d="M14 2v6h6" />
-                                <path d="M12 18v-6M9 15l3 3 3-3" />
-                              </svg>
-                              {exportState === 'pdf' ? '…' : 'PDF'}
-                            </button>
-                            <button className="run-again" type="button" onClick={handleReset}>
-                              New brief
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M5 12h14" />
-                                <path d="M13 5l7 7-7 7" />
-                              </svg>
-                            </button>
+                      {result.pain_points.length > 0 && (
+                        <>
+                          <div className="section-header">
+                            <span>{'// Implied pain points'}</span>
                           </div>
-                        </div>
-                      </>
-                    )}
-                  </EmailGate>
+                          <div className="tag-cloud">
+                            {result.pain_points.map((p) => (
+                              <span key={p} className="tag pain">
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      {result.budget_indicators.length > 0 && (
+                        <>
+                          <div className="section-header">
+                            <span>{'// Budget indicators'}</span>
+                          </div>
+                          <div className="tag-cloud" style={{ marginBottom: '20px' }}>
+                            {result.budget_indicators.map((b) => (
+                              <span key={b} className="tag budget">
+                                {b}
+                              </span>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      <div className="section-header">
+                        <span>{'// Sales signals'}</span>
+                        <span>{result.signals.length} found</span>
+                      </div>
+                      <div className="signals">
+                        {result.signals.map((s, i) => (
+                          <SignalCard key={i} signal={s} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="result-footer">
+                      <span className="token-pill">
+                        {tokens
+                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                          : ''}
+                      </span>
+                      <div className="export-actions">
+                        <button
+                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                          type="button"
+                          onClick={handleCopy}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'copying' ? (
+                            <>
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M20 6L9 17l-5-5" />
+                              </svg>
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <rect x="9" y="9" width="13" height="13" rx="2" />
+                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                              </svg>
+                              Copy
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                          type="button"
+                          onClick={handleDownloadPng}
+                          disabled={exportState !== 'idle'}
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <path d="M21 15l-5-5L5 21" />
+                          </svg>
+                          {exportState === 'png' ? '…' : 'PNG'}
+                        </button>
+                        <button
+                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                          type="button"
+                          onClick={handleDownloadPdf}
+                          disabled={exportState !== 'idle'}
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                            <path d="M14 2v6h6" />
+                            <path d="M12 18v-6M9 15l3 3 3-3" />
+                          </svg>
+                          {exportState === 'pdf' ? '…' : 'PDF'}
+                        </button>
+                        <button className="run-again" type="button" onClick={handleReset}>
+                          New brief
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M5 12h14" />
+                            <path d="M13 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </section>
 
               {/* ERROR */}
-              <section className={`jb-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section
+                className={clsx('jb-state', 'error-state', { active: appState === 'error' })}
+              >
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"

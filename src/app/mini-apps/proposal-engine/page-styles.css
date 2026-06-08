@@ -43,100 +43,8 @@
   box-sizing: border-box;
 }
 
-/* ── BACKGROUND ── */
-.proposal-engine .bg-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-.proposal-engine .bg-aurora {
-  overflow: hidden;
-}
-.proposal-engine .bg-aurora::before,
-.proposal-engine .bg-aurora::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.55;
-  will-change: transform;
-}
-.proposal-engine .bg-aurora::before {
-  width: 720px;
-  height: 720px;
-  left: -180px;
-  top: -200px;
-  background: radial-gradient(closest-side, rgba(79, 140, 255, 0.55), rgba(79, 140, 255, 0));
-  animation: pe-drift1 22s ease-in-out infinite alternate;
-}
-.proposal-engine .bg-aurora::after {
-  width: 640px;
-  height: 640px;
-  right: -160px;
-  top: 180px;
-  background: radial-gradient(closest-side, rgba(4, 227, 238, 0.35), rgba(4, 227, 238, 0));
-  animation: pe-drift2 26s ease-in-out infinite alternate;
-}
-.proposal-engine .bg-aurora .blob3 {
-  position: absolute;
-  width: 560px;
-  height: 560px;
-  left: 30%;
-  bottom: -260px;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(79, 140, 255, 0.22), rgba(79, 140, 255, 0));
-  filter: blur(120px);
-  animation: pe-drift3 30s ease-in-out infinite alternate;
-}
-@keyframes pe-drift1 {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-  100% {
-    transform: translate(120px, 60px) scale(1.1);
-  }
-}
-@keyframes pe-drift2 {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-  100% {
-    transform: translate(-100px, 80px) scale(0.95);
-  }
-}
-@keyframes pe-drift3 {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-  100% {
-    transform: translate(80px, -60px) scale(1.08);
-  }
-}
-
-.proposal-engine .bg-dots {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 22px 22px;
-  mask-image: radial-gradient(ellipse at 50% 30%, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0) 75%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0) 75%);
-}
-.proposal-engine .bg-grain {
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-}
-.proposal-engine .bg-vignette {
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(79, 140, 255, 0.06), transparent 50%),
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.55) 100%);
-}
-.proposal-engine .bg-spotlight {
-  background: radial-gradient(
-    420px circle at var(--mx, 50%) var(--my, 30%),
-    rgba(79, 140, 255, 0.1),
-    transparent 60%
-  );
-}
+/* Background (aurora canvas + dots + grain + spotlight) is provided by the
+ * shared <AuroraBackground /> component, identical to pricing-diagnostic. */
 
 /* ── SHELL ── */
 .proposal-engine .shell {
@@ -188,12 +96,9 @@
   color: var(--text);
 }
 .proposal-engine .hero h1 .accent {
-  color: transparent;
-  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-style: italic;
-  font-weight: 400;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 .proposal-engine .hero p {
   color: var(--text-dim);
@@ -393,13 +298,6 @@
     transform: translateX(3px);
   }
 }
-.proposal-engine .input-box .prompt {
-  padding: 0 10px 0 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--blue);
-  user-select: none;
-}
 .proposal-engine .input-box input {
   flex: 1;
   background: transparent;
@@ -408,8 +306,8 @@
   color: var(--text);
   font-family: var(--mono);
   font-size: 13px;
-  padding: 15px 14px 15px 0;
-  letter-spacing: -0.01em;
+  padding: 14px 16px;
+  letter-spacing: -0.005em;
   min-width: 0;
 }
 .proposal-engine .input-box input::placeholder {
@@ -458,15 +356,6 @@
   border-color: var(--error);
   animation: pe-shake 0.35s ease;
 }
-.proposal-engine .textarea-box .prompt {
-  padding: 14px 10px 0 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--blue);
-  user-select: none;
-  flex-shrink: 0;
-  line-height: 1.6;
-}
 .proposal-engine .textarea-box textarea {
   flex: 1;
   background: transparent;
@@ -475,7 +364,7 @@
   color: var(--text);
   font-family: var(--mono);
   font-size: 13px;
-  padding: 14px 14px 14px 0;
+  padding: 14px 16px;
   letter-spacing: -0.01em;
   resize: vertical;
   min-height: 160px;
@@ -1121,42 +1010,6 @@
   transform: scale(0.97);
 }
 
-/* ── INFO STRIP ── */
-.proposal-engine .info-strip {
-  margin-top: 28px;
-  width: min(100%, 680px);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.proposal-engine .dim-card {
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.012);
-  border-radius: 10px;
-  padding: 14px 16px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.proposal-engine .dim-card .key {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  margin-bottom: 5px;
-}
-.proposal-engine .dim-card .name {
-  font-size: 14px;
-  color: var(--text);
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-.proposal-engine .dim-card .desc {
-  font-size: 12.5px;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
   .proposal-engine .shell {
@@ -1169,9 +1022,6 @@
     padding: 20px;
   }
   .proposal-engine .stages {
-    grid-template-columns: 1fr;
-  }
-  .proposal-engine .info-strip {
     grid-template-columns: 1fr;
   }
   .proposal-engine .result-footer {
@@ -1495,12 +1345,15 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-  .proposal-engine .bg-aurora::before,
-  .proposal-engine .bg-aurora::after,
-  .proposal-engine .bg-aurora .blob3 {
-    animation: none !important;
-  }
-  .proposal-engine .bg-spotlight {
-    display: none;
-  }
+}
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.proposal-engine .input-box input:-webkit-autofill,
+.proposal-engine .input-box input:-webkit-autofill:hover,
+.proposal-engine .input-box input:-webkit-autofill:focus,
+.proposal-engine .input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
 }

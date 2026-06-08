@@ -6,7 +6,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { KeywordStatus, ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/aio-types'
 import { parseScanApiResponse } from '@/lib/mini-apps/aio-types'
@@ -18,6 +18,86 @@ type AppState = 'idle' | 'loading' | 'result' | 'error'
 const DOMAIN_RE = /^([a-z0-9-]+\.)+[a-z]{2,}$/i
 const STAGE_MS = 5000
 const MAX_KEYWORDS = 5
+const MARKETS = ['United States', 'United Kingdom', 'Canada', 'Australia', 'India'] as const
+
+// Killswitch: this app needs DataForSEO credentials server-side. When the
+// keys aren't provisioned (DATAFORSEO_LOGIN / DATAFORSEO_PASSWORD), the
+// route returns 502 "Service not configured". Flip this when DataForSEO
+// is wired up.
+const APP_ENABLED = (process.env.NEXT_PUBLIC_AI_OVERVIEW_TRACKER_ENABLED ?? 'false') === 'true'
+
+function MarketDropdown({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string
+  onChange: (v: string) => void
+  disabled?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDocClick = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDocClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div ref={wrapRef} className="aio-dd">
+      <button
+        type="button"
+        className="aio-dd-button"
+        disabled={disabled}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span>{value}</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <ul className="aio-dd-menu" role="listbox">
+          {MARKETS.map((opt) => (
+            <li
+              key={opt}
+              role="option"
+              aria-selected={opt === value}
+              className={clsx('aio-dd-option', { 'is-selected': opt === value })}
+              onClick={() => {
+                onChange(opt)
+                setOpen(false)
+              }}
+            >
+              {opt}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 const AIO_STEPS: HowItWorksStep[] = [
   {
@@ -39,7 +119,7 @@ const AIO_STEPS: HowItWorksStep[] = [
   },
   {
     title: 'We run live Google searches',
-    description: 'Each keyword is queried with AI Overview detection — not a rank position report.',
+    description: 'Each keyword is queried with AI Overview detection, not a rank position report.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -57,7 +137,7 @@ const AIO_STEPS: HowItWorksStep[] = [
   {
     title: 'See your free snapshot',
     description:
-      'Citation rate, AI Overview trigger rate, blind spots, and a per-keyword status strip — before you share your email.',
+      'Citation rate, AI Overview trigger rate, blind spots, and a per-keyword status strip, before you share your email.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -184,6 +264,9 @@ export default function AiOverviewTrackerPage() {
   const [domainError, setDomainError] = useState<string | null>(null)
   const [keywordsError, setKeywordsError] = useState<string | null>(null)
   const [shakeInput, setShakeInput] = useState(0)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [scanId, setScanId] = useState<string | null>(null)
   const [free, setFree] = useState<ScanFree | null>(null)
@@ -302,10 +385,13 @@ export default function AiOverviewTrackerPage() {
     })
   }, [clearTimers])
 
+  const submissionIdRef = useRef<string | null>(null)
+
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
       if (submitting) return
+      if (!APP_ENABLED) return
 
       const normalizedDomain = normalizeDomainInput(domain)
       const keywords = keywordsFromText(keywordsText).slice(0, MAX_KEYWORDS)
@@ -313,17 +399,62 @@ export default function AiOverviewTrackerPage() {
       const keywordInvalid = keywords.length === 0
       setDomainError(domainInvalid ? 'Enter a valid domain.' : null)
       setKeywordsError(keywordInvalid ? 'Enter at least one keyword.' : null)
+      let valid = !(domainInvalid || keywordInvalid)
       if (domainInvalid || keywordInvalid) {
         setShakeInput((k) => k + 1)
-        return
       }
 
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
+
+      setEmailError(null)
       setSubmitting(true)
       setScanId(null)
       setFree(null)
       setGated(null)
       setErrorMsg('')
       setTokens(null)
+
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'ai-overview-tracker',
+            input: { domain: normalizedDomain, keywords, location },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+        submissionIdRef.current = submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setAppState('loading')
       setSysState('running')
       startLoadingAnimation()
@@ -358,6 +489,15 @@ export default function AiOverviewTrackerPage() {
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: { free: data.free, scanId: data.scanId },
+          }),
+        }).catch((err) => console.error('[ai-overview-tracker] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -365,7 +505,7 @@ export default function AiOverviewTrackerPage() {
       }
       setSubmitting(false)
     },
-    [submitting, domain, keywordsText, location, startLoadingAnimation, clearTimers]
+    [submitting, domain, keywordsText, location, email, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -375,6 +515,7 @@ export default function AiOverviewTrackerPage() {
     setGated(null)
     setScanId(null)
     setErrorMsg('')
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
@@ -521,14 +662,14 @@ export default function AiOverviewTrackerPage() {
               </div>
             )}
             <div className="panel-body">
-              <section className={`aio-state${appState === 'idle' ? 'active' : ''}`}>
-                <div className="idle-label">Not a rank tracker — this checks AI citations</div>
+              <section className={clsx('aio-state', { active: appState === 'idle' })}>
+                <div className="idle-label">Not a rank tracker. This checks AI citations</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
                     <label>Your domain</label>
                     <div
                       key={`d-${shakeInput}`}
-                      className={`input-box${domainError ? 'error' : ''}`}
+                      className={clsx('input-box', { error: domainError })}
                     >
                       <span className="prompt">@</span>
                       <input
@@ -547,7 +688,7 @@ export default function AiOverviewTrackerPage() {
                   </div>
                   <div className="input-field">
                     <label>Keywords to check (up to 5)</label>
-                    <div className={`textarea-box${keywordsError ? 'error' : ''}`}>
+                    <div className={clsx('textarea-box', { error: keywordsError })}>
                       <span className="prompt">#</span>
                       <textarea
                         placeholder={
@@ -570,16 +711,44 @@ export default function AiOverviewTrackerPage() {
                   </div>
                   <div className="input-field">
                     <label>Market</label>
-                    <select value={location} onChange={(e) => setLocation(e.target.value)}>
-                      <option>United States</option>
-                      <option>United Kingdom</option>
-                      <option>Canada</option>
-                      <option>Australia</option>
-                      <option>India</option>
-                    </select>
+                    <MarketDropdown value={location} onChange={setLocation} disabled={submitting} />
                   </div>
-                  <div className="submit-row">
-                    <button type="submit" className="submit-btn" disabled={submitting}>
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError && <div className="field-error">{emailError}</div>}
+                  </div>
+                  {!APP_ENABLED ? (
+                    <div className="aio-coming-soon" role="status">
+                      <span className="aio-coming-soon-dot" />
+                      Coming soon. DataForSEO access in review. Form is read-only for now.
+                    </div>
+                  ) : null}
+                  <div className="submit-row" style={{ marginTop: APP_ENABLED ? 18 : 14 }}>
+                    <button
+                      type="submit"
+                      className="submit-btn"
+                      disabled={submitting || !APP_ENABLED}
+                      aria-disabled={submitting || !APP_ENABLED}
+                    >
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -591,12 +760,12 @@ export default function AiOverviewTrackerPage() {
                         <circle cx="11" cy="11" r="8" />
                         <path d="M21 21l-4.35-4.35" />
                       </svg>
-                      Check my AI Overview visibility
+                      {APP_ENABLED ? 'Check my AI Overview visibility' : 'Coming soon'}
                     </button>
                   </div>
                 </form>
               </section>
-              <section className={`aio-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('aio-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -634,137 +803,139 @@ export default function AiOverviewTrackerPage() {
                   })}
                 </div>
               </section>
-              <section className={`aio-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('aio-state', { active: appState === 'result' })}>
                 {free && scanId && (
-                  <EmailGate
-                    miniAppSlug="ai-overview-tracker"
-                    pattern="after-teaser"
-                    initialInput={leadInput}
-                    teaser={
-                      <div ref={shareableRef} className="shareable-block">
-                        <div className="one-liner-block">
-                          <p className="one-liner-text">&ldquo;{free.one_liner}&rdquo;</p>
-                          <div className="one-liner-meta">
-                            <span className="project-name">{free.domain}</span>
-                            <span className="type-pill">{free.verdict_label}</span>
-                          </div>
+                  <>
+                    <div ref={shareableRef} className="shareable-block">
+                      <div className="one-liner-block">
+                        <p className="one-liner-text">&ldquo;{free.one_liner}&rdquo;</p>
+                        <div className="one-liner-meta">
+                          <span className="project-name">{free.domain}</span>
+                          <span className="type-pill">{free.verdict_label}</span>
                         </div>
-                        <div className="score-row">
-                          <div className="score-card">
-                            <div className="sc-label">Citation rate</div>
-                            <div className="sc-value">
-                              <span className="sc-big">{free.citation_rate}%</span>
-                            </div>
-                            <div className="sc-delta">
-                              {free.aio_trigger_rate}% of your keywords trigger an AI Overview
-                            </div>
-                          </div>
-                          <div className="score-card">
-                            <div className="sc-label">Gap snapshot</div>
-                            <div className="stat-grid">
-                              <div>
-                                <span>Keywords</span>
-                                <strong>{free.keywords_scored}</strong>
-                              </div>
-                              <div>
-                                <span>AI Overviews</span>
-                                <strong>
-                                  {Math.round((free.keywords_scored * free.aio_trigger_rate) / 100)}
-                                </strong>
-                              </div>
-                              <div>
-                                <span>Blind spots</span>
-                                <strong>{free.blind_spot_count}</strong>
-                              </div>
-                              <div>
-                                <span>Ghosts</span>
-                                <strong>{free.ghost_count}</strong>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="keyword-strip">
-                          {(free.keyword_statuses ?? []).map((k) => (
-                            <div key={k.keyword} className="keyword-row">
-                              <span className="keyword-label">{k.keyword}</span>
-                              <span className={`status-pill is-${k.status}`}>
-                                {statusLabel(k.status)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        {free.top_cited_competitor && (
-                          <div className="hook-line">
-                            {free.top_cited_competitor.domain} is cited in{' '}
-                            {free.top_cited_competitor.appearances} of your keywords.
-                          </div>
-                        )}
                       </div>
-                    }
-                  >
-                    {({ submitToApi }) => (
-                      <>
-                        <GatedBreakdown
-                          scanId={scanId}
-                          free={free}
-                          leadInput={leadInput}
-                          submitToApi={submitToApi}
-                          onTokens={handleTokens}
-                          onGatedLoaded={handleGatedLoaded}
-                        />
-                        <div className="result-footer">
-                          <span className="token-pill">
-                            {tokens
-                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens`
-                              : 'Loading…'}
-                          </span>
-                          <span className="result-ts hide-sm">{resultTs}</span>
-                          <div className="export-actions">
-                            <button
-                              type="button"
-                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                              onClick={handleCopy}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'copying' ? 'Copied' : 'Copy'}
-                            </button>
-                            <button
-                              type="button"
-                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                              onClick={() => void handleDownloadPng()}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'png' ? '…' : 'PNG'}
-                            </button>
-                            <button
-                              type="button"
-                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                              onClick={() => void handleDownloadPdf()}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'pdf' ? '…' : 'PDF'}
-                            </button>
-                            <button className="run-again" type="button" onClick={handleReset}>
-                              Check again
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M5 12h14" />
-                                <path d="M13 5l7 7-7 7" />
-                              </svg>
-                            </button>
+                      <div className="score-row">
+                        <div className="score-card">
+                          <div className="sc-label">Citation rate</div>
+                          <div className="sc-value">
+                            <span className="sc-big">{free.citation_rate}%</span>
+                          </div>
+                          <div className="sc-delta">
+                            {free.aio_trigger_rate}% of your keywords trigger an AI Overview
                           </div>
                         </div>
-                      </>
-                    )}
-                  </EmailGate>
+                        <div className="score-card">
+                          <div className="sc-label">Gap snapshot</div>
+                          <div className="stat-grid">
+                            <div>
+                              <span>Keywords</span>
+                              <strong>{free.keywords_scored}</strong>
+                            </div>
+                            <div>
+                              <span>AI Overviews</span>
+                              <strong>
+                                {Math.round((free.keywords_scored * free.aio_trigger_rate) / 100)}
+                              </strong>
+                            </div>
+                            <div>
+                              <span>Blind spots</span>
+                              <strong>{free.blind_spot_count}</strong>
+                            </div>
+                            <div>
+                              <span>Ghosts</span>
+                              <strong>{free.ghost_count}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="keyword-strip">
+                        {(free.keyword_statuses ?? []).map((k) => (
+                          <div key={k.keyword} className="keyword-row">
+                            <span className="keyword-label">{k.keyword}</span>
+                            <span className={`status-pill is-${k.status}`}>
+                              {statusLabel(k.status)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      {free.top_cited_competitor && (
+                        <div className="hook-line">
+                          {free.top_cited_competitor.domain} is cited in{' '}
+                          {free.top_cited_competitor.appearances} of your keywords.
+                        </div>
+                      )}
+                    </div>
+                    <GatedBreakdown
+                      scanId={scanId}
+                      free={free}
+                      leadInput={leadInput}
+                      submitToApi={async (_input, output) => {
+                        const submissionId = submissionIdRef.current
+                        if (!submissionId || !output) return
+                        try {
+                          await fetch('/api/leads/complete', {
+                            method: 'POST',
+                            headers: { 'content-type': 'application/json' },
+                            body: JSON.stringify({ submissionId, output }),
+                          })
+                        } catch (err) {
+                          console.error('[ai-overview-tracker] gated leads/complete', err)
+                        }
+                      }}
+                      onTokens={handleTokens}
+                      onGatedLoaded={handleGatedLoaded}
+                    />
+                    <div className="result-footer">
+                      <span className="token-pill">
+                        {tokens
+                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens`
+                          : 'Loading…'}
+                      </span>
+                      <span className="result-ts hide-sm">{resultTs}</span>
+                      <div className="export-actions">
+                        <button
+                          type="button"
+                          className={clsx('export-btn', { done: exportState === 'copying' })}
+                          onClick={handleCopy}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'copying' ? 'Copied' : 'Copy'}
+                        </button>
+                        <button
+                          type="button"
+                          className={clsx('export-btn', { loading: exportState === 'png' })}
+                          onClick={() => void handleDownloadPng()}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'png' ? '…' : 'PNG'}
+                        </button>
+                        <button
+                          type="button"
+                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
+                          onClick={() => void handleDownloadPdf()}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'pdf' ? '…' : 'PDF'}
+                        </button>
+                        <button className="run-again" type="button" onClick={handleReset}>
+                          Check again
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M5 12h14" />
+                            <path d="M13 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {free && (
@@ -779,7 +950,9 @@ export default function AiOverviewTrackerPage() {
                   </div>
                 )}
               </section>
-              <section className={`aio-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section
+                className={clsx('aio-state', 'error-state', { active: appState === 'error' })}
+              >
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"
@@ -809,7 +982,7 @@ export default function AiOverviewTrackerPage() {
               From keywords to citation gaps in <span className="accent">under a minute</span>
             </>
           }
-          subtitle="No login. Paste your domain and buyer keywords — we check live Google results for AI Overviews and who gets cited."
+          subtitle="No login. Paste your domain and buyer keywords. We check live Google results for AI Overviews and who gets cited."
           steps={AIO_STEPS}
         />
       </main>

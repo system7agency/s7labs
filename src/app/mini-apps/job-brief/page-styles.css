@@ -188,12 +188,9 @@
   color: var(--text);
 }
 .job-brief .hero h1 .accent {
-  color: transparent;
-  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-style: italic;
-  font-weight: 400;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 .job-brief .hero p {
   color: var(--text-dim);
@@ -1214,4 +1211,15 @@
   .job-brief .bg-spotlight {
     display: none;
   }
+}
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.job-brief .input-box input:-webkit-autofill,
+.job-brief .input-box input:-webkit-autofill:hover,
+.job-brief .input-box input:-webkit-autofill:focus,
+.job-brief .input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
 }

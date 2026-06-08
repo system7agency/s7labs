@@ -205,12 +205,9 @@
 }
 
 .email-finder .hero h1 .accent {
-  color: transparent;
-  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-style: italic;
-  font-weight: 400;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 
 .email-finder .hero p {
@@ -1145,12 +1142,9 @@
   margin-inline: auto;
 }
 .email-finder .hiw-head h2 .accent {
-  font-style: italic;
-  color: var(--blue);
-  background: linear-gradient(135deg, #4f8cff, #7aa9ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 .email-finder .hiw-head p {
   font-size: 15px;
@@ -1780,4 +1774,68 @@
   background: var(--warning);
   box-shadow: 0 0 12px var(--warning);
   flex-shrink: 0;
+}
+
+/* single-line input variant — used by the inline work-email gate */
+.email-finder .input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.email-finder .input-field label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.email-finder .input-box {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    background 200ms ease;
+}
+.email-finder .input-box:focus-within {
+  border-color: rgba(79, 140, 255, 0.55);
+  background: rgba(79, 140, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12);
+}
+.email-finder .input-box.error {
+  border-color: rgba(255, 92, 122, 0.6);
+}
+.email-finder .input-box input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 14px 16px;
+  letter-spacing: -0.005em;
+  min-width: 0;
+}
+.email-finder .input-box input::placeholder {
+  color: var(--text-faint);
+}
+.email-finder .field-error {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--error);
+}
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.email-finder .input-box input:-webkit-autofill,
+.email-finder .input-box input:-webkit-autofill:hover,
+.email-finder .input-box input:-webkit-autofill:focus,
+.email-finder .input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
 }

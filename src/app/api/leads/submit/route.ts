@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
-import { EMAIL_REGEX, isDisposableEmail } from '@/lib/leads/disposable'
+import { EMAIL_REGEX, isDisposableEmail, isFreeEmailProvider } from '@/lib/leads/disposable'
 import { checkRateLimit, getClientIp } from '@/lib/leads/rateLimit'
 
 export const runtime = 'nodejs'
@@ -49,6 +49,9 @@ export async function POST(request: Request) {
   }
   if (isDisposableEmail(email)) {
     return errorResponse('Please use a work email', 400)
+  }
+  if (isFreeEmailProvider(email)) {
+    return errorResponse('Please use a work email. Personal addresses are not accepted.', 400)
   }
 
   const supabase = getSupabaseServerClient()
