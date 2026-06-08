@@ -8,9 +8,8 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
   ApiResponse,
@@ -157,6 +156,10 @@ export default function IntentSignalsPage() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [domain, setDomain] = useState('')
   const [domainError, setDomainError] = useState<string | null>(null)
+  const [shakeDomain, setShakeDomain] = useState(0)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<IntentSignalsResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -171,13 +174,6 @@ export default function IntentSignalsPage() {
   const [latency, setLatency] = useState('—')
   const [clock, setClock] = useState('—')
   const [sysState, setSysState] = useState('idle')
-  const [cost, setCost] = useState<{
-    model: string
-    inputTokens: number
-    outputTokens: number
-    costUsd: number
-  } | null>(null)
-
   const inputRef = useRef<HTMLInputElement | null>(null)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const rafRef = useRef<number | null>(null)
@@ -275,17 +271,61 @@ export default function IntentSignalsPage() {
       event.preventDefault()
       if (submitting) return
 
+      let valid = true
       const domainNormalized = normalizeHostInput(domain)
       if (!domainNormalized || !/^([a-z0-9-]+\.)+[a-z]{2,}$/i.test(domainNormalized)) {
         setDomainError('Enter a valid domain, e.g. acme.com')
-        return
+        setShakeDomain((k) => k + 1)
+        valid = false
       }
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
 
       setDomainError(null)
+      setEmailError(null)
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
-      setCost(null)
+
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'intent-signals',
+            input: { domain: domainNormalized },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       startLoadingAnimation()
@@ -319,7 +359,16 @@ export default function IntentSignalsPage() {
         setResultTs(formatReportTs(new Date()))
         setSysState('complete')
         setAppState('result')
-        if (data.cost) setCost(data.cost)
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: data.data,
+            ...(data.cost ? { cost: data.cost } : {}),
+          }),
+        }).catch((err) => console.error('[intent-signals] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -328,7 +377,7 @@ export default function IntentSignalsPage() {
 
       setSubmitting(false)
     },
-    [clearTimers, domain, startLoadingAnimation, submitting]
+    [clearTimers, domain, email, startLoadingAnimation, submitting]
   )
 
   const handleReset = useCallback(() => {
@@ -342,7 +391,6 @@ export default function IntentSignalsPage() {
     setLoadingPct('0%')
     setLatency('—')
     setSysState('idle')
-    setCost(null)
   }, [clearTimers])
 
   const handleCopy = useCallback(async () => {
@@ -406,10 +454,13 @@ export default function IntentSignalsPage() {
             )}
 
             <div className="panel-body">
-              <section className={`state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={clsx('state', { active: appState === 'idle' })}>
                 <div className="idle-label">Input target domain</div>
                 <form className="domain-form" onSubmit={handleSubmit} noValidate>
-                  <div className={`input-box${domainError ? 'error' : ''}`}>
+                  <div
+                    key={`d-${shakeDomain}`}
+                    className={clsx('input-box', { error: domainError })}
+                  >
                     <input
                       ref={inputRef}
                       type="text"
@@ -426,10 +477,33 @@ export default function IntentSignalsPage() {
                     </button>
                   </div>
                   {domainError ? <p className="field-error">{domainError}</p> : null}
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(event) => {
+                          setEmail(event.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError ? <div className="field-error">{emailError}</div> : null}
+                  </div>
                 </form>
               </section>
 
-              <section className={`state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -459,92 +533,77 @@ export default function IntentSignalsPage() {
                 </div>
               </section>
 
-              <section className={`state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('state', { active: appState === 'result' })}>
                 {result ? (
-                  <EmailGate
-                    miniAppSlug="intent-signals"
-                    pattern="upfront"
-                    initialInput={{ domain: result.domain }}
-                  >
-                    {({ submitToApi }) => (
-                      <>
-                        <SubmitOnce
-                          submit={submitToApi}
-                          input={{ domain: result.domain }}
-                          output={result}
-                          cost={cost ?? undefined}
-                        />
+                  <>
+                    <div className="result-head">
+                      <span className="title">Signal report ready</span>
+                      <span className="ts-label">{resultTs}</span>
+                    </div>
 
-                        <div className="result-head">
-                          <span className="title">Signal report ready</span>
-                          <span className="ts-label">{resultTs}</span>
-                        </div>
+                    <div className="score-grid">
+                      <article className={clsx('score-card', scoreClass(result.intentScore))}>
+                        <div className="score-label">Intent score</div>
+                        <div className="score-value">{result.intentScore}</div>
+                        <div className="score-note">{scoreNote(result.intentScore)}</div>
+                      </article>
+                      <article className="summary-card">
+                        <div className="score-label">Summary</div>
+                        <p>{result.summary}</p>
+                      </article>
+                    </div>
 
-                        <div className="score-grid">
-                          <article className={`score-card ${scoreClass(result.intentScore)}`}>
-                            <div className="score-label">Intent score</div>
-                            <div className="score-value">{result.intentScore}</div>
-                            <div className="score-note">{scoreNote(result.intentScore)}</div>
-                          </article>
-                          <article className="summary-card">
-                            <div className="score-label">Summary</div>
-                            <p>{result.summary}</p>
-                          </article>
-                        </div>
+                    <article className="angle-card">
+                      <div className="angle-eyebrow">{'// Outreach angle'}</div>
+                      <p>{result.outreachAngle}</p>
+                    </article>
 
-                        <article className="angle-card">
-                          <div className="angle-eyebrow">{'// Outreach angle'}</div>
-                          <p>{result.outreachAngle}</p>
+                    <div className="section-head">
+                      <span>{'// Ranked signals'}</span>
+                      <span>{result.signals.length} found</span>
+                    </div>
+                    <div className="signal-list">
+                      {result.signals.map((signal, index) => (
+                        <article key={`${signal.sourceUrl}-${index}`} className="signal-item">
+                          <div className="signal-top">
+                            <h3>{signal.headline}</h3>
+                            <span className={clsx('chip', signal.strength)}>{signal.strength}</span>
+                          </div>
+                          <p>{signal.detail}</p>
+                          <div className="signal-meta">
+                            <span>{signalTypeLabel(signal.type)}</span>
+                            <span>{signal.source}</span>
+                          </div>
                         </article>
+                      ))}
+                      {result.signals.length === 0 ? (
+                        <article className="signal-item empty">
+                          <h3>Quiet signal profile</h3>
+                          <p>No strong public triggers were detected in this scan window.</p>
+                        </article>
+                      ) : null}
+                    </div>
 
-                        <div className="section-head">
-                          <span>{'// Ranked signals'}</span>
-                          <span>{result.signals.length} found</span>
-                        </div>
-                        <div className="signal-list">
-                          {result.signals.map((signal, index) => (
-                            <article key={`${signal.sourceUrl}-${index}`} className="signal-item">
-                              <div className="signal-top">
-                                <h3>{signal.headline}</h3>
-                                <span className={`chip ${signal.strength}`}>{signal.strength}</span>
-                              </div>
-                              <p>{signal.detail}</p>
-                              <div className="signal-meta">
-                                <span>{signalTypeLabel(signal.type)}</span>
-                                <span>{signal.source}</span>
-                              </div>
-                            </article>
-                          ))}
-                          {result.signals.length === 0 ? (
-                            <article className="signal-item empty">
-                              <h3>Quiet signal profile</h3>
-                              <p>No strong public triggers were detected in this scan window.</p>
-                            </article>
-                          ) : null}
-                        </div>
-
-                        <div className="result-footer">
-                          <button type="button" className="footer-btn" onClick={handleReset}>
-                            Scan another
-                          </button>
-                          <button type="button" className="footer-btn" onClick={handleCopy}>
-                            {copying ? 'Copied' : 'Copy signals'}
-                          </button>
-                          <a
-                            className="footer-btn primary"
-                            href="https://www.system7.ai/contact"
-                            target="_blank"
-                          >
-                            Book a call
-                          </a>
-                        </div>
-                      </>
-                    )}
-                  </EmailGate>
+                    <div className="result-footer">
+                      <button type="button" className="footer-btn" onClick={handleReset}>
+                        Scan another
+                      </button>
+                      <button type="button" className="footer-btn" onClick={handleCopy}>
+                        {copying ? 'Copied' : 'Copy signals'}
+                      </button>
+                      <a
+                        className="footer-btn primary"
+                        href="https://www.system7.ai/contact"
+                        target="_blank"
+                      >
+                        Book a call
+                      </a>
+                    </div>
+                  </>
                 ) : null}
               </section>
 
-              <section className={`state error${appState === 'error' ? 'active' : ''}`}>
+              <section className={clsx('state', 'error', { active: appState === 'error' })}>
                 <h2>Scan failed</h2>
                 <p>{errorMsg}</p>
                 <button type="button" className="footer-btn" onClick={handleReset}>
