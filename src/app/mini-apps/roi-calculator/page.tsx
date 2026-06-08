@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { clsx } from 'clsx'
 import './page-styles.css'
@@ -8,9 +8,8 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 
 type Inputs = {
@@ -127,10 +126,25 @@ function formatPercent(value: number): string {
   return withTenths + '%'
 }
 
+function buildLeadInput(nextInputs: Inputs) {
+  return {
+    leads_contacted: nextInputs.leads,
+    reply_rate_pct: nextInputs.replyRate,
+    reply_to_meeting_pct: nextInputs.meetingRate,
+    meeting_to_deal_pct: nextInputs.closeRate,
+    avg_deal_size_usd: nextInputs.avgDealSize,
+    campaign_cost_usd: nextInputs.campaignCost,
+  }
+}
+
 export default function RoiCalculatorPage() {
   const [inputs, setInputs] = useState<Inputs>(DEFAULT_INPUTS)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
   const topRef = useRef<HTMLElement | null>(null)
+  const leadSubmittedRef = useRef(false)
 
   const calculated = useMemo(() => {
     const replyRateFraction = inputs.replyRate / 100
@@ -174,47 +188,81 @@ export default function RoiCalculatorPage() {
     return `${calculated.roiRaw.toFixed(1)}x`
   }, [calculated.roiRaw])
 
-  const leadInputContext = useMemo(
-    () => ({
-      leads_contacted: inputs.leads,
-      reply_rate_pct: inputs.replyRate,
-      reply_to_meeting_pct: inputs.meetingRate,
-      meeting_to_deal_pct: inputs.closeRate,
-      avg_deal_size_usd: inputs.avgDealSize,
-      campaign_cost_usd: inputs.campaignCost,
-    }),
-    [inputs]
+  const submitLead = useCallback(
+    async (nextInputs: Inputs, requireValid = false): Promise<boolean> => {
+      if (leadSubmittedRef.current) return true
+
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        if (requireValid) {
+          setEmailError('Please enter your work email.')
+          setShakeEmail((k) => k + 1)
+        }
+        return false
+      }
+      if (!EMAIL_REGEX.test(emailClean)) {
+        if (requireValid) {
+          setEmailError('Please enter a valid email.')
+          setShakeEmail((k) => k + 1)
+        }
+        return false
+      }
+
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'roi-calculator',
+            input: buildLeadInput(nextInputs),
+          }),
+        })
+        const json = (await res.json()) as { ok?: boolean; error?: string }
+        if (!res.ok || !json.ok) {
+          if (requireValid) {
+            setEmailError(json.error || "Couldn't save your info. Try again.")
+            setShakeEmail((k) => k + 1)
+          }
+          return false
+        }
+        leadSubmittedRef.current = true
+        setEmailError(null)
+        return true
+      } catch {
+        if (requireValid) {
+          setEmailError("Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+        }
+        return false
+      }
+    },
+    [email]
   )
 
-  const outputContext = useMemo(
-    () => ({
-      replies: Math.round(calculated.replies),
-      meetings: Math.round(calculated.meetings),
-      deals: Math.round(calculated.deals),
-      pipeline_value_usd: Math.round(calculated.pipelineValue),
-      expected_revenue_usd: Math.round(calculated.expectedRevenue),
-      roi_multiple: calculated.roiRaw,
-      cost_per_meeting_usd: calculated.costPerMeetingRaw,
-      cost_per_deal_usd: calculated.costPerDealRaw,
-      what_if_plus_1pct_reply_pipeline_gain_usd: Math.round(calculated.whatIfPipelineDelta),
-    }),
-    [calculated]
+  const setInput = useCallback(
+    (key: InputKey, rawValue: number) => {
+      const config = INPUT_CONFIGS.find((cfg) => cfg.key === key)
+      if (!config || Number.isNaN(rawValue)) return
+      const nextValue = sanitizeValue(rawValue, config)
+      setInputs((prev) => {
+        const next = { ...prev, [key]: nextValue }
+        void submitLead(next)
+        return next
+      })
+    },
+    [submitLead]
   )
-
-  const setInput = (key: InputKey, rawValue: number) => {
-    const config = INPUT_CONFIGS.find((cfg) => cfg.key === key)
-    if (!config || Number.isNaN(rawValue)) return
-    const next = sanitizeValue(rawValue, config)
-    setInputs((prev) => ({ ...prev, [key]: next }))
-  }
 
   const handleRecalculate = () => {
+    void submitLead(inputs, true)
     setInputs(DEFAULT_INPUTS)
     setCopyState('idle')
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const handleCopy = async () => {
+    await submitLead(inputs, true)
     const rows = [
       'ROI Calculator Results',
       '----------------------',
@@ -264,10 +312,7 @@ export default function RoiCalculatorPage() {
             Estimate pipeline upside before you ship your next{' '}
             <span className="accent">outreach campaign</span>.
           </h1>
-          <p>
-            Tune six assumptions, watch your funnel update instantly, and unlock the full ROI
-            breakdown.
-          </p>
+          <p>Tune six assumptions and watch your funnel and ROI breakdown update instantly.</p>
         </section>
 
         <section className="input-panel">
@@ -311,6 +356,25 @@ export default function RoiCalculatorPage() {
               </div>
             )
           })}
+          <div className="input-field email-field">
+            <label>
+              Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+            </label>
+            <div key={`e-${shakeEmail}`} className={clsx('input-box', { error: emailError })}>
+              <input
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  if (emailError) setEmailError(null)
+                }}
+              />
+            </div>
+            {emailError && <div className="field-error">{emailError}</div>}
+          </div>
         </section>
 
         <section className="mini-counters">
@@ -328,115 +392,109 @@ export default function RoiCalculatorPage() {
           </article>
         </section>
 
-        <EmailGate miniAppSlug="roi-calculator" pattern="upfront" initialInput={leadInputContext}>
-          {({ submitToApi }) => (
-            <>
-              <SubmitOnce submit={submitToApi} input={leadInputContext} output={outputContext} />
+        <section className="results">
+          <article className="roi-headline">
+            <span className="roi-label">Projected ROI</span>
+            <h2>{headlineRoi}</h2>
+            <p>
+              Expected revenue of <strong>{formatMoney(calculated.expectedRevenue)}</strong> from a{' '}
+              <strong>{formatMoney(inputs.campaignCost)}</strong> campaign.
+            </p>
+          </article>
 
-              <section className="results">
-                <article className="roi-headline">
-                  <span className="roi-label">Projected ROI</span>
-                  <h2>{headlineRoi}</h2>
-                  <p>
-                    Expected revenue of <strong>{formatMoney(calculated.expectedRevenue)}</strong>{' '}
-                    from a <strong>{formatMoney(inputs.campaignCost)}</strong> campaign.
-                  </p>
-                </article>
+          <article className="result-block">
+            <h3>Funnel breakdown</h3>
+            <table className="funnel-table">
+              <tbody>
+                <tr>
+                  <th>Replies</th>
+                  <td>{formatNumber(calculated.replies)}</td>
+                </tr>
+                <tr>
+                  <th>Meetings</th>
+                  <td>{formatNumber(calculated.meetings)}</td>
+                </tr>
+                <tr>
+                  <th>Deals</th>
+                  <td>{formatNumber(calculated.deals)}</td>
+                </tr>
+                <tr>
+                  <th>Pipeline value</th>
+                  <td>{formatMoney(calculated.pipelineValue)}</td>
+                </tr>
+                <tr>
+                  <th>Expected revenue</th>
+                  <td>{formatMoney(calculated.expectedRevenue)}</td>
+                </tr>
+                <tr>
+                  <th>ROI multiple (exact)</th>
+                  <td>
+                    {calculated.roiRaw === null || !Number.isFinite(calculated.roiRaw)
+                      ? 'n/a'
+                      : `${calculated.roiRaw.toFixed(1)}x`}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
 
-                <article className="result-block">
-                  <h3>Funnel breakdown</h3>
-                  <table className="funnel-table">
-                    <tbody>
-                      <tr>
-                        <th>Replies</th>
-                        <td>{formatNumber(calculated.replies)}</td>
-                      </tr>
-                      <tr>
-                        <th>Meetings</th>
-                        <td>{formatNumber(calculated.meetings)}</td>
-                      </tr>
-                      <tr>
-                        <th>Deals</th>
-                        <td>{formatNumber(calculated.deals)}</td>
-                      </tr>
-                      <tr>
-                        <th>Pipeline value</th>
-                        <td>{formatMoney(calculated.pipelineValue)}</td>
-                      </tr>
-                      <tr>
-                        <th>Expected revenue</th>
-                        <td>{formatMoney(calculated.expectedRevenue)}</td>
-                      </tr>
-                      <tr>
-                        <th>ROI multiple (exact)</th>
-                        <td>
-                          {calculated.roiRaw === null || !Number.isFinite(calculated.roiRaw)
-                            ? 'n/a'
-                            : `${calculated.roiRaw.toFixed(1)}x`}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </article>
+          <article className="result-block">
+            <h3>Cost efficiency</h3>
+            <div className="efficiency-grid">
+              <div className="efficiency-item">
+                <span>Cost per meeting</span>
+                <strong
+                  className={clsx({
+                    na: calculated.costPerMeetingRaw === null,
+                  })}
+                >
+                  {calculated.costPerMeetingRaw === null ||
+                  !Number.isFinite(calculated.costPerMeetingRaw)
+                    ? 'n/a'
+                    : formatMoney(calculated.costPerMeetingRaw)}
+                </strong>
+              </div>
+              <div className="efficiency-item">
+                <span>Cost per deal</span>
+                <strong
+                  className={clsx({
+                    na: calculated.costPerDealRaw === null,
+                  })}
+                >
+                  {calculated.costPerDealRaw === null || !Number.isFinite(calculated.costPerDealRaw)
+                    ? 'n/a'
+                    : formatMoney(calculated.costPerDealRaw)}
+                </strong>
+              </div>
+            </div>
+            <p className="what-if">
+              What-if: +1% reply rate ({formatPercent(inputs.replyRate)} →{' '}
+              {formatPercent(calculated.whatIfReplyRate)}) adds{' '}
+              <strong>{formatMoney(calculated.whatIfPipelineDelta)}</strong> in potential pipeline.
+            </p>
+          </article>
 
-                <article className="result-block">
-                  <h3>Cost efficiency</h3>
-                  <div className="efficiency-grid">
-                    <div className="efficiency-item">
-                      <span>Cost per meeting</span>
-                      <strong
-                        className={clsx({
-                          na: calculated.costPerMeetingRaw === null,
-                        })}
-                      >
-                        {calculated.costPerMeetingRaw === null ||
-                        !Number.isFinite(calculated.costPerMeetingRaw)
-                          ? 'n/a'
-                          : formatMoney(calculated.costPerMeetingRaw)}
-                      </strong>
-                    </div>
-                    <div className="efficiency-item">
-                      <span>Cost per deal</span>
-                      <strong
-                        className={clsx({
-                          na: calculated.costPerDealRaw === null,
-                        })}
-                      >
-                        {calculated.costPerDealRaw === null ||
-                        !Number.isFinite(calculated.costPerDealRaw)
-                          ? 'n/a'
-                          : formatMoney(calculated.costPerDealRaw)}
-                      </strong>
-                    </div>
-                  </div>
-                  <p className="what-if">
-                    What-if: +1% reply rate ({formatPercent(inputs.replyRate)} →{' '}
-                    {formatPercent(calculated.whatIfReplyRate)}) adds{' '}
-                    <strong>{formatMoney(calculated.whatIfPipelineDelta)}</strong> in potential
-                    pipeline.
-                  </p>
-                </article>
-
-                <div className="result-actions">
-                  <button type="button" className="ghost" onClick={handleRecalculate}>
-                    Recalculate
-                  </button>
-                  <button type="button" className="ghost" onClick={handleCopy}>
-                    {copyState === 'copied' ? 'Copied' : 'Copy results'}
-                  </button>
-                  <a
-                    className="primary"
-                    href="https://www.system7.ai/contact"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Book a call
-                  </a>
-                </div>
-              </section>
-            </>
-          )}
-        </EmailGate>
+          <div className="result-actions">
+            <button type="button" className="ghost" onClick={handleRecalculate}>
+              Recalculate
+            </button>
+            <button
+              type="button"
+              className={clsx('ghost', { copied: copyState === 'copied' })}
+              onClick={handleCopy}
+            >
+              {copyState === 'copied' ? 'Copied' : 'Copy results'}
+            </button>
+            <a
+              className="primary"
+              href="https://www.system7.ai/contact"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Book a call
+            </a>
+          </div>
+        </section>
 
         <HowItWorks
           title={
