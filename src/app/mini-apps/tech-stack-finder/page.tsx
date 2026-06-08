@@ -8,9 +8,8 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type {
   TechStackFinderApiResponse,
   TechStackFinderResult,
@@ -232,6 +231,9 @@ export default function TechStackFinderPage() {
   const [domain, setDomain] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
   const [shakeKey, setShakeKey] = useState(0)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<TechStackFinderResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -349,17 +351,61 @@ export default function TechStackFinderPage() {
       event.preventDefault()
       if (submitting) return
 
+      let valid = true
       const normalized = trimDomain(domain)
       if (!normalized || !/^(?:[a-z0-9-]+\.)+[a-z]{2,63}$/i.test(normalized)) {
         setInputError('Enter a valid domain like acme.com')
         setShakeKey((k) => k + 1)
-        return
+        valid = false
       }
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
 
       setInputError(null)
+      setEmailError(null)
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
+
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'tech-stack-finder',
+            input: { domain: normalized },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       startLoadingAnimation()
@@ -393,6 +439,15 @@ export default function TechStackFinderPage() {
         setResultTs(formatResultTs(data.data.analyzedAt))
         setSysState('complete')
         setAppState('result')
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: data.data,
+          }),
+        }).catch((err) => console.error('[tech-stack-finder] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -401,7 +456,7 @@ export default function TechStackFinderPage() {
 
       setSubmitting(false)
     },
-    [domain, submitting, startLoadingAnimation, clearTimers]
+    [clearTimers, domain, email, startLoadingAnimation, submitting]
   )
 
   const handleReset = useCallback(() => {
@@ -410,6 +465,7 @@ export default function TechStackFinderPage() {
     setResult(null)
     setErrorMsg('')
     setInputError(null)
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
@@ -473,26 +529,51 @@ export default function TechStackFinderPage() {
             <div className="tsf-panel-body">
               <section className={clsx('tsf-state', { active: appState === 'idle' })}>
                 <div className="tsf-input-label">Target domain</div>
-                <form key={shakeKey} className="tsf-domain-form" onSubmit={handleSubmit} noValidate>
-                  <input
-                    ref={domainInputRef}
-                    type="text"
-                    value={domain}
-                    placeholder="acme.com"
-                    spellCheck={false}
-                    disabled={submitting}
-                    onChange={(event) => {
-                      setDomain(event.target.value)
-                      if (inputError) setInputError(null)
-                    }}
-                  />
-                  <button type="submit" disabled={submitting}>
-                    Analyze
-                  </button>
+                <form key={shakeKey} onSubmit={handleSubmit} noValidate>
+                  <div className="tsf-domain-form">
+                    <input
+                      ref={domainInputRef}
+                      type="text"
+                      value={domain}
+                      placeholder="acme.com"
+                      spellCheck={false}
+                      disabled={submitting}
+                      onChange={(event) => {
+                        setDomain(event.target.value)
+                        if (inputError) setInputError(null)
+                      }}
+                    />
+                    <button type="submit" disabled={submitting}>
+                      Analyze
+                    </button>
+                  </div>
+                  <p className={clsx('tsf-helper', { error: Boolean(inputError) })}>
+                    {inputError ?? 'Examples: stripe.com · shopify.com · linear.app'}
+                  </p>
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(event) => {
+                          setEmail(event.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError ? <div className="field-error">{emailError}</div> : null}
+                  </div>
                 </form>
-                <p className={clsx('tsf-helper', { error: Boolean(inputError) })}>
-                  {inputError ?? 'Examples: stripe.com · shopify.com · linear.app'}
-                </p>
               </section>
 
               <section className={clsx('tsf-state', { active: appState === 'loading' })}>
@@ -530,53 +611,40 @@ export default function TechStackFinderPage() {
 
               <section className={clsx('tsf-state', { active: appState === 'result' })}>
                 {result ? (
-                  <EmailGate
-                    miniAppSlug="tech-stack-finder"
-                    pattern="upfront"
-                    initialInput={{ domain: result.domain }}
-                  >
-                    {({ submitToApi }) => (
-                      <>
-                        <SubmitOnce
-                          submit={submitToApi}
-                          input={{ domain: result.domain }}
-                          output={result}
-                        />
-                        <div className="tsf-result-head">
-                          <div>
-                            <h2>{result.domain}</h2>
-                            <p>{categorySummary}</p>
-                          </div>
-                          <span className="tsf-result-ts">{resultTs}</span>
-                        </div>
+                  <>
+                    <div className="tsf-result-head">
+                      <div>
+                        <h2>{result.domain}</h2>
+                        <p>{categorySummary}</p>
+                      </div>
+                      <span className="tsf-result-ts">{resultTs}</span>
+                    </div>
 
-                        <div className="tsf-category-grid">
-                          {result.categories.map((category) => (
-                            <CategoryCard key={category.name} category={category} />
-                          ))}
-                        </div>
+                    <div className="tsf-category-grid">
+                      {result.categories.map((category) => (
+                        <CategoryCard key={category.name} category={category} />
+                      ))}
+                    </div>
 
-                        <div className="tsf-result-foot">
-                          <span className="tsf-provider-pill">
-                            provider: {result.provider}
-                            {result.cached ? ' · cached 24h' : ''}
-                          </span>
-                          <div className="tsf-actions">
-                            <button
-                              type="button"
-                              className={clsx({ done: copyState === 'done' })}
-                              onClick={handleCopy}
-                            >
-                              {copyState === 'done' ? 'Copied' : 'Copy summary'}
-                            </button>
-                            <button type="button" className="secondary" onClick={handleReset}>
-                              Analyze another
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </EmailGate>
+                    <div className="tsf-result-foot">
+                      <span className="tsf-provider-pill">
+                        provider: {result.provider}
+                        {result.cached ? ' · cached 24h' : ''}
+                      </span>
+                      <div className="tsf-actions">
+                        <button
+                          type="button"
+                          className={clsx({ done: copyState === 'done' })}
+                          onClick={handleCopy}
+                        >
+                          {copyState === 'done' ? 'Copied' : 'Copy summary'}
+                        </button>
+                        <button type="button" className="secondary" onClick={handleReset}>
+                          Analyze another
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 ) : null}
               </section>
 
