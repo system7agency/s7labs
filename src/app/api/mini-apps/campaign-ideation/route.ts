@@ -2,6 +2,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { NextResponse } from 'next/server'
 
+import { calculateCost, type CostBreakdown, sumUsage } from '@/lib/llm/cost'
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 55
@@ -9,6 +11,9 @@ export const maxDuration = 55
 const MIN_REQUIRED = 20
 const MAX_REQUIRED = 1500
 const MAX_OPTIONAL = 800
+
+
+const CAMPAIGN_MODEL = 'claude-opus-4-5'
 
 const ALLOWED_EFFORT = new Set(['low', 'medium', 'high'])
 
@@ -31,10 +36,19 @@ export type CampaignIdeationResult = {
   tokens_out: number
 }
 
-type SuccessResponse = { ok: true; data: CampaignIdeationResult }
+type SuccessResponse = { ok: true; data: CampaignIdeationResult; cost?: CostBreakdown }
 type ErrorResponse = { ok: false; message: string }
 export type ApiResponse = SuccessResponse | ErrorResponse
 
+
+
+function costFromPass(tokensIn: number, tokensOut: number): CostBreakdown {
+  return calculateCost({
+    model: CAMPAIGN_MODEL,
+    inputTokens: tokensIn,
+    outputTokens: tokensOut,
+  })
+}
 function jsonResponse(body: ApiResponse, status: number) {
   return NextResponse.json(body, { status })
 }
@@ -237,7 +251,7 @@ export async function POST(request: Request) {
     const firstPass = await runClaude(anthropic, prompt)
     firstPass.parsed.tokens_in = firstPass.tokensIn
     firstPass.parsed.tokens_out = firstPass.tokensOut
-    return jsonResponse({ ok: true, data: firstPass.parsed }, 200)
+    return jsonResponse({ ok: true, data: firstPass.parsed, cost: costFromPass(firstPass.tokensIn, firstPass.tokensOut) }, 200)
   } catch (firstErr) {
     try {
       const retryPrompt = `${prompt}
@@ -248,7 +262,12 @@ Return corrected JSON only, still following the exact schema and rules.
       const retry = await runClaude(anthropic, retryPrompt)
       retry.parsed.tokens_in = retry.tokensIn
       retry.parsed.tokens_out = retry.tokensOut
-      return jsonResponse({ ok: true, data: retry.parsed }, 200)
+      const usage = sumUsage([
+        { model: CAMPAIGN_MODEL, inputTokens: firstPass.tokensIn, outputTokens: firstPass.tokensOut },
+        { model: CAMPAIGN_MODEL, inputTokens: retry.tokensIn, outputTokens: retry.tokensOut },
+      ])
+      const cost = calculateCost(usage)
+      return jsonResponse({ ok: true, data: retry.parsed, cost }, 200)
     } catch {
       const message =
         firstErr instanceof Error && /JSON|shape|effort/i.test(firstErr.message)

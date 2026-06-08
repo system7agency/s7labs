@@ -525,7 +525,7 @@ export default function CampaignIdeationPage() {
                 rows={3}
               />
 
-              <label key={`e-${shakeEmail}`} className="ci-field">
+              <label key={`e-${shakeEmail}`} className={clsx('ci-field', 'input-box', { error: !!emailError })}>
                 <span className="ci-field-label">
                   Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
                 </span>
