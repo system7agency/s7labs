@@ -1,13 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type {
   ApiResponse,
   CampaignIdea,
@@ -169,7 +169,7 @@ function Field({
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
       />
-      <span className={`ci-meta${error ? 'error' : ''}`}>
+      <span className={clsx('ci-meta', { error: !!error })}>
         {error ?? `${value.length} chars${minChars ? ` (min ${minChars})` : ''}`}
       </span>
     </label>
@@ -200,7 +200,7 @@ function IdeaCard({ idea, index }: { idea: CampaignIdea; index: number }) {
     <article className="ci-idea-card">
       <div className="ci-idea-head">
         <span className="ci-idea-num">{String(index + 1).padStart(2, '0')}</span>
-        <span className={`ci-effort ${idea.effort}`}>{idea.effort}</span>
+        <span className={clsx('ci-effort', idea.effort)}>{idea.effort}</span>
       </div>
       <h3>{idea.name}</h3>
       <p>{idea.hook}</p>
@@ -244,6 +244,9 @@ export default function CampaignIdeationPage() {
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
   const [prodError, setProdError] = useState<string | null>(null)
   const [audError, setAudError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
 
   const stageTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -280,16 +283,6 @@ export default function CampaignIdeationPage() {
     }, 220)
   }, [clearLoadTimers])
 
-  const leadInput = useMemo(
-    () => ({
-      product: product.trim(),
-      audience: audience.trim(),
-      currentMotion: currentMotion.trim() || undefined,
-      goal: goal.trim() || undefined,
-    }),
-    [product, audience, currentMotion, goal]
-  )
-
   const handleTrySample = useCallback(() => {
     setProduct(SAMPLE_INPUT.product)
     setAudience(SAMPLE_INPUT.audience)
@@ -298,6 +291,7 @@ export default function CampaignIdeationPage() {
     setSelectedMotion(null)
     setProdError(null)
     setAudError(null)
+    setEmailError(null)
   }, [])
 
   const handleSubmit = useCallback(
@@ -307,26 +301,78 @@ export default function CampaignIdeationPage() {
 
       const p = product.trim()
       const a = audience.trim()
+      const motion = currentMotion.trim()
+      const goalTrimmed = goal.trim()
 
-      let invalid = false
+      let valid = true
       if (p.length < 20 || p.length > 1500) {
         setProdError('Product must be 20-1500 chars.')
-        invalid = true
+        valid = false
       } else {
         setProdError(null)
       }
       if (a.length < 20 || a.length > 1500) {
         setAudError('Audience must be 20-1500 chars.')
-        invalid = true
+        valid = false
       } else {
         setAudError(null)
       }
-      if (invalid) return
 
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
+
+      setEmailError(null)
       setSubmitting(true)
       setErrorMsg('')
-      setAppState('loading')
       setResult(null)
+
+      const leadInput = {
+        product: p,
+        audience: a,
+        ...(motion ? { currentMotion: motion } : {}),
+        ...(goalTrimmed ? { goal: goalTrimmed } : {}),
+      }
+
+      let submissionId: string | null = null
+      try {
+        const leadRes = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'campaign-ideation',
+            input: leadInput,
+          }),
+        })
+        const leadJson = (await leadRes.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!leadRes.ok || !leadJson.ok || !leadJson.submissionId) {
+          setEmailError(leadJson.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = leadJson.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
+      setAppState('loading')
       startLoading()
 
       let data: ApiResponse
@@ -337,8 +383,8 @@ export default function CampaignIdeationPage() {
           body: JSON.stringify({
             product: p,
             audience: a,
-            currentMotion: currentMotion.trim() || undefined,
-            goal: goal.trim() || undefined,
+            currentMotion: motion || undefined,
+            goal: goalTrimmed || undefined,
           }),
         })
         data = (await res.json()) as ApiResponse
@@ -356,13 +402,23 @@ export default function CampaignIdeationPage() {
         setResult(data.data)
         setResultTs(formatReportTs(new Date()))
         setAppState('result')
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: data.data,
+            ...('cost' in data && data.cost ? { cost: data.cost } : {}),
+          }),
+        }).catch((err) => console.error('[campaign-ideation] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setAppState('error')
       }
       setSubmitting(false)
     },
-    [audience, clearLoadTimers, currentMotion, goal, product, startLoading, submitting]
+    [audience, clearLoadTimers, currentMotion, email, goal, product, startLoading, submitting]
   )
 
   const handleCopyAll = useCallback(async () => {
@@ -389,6 +445,7 @@ export default function CampaignIdeationPage() {
     setErrorMsg('')
     setResult(null)
     setProgress(0)
+    setEmailError(null)
   }, [clearLoadTimers])
 
   return (
@@ -449,7 +506,7 @@ export default function CampaignIdeationPage() {
                   <button
                     key={chip}
                     type="button"
-                    className={`ci-chip${selectedMotion === chip ? 'active' : ''}`}
+                    className={clsx('ci-chip', { active: selectedMotion === chip })}
                     onClick={() => {
                       setSelectedMotion(chip)
                       setCurrentMotion(chip)
@@ -467,6 +524,25 @@ export default function CampaignIdeationPage() {
                 disabled={submitting}
                 rows={3}
               />
+
+              <label key={`e-${shakeEmail}`} className="ci-field">
+                <span className="ci-field-label">
+                  Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                </span>
+                <input
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  value={email}
+                  disabled={submitting}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    if (emailError) setEmailError(null)
+                  }}
+                />
+                {emailError && <span className={clsx('ci-meta', { error: true })}>{emailError}</span>}
+              </label>
 
               <div className="ci-actions">
                 <button className="ci-submit" type="submit" disabled={submitting}>
@@ -487,7 +563,7 @@ export default function CampaignIdeationPage() {
               <div className="ci-progress-label">{Math.floor(progress)}%</div>
               <div className="ci-stage-list">
                 {STAGES.map((stage, idx) => (
-                  <div key={stage} className={`ci-stage${idx <= activeStage ? 'on' : ''}`}>
+                  <div key={stage} className={clsx('ci-stage', { on: idx <= activeStage })}>
                     <span>{String(idx + 1).padStart(2, '0')}</span>
                     <strong>{stage}</strong>
                   </div>
@@ -498,41 +574,34 @@ export default function CampaignIdeationPage() {
 
           {appState === 'result' && result && (
             <section className="ci-result-wrap">
-              <EmailGate miniAppSlug="campaign-ideation" pattern="upfront" initialInput={leadInput}>
-                {({ submitToApi }) => (
-                  <>
-                    <SubmitOnce submit={submitToApi} input={leadInput} output={result} />
-                    <div className="ci-report-head">
-                      <span className="ci-report-title">Campaign ideas ready</span>
-                      <span className="ci-report-ts">{resultTs}</span>
-                    </div>
+              <div className="ci-report-head">
+                <span className="ci-report-title">Campaign ideas ready</span>
+                <span className="ci-report-ts">{resultTs}</span>
+              </div>
 
-                    <article className="ci-positioning">
-                      <span>{'// Positioning summary'}</span>
-                      <p>{result.summary.positioning}</p>
-                    </article>
+              <article className="ci-positioning">
+                <span>{'// Positioning summary'}</span>
+                <p>{result.summary.positioning}</p>
+              </article>
 
-                    <div className="ci-grid">
-                      {result.ideas.map((idea, index) => (
-                        <IdeaCard key={index} idea={idea} index={index} />
-                      ))}
-                    </div>
+              <div className="ci-grid">
+                {result.ideas.map((idea, index) => (
+                  <IdeaCard key={index} idea={idea} index={index} />
+                ))}
+              </div>
 
-                    <div className="ci-footer-actions">
-                      <button
-                        className={`ci-copy-all${copyState === 'copied' ? 'copied' : ''}`}
-                        type="button"
-                        onClick={handleCopyAll}
-                      >
-                        {copyState === 'copied' ? 'Copied' : 'Copy all'}
-                      </button>
-                      <button className="ci-ghost" type="button" onClick={() => window.print()}>
-                        Print
-                      </button>
-                    </div>
-                  </>
-                )}
-              </EmailGate>
+              <div className="ci-footer-actions">
+                <button
+                  className={clsx('ci-copy-all', { copied: copyState === 'copied' })}
+                  type="button"
+                  onClick={handleCopyAll}
+                >
+                  {copyState === 'copied' ? 'Copied' : 'Copy all'}
+                </button>
+                <button className="ci-ghost" type="button" onClick={() => window.print()}>
+                  Print
+                </button>
+              </div>
             </section>
           )}
 
