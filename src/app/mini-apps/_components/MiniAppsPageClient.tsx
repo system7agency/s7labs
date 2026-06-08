@@ -90,10 +90,10 @@ export function MiniAppsPageClient() {
     <>
       <PageEyebrow />
       <LabTitleHero
-        eyebrow="ROUTE_05 — MINI APPS"
+        eyebrow="ROUTE_05 · MINI APPS"
         name="Mini Apps"
         bgWord="MINI APPS"
-        subtitle="A marketplace of compact products you can open, test and learn from — each one a focused tool that shows how useful software can solve a specific problem."
+        subtitle="A marketplace of compact products you can open, test and learn from. Each one a focused tool that shows how useful software can solve a specific problem."
         meta={[
           { label: 'LIVE' },
           { label: 'BETA' },

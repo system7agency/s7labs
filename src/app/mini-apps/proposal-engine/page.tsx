@@ -5,12 +5,15 @@ import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type {
   ApiResponse,
   Phase,
   ProposalResult,
   TechItem,
 } from '@/app/api/mini-apps/proposal-engine/route'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
@@ -39,6 +42,82 @@ const STAGES = [
   },
 ]
 const STAGE_MS = 5000
+
+const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Paste the client brief',
+    description:
+      'Drop in an RFP, a discovery call summary, or a few paragraphs that capture what the client needs.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+        <path d="M14 2v6h6" />
+        <path d="M9 13h6M9 17h6" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Pick a tone',
+    description:
+      'Formal, conversational, or technical. We tune voice and structure to match how this client buys.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 12h3l3-7 4 14 3-7h5" />
+      </svg>
+    ),
+  },
+  {
+    title: 'See the structured draft',
+    description:
+      'Scope, phased delivery plan, a recommended tech stack with reasons, and a realistic timeline.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M7 9h10M7 13h10M7 17h6" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Copy or export',
+    description:
+      'Grab plain text for your editor, or download a PNG / PDF you can drop straight into a follow-up.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 3v12" />
+        <path d="M7 10l5 5 5-5" />
+        <path d="M5 21h14" />
+      </svg>
+    ),
+  },
+]
 
 const TONE_OPTIONS: { id: Tone; label: string }[] = [
   { id: 'formal', label: 'Formal' },
@@ -166,6 +245,9 @@ export default function ProposalEnginePage() {
   const [resultTs, setResultTs] = useState('')
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -284,17 +366,61 @@ export default function ProposalEnginePage() {
       e.preventDefault()
       if (submitting) return
 
+      let valid = true
       const trimBrief = briefText.trim()
       if (!trimBrief || trimBrief.length < 50) {
         setInputError('Paste the full client brief (at least 50 characters).')
         setShakeInput((k) => k + 1)
-        return
+        valid = false
       }
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
 
       setInputError(null)
+      setEmailError(null)
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
+
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'proposal-engine',
+            input: { brief_text: trimBrief, tone },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       startLoadingAnimation(`${trimBrief.length} chars · ${TONE_LABEL[tone]}`)
@@ -330,6 +456,15 @@ export default function ProposalEnginePage() {
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
+
+        const completeBody: Record<string, unknown> = { submissionId, output: data.data }
+        const withCost = data as ApiResponse & { cost?: unknown }
+        if (withCost.cost) completeBody.cost = withCost.cost
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(completeBody),
+        }).catch((err) => console.error('[proposal-engine] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -337,7 +472,7 @@ export default function ProposalEnginePage() {
       }
       setSubmitting(false)
     },
-    [briefText, tone, submitting, startLoadingAnimation, clearTimers]
+    [briefText, tone, email, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -346,6 +481,7 @@ export default function ProposalEnginePage() {
     setResult(null)
     setErrorMsg('')
     setInputError(null)
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
@@ -418,13 +554,7 @@ export default function ProposalEnginePage() {
 
   return (
     <div className="proposal-engine">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="pe-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -436,7 +566,7 @@ export default function ProposalEnginePage() {
           </h1>
           <p>
             Paste a client brief or RFP. Get a structured proposal with scope, phases, tech stack,
-            timeline, and a tailored why-us section — in seconds.
+            timeline, and a tailored why-us section, in seconds.
           </p>
           <div className="meta-tags">
             <span>· Scope</span>
@@ -484,7 +614,7 @@ export default function ProposalEnginePage() {
             </div>
 
             <div className="panel-body">
-              <section className={`pe-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={clsx('pe-state', { active: appState === 'idle' })}>
                 <div className="idle-label">Client brief</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
@@ -493,7 +623,6 @@ export default function ProposalEnginePage() {
                       key={`t-${shakeInput}`}
                       className={clsx('textarea-box', { error: inputError })}
                     >
-                      <span className="prompt">$</span>
                       <textarea
                         ref={textareaRef}
                         placeholder={`We need a custom SaaS platform for managing field operations...\nMust integrate with Salesforce and support mobile offline mode...\nTimeline: Q3 launch, budget TBD...`}
@@ -517,7 +646,7 @@ export default function ProposalEnginePage() {
                       <button
                         key={opt.id}
                         type="button"
-                        className={`tone-pill${tone === opt.id ? 'active' : ''}`}
+                        className={clsx('tone-pill', { active: tone === opt.id })}
                         onClick={() => setTone(opt.id)}
                         disabled={submitting}
                       >
@@ -526,7 +655,31 @@ export default function ProposalEnginePage() {
                     ))}
                   </div>
 
-                  <div className="submit-row">
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError && <div className="field-error">{emailError}</div>}
+                  </div>
+
+                  <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
@@ -545,7 +698,7 @@ export default function ProposalEnginePage() {
                 </form>
               </section>
 
-              <section className={`pe-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('pe-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -562,7 +715,7 @@ export default function ProposalEnginePage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -586,9 +739,13 @@ export default function ProposalEnginePage() {
                 </div>
               </section>
 
-              <section className={`pe-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('pe-state', { active: appState === 'result' })}>
                 {result && (
                   <>
+                    <div className="result-head">
+                      <span className="title">Proposal draft</span>
+                      <span className="ts-label">{resultTs}</span>
+                    </div>
                     <div ref={resultPanelRef}>
                       <div className="proposal-doc">
                         <div className="doc-header">
@@ -597,7 +754,6 @@ export default function ProposalEnginePage() {
                             <span className="badge dept">
                               {TONE_LABEL[result.tone as Tone] ?? result.tone}
                             </span>
-                            <span className="doc-ts">{resultTs}</span>
                           </div>
                         </div>
 
@@ -671,14 +827,9 @@ export default function ProposalEnginePage() {
                     </div>
 
                     <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : ''}
-                      </span>
                       <div className="export-actions">
                         <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                          className={clsx('export-btn', { done: exportState === 'copying' })}
                           type="button"
                           onClick={handleCopy}
                           disabled={exportState !== 'idle'}
@@ -719,7 +870,7 @@ export default function ProposalEnginePage() {
                           )}
                         </button>
                         <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                          className={clsx('export-btn', { loading: exportState === 'png' })}
                           type="button"
                           onClick={handleDownloadPng}
                           disabled={exportState !== 'idle'}
@@ -741,7 +892,7 @@ export default function ProposalEnginePage() {
                           {exportState === 'png' ? '…' : 'PNG'}
                         </button>
                         <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
                           type="button"
                           onClick={handleDownloadPdf}
                           disabled={exportState !== 'idle'}
@@ -784,7 +935,9 @@ export default function ProposalEnginePage() {
                 )}
               </section>
 
-              <section className={`pe-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section
+                className={clsx('pe-state', 'error-state', { active: appState === 'error' })}
+              >
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"
@@ -808,40 +961,15 @@ export default function ProposalEnginePage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Scope'}</div>
-            <div className="name">Structured output</div>
-            <div className="desc">
-              Scope summary with key deliverables pulled directly from the brief — not generic
-              boilerplate.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Phases'}</div>
-            <div className="name">Delivery plan</div>
-            <div className="desc">
-              Phased breakdown with durations and concrete deliverables for each stage of the
-              engagement.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Stack'}</div>
-            <div className="name">Tech recommendations</div>
-            <div className="desc">
-              Technology choices grouped by category, each with a reason tied to the project
-              requirements.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Why S7'}</div>
-            <div className="name">Tailored positioning</div>
-            <div className="desc">
-              A why-us section seeded with S7 capabilities and adapted to what this client actually
-              needs.
-            </div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From brief to <span className="accent">proposal</span> in under a minute
+            </>
+          }
+          subtitle="Paste, pick a tone, and get a structured draft you can hand to the client."
+          steps={HOW_IT_WORKS_STEPS}
+        />
       </main>
 
       <Footer />

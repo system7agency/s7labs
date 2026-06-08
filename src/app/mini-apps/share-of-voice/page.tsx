@@ -5,6 +5,8 @@ import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type {
   BrandScore,
   Provider,
@@ -13,10 +15,10 @@ import type {
   ScanGated,
   UnlockApiResponse,
 } from '@/lib/mini-apps/sov-types'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
-type ResultView = 'locked' | 'unlocked'
 
 const DOMAIN_RE = /^([a-z0-9-]+\.)+[a-z]{2,}/i
 
@@ -50,10 +52,77 @@ const PROVIDER_LABELS: Record<Provider, string> = {
   perplexity: 'Perplexity',
 }
 
-function fmtTs(d: Date) {
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `SOV · ${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} · ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`
-}
+const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Enter your domain + rivals',
+    description:
+      'Drop in your domain and up to three competitors in the same category. We figure out the rest.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We write buyer questions',
+    description:
+      'Real shopping questions a buyer would ask — no brand names baked in, no leading prompts.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Ask three AIs in parallel',
+    description: 'Claude, ChatGPT, and Perplexity get the same questions. We capture every answer.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+      </svg>
+    ),
+  },
+  {
+    title: 'See who wins the answers',
+    description:
+      'Share of voice, by-provider breakdown, question-by-question mentions, and moves to close the gap.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 3v18h18" />
+        <path d="M7 14l4-4 4 4 5-6" />
+      </svg>
+    ),
+  },
+]
 
 function normalizeDomainInput(input: string): string {
   return input
@@ -171,7 +240,7 @@ function ProviderCard({ provider, free }: { provider: Provider; free: ScanFree }
   const available = free.providers_used.includes(provider)
 
   return (
-    <div className={`provider-card${available ? '' : 'is-unavailable'}`}>
+    <div className={clsx('provider-card', { 'is-unavailable': !available })}>
       <div className="provider-card-label">{PROVIDER_LABELS[provider]}</div>
       {available && row ? (
         <>
@@ -190,23 +259,20 @@ function ProviderCard({ provider, free }: { provider: Provider; free: ScanFree }
 
 export default function ShareOfVoicePage() {
   const [appState, setAppState] = useState<AppState>('idle')
-  const [resultView, setResultView] = useState<ResultView>('locked')
   const [yourDomain, setYourDomain] = useState('')
   const [competitors, setCompetitors] = useState<string[]>([''])
   const [domainError, setDomainError] = useState<string | null>(null)
   const [competitorError, setCompetitorError] = useState<string | null>(null)
   const [shakeDomain, setShakeDomain] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-  const [scanId, setScanId] = useState<string | null>(null)
   const [free, setFree] = useState<ScanFree | null>(null)
   const [gated, setGated] = useState<ScanGated | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [resultTs, setResultTs] = useState('')
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
 
-  const [unlockEmail, setUnlockEmail] = useState('')
-  const [unlockError, setUnlockError] = useState<string | null>(null)
-  const [unlocking, setUnlocking] = useState(false)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -321,11 +387,12 @@ export default function ShareOfVoicePage() {
       e.preventDefault()
       if (submitting) return
 
+      let valid = true
       const yourClean = normalizeDomainInput(yourDomain)
       if (!yourClean || !DOMAIN_RE.test(yourClean)) {
         setDomainError('Enter a valid domain for your brand.')
         setShakeDomain((k) => k + 1)
-        return
+        valid = false
       }
 
       const compClean: string[] = []
@@ -334,19 +401,62 @@ export default function ShareOfVoicePage() {
         if (!t) continue
         if (!DOMAIN_RE.test(t)) {
           setCompetitorError('Enter valid competitor domains (e.g. competitor.com).')
-          return
+          valid = false
+          break
         }
         if (t !== yourClean && !compClean.includes(t)) compClean.push(t)
       }
 
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
+
       setDomainError(null)
       setCompetitorError(null)
+      setEmailError(null)
       setSubmitting(true)
       setFree(null)
       setGated(null)
-      setScanId(null)
-      setResultView('locked')
       setErrorMsg('')
+
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'share-of-voice',
+            input: { your_domain: yourClean, competitors: compClean },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       startLoadingAnimation()
@@ -373,77 +483,59 @@ export default function ShareOfVoicePage() {
       setProgressPct(100)
       setLoadingPct('100%')
 
-      if (data.ok) {
-        setDoneStages([0, 1, 2, 3])
-        await new Promise((r) => setTimeout(r, 400))
-        setScanId(data.scanId)
-        setFree(data.free)
-        setResultTs(fmtTs(new Date()))
-        setSysState('complete')
-        setAppState('result')
-      } else {
+      if (!data.ok) {
         setErrorMsg(data.message)
         setSysState('error')
         setAppState('error')
-      }
-      setSubmitting(false)
-    },
-    [yourDomain, competitors, submitting, startLoadingAnimation, clearTimers]
-  )
-
-  const handleUnlock = useCallback(
-    async (e: FormEvent) => {
-      e.preventDefault()
-      if (!scanId || unlocking) return
-      const email = unlockEmail.trim().toLowerCase()
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-        setUnlockError('Enter a valid email.')
+        setSubmitting(false)
         return
       }
-      setUnlockError(null)
-      setUnlocking(true)
 
-      let data: UnlockApiResponse
+      setDoneStages([0, 1, 2, 3])
+      await new Promise((r) => setTimeout(r, 400))
+      setFree(data.free)
+
+      // Auto-unlock gated portion using the captured email.
+      let unlockData: UnlockApiResponse | null = null
       try {
         const res = await fetch('/api/mini-apps/share-of-voice/unlock', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ scanId, email }),
+          body: JSON.stringify({ scanId: data.scanId, email: emailClean }),
         })
-        data = (await res.json()) as UnlockApiResponse
+        unlockData = (await res.json()) as UnlockApiResponse
       } catch {
-        setUnlockError('Network error. Please try again.')
-        setUnlocking(false)
-        return
+        // Non-fatal: free portion will still render. The user already paid the email cost.
+      }
+      if (unlockData?.ok) {
+        setGated(unlockData.data)
+        setTokens({ in: unlockData.data.tokens_in, out: unlockData.data.tokens_out })
       }
 
-      if (data.ok) {
-        setGated(data.data)
-        setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
-        setResultView('unlocked')
-      } else {
-        setUnlockError(data.message)
-        if (data.message.includes('expired')) {
-          setResultView('locked')
-        }
-      }
-      setUnlocking(false)
+      setSysState('complete')
+      setAppState('result')
+
+      const completeOutput: Record<string, unknown> = { free: data.free }
+      if (unlockData?.ok) completeOutput.gated = unlockData.data
+      fetch('/api/leads/complete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ submissionId, output: completeOutput }),
+      }).catch((err) => console.error('[share-of-voice] leads/complete', err))
+
+      setSubmitting(false)
     },
-    [scanId, unlockEmail, unlocking]
+    [yourDomain, competitors, email, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
     clearTimers()
     setAppState('idle')
-    setResultView('locked')
     setFree(null)
     setGated(null)
-    setScanId(null)
     setErrorMsg('')
-    setUnlockEmail('')
-    setUnlockError(null)
+    setEmailError(null)
     setSubmitting(false)
-    setUnlocking(false)
     setSysState('idle')
     setLatency('—')
     setTokens(null)
@@ -517,13 +609,7 @@ export default function ShareOfVoicePage() {
 
   return (
     <div className="share-of-voice">
-      <div className="bg-layer bg-aurora">
-        <div className="blob3" />
-      </div>
-      <div className="bg-layer bg-dots" />
-      <div className="bg-layer bg-vignette" />
-      <div className="bg-layer bg-spotlight" id="sov-spotlight" />
-      <div className="bg-layer bg-grain" />
+      <AuroraBackground />
 
       <Header />
 
@@ -535,7 +621,7 @@ export default function ShareOfVoicePage() {
           </h1>
           <p>
             Enter your domain and up to three competitors. We ask the same buying-intent questions
-            across Claude, ChatGPT, and Perplexity — and show who wins the answers.
+            across Claude, ChatGPT, and Perplexity, and show who wins the answers.
           </p>
           <div className="meta-tags">
             <span>· 3 AI providers</span>
@@ -583,7 +669,7 @@ export default function ShareOfVoicePage() {
             </div>
 
             <div className="panel-body">
-              <section className={`sov-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={clsx('sov-state', { active: appState === 'idle' })}>
                 <div className="idle-label">Enter your domain and up to 3 competitors</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
@@ -592,7 +678,6 @@ export default function ShareOfVoicePage() {
                       key={`yd-${shakeDomain}`}
                       className={clsx('input-box', { error: domainError })}
                     >
-                      <span className="prompt">@</span>
                       <input
                         ref={domainInputRef}
                         type="text"
@@ -613,7 +698,6 @@ export default function ShareOfVoicePage() {
                       <div key={i} className="input-field domain-row">
                         <label>Competitor {competitors.length > 1 ? i + 1 : ''}</label>
                         <div className={clsx('input-box', { error: competitorError })}>
-                          <span className="prompt">@</span>
                           <input
                             type="text"
                             placeholder="competitor.com"
@@ -642,7 +726,31 @@ export default function ShareOfVoicePage() {
                     )}
                   </div>
 
-                  <div className="submit-row">
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError && <div className="field-error">{emailError}</div>}
+                  </div>
+
+                  <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
@@ -661,7 +769,7 @@ export default function ShareOfVoicePage() {
                 </form>
               </section>
 
-              <section className={`sov-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('sov-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -676,7 +784,7 @@ export default function ShareOfVoicePage() {
                     return (
                       <div
                         key={s.num}
-                        className={`stage${isActive ? 'active' : ''}${isDone ? 'done' : ''}`}
+                        className={clsx('stage', { active: isActive, done: isDone })}
                       >
                         <div className="stage-num-row">
                           <span>{s.num}</span>
@@ -700,7 +808,7 @@ export default function ShareOfVoicePage() {
                 </div>
               </section>
 
-              <section className={`sov-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('sov-state', { active: appState === 'result' })}>
                 {free && (
                   <>
                     <div ref={shareableRef} className="shareable-block">
@@ -743,59 +851,12 @@ export default function ShareOfVoicePage() {
                       </div>
                       <p className="provider-footnote">
                         {free.providers_used.length < 3
-                          ? `Scored across ${free.providers_used.map((p) => PROVIDER_LABELS[p]).join(' and ')} only — unavailable providers excluded.`
+                          ? `Scored across ${free.providers_used.map((p) => PROVIDER_LABELS[p]).join(' and ')} only. Unavailable providers excluded.`
                           : 'Your share within each provider’s answers.'}
                       </p>
                     </div>
 
-                    {resultView === 'locked' && (
-                      <div className="gate-block">
-                        <div className="gate-preview" aria-hidden>
-                          <div className="gate-preview-fake">
-                            {free.scores.slice(0, 2).map((s) => (
-                              <div key={s.domain} className="gate-fake-row">
-                                {s.name}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="gate-card">
-                          <h3 className="gate-title">
-                            See the exact questions and who&apos;s beating you
-                          </h3>
-                          <p className="gate-sub">
-                            Get the questions we asked, which AI named which brand, and the actual
-                            answers.
-                          </p>
-                          <form noValidate onSubmit={handleUnlock} className="gate-form">
-                            <div
-                              className={clsx('input-box gate-email-box', { error: unlockError })}
-                            >
-                              <input
-                                type="email"
-                                placeholder="you@company.com"
-                                value={unlockEmail}
-                                disabled={unlocking}
-                                onChange={(e) => {
-                                  setUnlockEmail(e.target.value)
-                                  if (unlockError) setUnlockError(null)
-                                }}
-                              />
-                            </div>
-                            {unlockError && <div className="field-error">{unlockError}</div>}
-                            <button
-                              type="submit"
-                              className="submit-btn gate-submit"
-                              disabled={unlocking}
-                            >
-                              {unlocking ? 'Unlocking…' : 'Unlock the full report'}
-                            </button>
-                          </form>
-                        </div>
-                      </div>
-                    )}
-
-                    {resultView === 'unlocked' && gated && (
+                    {gated && (
                       <>
                         <div className="section-header">
                           <span>{'// question breakdown'}</span>
@@ -813,7 +874,11 @@ export default function ShareOfVoicePage() {
                               return (
                                 <div
                                   key={`${q.question}-${row.provider}`}
-                                  className={`mention-row${hasYou ? 'has-you' : 'missing-you'}${hasCompetitor && !hasYou ? 'competitor-ahead' : ''}`}
+                                  className={clsx('mention-row', {
+                                    'has-you': hasYou,
+                                    'missing-you': !hasYou,
+                                    'competitor-ahead': hasCompetitor && !hasYou,
+                                  })}
                                 >
                                   <div className="mention-provider">
                                     {PROVIDER_LABELS[row.provider]}
@@ -858,15 +923,9 @@ export default function ShareOfVoicePage() {
                     )}
 
                     <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : 'Unlock for token usage'}
-                      </span>
-                      <span className="result-ts hide-sm">{resultTs}</span>
                       <div className="export-actions">
                         <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                          className={clsx('export-btn', { done: exportState === 'copying' })}
                           type="button"
                           onClick={handleCopy}
                           disabled={exportState !== 'idle'}
@@ -874,7 +933,7 @@ export default function ShareOfVoicePage() {
                           {exportState === 'copying' ? 'Copied' : 'Copy'}
                         </button>
                         <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                          className={clsx('export-btn', { loading: exportState === 'png' })}
                           type="button"
                           onClick={handleDownloadPng}
                           disabled={exportState !== 'idle'}
@@ -882,7 +941,7 @@ export default function ShareOfVoicePage() {
                           {exportState === 'png' ? '…' : 'PNG'}
                         </button>
                         <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
                           type="button"
                           onClick={handleDownloadPdf}
                           disabled={exportState !== 'idle'}
@@ -911,7 +970,9 @@ export default function ShareOfVoicePage() {
                 )}
               </section>
 
-              <section className={`sov-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section
+                className={clsx('sov-state', 'error-state', { active: appState === 'error' })}
+              >
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"
@@ -935,32 +996,15 @@ export default function ShareOfVoicePage() {
           </div>
         </div>
 
-        <section className="info-strip">
-          <div className="dim-card">
-            <div className="key">{'// 01 Domains'}</div>
-            <div className="name">You + competitors</div>
-            <div className="desc">Your domain plus up to three rivals in the same category.</div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 02 Questions'}</div>
-            <div className="name">Buyer intent</div>
-            <div className="desc">Five natural shopping questions — no brand names baked in.</div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 03 Three AIs'}</div>
-            <div className="name">Claude · ChatGPT · Perplexity</div>
-            <div className="desc">
-              Same questions, three engines — who gets named in the answers.
-            </div>
-          </div>
-          <div className="dim-card">
-            <div className="key">{'// 04 Unlock'}</div>
-            <div className="name">Full breakdown</div>
-            <div className="desc">
-              Email unlocks every question, mention, excerpt, and three moves to close the gap.
-            </div>
-          </div>
-        </section>
+        <HowItWorks
+          title={
+            <>
+              From domains to <span className="accent">answers</span> in under a minute
+            </>
+          }
+          subtitle="Same buyer questions, three AIs, one scoreboard of who actually gets recommended."
+          steps={HOW_IT_WORKS_STEPS}
+        />
       </main>
 
       <Footer />

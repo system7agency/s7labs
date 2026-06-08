@@ -188,12 +188,9 @@
   color: var(--text);
 }
 .ai-overview-tracker .hero h1 .accent {
-  color: transparent;
-  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-style: italic;
-  font-weight: 400;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 .ai-overview-tracker .hero p {
   color: var(--text-dim);
@@ -1489,8 +1486,16 @@
   gap: 16px;
 }
 
-.ai-overview-tracker .input-field select {
+/* ============== Themed Market dropdown (replaces native <select>) ============== */
+.ai-overview-tracker .aio-dd {
+  position: relative;
+}
+.ai-overview-tracker .aio-dd-button {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   background: var(--bg);
   border: 1px solid var(--border-strong);
   border-radius: 10px;
@@ -1498,21 +1503,144 @@
   font-family: var(--mono);
   font-size: 13px;
   padding: 12px 14px;
-  outline: none;
   cursor: pointer;
+  text-align: left;
   transition:
     border-color 180ms ease,
-    box-shadow 180ms ease;
+    box-shadow 180ms ease,
+    background 180ms ease;
 }
-
-.ai-overview-tracker .input-field select:focus {
+.ai-overview-tracker .aio-dd-button:hover:not(:disabled) {
+  border-color: rgba(79, 140, 255, 0.45);
+}
+.ai-overview-tracker .aio-dd-button:focus-visible,
+.ai-overview-tracker .aio-dd[aria-expanded='true'] .aio-dd-button {
+  outline: none;
   border-color: var(--blue);
   box-shadow:
     0 0 0 3px rgba(79, 140, 255, 0.18),
     0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
 }
+.ai-overview-tracker .aio-dd-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.ai-overview-tracker .aio-dd-button svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 180ms ease;
+}
+.ai-overview-tracker .aio-dd-button[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+  color: var(--blue);
+}
+.ai-overview-tracker .aio-dd-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: linear-gradient(180deg, #181820, #101014);
+  border: 1px solid rgba(79, 140, 255, 0.28);
+  border-radius: 10px;
+  box-shadow:
+    0 18px 40px -16px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(79, 140, 255, 0.08) inset;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  max-height: min(240px, 50vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: aio-dd-fade 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ai-overview-tracker .aio-dd-menu::-webkit-scrollbar {
+  width: 8px;
+}
+.ai-overview-tracker .aio-dd-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ai-overview-tracker .aio-dd-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+.ai-overview-tracker .aio-dd-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 140, 255, 0.35);
+}
+@keyframes aio-dd-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.ai-overview-tracker .aio-dd-option {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+.ai-overview-tracker .aio-dd-option:hover {
+  background: rgba(79, 140, 255, 0.1);
+  color: var(--text);
+}
+.ai-overview-tracker .aio-dd-option.is-selected {
+  background: rgba(79, 140, 255, 0.14);
+  color: var(--blue);
+}
+.ai-overview-tracker .aio-dd-option.is-selected::before {
+  content: '✓ ';
+}
 
 .ai-overview-tracker .textarea-box.error,
 .ai-overview-tracker .input-box.error {
   animation: aio-shake 0.35s ease;
+}
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.ai-overview-tracker .input-box input:-webkit-autofill,
+.ai-overview-tracker .input-box input:-webkit-autofill:hover,
+.ai-overview-tracker .input-box input:-webkit-autofill:focus,
+.ai-overview-tracker .input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* ============== COMING-SOON NOTICE ============== */
+
+.ai-overview-tracker .aio-coming-soon {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(245, 166, 35, 0.32);
+  background: rgba(245, 166, 35, 0.05);
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--warning);
+}
+.ai-overview-tracker .aio-coming-soon-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warning);
+  box-shadow: 0 0 12px var(--warning);
+  flex-shrink: 0;
 }

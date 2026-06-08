@@ -205,12 +205,9 @@
 }
 
 .pricing-diag .hero h1 .accent {
-  color: transparent;
-  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-style: italic;
-  font-weight: 400;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 
 .pricing-diag .hero p {
@@ -367,6 +364,14 @@
   border-radius: 50%;
   background: var(--cyan);
   box-shadow: 0 0 8px var(--cyan);
+}
+.pricing-diag .pd-form .idle-label {
+  margin-top: 14px;
+}
+.pricing-diag .required-mark {
+  color: var(--error, #ff5c7a);
+  font-size: 13px;
+  letter-spacing: 0;
 }
 
 .pricing-diag .url-input {
@@ -1145,12 +1150,9 @@
   margin-inline: auto;
 }
 .pricing-diag .hiw-head h2 .accent {
-  font-style: italic;
-  color: var(--blue);
-  background: linear-gradient(135deg, #4f8cff, #7aa9ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 .pricing-diag .hiw-head p {
   font-size: 15px;
@@ -1518,4 +1520,15 @@
 .pricing-diag .pd-submit-btn svg {
   width: 14px;
   height: 14px;
+}
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.pricing-diag .pd-input-box input:-webkit-autofill,
+.pricing-diag .pd-input-box input:-webkit-autofill:hover,
+.pricing-diag .pd-input-box input:-webkit-autofill:focus,
+.pricing-diag .pd-input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-1) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
 }

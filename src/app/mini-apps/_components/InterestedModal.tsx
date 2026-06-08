@@ -41,7 +41,7 @@ export function InterestedModal({ app, initialIntent = 'use', onClose }: Interes
   const title = app ? `Interested in ${app.name}?` : 'Suggest a mini-app.'
   const lead = app
     ? "Tell us a little about how you'd want to use it."
-    : "Tell us about the idea — we'll come back to you within 24 hours."
+    : "Tell us about the idea. We'll come back to you within 24 hours."
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

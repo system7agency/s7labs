@@ -6,9 +6,8 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type {
   ApiResponse,
   RoastCategory,
@@ -60,7 +59,7 @@ const ROAST_STEPS: HowItWorksStep[] = [
   {
     title: 'AI roasts six honest categories',
     description:
-      'Copy, CTAs, SEO, mobile UX, performance, and trust — each with a score, a roast, and a specific quick fix.',
+      'Copy, CTAs, SEO, mobile UX, performance, and trust, each with a score, a roast, and a specific quick fix.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -78,7 +77,7 @@ const ROAST_STEPS: HowItWorksStep[] = [
   {
     title: 'Get your overall grade and top 3 fixes',
     description:
-      'A friction-style score, a one-liner verdict, and the highest-impact changes ranked first — specific actions, not advice.',
+      'A friction-style score, a one-liner verdict, and the highest-impact changes ranked first: specific actions, not advice.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -206,12 +205,9 @@ export default function WebsiteRoastPage() {
   const [resultTs, setResultTs] = useState('')
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
-  const [cost, setCost] = useState<{
-    model: string
-    inputTokens: number
-    outputTokens: number
-    costUsd: number
-  } | null>(null)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -330,17 +326,61 @@ export default function WebsiteRoastPage() {
       e.preventDefault()
       if (submitting) return
 
+      let valid = true
       const trimmed = url.trim()
       if (!trimmed || !/^https:\/\/.+/i.test(trimmed)) {
         setUrlError('Enter a valid URL starting with https://')
         setShakeInput((k) => k + 1)
-        return
+        valid = false
       }
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
 
       setUrlError(null)
+      setEmailError(null)
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
+
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'website-roast',
+            input: { url: trimmed },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       const host = trimmed.replace(/^https?:\/\//, '').split('/')[0] ?? trimmed
@@ -374,10 +414,19 @@ export default function WebsiteRoastPage() {
         await new Promise((r) => setTimeout(r, 400))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
-        if (data.cost) setCost(data.cost)
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: data.data,
+            ...(data.cost ? { cost: data.cost } : {}),
+          }),
+        }).catch((err) => console.error('[website-roast] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -385,7 +434,7 @@ export default function WebsiteRoastPage() {
       }
       setSubmitting(false)
     },
-    [url, submitting, startLoadingAnimation, clearTimers]
+    [url, email, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -394,12 +443,12 @@ export default function WebsiteRoastPage() {
     setResult(null)
     setErrorMsg('')
     setUrlError(null)
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
     setProgressPct(0)
     setTokens(null)
-    setCost(null)
   }, [clearTimers])
 
   const handleCopy = useCallback(async () => {
@@ -476,7 +525,7 @@ export default function WebsiteRoastPage() {
             Drop a URL. <span className="accent">Get roasted.</span>
           </h1>
           <p>
-            Brutally honest feedback on copy, CTAs, SEO, mobile UX, and trust signals — backed by
+            Brutally honest feedback on copy, CTAs, SEO, mobile UX, and trust signals, backed by
             real Google Lighthouse scores.
           </p>
         </section>
@@ -520,7 +569,7 @@ export default function WebsiteRoastPage() {
             )}
 
             <div className="panel-body">
-              <section className={`wr-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={clsx('wr-state', { active: appState === 'idle' })}>
                 <div className="idle-label">Drop a URL and get roasted</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
@@ -540,7 +589,30 @@ export default function WebsiteRoastPage() {
                     </div>
                     {urlError && <div className="field-error">{urlError}</div>}
                   </div>
-                  <div className="submit-row">
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError && <div className="field-error">{emailError}</div>}
+                  </div>
+                  <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
@@ -559,7 +631,7 @@ export default function WebsiteRoastPage() {
                 </form>
               </section>
 
-              <section className={`wr-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('wr-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -600,143 +672,127 @@ export default function WebsiteRoastPage() {
                 </div>
               </section>
 
-              <section className={`wr-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('wr-state', { active: appState === 'result' })}>
                 {result && (
-                  <EmailGate
-                    miniAppSlug="website-roast"
-                    pattern="upfront"
-                    initialInput={{ url: result.url }}
-                  >
-                    {({ submitToApi }) => (
-                      <>
-                        <SubmitOnce
-                          submit={submitToApi}
-                          input={{ url: result.url }}
-                          output={result}
-                          cost={cost ?? undefined}
-                        />
-                        <div ref={resultPanelRef}>
-                          <div className="one-liner-block">
-                            <p className="one-liner-text">&ldquo;{result.one_liner}&rdquo;</p>
-                            <div className="one-liner-meta">
-                              <span className="site-name">{result.site_name}</span>
-                              <span className="url-pill">{result.url}</span>
-                            </div>
-                          </div>
+                  <>
+                    <div ref={resultPanelRef}>
+                      <div className="one-liner-block">
+                        <p className="one-liner-text">&ldquo;{result.one_liner}&rdquo;</p>
+                        <div className="one-liner-meta">
+                          <span className="site-name">{result.site_name}</span>
+                          <span className="url-pill">{result.url}</span>
+                        </div>
+                      </div>
 
-                          <div className="score-row">
-                            <div
-                              className={`score-card ${overallGradeClass(result.overall_grade)}`}
-                            >
-                              <div className="sc-label">Overall score</div>
-                              <div className="sc-value">
-                                <span className="sc-big">{result.overall_score}</span>
-                                <span className="sc-small">/100</span>
-                              </div>
-                              <div className="sc-delta">Grade {result.overall_grade}</div>
-                            </div>
-                            <div className="score-card lighthouse-card">
-                              <div className="sc-label">Lighthouse (mobile)</div>
-                              <div className="lighthouse-grid">
-                                <LighthouseMini
-                                  label="Performance"
-                                  value={result.lighthouse.performance}
-                                />
-                                <LighthouseMini label="SEO" value={result.lighthouse.seo} />
-                                <LighthouseMini
-                                  label="Accessibility"
-                                  value={result.lighthouse.accessibility}
-                                />
-                                <LighthouseMini
-                                  label="Best Practices"
-                                  value={result.lighthouse.best_practices}
-                                />
-                              </div>
-                            </div>
+                      <div className="score-row">
+                        <div className={`score-card ${overallGradeClass(result.overall_grade)}`}>
+                          <div className="sc-label">Overall score</div>
+                          <div className="sc-value">
+                            <span className="sc-big">{result.overall_score}</span>
+                            <span className="sc-small">/100</span>
                           </div>
-
-                          <div className="section-header">
-                            <span>{'// Category breakdown'}</span>
-                            <span>6 categories</span>
-                          </div>
-                          <div className="category-grid">
-                            {result.categories.map((cat) => (
-                              <CategoryCard key={cat.name} cat={cat} />
-                            ))}
-                          </div>
-
-                          <div className="fixes-block">
-                            <div className="fixes-eyebrow">{'// 3 things to fix first'}</div>
-                            <ol className="fixes-list">
-                              {result.top_3_fixes.map((fix, i) => (
-                                <li key={i} className="fix-row">
-                                  <span className="fix-number">
-                                    {String(i + 1).padStart(2, '0')}
-                                  </span>
-                                  <span className="fix-text-main">{fix}</span>
-                                </li>
-                              ))}
-                            </ol>
+                          <div className="sc-delta">Grade {result.overall_grade}</div>
+                        </div>
+                        <div className="score-card lighthouse-card">
+                          <div className="sc-label">Lighthouse (mobile)</div>
+                          <div className="lighthouse-grid">
+                            <LighthouseMini
+                              label="Performance"
+                              value={result.lighthouse.performance}
+                            />
+                            <LighthouseMini label="SEO" value={result.lighthouse.seo} />
+                            <LighthouseMini
+                              label="Accessibility"
+                              value={result.lighthouse.accessibility}
+                            />
+                            <LighthouseMini
+                              label="Best Practices"
+                              value={result.lighthouse.best_practices}
+                            />
                           </div>
                         </div>
+                      </div>
 
-                        <div className="result-footer">
-                          <span className="token-pill">
-                            {tokens
-                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                              : ''}
-                          </span>
-                          <span className="result-ts hide-sm">{resultTs}</span>
-                          <div className="export-actions">
-                            <button
-                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                              type="button"
-                              onClick={handleCopy}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'copying' ? 'Copied' : 'Copy'}
-                            </button>
-                            <button
-                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                              type="button"
-                              onClick={handleDownloadPng}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'png' ? '…' : 'PNG'}
-                            </button>
-                            <button
-                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                              type="button"
-                              onClick={handleDownloadPdf}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'pdf' ? '…' : 'PDF'}
-                            </button>
-                            <button className="run-again" type="button" onClick={handleReset}>
-                              Roast another
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M5 12h14" />
-                                <path d="M13 5l7 7-7 7" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </EmailGate>
+                      <div className="section-header">
+                        <span>{'// Category breakdown'}</span>
+                        <span>6 categories</span>
+                      </div>
+                      <div className="category-grid">
+                        {result.categories.map((cat) => (
+                          <CategoryCard key={cat.name} cat={cat} />
+                        ))}
+                      </div>
+
+                      <div className="fixes-block">
+                        <div className="fixes-eyebrow">{'// 3 things to fix first'}</div>
+                        <ol className="fixes-list">
+                          {result.top_3_fixes.map((fix, i) => (
+                            <li key={i} className="fix-row">
+                              <span className="fix-number">{String(i + 1).padStart(2, '0')}</span>
+                              <span className="fix-text-main">{fix}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    </div>
+
+                    <div className="result-footer">
+                      <span className="token-pill">
+                        {tokens
+                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                          : ''}
+                      </span>
+                      <span className="result-ts hide-sm">{resultTs}</span>
+                      <div className="export-actions">
+                        <button
+                          className={clsx('export-btn', { done: exportState === 'copying' })}
+                          type="button"
+                          onClick={handleCopy}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'copying' ? 'Copied' : 'Copy'}
+                        </button>
+                        <button
+                          className={clsx('export-btn', { loading: exportState === 'png' })}
+                          type="button"
+                          onClick={handleDownloadPng}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'png' ? '…' : 'PNG'}
+                        </button>
+                        <button
+                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
+                          type="button"
+                          onClick={handleDownloadPdf}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'pdf' ? '…' : 'PDF'}
+                        </button>
+                        <button className="run-again" type="button" onClick={handleReset}>
+                          Roast another
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M5 12h14" />
+                            <path d="M13 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </section>
 
-              <section className={`wr-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section
+                className={clsx('wr-state', 'error-state', { active: appState === 'error' })}
+              >
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"

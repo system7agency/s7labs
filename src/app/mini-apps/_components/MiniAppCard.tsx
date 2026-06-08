@@ -61,7 +61,7 @@ export function MiniAppCard({ app, index, onInterested, onLearnMore, onLaunch }:
           handlePrimary()
         }
       }}
-      aria-label={`${app.name} — ${arrowLabel}`}
+      aria-label={`${app.name}: ${arrowLabel}`}
     >
       <span className="mx-scan-line" aria-hidden />
       <div className="mx-glyphs" aria-hidden>

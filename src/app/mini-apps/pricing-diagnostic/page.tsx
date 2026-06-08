@@ -8,8 +8,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
   ApiResponse,
@@ -112,16 +111,16 @@ function legibilityClass(leg: string): string {
 }
 
 function frictionDelta(score: number): string {
-  if (score <= 3) return 'low — smooth buyer path'
-  if (score <= 6) return 'moderate — some friction'
-  return 'high — buyer drop-off likely'
+  if (score <= 3) return 'low: smooth buyer path'
+  if (score <= 6) return 'moderate: some friction'
+  return 'high: buyer drop-off likely'
 }
 
 function gradeDelta(grade: string): string {
   if (grade.startsWith('A')) return 'clear value communication'
   if (grade.startsWith('B')) return 'mostly clear, minor gaps'
   if (grade.startsWith('C')) return 'mixed signals to first-time visitors'
-  return 'confusing — needs rework'
+  return 'confusing: needs rework'
 }
 
 function legDelta(leg: string): string {
@@ -148,6 +147,8 @@ export default function PricingDiagnosticPage() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [url, setUrl] = useState('')
   const [urlError, setUrlError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [shakeKey, setShakeKey] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<DiagnosticResult | null>(null)
@@ -164,12 +165,6 @@ export default function PricingDiagnosticPage() {
   const [sysState, setSysState] = useState('idle')
   const [clock, setClock] = useState('—')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
-  const [cost, setCost] = useState<{
-    model: string
-    inputTokens: number
-    outputTokens: number
-    costUsd: number
-  } | null>(null)
 
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
 
@@ -288,21 +283,68 @@ export default function PricingDiagnosticPage() {
     async (e: FormEvent) => {
       e.preventDefault()
       if (submitting) return
-      const trimmed = url.trim()
-      if (!trimmed) {
+      const trimmedUrl = url.trim()
+      const trimmedEmail = email.trim().toLowerCase()
+      let hasError = false
+      if (!trimmedUrl) {
         setUrlError('Please enter a URL.')
-        setShakeKey((k) => k + 1)
-        return
-      }
-      if (!/^https?:\/\/.+\..+/.test(trimmed)) {
+        hasError = true
+      } else if (!/^https?:\/\/.+\..+/.test(trimmedUrl)) {
         setUrlError('Enter a valid URL starting with http:// or https://')
+        hasError = true
+      } else {
+        setUrlError(null)
+      }
+      if (!trimmedEmail) {
+        setEmailError('Please enter your work email.')
+        hasError = true
+      } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+        setEmailError('Please enter a valid email.')
+        hasError = true
+      } else {
+        setEmailError(null)
+      }
+      if (hasError) {
         setShakeKey((k) => k + 1)
         return
       }
-      setUrlError(null)
+
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
+
+      // 1) Save the lead first. If this fails (disposable email, rate limit,
+      // etc.) we bail BEFORE spending an Anthropic call.
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: trimmedEmail,
+            miniAppSlug: 'pricing-diagnostic',
+            input: { url: trimmedUrl },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeKey((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeKey((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       startLoadingAnimation()
@@ -312,7 +354,7 @@ export default function PricingDiagnosticPage() {
         const res = await fetch('/api/mini-apps/pricing-diagnostic', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: trimmed }),
+          body: JSON.stringify({ url: trimmedUrl }),
         })
         data = (await res.json()) as ApiResponse
       } catch {
@@ -336,10 +378,20 @@ export default function PricingDiagnosticPage() {
         await new Promise((r) => setTimeout(r, 400))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
-        if (data.cost) setCost(data.cost)
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
+
+        // 2) Mark the submission completed (best-effort; result is already shown).
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: data.data,
+            ...(data.cost ? { cost: data.cost } : {}),
+          }),
+        }).catch((err) => console.error('[pricing-diagnostic] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -347,7 +399,7 @@ export default function PricingDiagnosticPage() {
       }
       setSubmitting(false)
     },
-    [url, submitting, startLoadingAnimation, clearTimers]
+    [url, email, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -356,12 +408,12 @@ export default function PricingDiagnosticPage() {
     setResult(null)
     setErrorMsg('')
     setUrlError(null)
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
     setProgressPct(0)
     setTokens(null)
-    setCost(null)
   }, [clearTimers])
 
   const handleCopy = useCallback(async () => {
@@ -443,7 +495,7 @@ export default function PricingDiagnosticPage() {
             See what your pricing page <span className="accent">actually says</span> to buyers.
           </h1>
           <p>
-            Drop in any URL — yours or a competitor&apos;s. We scrape it, parse the plan structure,
+            Drop in any URL (yours or a competitor&apos;s). We scrape it, parse the plan structure,
             and return an AI teardown of where it&apos;s leaking trust.
           </p>
         </section>
@@ -490,8 +542,10 @@ export default function PricingDiagnosticPage() {
 
             <div className="panel-body">
               {/* IDLE */}
-              <section className={`pd-state${appState === 'idle' ? 'active' : ''}`}>
-                <div className="idle-label">Input target URL</div>
+              <section className={clsx('pd-state', { active: appState === 'idle' })}>
+                <div className="idle-label">
+                  Pricing URL <span className="required-mark">*</span>
+                </div>
                 <form
                   key={shakeKey}
                   className="pd-form"
@@ -516,6 +570,26 @@ export default function PricingDiagnosticPage() {
                   <div className={clsx('pd-helper', { error: urlError })}>
                     {urlError ?? 'Paste your pricing URL'}
                   </div>
+                  <div className="idle-label">
+                    Work email <span className="required-mark">*</span>
+                  </div>
+                  <div className={clsx('pd-input-box', { error: emailError })}>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={email}
+                      disabled={submitting}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        if (emailError) setEmailError(null)
+                      }}
+                    />
+                  </div>
+                  <div className={clsx('pd-helper', { error: emailError })}>
+                    {emailError ?? 'We send the report to your work email. No spam.'}
+                  </div>
                   <div className="pd-submit-row">
                     <button type="submit" className="pd-submit-btn" disabled={submitting}>
                       Find Diagnostic
@@ -536,7 +610,7 @@ export default function PricingDiagnosticPage() {
               </section>
 
               {/* LOADING */}
-              <section className={`pd-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('pd-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -578,143 +652,105 @@ export default function PricingDiagnosticPage() {
               </section>
 
               {/* RESULT */}
-              <section className={`pd-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('pd-state', { active: appState === 'result' })}>
                 {result && (
-                  <EmailGate
-                    miniAppSlug="pricing-diagnostic"
-                    pattern="upfront"
-                    initialInput={{ url: result.url }}
-                  >
-                    {({ submitToApi }) => (
-                      <>
-                        <SubmitOnce
-                          submit={submitToApi}
-                          input={{ url: result.url }}
-                          output={result}
-                          cost={cost ?? undefined}
-                        />
-                        <div ref={resultPanelRef}>
-                          <div className="result-head">
-                            <span className="title">Diagnostic complete</span>
-                            <span className="ts-label">{resultTs}</span>
+                  <>
+                    <div ref={resultPanelRef}>
+                      <div className="result-head">
+                        <span className="title">Diagnostic complete</span>
+                        <span className="ts-label">{resultTs}</span>
+                      </div>
+
+                      <div className="score-row">
+                        <div className={`score-card ${frictionClass(result.friction_score)}`}>
+                          <div className="sc-label">Friction Score</div>
+                          <div className="sc-value">
+                            <span className="sc-big">{result.friction_score}</span>
+                            <span className="sc-small">/10</span>
                           </div>
-
-                          <div className="score-row">
-                            <div className={`score-card ${frictionClass(result.friction_score)}`}>
-                              <div className="sc-label">Friction Score</div>
-                              <div className="sc-value">
-                                <span className="sc-big">{result.friction_score}</span>
-                                <span className="sc-small">/10</span>
-                              </div>
-                              <div className="sc-delta">{frictionDelta(result.friction_score)}</div>
-                            </div>
-                            <div className={`score-card ${gradeClass(result.clarity_grade)}`}>
-                              <div className="sc-label">Clarity Grade</div>
-                              <div className="sc-value">
-                                <span className="sc-big">{result.clarity_grade}</span>
-                              </div>
-                              <div className="sc-delta">{gradeDelta(result.clarity_grade)}</div>
-                            </div>
-                            <div
-                              className={`score-card ${legibilityClass(result.plan_legibility)}`}
-                            >
-                              <div className="sc-label">Plan Legibility</div>
-                              <div className="sc-value">
-                                <span className="sc-big" style={{ fontSize: '28px' }}>
-                                  {result.plan_legibility}
-                                </span>
-                              </div>
-                              <div className="sc-delta">{legDelta(result.plan_legibility)}</div>
-                            </div>
+                          <div className="sc-delta">{frictionDelta(result.friction_score)}</div>
+                        </div>
+                        <div className={`score-card ${gradeClass(result.clarity_grade)}`}>
+                          <div className="sc-label">Clarity Grade</div>
+                          <div className="sc-value">
+                            <span className="sc-big">{result.clarity_grade}</span>
                           </div>
-
-                          <div className="buyer-block">
-                            <div className="buyer-eyebrow">{'// Who this actually targets'}</div>
-                            <p className="buyer-text">{result.buyer_inference}</p>
+                          <div className="sc-delta">{gradeDelta(result.clarity_grade)}</div>
+                        </div>
+                        <div className={`score-card ${legibilityClass(result.plan_legibility)}`}>
+                          <div className="sc-label">Plan Legibility</div>
+                          <div className="sc-value">
+                            <span className="sc-big" style={{ fontSize: '28px' }}>
+                              {result.plan_legibility}
+                            </span>
                           </div>
+                          <div className="sc-delta">{legDelta(result.plan_legibility)}</div>
+                        </div>
+                      </div>
 
-                          {result.flags.length > 0 && (
-                            <>
-                              <div className="section-header">
-                                <span>{'// Issues found'}</span>
-                                <span className="count">{result.flags.length} flagged</span>
-                              </div>
-                              <div className="flags">
-                                {result.flags.map((f, i) => (
-                                  <span key={i} className="flag">
-                                    {f}
-                                  </span>
-                                ))}
-                              </div>
-                            </>
-                          )}
+                      <div className="buyer-block">
+                        <div className="buyer-eyebrow">{'// Who this actually targets'}</div>
+                        <p className="buyer-text">{result.buyer_inference}</p>
+                      </div>
 
+                      {result.flags.length > 0 && (
+                        <>
                           <div className="section-header">
-                            <span>{'// Top 3 improvements'}</span>
-                            <span className="count">ranked by impact</span>
+                            <span>{'// Issues found'}</span>
+                            <span className="count">{result.flags.length} flagged</span>
                           </div>
-                          <div className="improvements">
-                            {result.improvements.map((item) => (
-                              <ImpCard key={item.rank} item={item} />
+                          <div className="flags">
+                            {result.flags.map((f, i) => (
+                              <span key={i} className="flag">
+                                {f}
+                              </span>
                             ))}
                           </div>
-                        </div>
-                        {/* end resultPanelRef */}
+                        </>
+                      )}
 
-                        <div className="result-footer">
-                          <span className="url-pill">
-                            <span>{trimUrl(result.url)}</span>
-                          </span>
-                          <div className="export-actions">
-                            <button
-                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                              type="button"
-                              onClick={handleCopy}
-                              disabled={exportState !== 'idle'}
-                              title="Copy as text"
-                            >
-                              {exportState === 'copying' ? (
-                                <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M20 6L9 17l-5-5" />
-                                  </svg>
-                                  Copied
-                                </>
-                              ) : (
-                                <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                                  </svg>
-                                  Copy
-                                </>
-                              )}
-                            </button>
-                            <button
-                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                              type="button"
-                              onClick={handleDownloadPng}
-                              disabled={exportState !== 'idle'}
-                              title="Download as PNG"
-                            >
+                      <div className="section-header">
+                        <span>{'// Top 3 improvements'}</span>
+                        <span className="count">ranked by impact</span>
+                      </div>
+                      <div className="improvements">
+                        {result.improvements.map((item) => (
+                          <ImpCard key={item.rank} item={item} />
+                        ))}
+                      </div>
+                    </div>
+                    {/* end resultPanelRef */}
+
+                    <div className="result-footer">
+                      <span className="url-pill">
+                        <span>{trimUrl(result.url)}</span>
+                      </span>
+                      <div className="export-actions">
+                        <button
+                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
+                          type="button"
+                          onClick={handleCopy}
+                          disabled={exportState !== 'idle'}
+                          title="Copy as text"
+                        >
+                          {exportState === 'copying' ? (
+                            <>
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M20 6L9 17l-5-5" />
+                              </svg>
+                              Copied
+                            </>
+                          ) : (
+                            <>
                               <svg
                                 width="12"
                                 height="12"
@@ -725,61 +761,85 @@ export default function PricingDiagnosticPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <rect x="3" y="3" width="18" height="18" rx="2" />
-                                <circle cx="8.5" cy="8.5" r="1.5" />
-                                <path d="M21 15l-5-5L5 21" />
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                               </svg>
-                              {exportState === 'png' ? '…' : 'PNG'}
-                            </button>
-                            <button
-                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                              type="button"
-                              onClick={handleDownloadPdf}
-                              disabled={exportState !== 'idle'}
-                              title="Download as PDF"
-                            >
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                                <path d="M14 2v6h6" />
-                                <path d="M12 18v-6M9 15l3 3 3-3" />
-                              </svg>
-                              {exportState === 'pdf' ? '…' : 'PDF'}
-                            </button>
-                            <button className="run-again" type="button" onClick={handleReset}>
-                              Run another
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M5 12h14" />
-                                <path d="M13 5l7 7-7 7" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </EmailGate>
+                              Copy
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
+                          type="button"
+                          onClick={handleDownloadPng}
+                          disabled={exportState !== 'idle'}
+                          title="Download as PNG"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <path d="M21 15l-5-5L5 21" />
+                          </svg>
+                          {exportState === 'png' ? '…' : 'PNG'}
+                        </button>
+                        <button
+                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
+                          type="button"
+                          onClick={handleDownloadPdf}
+                          disabled={exportState !== 'idle'}
+                          title="Download as PDF"
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                            <path d="M14 2v6h6" />
+                            <path d="M12 18v-6M9 15l3 3 3-3" />
+                          </svg>
+                          {exportState === 'pdf' ? '…' : 'PDF'}
+                        </button>
+                        <button className="run-again" type="button" onClick={handleReset}>
+                          Run another
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M5 12h14" />
+                            <path d="M13 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </section>
 
               {/* ERROR */}
-              <section className={`pd-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section
+                className={clsx('pd-state', 'error-state', { active: appState === 'error' })}
+              >
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"
@@ -868,7 +928,7 @@ export default function PricingDiagnosticPage() {
                   </div>
                   <div className="hiw-text">
                     <h3>We scrape and parse the page</h3>
-                    <p>Plan tiers, CTAs, gates, copy, and trust signals — extracted in seconds.</p>
+                    <p>Plan tiers, CTAs, gates, copy, and trust signals, extracted in seconds.</p>
                   </div>
                 </div>
               </div>
@@ -897,7 +957,7 @@ export default function PricingDiagnosticPage() {
                   <div className="hiw-text">
                     <h3>AI evaluates four conversion dimensions</h3>
                     <p>
-                      Structure, friction, copy, and signal — scored against what actually converts.
+                      Structure, friction, copy, and signal, scored against what actually converts.
                     </p>
                   </div>
                 </div>
@@ -927,7 +987,7 @@ export default function PricingDiagnosticPage() {
                   <div className="hiw-text">
                     <h3>Get your scores and the 3 quickest fixes</h3>
                     <p>
-                      Friction Score, Clarity Grade, Plan Legibility — plus top improvements ranked
+                      Friction Score, Clarity Grade, Plan Legibility, plus top improvements ranked
                       by impact.
                     </p>
                   </div>

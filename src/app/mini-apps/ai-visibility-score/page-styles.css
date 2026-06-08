@@ -188,12 +188,9 @@
   color: var(--text);
 }
 .ai-visibility-score .hero h1 .accent {
-  color: transparent;
-  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-style: italic;
-  font-weight: 400;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 .ai-visibility-score .hero p {
   color: var(--text-dim);
@@ -1372,4 +1369,15 @@
   .ai-visibility-score .avs-number {
     font-size: 52px;
   }
+}
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.ai-visibility-score .input-box input:-webkit-autofill,
+.ai-visibility-score .input-box input:-webkit-autofill:hover,
+.ai-visibility-score .input-box input:-webkit-autofill:focus,
+.ai-visibility-score .input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
 }

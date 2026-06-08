@@ -188,12 +188,9 @@
   color: var(--text);
 }
 .linkedin-hook .hero h1 .accent {
-  color: transparent;
-  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-style: italic;
-  font-weight: 400;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 .linkedin-hook .hero p {
   color: var(--text-dim);
@@ -419,6 +416,42 @@
   line-height: 1.6;
 }
 .linkedin-hook .textarea-box textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.linkedin-hook .input-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  overflow: hidden;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.linkedin-hook .input-box:focus-within {
+  border-color: var(--blue);
+  box-shadow:
+    0 0 0 3px rgba(79, 140, 255, 0.18),
+    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
+}
+.linkedin-hook .input-box.error {
+  border-color: var(--error);
+  animation: lh-shake 0.35s ease;
+}
+.linkedin-hook .input-box input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 14px 16px;
+  letter-spacing: -0.005em;
+}
+.linkedin-hook .input-box input::placeholder {
   color: var(--text-faint);
 }
 
@@ -829,9 +862,6 @@
   line-height: 1.55;
 }
 .linkedin-hook .hook-copy-btn {
-  position: absolute;
-  top: 14px;
-  right: 14px;
   border: 1px solid var(--border-strong);
   background: rgba(255, 255, 255, 0.025);
   color: var(--text-muted);
@@ -1107,4 +1137,15 @@
   .linkedin-hook .bg-spotlight {
     display: none;
   }
+}
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.linkedin-hook .input-box input:-webkit-autofill,
+.linkedin-hook .input-box input:-webkit-autofill:hover,
+.linkedin-hook .input-box input:-webkit-autofill:focus,
+.linkedin-hook .input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
 }

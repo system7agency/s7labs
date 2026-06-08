@@ -182,12 +182,9 @@
   color: var(--text);
 }
 .crm-sanity .hero h1 .accent {
-  color: transparent;
-  background: linear-gradient(180deg, var(--cyan) 0%, var(--blue) 80%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-style: italic;
-  font-weight: 400;
+  color: var(--blue, #4f8cff);
+  font-style: normal;
+  font-weight: inherit;
 }
 .crm-sanity .hero p {
   color: var(--text-dim);
@@ -412,6 +409,41 @@
 .crm-sanity .textarea-box textarea::placeholder {
   color: var(--text-faint);
 }
+.crm-sanity .input-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  overflow: hidden;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.crm-sanity .input-box:focus-within {
+  border-color: var(--blue);
+  box-shadow:
+    0 0 0 3px rgba(79, 140, 255, 0.18),
+    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
+}
+.crm-sanity .input-box.error {
+  border-color: var(--error);
+  animation: cs-shake 0.35s ease;
+}
+.crm-sanity .input-box input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 14px 16px;
+  letter-spacing: -0.005em;
+}
+.crm-sanity .input-box input::placeholder {
+  color: var(--text-faint);
+}
 .crm-sanity .field-error {
   font-family: var(--mono);
   font-size: 10.5px;
@@ -423,6 +455,14 @@
   color: var(--text-faint);
   text-align: right;
   letter-spacing: 0.1em;
+  transition: color 160ms ease;
+}
+.crm-sanity .char-count.is-warn {
+  color: var(--warning, #f5a623);
+}
+.crm-sanity .char-count.is-cap {
+  color: var(--error, #ff5c7a);
+  font-weight: 600;
 }
 
 .crm-sanity .submit-row {
@@ -730,6 +770,94 @@
   width: 2px;
   height: 100%;
   background: var(--blue);
+}
+
+/* Cleaned record block (drop-in CRM paste) */
+.crm-sanity .cleaned-block {
+  position: relative;
+  border: 1px solid rgba(79, 200, 138, 0.28);
+  background: linear-gradient(180deg, rgba(79, 200, 138, 0.06), rgba(79, 200, 138, 0.015));
+  border-radius: 10px;
+  padding: 14px 16px 16px;
+  margin-bottom: 22px;
+  box-shadow: 0 0 24px -12px rgba(79, 200, 138, 0.35);
+}
+.crm-sanity .cleaned-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.crm-sanity .cleaned-head-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.crm-sanity .cleaned-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--success, #4fc88a);
+}
+.crm-sanity .cleaned-format-pill {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(79, 200, 138, 0.35);
+  color: var(--success, #4fc88a);
+  background: rgba(79, 200, 138, 0.08);
+}
+.crm-sanity .cleaned-copy-btn {
+  border: 1px solid rgba(79, 200, 138, 0.45);
+  background: rgba(79, 200, 138, 0.1);
+  color: var(--success, #4fc88a);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+.crm-sanity .cleaned-copy-btn:hover {
+  background: rgba(79, 200, 138, 0.18);
+}
+.crm-sanity .cleaned-copy-btn.copied {
+  background: rgba(79, 200, 138, 0.22);
+  color: #d2f4e0;
+}
+.crm-sanity .cleaned-pre {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 360px;
+  overflow: auto;
+}
+.crm-sanity .cleaned-foot {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+  margin-top: 8px;
 }
 
 /* Summary block */
@@ -1236,4 +1364,15 @@
   .crm-sanity .bg-spotlight {
     display: none;
   }
+}
+
+/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
+.crm-sanity .input-box input:-webkit-autofill,
+.crm-sanity .input-box input:-webkit-autofill:hover,
+.crm-sanity .input-box input:-webkit-autofill:focus,
+.crm-sanity .input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
 }

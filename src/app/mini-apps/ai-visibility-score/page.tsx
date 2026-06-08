@@ -6,9 +6,8 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type { AVSApiResponse, AVSResult } from '@/app/api/mini-apps/ai-visibility-score/route'
 import { PageScripts } from './PageScripts'
 
@@ -40,7 +39,7 @@ const AVS_STEPS: HowItWorksStep[] = [
   {
     title: 'We ask the AIs',
     description:
-      'Claude plus optional ChatGPT, Perplexity, and Google AI Overview — coverage shown on each sub-score.',
+      'Claude plus optional ChatGPT, Perplexity, and Google AI Overview, with coverage shown on each sub-score.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -59,7 +58,7 @@ const AVS_STEPS: HowItWorksStep[] = [
   {
     title: 'Four sub-scores, one AVS',
     description:
-      'Presence 35%, Citations 30%, Entity Clarity 20%, Drift 15% — fixed methodology every run.',
+      'Presence 35%, Citations 30%, Entity Clarity 20%, Drift 15%. Fixed methodology every run.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -133,11 +132,6 @@ function gradeClass(grade: string): string {
   return 'grade-d'
 }
 
-function fmtTs(d: Date) {
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `AVS · ${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} · ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`
-}
-
 function buildPlainText(r: AVSResult): string {
   const lines = [
     `AI Visibility Score — ${r.domain}`,
@@ -196,11 +190,13 @@ export default function AiVisibilityScorePage() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [domain, setDomain] = useState('')
   const [domainError, setDomainError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
   const [shakeKey, setShakeKey] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<AVSResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [resultTs, setResultTs] = useState('')
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [activeStage, setActiveStage] = useState(-1)
@@ -299,16 +295,65 @@ export default function AiVisibilityScorePage() {
       e.preventDefault()
       if (submitting) return
       const normalized = normalizeDomainInput(domain)
+      const trimmedEmail = email.trim().toLowerCase()
+      let hasError = false
       if (!DOMAIN_RE.test(normalized)) {
         setDomainError('Enter a valid domain.')
+        hasError = true
+      } else {
+        setDomainError(null)
+      }
+      if (!trimmedEmail) {
+        setEmailError('Please enter your work email.')
+        hasError = true
+      } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+        setEmailError('Please enter a valid email.')
+        hasError = true
+      } else {
+        setEmailError(null)
+      }
+      if (hasError) {
         setShakeKey((k) => k + 1)
+        setShakeEmail((k) => k + 1)
         return
       }
-      setDomainError(null)
+
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
       setTokens(null)
+
+      // 1) Save the lead first.
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: trimmedEmail,
+            miniAppSlug: 'ai-visibility-score',
+            input: { domain: normalized },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setAppState('loading')
       setSysState('running')
       startLoadingAnimation()
@@ -340,9 +385,17 @@ export default function AiVisibilityScorePage() {
         await new Promise((r) => setTimeout(r, 350))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
-        setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: data.data,
+          }),
+        }).catch((err) => console.error('[ai-visibility-score] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -350,7 +403,7 @@ export default function AiVisibilityScorePage() {
       }
       setSubmitting(false)
     },
-    [submitting, domain, startLoadingAnimation, clearTimers]
+    [submitting, domain, email, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -358,6 +411,8 @@ export default function AiVisibilityScorePage() {
     setAppState('idle')
     setResult(null)
     setErrorMsg('')
+    setDomainError(null)
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
@@ -464,7 +519,6 @@ export default function AiVisibilityScorePage() {
     }
   }, [result, captureShareable])
 
-  const leadInput = { domain: normalizeDomainInput(domain) }
   const loadingDomain = normalizeDomainInput(domain) || 'domain'
 
   return (
@@ -481,7 +535,7 @@ export default function AiVisibilityScorePage() {
           </h1>
           <p>
             A single 0–100 AVS built from presence in AI answers, citations, entity clarity, and
-            drift — the metric to measure yourself against over time.
+            drift. The metric to measure yourself against over time.
           </p>
         </section>
 
@@ -524,7 +578,7 @@ export default function AiVisibilityScorePage() {
             )}
 
             <div className="panel-body">
-              <section className={`avs-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={clsx('avs-state', { active: appState === 'idle' })}>
                 <div className="idle-label">Enter your domain</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-field">
@@ -547,7 +601,30 @@ export default function AiVisibilityScorePage() {
                     </div>
                     {domainError && <div className="field-error">{domainError}</div>}
                   </div>
-                  <div className="submit-row">
+                  <div className="input-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError && <div className="field-error">{emailError}</div>}
+                  </div>
+                  <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
@@ -566,7 +643,7 @@ export default function AiVisibilityScorePage() {
                 </form>
               </section>
 
-              <section className={`avs-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('avs-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -607,91 +684,75 @@ export default function AiVisibilityScorePage() {
                 </div>
               </section>
 
-              <section className={`avs-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('avs-state', { active: appState === 'result' })}>
                 {result && (
-                  <EmailGate
-                    miniAppSlug="ai-visibility-score"
-                    pattern="upfront"
-                    initialInput={leadInput}
-                  >
-                    {({ submitToApi }) => (
-                      <>
-                        <SubmitOnce submit={submitToApi} input={leadInput} output={result} />
-                        <div ref={resultPanelRef}>
-                          <AvsResultBody result={result} />
-                          <div className="short-read-block">
-                            <div className="section-header">
-                              {"// what's dragging your score down"}
-                            </div>
-                            <p className="biggest-drag">
-                              <span>{result.biggest_drag.sub_score}</span> —{' '}
-                              {result.biggest_drag.why}
-                            </p>
-                            {result.short_read.map((item) => (
-                              <div key={item.sub_score} className="short-read-item">
-                                <h4>{item.sub_score}</h4>
-                                <p>{item.diagnosis}</p>
-                              </div>
-                            ))}
+                  <>
+                    <div ref={resultPanelRef}>
+                      <AvsResultBody result={result} />
+                      <div className="short-read-block">
+                        <div className="section-header">{"// what's dragging your score down"}</div>
+                        <p className="biggest-drag">
+                          <span>{result.biggest_drag.sub_score}</span>: {result.biggest_drag.why}
+                        </p>
+                        {result.short_read.map((item) => (
+                          <div key={item.sub_score} className="short-read-item">
+                            <h4>{item.sub_score}</h4>
+                            <p>{item.diagnosis}</p>
                           </div>
-                        </div>
-                        <div className="result-footer">
-                          <span className="token-pill">
-                            {tokens
-                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                              : ''}
-                          </span>
-                          <span className="result-ts hide-sm">{resultTs}</span>
-                          <div className="export-actions">
-                            <button
-                              type="button"
-                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                              onClick={handleCopy}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'copying' ? 'Copied' : 'Copy'}
-                            </button>
-                            <button
-                              type="button"
-                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                              onClick={() => void handleDownloadPng()}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'png' ? '…' : 'PNG'}
-                            </button>
-                            <button
-                              type="button"
-                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                              onClick={() => void handleDownloadPdf()}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'pdf' ? '…' : 'PDF'}
-                            </button>
-                            <button type="button" className="run-again" onClick={handleReset}>
-                              Score another
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M5 12h14" />
-                                <path d="M13 5l7 7-7 7" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </EmailGate>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="result-footer">
+                      <div className="export-actions">
+                        <button
+                          type="button"
+                          className={clsx('export-btn', { done: exportState === 'copying' })}
+                          onClick={handleCopy}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'copying' ? 'Copied' : 'Copy'}
+                        </button>
+                        <button
+                          type="button"
+                          className={clsx('export-btn', { loading: exportState === 'png' })}
+                          onClick={() => void handleDownloadPng()}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'png' ? '…' : 'PNG'}
+                        </button>
+                        <button
+                          type="button"
+                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
+                          onClick={() => void handleDownloadPdf()}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'pdf' ? '…' : 'PDF'}
+                        </button>
+                        <button type="button" className="run-again" onClick={handleReset}>
+                          Score another
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M5 12h14" />
+                            <path d="M13 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </section>
 
-              <section className={`avs-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section
+                className={clsx('avs-state', 'error-state', { active: appState === 'error' })}
+              >
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"
@@ -721,7 +782,7 @@ export default function AiVisibilityScorePage() {
               From domain to AVS in <span className="accent">under a minute</span>
             </>
           }
-          subtitle="One headline score from four fixed parts — presence, citations, entity clarity, and drift."
+          subtitle="One headline score from four fixed parts: presence, citations, entity clarity, and drift."
           steps={AVS_STEPS}
         />
       </main>

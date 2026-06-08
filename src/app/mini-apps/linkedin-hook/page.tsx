@@ -6,9 +6,8 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
-import { EmailGate } from '@/components/mini-apps/EmailGate'
+import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
 import type { ApiResponse, Hook, HookResult } from '@/app/api/mini-apps/linkedin-hook/route'
 import { PageScripts } from './PageScripts'
 
@@ -18,7 +17,7 @@ const HOOK_STEPS: HowItWorksStep[] = [
   {
     title: 'Paste a LinkedIn post',
     description:
-      'Any public post — yours, your prospect’s, or a thought-leader you want to bring into your outreach.',
+      'Any public post: yours, your prospect’s, or a thought-leader you want to bring into your outreach.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -36,7 +35,7 @@ const HOOK_STEPS: HowItWorksStep[] = [
   {
     title: 'We extract the trigger, author, and signals',
     description:
-      'Opinion, news, pain, or achievement — the specific moment in the post that creates an opening for outreach.',
+      'Opinion, news, pain, or achievement: the specific moment in the post that creates an opening for outreach.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -55,7 +54,7 @@ const HOOK_STEPS: HowItWorksStep[] = [
   {
     title: 'AI generates personalized outbound hooks',
     description:
-      'Each hook uses a different tone and channel — LinkedIn DM, email, or cold call — mapped to the buyer persona.',
+      'Each hook uses a different tone and channel (LinkedIn DM, email, or cold call) mapped to the buyer persona.',
     icon: (
       <svg
         viewBox="0 0 24 24"
@@ -175,7 +174,7 @@ function HookCard({ hook, isBest }: { hook: Hook; isBest: boolean }) {
   }, [hook])
 
   return (
-    <div className={`hook-card${isBest ? 'best' : ''}`}>
+    <div className={clsx('hook-card', { best: isBest })}>
       <div className="hook-card-header">
         <span className="hook-angle">{`// ${hook.angle}`}</span>
         <div className="hook-badges">
@@ -184,49 +183,49 @@ function HookCard({ hook, isBest }: { hook: Hook; isBest: boolean }) {
             {CHANNEL_LABEL[hook.channel] ?? hook.channel}
           </span>
           <span className="badge">{hook.tone}</span>
+          <button
+            type="button"
+            className={clsx('hook-copy-btn', { copied })}
+            onClick={handleCopy}
+            aria-label="Copy hook"
+          >
+            {copied ? (
+              <>
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                Copied
+              </>
+            ) : (
+              <>
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+                Copy
+              </>
+            )}
+          </button>
         </div>
       </div>
-      <button
-        type="button"
-        className={`hook-copy-btn${copied ? 'copied' : ''}`}
-        onClick={handleCopy}
-        aria-label="Copy hook"
-      >
-        {copied ? (
-          <>
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-            Copied
-          </>
-        ) : (
-          <>
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="9" y="9" width="13" height="13" rx="2" />
-              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-            </svg>
-            Copy
-          </>
-        )}
-      </button>
       <p className="hook-opening">{hook.opening_line}</p>
       <div className="hook-followup-label">{'// Follow-up'}</div>
       <p className="hook-followup">{hook.follow_up}</p>
@@ -245,12 +244,9 @@ export default function LinkedInHookPage() {
   const [resultTs, setResultTs] = useState('')
   const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
-  const [cost, setCost] = useState<{
-    model: string
-    inputTokens: number
-    outputTokens: number
-    costUsd: number
-  } | null>(null)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -364,16 +360,62 @@ export default function LinkedInHookPage() {
       e.preventDefault()
       if (submitting) return
 
-      if (!postText.trim() || postText.trim().length < 30) {
+      let valid = true
+      const postClean = postText.trim()
+      if (!postClean || postClean.length < 30) {
         setPostError('Paste the full LinkedIn post text (at least 30 characters).')
         setShakePost((k) => k + 1)
-        return
+        valid = false
       }
+      const emailClean = email.trim().toLowerCase()
+      if (!emailClean) {
+        setEmailError('Please enter your work email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      } else if (!EMAIL_REGEX.test(emailClean)) {
+        setEmailError('Please enter a valid email.')
+        setShakeEmail((k) => k + 1)
+        valid = false
+      }
+      if (!valid) return
 
       setPostError(null)
+      setEmailError(null)
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
+
+      // Save lead first. Bail BEFORE the Anthropic call on bad email.
+      let submissionId: string | null = null
+      try {
+        const res = await fetch('/api/leads/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            email: emailClean,
+            miniAppSlug: 'linkedin-post-outbound-hook',
+            input: { post_text: postClean },
+          }),
+        })
+        const json = (await res.json()) as {
+          ok: boolean
+          submissionId?: string
+          error?: string
+        }
+        if (!res.ok || !json.ok || !json.submissionId) {
+          setEmailError(json.error || "Couldn't save your info. Try again.")
+          setShakeEmail((k) => k + 1)
+          setSubmitting(false)
+          return
+        }
+        submissionId = json.submissionId
+      } catch {
+        setEmailError("Couldn't save your info. Try again.")
+        setShakeEmail((k) => k + 1)
+        setSubmitting(false)
+        return
+      }
+
       setSysState('running')
       setAppState('loading')
       startLoadingAnimation()
@@ -383,7 +425,7 @@ export default function LinkedInHookPage() {
         const res = await fetch('/api/mini-apps/linkedin-hook', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ post_text: postText.trim() }),
+          body: JSON.stringify({ post_text: postClean }),
         })
         data = (await res.json()) as ApiResponse
       } catch {
@@ -406,10 +448,19 @@ export default function LinkedInHookPage() {
         await new Promise((r) => setTimeout(r, 400))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
-        if (data.cost) setCost(data.cost)
         setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
+
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            output: data.data,
+            ...(data.cost ? { cost: data.cost } : {}),
+          }),
+        }).catch((err) => console.error('[linkedin-hook] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
@@ -417,7 +468,7 @@ export default function LinkedInHookPage() {
       }
       setSubmitting(false)
     },
-    [postText, submitting, startLoadingAnimation, clearTimers]
+    [postText, email, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -426,12 +477,12 @@ export default function LinkedInHookPage() {
     setResult(null)
     setErrorMsg('')
     setPostError(null)
+    setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
     setLatency('—')
     setProgressPct(0)
     setTokens(null)
-    setCost(null)
   }, [clearTimers])
 
   const handleCopyAll = useCallback(async () => {
@@ -512,7 +563,7 @@ export default function LinkedInHookPage() {
           </h1>
           <p>
             Paste a LinkedIn post. We detect the trigger, profile the persona, and write three
-            ready-to-send hooks — each with a different angle and channel.
+            ready-to-send hooks, each with a different angle and channel.
           </p>
         </section>
 
@@ -556,7 +607,7 @@ export default function LinkedInHookPage() {
 
             <div className="panel-body">
               {/* IDLE */}
-              <section className={`lh-state${appState === 'idle' ? 'active' : ''}`}>
+              <section className={clsx('lh-state', { active: appState === 'idle' })}>
                 <div className="idle-label">LinkedIn post text</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="textarea-field">
@@ -579,7 +630,30 @@ export default function LinkedInHookPage() {
                     {postError && <div className="field-error">{postError}</div>}
                     <div className="char-count">{postText.length} chars</div>
                   </div>
-                  <div className="submit-row">
+                  <div className="textarea-field" style={{ marginTop: 14 }}>
+                    <label>
+                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
+                    </label>
+                    <div
+                      key={`e-${shakeEmail}`}
+                      className={clsx('input-box', { error: emailError })}
+                    >
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={email}
+                        disabled={submitting}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          if (emailError) setEmailError(null)
+                        }}
+                      />
+                    </div>
+                    {emailError && <div className="field-error">{emailError}</div>}
+                  </div>
+                  <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
@@ -598,7 +672,7 @@ export default function LinkedInHookPage() {
               </section>
 
               {/* LOADING */}
-              <section className={`lh-state${appState === 'loading' ? 'active' : ''}`}>
+              <section className={clsx('lh-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -638,104 +712,69 @@ export default function LinkedInHookPage() {
               </section>
 
               {/* RESULT */}
-              <section className={`lh-state${appState === 'result' ? 'active' : ''}`}>
+              <section className={clsx('lh-state', { active: appState === 'result' })}>
                 {result && (
-                  <EmailGate
-                    miniAppSlug="linkedin-post-outbound-hook"
-                    pattern="upfront"
-                    initialInput={{ post_text: postText.trim() }}
-                  >
-                    {({ submitToApi }) => (
-                      <>
-                        <SubmitOnce
-                          submit={submitToApi}
-                          input={{ post_text: postText.trim() }}
-                          output={result}
-                          cost={cost ?? undefined}
-                        />
-                        <div ref={resultPanelRef}>
-                          <div className="result-head">
-                            <span className="title">Hooks ready — {result.post_author}</span>
-                            <span className="ts-label">{resultTs}</span>
-                          </div>
+                  <>
+                    <div ref={resultPanelRef}>
+                      <div className="result-head">
+                        <span className="title">Hooks ready: {result.post_author}</span>
+                        <span className="ts-label">{resultTs}</span>
+                      </div>
 
-                          <div className="trigger-block">
-                            <div className="trigger-eyebrow">
-                              {'// Outbound trigger'}
-                              <span className="trigger-type-badge">{result.trigger_type}</span>
-                            </div>
-                            <p className="trigger-text">{result.trigger}</p>
-                            <div className="trigger-meta">
-                              <span>Target: {result.target_persona}</span>
-                              <span>Summary: {result.post_summary}</span>
-                            </div>
-                          </div>
-
-                          <div className="section-header">
-                            <span>{'// Outbound hooks'}</span>
-                            <span className="count">{result.hooks.length} generated</span>
-                          </div>
-                          <div className="hooks">
-                            {result.hooks.map((h, i) => (
-                              <HookCard key={i} hook={h} isBest={i === result.best_hook_index} />
-                            ))}
-                          </div>
+                      <div className="trigger-block">
+                        <div className="trigger-eyebrow">
+                          {'// Outbound trigger'}
+                          <span className="trigger-type-badge">{result.trigger_type}</span>
                         </div>
+                        <p className="trigger-text">{result.trigger}</p>
+                        <div className="trigger-meta">
+                          <span>Target: {result.target_persona}</span>
+                          <span>Summary: {result.post_summary}</span>
+                        </div>
+                      </div>
 
-                        <div className="result-footer">
-                          <span className="token-pill">
-                            {tokens
-                              ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                              : ''}
-                          </span>
-                          <div className="export-actions">
-                            <button
-                              className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                              type="button"
-                              onClick={handleCopyAll}
-                              disabled={exportState !== 'idle'}
-                            >
-                              {exportState === 'copying' ? (
-                                <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M20 6L9 17l-5-5" />
-                                  </svg>
-                                  Copied
-                                </>
-                              ) : (
-                                <>
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                                  </svg>
-                                  Copy all
-                                </>
-                              )}
-                            </button>
-                            <button
-                              className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                              type="button"
-                              onClick={handleDownloadPng}
-                              disabled={exportState !== 'idle'}
-                            >
+                      <div className="section-header">
+                        <span>{'// Outbound hooks'}</span>
+                        <span className="count">{result.hooks.length} generated</span>
+                      </div>
+                      <div className="hooks">
+                        {result.hooks.map((h, i) => (
+                          <HookCard key={i} hook={h} isBest={i === result.best_hook_index} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="result-footer">
+                      <span className="token-pill">
+                        {tokens
+                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
+                          : ''}
+                      </span>
+                      <div className="export-actions">
+                        <button
+                          className={clsx('export-btn', { done: exportState === 'copying' })}
+                          type="button"
+                          onClick={handleCopyAll}
+                          disabled={exportState !== 'idle'}
+                        >
+                          {exportState === 'copying' ? (
+                            <>
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M20 6L9 17l-5-5" />
+                              </svg>
+                              Copied
+                            </>
+                          ) : (
+                            <>
                               <svg
                                 width="12"
                                 height="12"
@@ -746,60 +785,83 @@ export default function LinkedInHookPage() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
-                                <rect x="3" y="3" width="18" height="18" rx="2" />
-                                <circle cx="8.5" cy="8.5" r="1.5" />
-                                <path d="M21 15l-5-5L5 21" />
+                                <rect x="9" y="9" width="13" height="13" rx="2" />
+                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                               </svg>
-                              {exportState === 'png' ? '…' : 'PNG'}
-                            </button>
-                            <button
-                              className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                              type="button"
-                              onClick={handleDownloadPdf}
-                              disabled={exportState !== 'idle'}
-                            >
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                                <path d="M14 2v6h6" />
-                                <path d="M12 18v-6M9 15l3 3 3-3" />
-                              </svg>
-                              {exportState === 'pdf' ? '…' : 'PDF'}
-                            </button>
-                            <button className="run-again" type="button" onClick={handleReset}>
-                              New post
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M5 12h14" />
-                                <path d="M13 5l7 7-7 7" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </EmailGate>
+                              Copy all
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className={clsx('export-btn', { loading: exportState === 'png' })}
+                          type="button"
+                          onClick={handleDownloadPng}
+                          disabled={exportState !== 'idle'}
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <path d="M21 15l-5-5L5 21" />
+                          </svg>
+                          {exportState === 'png' ? '…' : 'PNG'}
+                        </button>
+                        <button
+                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
+                          type="button"
+                          onClick={handleDownloadPdf}
+                          disabled={exportState !== 'idle'}
+                        >
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                            <path d="M14 2v6h6" />
+                            <path d="M12 18v-6M9 15l3 3 3-3" />
+                          </svg>
+                          {exportState === 'pdf' ? '…' : 'PDF'}
+                        </button>
+                        <button className="run-again" type="button" onClick={handleReset}>
+                          New post
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M5 12h14" />
+                            <path d="M13 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </section>
 
               {/* ERROR */}
-              <section className={`lh-state error-state${appState === 'error' ? 'active' : ''}`}>
+              <section
+                className={clsx('lh-state', 'error-state', { active: appState === 'error' })}
+              >
                 <div className="err-icon">
                   <svg
                     viewBox="0 0 24 24"
