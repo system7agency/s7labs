@@ -388,13 +388,12 @@ export default function AiVisibilityScorePage() {
         setSysState('complete')
         setAppState('result')
 
+        const completeBody: Record<string, unknown> = { submissionId, output: data.data }
+        if (data.cost) completeBody.cost = data.cost
         fetch('/api/leads/complete', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            submissionId,
-            output: data.data,
-          }),
+          body: JSON.stringify(completeBody),
         }).catch((err) => console.error('[ai-visibility-score] leads/complete', err))
       } else {
         setErrorMsg(data.message)
