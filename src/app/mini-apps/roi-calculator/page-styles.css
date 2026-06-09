@@ -7,6 +7,8 @@
   --text: #f2f3f5;
   --text-dim: #b4b7c2;
   --text-muted: #8c90a0;
+  --text-faint: #5f6372;
+  --error: #ff5c7a;
   --blue: #4f8cff;
   --cyan: #04e3ee;
   --mono:
@@ -171,6 +173,87 @@
   font-family: var(--mono);
   font-size: 12px;
   padding: 0 8px;
+}
+
+.roi-calculator .email-field {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.09);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.roi-calculator .idle-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roi-calculator .idle-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+.roi-calculator .required-mark {
+  color: var(--error);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.roi-calculator .pd-input-box {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.roi-calculator .pd-input-box:focus-within {
+  border-color: rgba(79, 140, 255, 0.55);
+  background: rgba(79, 140, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12);
+}
+
+.roi-calculator .pd-input-box.error {
+  border-color: rgba(255, 92, 122, 0.6);
+}
+
+.roi-calculator .pd-input-box input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 14px 16px;
+  letter-spacing: -0.005em;
+}
+
+.roi-calculator .pd-input-box input::placeholder {
+  color: var(--text-faint);
+}
+
+.roi-calculator .pd-helper {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.roi-calculator .pd-helper.error {
+  color: var(--error);
 }
 
 .roi-calculator .mini-counters {
@@ -373,10 +456,10 @@
 }
 
 /* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
-.roi-calculator .input-box input:-webkit-autofill,
-.roi-calculator .input-box input:-webkit-autofill:hover,
-.roi-calculator .input-box input:-webkit-autofill:focus,
-.roi-calculator .input-box input:-webkit-autofill:active {
+.roi-calculator .pd-input-box input:-webkit-autofill,
+.roi-calculator .pd-input-box input:-webkit-autofill:hover,
+.roi-calculator .pd-input-box input:-webkit-autofill:focus,
+.roi-calculator .pd-input-box input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--text);
   -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
   caret-color: var(--text);

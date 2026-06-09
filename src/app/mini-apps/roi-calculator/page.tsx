@@ -356,11 +356,11 @@ export default function RoiCalculatorPage() {
               </div>
             )
           })}
-          <div className="input-field email-field">
-            <label>
-              Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-            </label>
-            <div key={`e-${shakeEmail}`} className={clsx('input-box', { error: emailError })}>
+          <div className="email-field">
+            <div className="idle-label">
+              Work email <span className="required-mark">*</span>
+            </div>
+            <div key={`e-${shakeEmail}`} className={clsx('pd-input-box', { error: emailError })}>
               <input
                 type="email"
                 inputMode="email"
@@ -373,7 +373,9 @@ export default function RoiCalculatorPage() {
                 }}
               />
             </div>
-            {emailError && <div className="field-error">{emailError}</div>}
+            <div className={clsx('pd-helper', { error: emailError })}>
+              {emailError ?? 'We send the report to your work email. No spam.'}
+            </div>
           </div>
         </section>
 
