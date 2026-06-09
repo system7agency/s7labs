@@ -16,6 +16,7 @@ export type AppThumb =
   | 'avs'
   | 'bulkemail'
   | 'campaign'
+  | 'emailopt'
   | 'intents'
 
 export type MiniApp = {
@@ -145,6 +146,36 @@ export const APPS: MiniApp[] = [
         'The internal version gives free fix recommendations and a paid roadmap, tracks AVS over time per client from stored snapshots, and turns drift into an alerting trend.',
     },
     interest_context: 'ai-visibility-score',
+  },
+  {
+    id: 'email-copy-optimizer',
+    name: 'Email Copy Optimizer',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Paste a cold email and get three optimized rewrites — each with a different angle, annotated changes, and a quality diagnosis.',
+    tags: ['email', 'copywriting', 'outbound', 'cold email', 'ai'],
+    thumb: 'emailopt',
+    launch_url: '/mini-apps/email-copy-optimizer',
+    learn_more: {
+      what_it_does:
+        'Reads your cold email subject and body, scores weak points, and rewrites it into three distinct variations (e.g. direct, curiosity-led, value-first) with annotated explanations of what changed and why.',
+      how_it_works: {
+        inputs: ['email subject', 'email body', 'optional goal / audience / tone'],
+        outputs: [
+          'quality score and issues list',
+          '3 optimized variations',
+          'annotated changes per variation',
+          'copy-to-clipboard per variation',
+        ],
+      },
+      who_its_for:
+        'SDRs, AEs, and founders who want stronger cold email copy without spending an hour rewriting the same message three ways.',
+      build_potential:
+        'Could learn from reply rates, A/B test variations in a sequencer, and generate follow-up sequences from the winning angle.',
+    },
+    interest_context: 'email-copy-optimizer',
   },
   {
     id: 'share-of-voice',
