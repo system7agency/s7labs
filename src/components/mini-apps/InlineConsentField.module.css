@@ -1,5 +1,5 @@
 .consentRow {
-  margin-top: 12px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -8,59 +8,105 @@
 .consentLabel {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   min-height: 36px;
   cursor: pointer;
   padding: 4px 0;
+  user-select: none;
 }
 
-.consentCheckbox {
-  appearance: none;
-  -webkit-appearance: none;
+.srOnlyInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.consentBox {
+  position: relative;
+  flex-shrink: 0;
   width: 16px;
   height: 16px;
-  margin: 2px 0 0 0;
-  border: 1px solid var(--color-border, var(--border, rgba(255, 255, 255, 0.18)));
-  border-radius: 3px;
-  background: var(--color-bg-2, transparent);
-  cursor: pointer;
-  flex-shrink: 0;
-  position: relative;
-  accent-color: var(--s7-accent, var(--color-accent, #04e3ee));
+  margin-top: 2px;
+  border: 1px solid var(--color-border, var(--border, rgba(255, 255, 255, 0.22)));
+  border-radius: 2px;
+  background: rgba(4, 227, 238, 0.04);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 200ms ease;
 }
 
-.consentCheckbox:checked {
-  background: var(--s7-accent, var(--color-accent, #04e3ee));
-  border-color: var(--s7-accent, var(--color-accent, #04e3ee));
-}
-
-.consentCheckbox:checked::after {
+.consentBox::after {
   content: '';
   position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 4px;
-  height: 8px;
-  border: solid #060608;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  inset: -4px;
+  border-radius: 4px;
+  pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(4, 227, 238, 0);
+  transition: box-shadow 220ms ease;
 }
 
-.consentCheckbox:focus-visible {
-  outline: 2px solid var(--s7-accent, var(--color-accent, #04e3ee));
-  outline-offset: 2px;
+.consentLabel:hover .consentBox {
+  border-color: rgba(4, 227, 238, 0.55);
+  background: rgba(4, 227, 238, 0.08);
 }
 
-.consentCheckbox:disabled {
-  opacity: 0.6;
+.srOnlyInput:focus-visible + .consentBox::after {
+  box-shadow: 0 0 0 2px rgba(4, 227, 238, 0.45);
+}
+
+.srOnlyInput:checked + .consentBox {
+  border-color: var(--s7-accent, var(--color-accent, #04e3ee));
+  background: rgba(4, 227, 238, 0.14);
+  box-shadow:
+    inset 0 0 0 1px rgba(4, 227, 238, 0.35),
+    0 0 12px -2px rgba(4, 227, 238, 0.45);
+}
+
+.consentTick {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--s7-accent, var(--color-accent, #04e3ee));
+  pointer-events: none;
+}
+
+.consentTick path {
+  stroke-dasharray: 18;
+  stroke-dashoffset: 18;
+  transition:
+    stroke-dashoffset 220ms ease-out,
+    opacity 120ms ease;
+  opacity: 0;
+}
+
+.srOnlyInput:checked + .consentBox .consentTick path {
+  stroke-dashoffset: 0;
+  opacity: 1;
+}
+
+.srOnlyInput:disabled + .consentBox {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .consentText {
   font-family: var(--font-sans, 'Geist Sans', system-ui, sans-serif);
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--color-fg, var(--fg, #f4f4f5));
+  transition: color 160ms ease;
+}
+
+.consentLabel:hover .consentText {
+  color: var(--color-fg, #ffffff);
 }
 
 .consentHint {
@@ -68,5 +114,15 @@
   font-size: 9px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--color-fg-dim, var(--fg-muted, rgba(255, 255, 255, 0.55)));
+  color: var(--color-fg-dim, var(--fg-muted, rgba(255, 255, 255, 0.5)));
+  padding-left: 28px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consentBox,
+  .consentBox::after,
+  .consentText,
+  .consentTick path {
+    transition: none;
+  }
 }

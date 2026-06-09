@@ -11,9 +11,9 @@ type Props = {
 
 /**
  * Marketing consent checkbox for the inline lead-capture forms used by the
- * mini-apps. Visual + copy parity with the canonical `EmailGate` overlay
- * (see `EmailGate.module.css`). Default state is unchecked; the server
- * never silently revokes a previously-given consent.
+ * mini-apps. The native input is visually hidden and a custom box plus
+ * animated SVG tick are rendered in its place so the control matches the
+ * terminal aesthetic across browsers and respects prefers-reduced-motion.
  */
 export function InlineConsentField({
   id = 'mini-app-marketing-consent',
@@ -26,12 +26,28 @@ export function InlineConsentField({
       <label className={styles.consentLabel} htmlFor={id}>
         <input
           id={id}
-          className={styles.consentCheckbox}
+          className={styles.srOnlyInput}
           type="checkbox"
           checked={checked}
           disabled={disabled}
           onChange={(e) => onChange(e.target.checked)}
         />
+        <span className={styles.consentBox} aria-hidden="true">
+          <svg
+            className={styles.consentTick}
+            viewBox="0 0 16 16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3.2 8.4 L6.6 11.8 L12.8 4.6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="square"
+              strokeLinejoin="miter"
+            />
+          </svg>
+        </span>
         <span className={styles.consentText}>
           Email me occasional updates from S7 Labs. Unsubscribe anytime.
         </span>
