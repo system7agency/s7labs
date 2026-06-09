@@ -49,7 +49,8 @@ export function InlineConsentField({
           </svg>
         </span>
         <span className={styles.consentText}>
-          Email me occasional updates from S7 Labs. Unsubscribe anytime.
+          Email me occasional updates from S7 Labs.{' '}
+          <span className={styles.consentReassurance}>Unsubscribe anytime.</span>
         </span>
       </label>
       <div className={styles.consentHint}>WE&apos;LL SEND YOUR RESULT EITHER WAY</div>

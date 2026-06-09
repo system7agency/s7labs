@@ -109,6 +109,12 @@
   color: var(--color-fg, #ffffff);
 }
 
+.consentReassurance {
+  color: var(--s7-accent, var(--color-accent, #04e3ee));
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .consentHint {
   font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
   font-size: 9px;
