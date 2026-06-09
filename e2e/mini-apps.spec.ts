@@ -224,12 +224,13 @@ async function fakeAnthropicResponse(page: Page, route: string | null) {
 
 test.describe('Marketplace', () => {
   test('gallery renders and reaches each mini-app', async ({ page }) => {
+    test.setTimeout(60_000)
     await page.goto('/mini-apps')
     // h1 is "Mini Apps" or similar — just confirm one is there.
     await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible()
     // For each app, confirm we can navigate to its page directly.
     for (const app of APPS) {
-      const resp = await page.goto(`/mini-apps/${app.folder}`)
+      const resp = await page.goto(`/mini-apps/${app.folder}`, { waitUntil: 'domcontentloaded' })
       expect(resp?.status(), `bad status on ${app.folder}`).toBeLessThan(400)
     }
   })

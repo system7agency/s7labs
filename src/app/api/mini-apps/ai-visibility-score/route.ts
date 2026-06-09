@@ -22,6 +22,7 @@ import {
   CLAUDE_ANSWER_MODEL,
   CLAUDE_SETUP_MODEL,
 } from '@/lib/mini-apps/sov-providers'
+import { calculateCost } from '@/lib/llm/cost'
 
 export type { AVSApiResponse, AVSResult, SubScore } from '@/lib/mini-apps/avs-types'
 
@@ -425,7 +426,15 @@ export async function POST(request: Request) {
 
     await saveAvsScan(randomUUID(), domain, avs, sub_scores, result)
     clearTimeout(timer)
-    return jsonResponse({ ok: true, data: result }, 200)
+    // Cost approximation: tokensIn/tokensOut span multiple Anthropic models
+    // (setup + interpret on opus, answers on haiku, plus entity probe). Use
+    // INTERPRET_MODEL as the recorded model_used since opus pricing dominates.
+    const cost = calculateCost({
+      model: INTERPRET_MODEL,
+      inputTokens: tokensIn,
+      outputTokens: tokensOut,
+    })
+    return jsonResponse({ ok: true, data: result, cost }, 200)
   } catch (err) {
     clearTimeout(timer)
     if (controller.signal.aborted) {

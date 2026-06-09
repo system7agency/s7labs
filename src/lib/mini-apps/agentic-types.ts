@@ -1,3 +1,5 @@
+import type { CostBreakdown } from '@/lib/llm/cost'
+
 export type Grade = 'A' | 'B' | 'C' | 'D' | 'F'
 export type CheckStatus = 'pass' | 'warn' | 'fail'
 export type Priority = 'high' | 'medium' | 'low'
@@ -42,7 +44,7 @@ export type ScanGated = {
   tokens_out: number
 }
 
-export type ScanSuccess = { ok: true; scanId: string; free: ScanFree }
+export type ScanSuccess = { ok: true; scanId: string; free: ScanFree; cost?: CostBreakdown }
 export type ScanError = { ok: false; message: string }
 export type ScanApiResponse = ScanSuccess | ScanError
 
@@ -82,4 +84,20 @@ export function parseUnlockApiResponse(raw: unknown): UnlockApiResponse {
     return { ok: false, message: 'Invalid response. Please try again.' }
   }
   return { ok: true, data: gated }
+}
+
+function isCostBreakdown(v: unknown): v is CostBreakdown {
+  if (!isRecord(v)) return false
+  return (
+    typeof v.model === 'string' &&
+    typeof v.inputTokens === 'number' &&
+    typeof v.outputTokens === 'number' &&
+    typeof v.costUsd === 'number'
+  )
+}
+
+export function pickCostBreakdown(raw: unknown): CostBreakdown | undefined {
+  if (!isRecord(raw)) return undefined
+  const cost = (raw as { cost?: unknown }).cost
+  return isCostBreakdown(cost) ? cost : undefined
 }

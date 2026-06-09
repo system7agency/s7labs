@@ -290,10 +290,22 @@ function LookupRunner({
         setActiveStage(STAGES.length - 1)
         setDoneStages([0, 1, 2, 3])
 
+        // email-finder is a provider lookup (Apollo), no LLM. Record ZERO_COST.
+        const zeroCost = { model: 'none', inputTokens: 0, outputTokens: 0, costUsd: 0 }
+
         if (!data.ok) {
           setErrorMsg(data.error)
           setSysState('error')
           setState('error')
+          fetch('/api/leads/complete', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              submissionId,
+              status: 'failed',
+              errorMessage: data.error?.slice(0, 500),
+            }),
+          }).catch((err) => console.error('[email-finder] leads/complete fail', err))
           return
         }
 
@@ -304,7 +316,7 @@ function LookupRunner({
           fetch('/api/leads/complete', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ submissionId, output: { result: null } }),
+            body: JSON.stringify({ submissionId, output: { result: null }, cost: zeroCost }),
           }).catch((err) => console.error('[email-finder] leads/complete', err))
           return
         }
@@ -316,7 +328,7 @@ function LookupRunner({
         fetch('/api/leads/complete', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ submissionId, output: data.result }),
+          body: JSON.stringify({ submissionId, output: data.result, cost: zeroCost }),
         }).catch((err) => console.error('[email-finder] leads/complete', err))
       } catch {
         if (cancelled) return
