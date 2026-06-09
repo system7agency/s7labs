@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
+import { sendResultEmail } from '@/lib/email/send-result-email'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -99,6 +100,19 @@ export async function POST(request: Request) {
   if (updateErr) {
     console.error('[leads/complete] update error', updateErr)
     return errorResponse('Something went wrong', 500)
+  }
+
+  // SYS-552: fire-and-forget transactional result email on the success branch.
+  // We never await or block the response on this; the helper returns ok:false
+  // on misconfig (e.g. webhook env var missing) and we swallow it here.
+  if (update.status === 'completed') {
+    const submissionId = parsed.data.submissionId
+    sendResultEmail(submissionId).catch((err) => {
+      console.error('[leads/complete] background email send failed', {
+        submissionId,
+        err: err instanceof Error ? err.message : String(err),
+      })
+    })
   }
 
   return NextResponse.json({ ok: true })
