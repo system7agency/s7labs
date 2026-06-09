@@ -275,5 +275,16 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="fw-node fw-node-4" />
         </div>
       )
+    case 'techfind':
+      return (
+        <div className="card-thumb thumb-techfind">
+          <div className="tf-grid">
+            <span className="tf-tile tf-tile-1" />
+            <span className="tf-tile tf-tile-2" />
+            <span className="tf-tile tf-tile-3" />
+            <span className="tf-tile tf-tile-4" />
+          </div>
+        </div>
+      )
   }
 }

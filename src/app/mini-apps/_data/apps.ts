@@ -19,6 +19,7 @@ export type AppThumb =
   | 'emailopt'
   | 'flywheel'
   | 'intents'
+  | 'techfind'
 
 export type MiniApp = {
   id: string
@@ -177,6 +178,31 @@ export const APPS: MiniApp[] = [
         'Could learn from reply rates, A/B test variations in a sequencer, and generate follow-up sequences from the winning angle.',
     },
     interest_context: 'email-copy-optimizer',
+  },
+  {
+    id: 'tech-stack-finder',
+    name: 'Tech Stack Finder',
+    status: 'live',
+    category: 'Software / AI',
+    cats: ['ai', 'gtm', 'software'],
+    short_description:
+      'Enter a company domain and get its technology stack grouped by category — analytics, CMS, hosting, CRM, ads, and more.',
+    tags: ['tech stack', 'enrichment', 'competitive intel', 'gtm', 'ai'],
+    thumb: 'techfind',
+    launch_url: '/mini-apps/tech-stack-finder',
+    learn_more: {
+      what_it_does:
+        'Fingerprints a company website and returns detected technologies organized into standard categories with logos — useful for competitive research and outbound personalization.',
+      how_it_works: {
+        inputs: ['company domain'],
+        outputs: ['categorized tech stack', 'technology logos', 'total technologies detected'],
+      },
+      who_its_for:
+        'SDRs, marketers, and agencies researching prospects or competitors who need to know what tools a company runs before pitching.',
+      build_potential:
+        'Could diff stacks over time, alert on competitor tech changes, and personalize outreach based on detected tools.',
+    },
+    interest_context: 'tech-stack-finder',
   },
   {
     id: 'share-of-voice',
