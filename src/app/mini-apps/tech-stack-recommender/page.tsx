@@ -12,6 +12,7 @@ import type {
   StackChoice,
   StackResult,
 } from '@/app/api/mini-apps/tech-stack-recommender/route'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 
@@ -246,6 +247,7 @@ export default function TechStackRecommenderPage() {
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
@@ -393,6 +395,7 @@ export default function TechStackRecommenderPage() {
           body: JSON.stringify({
             email: emailClean,
             miniAppSlug: 'tech-stack-recommender',
+            marketingConsent,
             input: { brief: trimmed },
           }),
         })
@@ -473,7 +476,7 @@ export default function TechStackRecommenderPage() {
       }
       setSubmitting(false)
     },
-    [brief, email, submitting, startLoadingAnimation, clearTimers]
+    [brief, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -677,6 +680,12 @@ export default function TechStackRecommenderPage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
 
                   <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>

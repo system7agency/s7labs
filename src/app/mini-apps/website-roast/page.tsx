@@ -6,6 +6,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type {
@@ -207,6 +208,7 @@ export default function WebsiteRoastPage() {
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
@@ -359,6 +361,7 @@ export default function WebsiteRoastPage() {
           body: JSON.stringify({
             email: emailClean,
             miniAppSlug: 'website-roast',
+            marketingConsent,
             input: { url: trimmed },
           }),
         })
@@ -443,7 +446,7 @@ export default function WebsiteRoastPage() {
       }
       setSubmitting(false)
     },
-    [url, email, submitting, startLoadingAnimation, clearTimers]
+    [url, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -621,6 +624,11 @@ export default function WebsiteRoastPage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg

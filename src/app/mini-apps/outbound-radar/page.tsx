@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type { ApiResponse, RadarResult, Signal } from '@/app/api/mini-apps/outbound-radar/route'
 import { PageScripts } from './PageScripts'
@@ -187,6 +188,7 @@ export default function OutboundRadarPage() {
   const [shakeDomain, setShakeDomain] = useState(0)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<RadarResult | null>(null)
@@ -351,6 +353,7 @@ export default function OutboundRadarPage() {
           body: JSON.stringify({
             email: emailClean,
             miniAppSlug: 'outbound-trigger-radar',
+            marketingConsent,
             input: { company: company.trim(), domain: domainClean },
           }),
         })
@@ -434,7 +437,7 @@ export default function OutboundRadarPage() {
       }
       setSubmitting(false)
     },
-    [company, domain, email, submitting, startLoadingAnimation, clearTimers]
+    [company, domain, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -640,6 +643,11 @@ export default function OutboundRadarPage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   <div className="submit-row">
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg

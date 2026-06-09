@@ -6,6 +6,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type {
@@ -195,6 +196,7 @@ export default function AgenticReadinessPage() {
   const [shakeInput, setShakeInput] = useState(0)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [scanId, setScanId] = useState<string | null>(null)
@@ -375,6 +377,7 @@ export default function AgenticReadinessPage() {
             email: emailClean,
             miniAppSlug: 'agentic-readiness',
             input: { url: normalized },
+            marketingConsent,
           }),
         })
         const json = (await res.json()) as {
@@ -459,7 +462,7 @@ export default function AgenticReadinessPage() {
       }
       setSubmitting(false)
     },
-    [url, email, submitting, startLoadingAnimation, clearTimers]
+    [url, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -672,6 +675,11 @@ export default function AgenticReadinessPage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg

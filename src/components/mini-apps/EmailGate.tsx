@@ -51,6 +51,7 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
   const [company, setCompany] = useState('')
   const [role, setRole] = useState('')
   const [emailInput, setEmailInput] = useState('')
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -71,14 +72,14 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
       const res = await fetch('/api/leads/submit', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, miniAppSlug, input, output }),
+        body: JSON.stringify({ email, miniAppSlug, input, output, marketingConsent }),
       })
       const json = (await res.json()) as SubmitResponse
       if (json.ok && json.submissionId) {
         setSubmissionId(json.submissionId)
       }
     },
-    [email, miniAppSlug, submissionId]
+    [email, miniAppSlug, submissionId, marketingConsent]
   )
 
   const handleSubmit = useCallback(
@@ -107,6 +108,7 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
             miniAppSlug,
             input: initialInput ?? {},
             enrichment,
+            marketingConsent,
           }),
         })
         const json = (await res.json()) as SubmitResponse
@@ -125,7 +127,7 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
         setSubmitting(false)
       }
     },
-    [emailInput, name, company, role, miniAppSlug, initialInput]
+    [emailInput, name, company, role, miniAppSlug, initialInput, marketingConsent]
   )
 
   const renderCtx = useMemo<RenderContext>(
@@ -156,6 +158,22 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
             onChange={(e) => setEmailInput(e.target.value)}
             required
           />
+        </div>
+
+        <div className={styles.consentRow}>
+          <label className={styles.consentLabel}>
+            <input
+              className={styles.consentCheckbox}
+              type="checkbox"
+              checked={marketingConsent}
+              disabled={submitting}
+              onChange={(e) => setMarketingConsent(e.target.checked)}
+            />
+            <span className={styles.consentText}>
+              Email me occasional updates from S7 Labs. Unsubscribe anytime.
+            </span>
+          </label>
+          <div className={styles.consentHint}>WE&apos;LL SEND YOUR RESULT EITHER WAY</div>
         </div>
 
         <button
