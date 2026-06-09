@@ -490,18 +490,29 @@ export default function AiOverviewTrackerPage() {
         setSysState('complete')
         setAppState('result')
 
+        const completeBody: Record<string, unknown> = {
+          submissionId,
+          output: { free: data.free, scanId: data.scanId },
+        }
+        if (data.cost) completeBody.cost = data.cost
         fetch('/api/leads/complete', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            submissionId,
-            output: { free: data.free, scanId: data.scanId },
-          }),
+          body: JSON.stringify(completeBody),
         }).catch((err) => console.error('[ai-overview-tracker] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
         setAppState('error')
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            status: 'failed',
+            errorMessage: data.message?.slice(0, 500),
+          }),
+        }).catch((err) => console.error('[ai-overview-tracker] leads/complete fail', err))
       }
       setSubmitting(false)
     },

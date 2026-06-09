@@ -2298,6 +2298,170 @@
   }
 }
 
+/* Campaign Ideation thumb */
+.mini-apps-lab .thumb-campaign {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 12px 16px;
+}
+.mini-apps-lab .cp-bulb {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.5));
+}
+.mini-apps-lab .cp-stack {
+  position: relative;
+  width: 72px;
+  height: 52px;
+}
+.mini-apps-lab .cp-card {
+  position: absolute;
+  display: block;
+  width: 56px;
+  height: 28px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+.mini-apps-lab .cp-card-1 {
+  top: 0;
+  left: 8px;
+  border-color: rgba(79, 140, 255, 0.35);
+}
+.mini-apps-lab .cp-card-2 {
+  top: 12px;
+  left: 4px;
+  border-color: rgba(4, 227, 238, 0.3);
+  opacity: 0.85;
+}
+.mini-apps-lab .cp-card-3 {
+  top: 24px;
+  left: 0;
+  border-color: rgba(255, 255, 255, 0.1);
+  opacity: 0.65;
+}
+
+/* GTM Flywheel thumb */
+.mini-apps-lab .thumb-flywheel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+.mini-apps-lab .fw-ring-outer {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 1px dashed rgba(79, 140, 255, 0.25);
+}
+.mini-apps-lab .fw-node {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(4, 227, 238, 0.7);
+  border: 1px solid rgba(4, 227, 238, 0.9);
+  box-shadow: 0 0 8px rgba(4, 227, 238, 0.4);
+}
+.mini-apps-lab .fw-node-1 {
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.mini-apps-lab .fw-node-2 {
+  top: 50%;
+  right: 18%;
+  transform: translateY(-50%);
+}
+.mini-apps-lab .fw-node-3 {
+  bottom: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.mini-apps-lab .fw-node-4 {
+  top: 50%;
+  left: 18%;
+  transform: translateY(-50%);
+}
+
+/* Intent Signals thumb */
+.mini-apps-lab .thumb-intents {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+.mini-apps-lab .is-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 92, 122, 0.3);
+}
+.mini-apps-lab .is-ring-1 {
+  width: 34px;
+  height: 34px;
+}
+.mini-apps-lab .is-ring-2 {
+  width: 58px;
+  height: 58px;
+  border-color: rgba(255, 92, 122, 0.15);
+}
+.mini-apps-lab .is-pulse {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 92, 122, 0.25);
+  animation: is-pulse 2s ease-out infinite;
+}
+@keyframes is-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.mini-apps-lab .is-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ff5c7a;
+  box-shadow: 0 0 6px rgba(255, 92, 122, 0.6);
+}
+.mini-apps-lab .is-dot-1 {
+  top: 26%;
+  left: 62%;
+}
+.mini-apps-lab .is-dot-2 {
+  top: 58%;
+  left: 28%;
+  opacity: 0.75;
+}
+.mini-apps-lab .is-dot-3 {
+  top: 40%;
+  left: 70%;
+  opacity: 0.5;
+  width: 4px;
+  height: 4px;
+}
+
 /* CRM Sanity thumb */
 .mini-apps-lab .thumb-sanity {
   position: relative;
@@ -3581,6 +3745,42 @@
   color: rgba(255, 255, 255, 0.25);
 }
 
+/* Email Copy Optimizer thumb */
+.mini-apps-lab .thumb-emailopt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 12px 16px;
+}
+.mini-apps-lab .eo-envelope {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(79, 140, 255, 0.35);
+  border-radius: 6px;
+  background: rgba(79, 140, 255, 0.08);
+}
+.mini-apps-lab .eo-flap {
+  display: block;
+  height: 6px;
+  border-radius: 2px;
+  background: rgba(4, 227, 238, 0.45);
+  margin-bottom: 2px;
+}
+.mini-apps-lab .eo-line {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+}
+.mini-apps-lab .eo-line-hi {
+  background: rgba(4, 227, 238, 0.35);
+}
+
 /* ROI Calculator thumb */
 .mini-apps-lab .thumb-roi {
   position: relative;
@@ -3621,6 +3821,40 @@
   font-weight: 700;
   color: var(--accent);
   letter-spacing: 0.02em;
+}
+
+/* Tech Stack Finder thumb */
+.mini-apps-lab .thumb-techfind {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 14px;
+}
+.mini-apps-lab .tf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  width: 72%;
+}
+.mini-apps-lab .tf-tile {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.mini-apps-lab .tf-tile-1 {
+  background: rgba(79, 140, 255, 0.25);
+}
+.mini-apps-lab .tf-tile-2 {
+  background: rgba(4, 227, 238, 0.2);
+}
+.mini-apps-lab .tf-tile-3 {
+  background: rgba(147, 112, 219, 0.2);
+}
+.mini-apps-lab .tf-tile-4 {
+  background: rgba(245, 166, 35, 0.2);
 }
 
 @media (prefers-reduced-motion: reduce) {

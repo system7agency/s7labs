@@ -11,6 +11,7 @@ import type {
   ScanGated,
 } from '@/lib/mini-apps/aio-types'
 import { isValidDomain, normalizeDomain } from '@/lib/mini-apps/normalize-domain'
+import { calculateCost, usageFromAnthropic } from '@/lib/llm/cost'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -348,7 +349,8 @@ export async function POST(request: Request) {
     }
     await saveAioScan(scanId, record)
 
-    return jsonScan({ ok: true, scanId, free }, 200)
+    const cost = calculateCost(usageFromAnthropic(message))
+    return jsonScan({ ok: true, scanId, free, cost }, 200)
   } catch {
     clearTimeout(timer)
     return jsonScan({ ok: false, message: 'Scan timed out. Please try again.' }, 504)
