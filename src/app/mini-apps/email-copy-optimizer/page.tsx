@@ -8,6 +8,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -111,6 +112,7 @@ export default function EmailCopyOptimizerPage() {
   const [bodyError, setBodyError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeKey, setShakeKey] = useState(0)
 
   useEffect(() => {
@@ -218,6 +220,7 @@ export default function EmailCopyOptimizerPage() {
             email: emailClean,
             miniAppSlug: 'email-copy-optimizer',
             input: leadInput,
+            marketingConsent,
           }),
         })
         const json = (await res.json()) as {
@@ -281,7 +284,7 @@ export default function EmailCopyOptimizerPage() {
         setSubmitting(false)
       }
     },
-    [audience, body, clearErrors, email, goal, subject, submitting, tone]
+    [audience, body, clearErrors, email, goal, marketingConsent, subject, submitting, tone]
   )
 
   const handleReset = useCallback(() => {
@@ -482,6 +485,11 @@ export default function EmailCopyOptimizerPage() {
                   <div className={clsx('pd-helper', { error: emailError })}>
                     {emailError ?? 'We send the report to your work email. No spam.'}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
 
                   <div className="pd-submit-row">
                     <button type="button" className="secondary-btn" onClick={handleTrySample}>

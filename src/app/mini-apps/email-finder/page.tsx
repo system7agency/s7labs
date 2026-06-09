@@ -9,6 +9,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type { ApiResponse, EmailFinderResult } from '@/app/api/mini-apps/email-finder/route'
@@ -599,6 +600,7 @@ export default function EmailFinderPage() {
   const [company, setCompany] = useState('')
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [errors, setErrors] = useState<IdleErrors>({})
   const [shakeKey, setShakeKey] = useState(0)
@@ -670,6 +672,7 @@ export default function EmailFinderPage() {
             email: trimmedEmail,
             miniAppSlug: 'email-finder',
             input: lookupInput,
+            marketingConsent,
           }),
         })
         const json = (await res.json()) as {
@@ -695,7 +698,7 @@ export default function EmailFinderPage() {
       setSubmittedInput(lookupInput)
       setSubmitting(false)
     },
-    [name, company, email, submitting]
+    [name, company, email, marketingConsent, submitting]
   )
 
   const handleReset = useCallback(() => {
@@ -812,6 +815,12 @@ export default function EmailFinderPage() {
                       </div>
                       {emailError && <div className="field-error">{emailError}</div>}
                     </div>
+                    <InlineConsentField
+                      id="email-finder-marketing-consent"
+                      checked={marketingConsent}
+                      disabled={submitting || !APP_ENABLED}
+                      onChange={setMarketingConsent}
+                    />
 
                     {!APP_ENABLED ? (
                       <div className="ef-coming-soon" role="status">

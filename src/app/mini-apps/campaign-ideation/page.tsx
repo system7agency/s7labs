@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type {
   ApiResponse,
@@ -256,6 +257,7 @@ export default function CampaignIdeationPage() {
   const [audError, setAudError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeKey, setShakeKey] = useState(0)
 
   const stageTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -361,6 +363,7 @@ export default function CampaignIdeationPage() {
             email: emailClean,
             miniAppSlug: 'campaign-ideation',
             input: leadInput,
+            marketingConsent,
           }),
         })
         const leadJson = (await leadRes.json()) as {
@@ -428,7 +431,17 @@ export default function CampaignIdeationPage() {
       }
       setSubmitting(false)
     },
-    [audience, clearLoadTimers, currentMotion, email, goal, product, startLoading, submitting]
+    [
+      audience,
+      clearLoadTimers,
+      currentMotion,
+      email,
+      goal,
+      marketingConsent,
+      product,
+      startLoading,
+      submitting,
+    ]
   )
 
   const handleCopyAll = useCallback(async () => {
@@ -568,6 +581,11 @@ export default function CampaignIdeationPage() {
                 <div className={clsx('pd-helper', { error: emailError })}>
                   {emailError ?? 'We send the report to your work email. No spam.'}
                 </div>
+                <InlineConsentField
+                  checked={marketingConsent}
+                  disabled={submitting}
+                  onChange={setMarketingConsent}
+                />
 
                 <div className="pd-submit-row">
                   <button className="ci-ghost" type="button" onClick={handleTrySample}>
