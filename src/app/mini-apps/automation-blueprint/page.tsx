@@ -460,18 +460,27 @@ export default function AutomationBlueprintPage() {
         setSysState('complete')
         setAppState('result')
 
+        const completeBody: Record<string, unknown> = { submissionId, output: data.data }
+        const withCost = data as ApiResponse & { cost?: unknown }
+        if (withCost.cost) completeBody.cost = withCost.cost
         fetch('/api/leads/complete', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            submissionId,
-            output: data.data,
-          }),
+          body: JSON.stringify(completeBody),
         }).catch((err) => console.error('[automation-blueprint] leads/complete', err))
       } else {
         setErrorMsg(data.message)
         setSysState('error')
         setAppState('error')
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            status: 'failed',
+            errorMessage: data.message?.slice(0, 500),
+          }),
+        }).catch((err) => console.error('[automation-blueprint] leads/complete fail', err))
       }
       setSubmitting(false)
     },

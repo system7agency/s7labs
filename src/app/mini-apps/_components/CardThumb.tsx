@@ -201,6 +201,17 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="rd-sweep" />
         </div>
       )
+    case 'intents':
+      return (
+        <div className="card-thumb thumb-intents">
+          <span className="is-ring is-ring-1" />
+          <span className="is-ring is-ring-2" />
+          <span className="is-pulse" />
+          <span className="is-dot is-dot-1" />
+          <span className="is-dot is-dot-2" />
+          <span className="is-dot is-dot-3" />
+        </div>
+      )
     case 'proposal':
       return (
         <div className="card-thumb thumb-proposal">
@@ -230,6 +241,38 @@ export function CardThumb({ thumb }: CardThumbProps) {
               <span className="be-check be-miss">—</span>
             </span>
           </div>
+        </div>
+      )
+    case 'campaign':
+      return (
+        <div className="card-thumb thumb-campaign">
+          <span className="cp-bulb">💡</span>
+          <div className="cp-stack">
+            <span className="cp-card cp-card-1" />
+            <span className="cp-card cp-card-2" />
+            <span className="cp-card cp-card-3" />
+          </div>
+        </div>
+      )
+    case 'emailopt':
+      return (
+        <div className="card-thumb thumb-emailopt">
+          <div className="eo-envelope">
+            <span className="eo-flap" />
+            <span className="eo-line" style={{ width: '70%' }} />
+            <span className="eo-line" style={{ width: '55%' }} />
+            <span className="eo-line eo-line-hi" style={{ width: '40%' }} />
+          </div>
+        </div>
+      )
+    case 'flywheel':
+      return (
+        <div className="card-thumb thumb-flywheel">
+          <span className="fw-ring fw-ring-outer" />
+          <span className="fw-node fw-node-1" />
+          <span className="fw-node fw-node-2" />
+          <span className="fw-node fw-node-3" />
+          <span className="fw-node fw-node-4" />
         </div>
       )
     case 'techfind':
