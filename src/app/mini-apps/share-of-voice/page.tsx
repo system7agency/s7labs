@@ -15,6 +15,7 @@ import type {
   ScanGated,
   UnlockApiResponse,
 } from '@/lib/mini-apps/sov-types'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 
@@ -272,6 +273,7 @@ export default function ShareOfVoicePage() {
 
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
@@ -435,6 +437,7 @@ export default function ShareOfVoicePage() {
           body: JSON.stringify({
             email: emailClean,
             miniAppSlug: 'share-of-voice',
+            marketingConsent,
             input: { your_domain: yourClean, competitors: compClean },
           }),
         })
@@ -527,7 +530,15 @@ export default function ShareOfVoicePage() {
 
       setSubmitting(false)
     },
-    [yourDomain, competitors, email, submitting, startLoadingAnimation, clearTimers]
+    [
+      yourDomain,
+      competitors,
+      email,
+      marketingConsent,
+      submitting,
+      startLoadingAnimation,
+      clearTimers,
+    ]
   )
 
   const handleReset = useCallback(() => {
@@ -751,6 +762,12 @@ export default function ShareOfVoicePage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
 
                   <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>

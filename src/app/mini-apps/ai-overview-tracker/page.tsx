@@ -6,6 +6,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { KeywordStatus, ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/aio-types'
@@ -266,6 +267,7 @@ export default function AiOverviewTrackerPage() {
   const [shakeInput, setShakeInput] = useState(0)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [scanId, setScanId] = useState<string | null>(null)
@@ -432,6 +434,7 @@ export default function AiOverviewTrackerPage() {
           body: JSON.stringify({
             email: emailClean,
             miniAppSlug: 'ai-overview-tracker',
+            marketingConsent,
             input: { domain: normalizedDomain, keywords, location },
           }),
         })
@@ -516,7 +519,16 @@ export default function AiOverviewTrackerPage() {
       }
       setSubmitting(false)
     },
-    [submitting, domain, keywordsText, location, email, startLoadingAnimation, clearTimers]
+    [
+      submitting,
+      domain,
+      keywordsText,
+      location,
+      email,
+      marketingConsent,
+      startLoadingAnimation,
+      clearTimers,
+    ]
   )
 
   const handleReset = useCallback(() => {
@@ -747,6 +759,11 @@ export default function AiOverviewTrackerPage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   {!APP_ENABLED ? (
                     <div className="aio-coming-soon" role="status">
                       <span className="aio-coming-soon-dot" />

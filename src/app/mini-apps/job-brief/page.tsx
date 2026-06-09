@@ -6,6 +6,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { ApiResponse, BriefResult, Signal } from '@/app/api/mini-apps/job-brief/route'
@@ -199,6 +200,7 @@ export default function JobBriefPage() {
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
@@ -365,6 +367,7 @@ export default function JobBriefPage() {
           body: JSON.stringify({
             email: emailClean,
             miniAppSlug: 'job-posting-sales-brief',
+            marketingConsent,
             input: inputPayload,
           }),
         })
@@ -452,7 +455,7 @@ export default function JobBriefPage() {
       }
       setSubmitting(false)
     },
-    [url, text, inputMode, email, submitting, startLoadingAnimation, clearTimers]
+    [url, text, inputMode, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -687,6 +690,11 @@ export default function JobBriefPage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg

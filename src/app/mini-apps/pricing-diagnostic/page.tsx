@@ -8,6 +8,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -149,6 +150,7 @@ export default function PricingDiagnosticPage() {
   const [urlError, setUrlError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [shakeKey, setShakeKey] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<DiagnosticResult | null>(null)
@@ -324,6 +326,7 @@ export default function PricingDiagnosticPage() {
             email: trimmedEmail,
             miniAppSlug: 'pricing-diagnostic',
             input: { url: trimmedUrl },
+            marketingConsent,
           }),
         })
         const json = (await res.json()) as {
@@ -408,7 +411,7 @@ export default function PricingDiagnosticPage() {
       }
       setSubmitting(false)
     },
-    [url, email, submitting, startLoadingAnimation, clearTimers]
+    [url, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -599,6 +602,11 @@ export default function PricingDiagnosticPage() {
                   <div className={clsx('pd-helper', { error: emailError })}>
                     {emailError ?? 'We send the report to your work email. No spam.'}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   <div className="pd-submit-row">
                     <button type="submit" className="pd-submit-btn" disabled={submitting}>
                       Find Diagnostic

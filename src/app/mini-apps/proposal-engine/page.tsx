@@ -13,6 +13,7 @@ import type {
   ProposalResult,
   TechItem,
 } from '@/app/api/mini-apps/proposal-engine/route'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 
@@ -247,6 +248,7 @@ export default function ProposalEnginePage() {
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
@@ -399,6 +401,7 @@ export default function ProposalEnginePage() {
           body: JSON.stringify({
             email: emailClean,
             miniAppSlug: 'proposal-engine',
+            marketingConsent,
             input: { brief_text: trimBrief, tone },
           }),
         })
@@ -481,7 +484,7 @@ export default function ProposalEnginePage() {
       }
       setSubmitting(false)
     },
-    [briefText, tone, email, submitting, startLoadingAnimation, clearTimers]
+    [briefText, tone, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -687,6 +690,12 @@ export default function ProposalEnginePage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
 
                   <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>

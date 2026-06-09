@@ -9,6 +9,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -195,6 +196,7 @@ export default function FindPeoplePage() {
   const [shakeKey, setShakeKey] = useState(0)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<FindPeopleResult | null>(null)
@@ -344,6 +346,7 @@ export default function FindPeoplePage() {
             email: emailClean,
             miniAppSlug: 'find-people',
             input,
+            marketingConsent,
           }),
         })
         const json = (await res.json()) as {
@@ -450,7 +453,7 @@ export default function FindPeoplePage() {
         }),
       }).catch((err) => console.error('[find-people] leads/complete', err))
     },
-    [company, email, submitting, startLoadingAnimation, clearTimers]
+    [company, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -559,6 +562,12 @@ export default function FindPeoplePage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
 
                   {!APP_ENABLED ? (
                     <div className="fp-coming-soon" role="status">

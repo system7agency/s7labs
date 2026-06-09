@@ -6,6 +6,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { ApiResponse, Hook, HookResult } from '@/app/api/mini-apps/linkedin-hook/route'
@@ -246,6 +247,7 @@ export default function LinkedInHookPage() {
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
@@ -394,6 +396,7 @@ export default function LinkedInHookPage() {
           body: JSON.stringify({
             email: emailClean,
             miniAppSlug: 'linkedin-post-outbound-hook',
+            marketingConsent,
             input: { post_text: postClean },
           }),
         })
@@ -477,7 +480,7 @@ export default function LinkedInHookPage() {
       }
       setSubmitting(false)
     },
-    [postText, email, submitting, startLoadingAnimation, clearTimers]
+    [postText, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -662,6 +665,11 @@ export default function LinkedInHookPage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg

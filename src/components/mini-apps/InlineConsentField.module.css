@@ -1,0 +1,72 @@
+.consentRow {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.consentLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 36px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.consentCheckbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0 0;
+  border: 1px solid var(--color-border, var(--border, rgba(255, 255, 255, 0.18)));
+  border-radius: 3px;
+  background: var(--color-bg-2, transparent);
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  accent-color: var(--s7-accent, var(--color-accent, #04e3ee));
+}
+
+.consentCheckbox:checked {
+  background: var(--s7-accent, var(--color-accent, #04e3ee));
+  border-color: var(--s7-accent, var(--color-accent, #04e3ee));
+}
+
+.consentCheckbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #060608;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.consentCheckbox:focus-visible {
+  outline: 2px solid var(--s7-accent, var(--color-accent, #04e3ee));
+  outline-offset: 2px;
+}
+
+.consentCheckbox:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.consentText {
+  font-family: var(--font-sans, 'Geist Sans', system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-fg, var(--fg, #f4f4f5));
+}
+
+.consentHint {
+  font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-fg-dim, var(--fg-muted, rgba(255, 255, 255, 0.55)));
+}

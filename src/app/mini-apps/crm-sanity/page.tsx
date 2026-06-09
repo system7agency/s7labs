@@ -6,6 +6,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { ApiResponse, FieldIssue, SanityResult } from '@/app/api/mini-apps/crm-sanity/route'
@@ -264,6 +265,7 @@ export default function CrmSanityPage() {
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)
@@ -417,6 +419,7 @@ export default function CrmSanityPage() {
           body: JSON.stringify({
             email: emailClean,
             miniAppSlug: 'crm-field-sanity-check',
+            marketingConsent,
             input: { record_text: recordClean },
           }),
         })
@@ -500,7 +503,7 @@ export default function CrmSanityPage() {
       }
       setSubmitting(false)
     },
-    [recordText, email, submitting, startLoadingAnimation, clearTimers]
+    [recordText, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
   )
 
   const handleReset = useCallback(() => {
@@ -696,6 +699,11 @@ export default function CrmSanityPage() {
                     </div>
                     {emailError && <div className="field-error">{emailError}</div>}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
