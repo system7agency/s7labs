@@ -15,7 +15,9 @@ export type AppThumb =
   | 'aio'
   | 'avs'
   | 'bulkemail'
+  | 'campaign'
   | 'emailopt'
+  | 'intents'
 
 export type MiniApp = {
   id: string
@@ -469,6 +471,73 @@ export const APPS: MiniApp[] = [
         'Could become a Chrome extension that surfaces the roster inline on a company’s website, or batch lookup for an uploaded list of accounts.',
     },
     interest_context: 'find-people',
+  },
+  {
+    id: 'campaign-ideation',
+    author: 'YA',
+    name: 'Campaign Ideation',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm'],
+    short_description:
+      'Describe your product, audience, and goal. Get seven specific GTM campaign ideas with hooks, channels, formats, and first steps.',
+    tags: ['campaign', 'gtm', 'strategy', 'copy', 'ai'],
+    thumb: 'campaign',
+    launch_url: '/mini-apps/campaign-ideation',
+    learn_more: {
+      what_it_does:
+        'Turns a product brief into seven channel-specific campaign ideas — each with a memorable name, hook, channels, format, first step, expected outcome, and effort level — plus a positioning summary reflecting what it understood.',
+      how_it_works: {
+        inputs: [
+          'product description',
+          'target audience',
+          'current motion (optional)',
+          'goal (optional)',
+        ],
+        outputs: [
+          'positioning summary',
+          '7 campaign ideas',
+          'hooks and channels per idea',
+          'first steps and expected outcomes',
+        ],
+      },
+      who_its_for:
+        'Founders and GTM teams who need fresh campaign angles tied to their actual product — not generic playbooks.',
+      build_potential:
+        'Could save briefs, pair with ROI Calculator scenarios, and generate full launch copy per idea.',
+    },
+    interest_context: 'campaign-ideation',
+  },
+  {
+    id: 'intent-signals',
+    author: 'YA',
+    name: 'Intent Signals',
+    status: 'live',
+    category: 'AI / Operations',
+    cats: ['ai', 'operations', 'gtm'],
+    short_description:
+      'Enter a company domain. Get ranked buying intent signals — hiring, funding, leadership, tech — with sources and a ready outreach angle.',
+    tags: ['intent', 'signals', 'outbound', 'hiring', 'gtm', 'ai'],
+    thumb: 'intents',
+    launch_url: '/mini-apps/intent-signals',
+    learn_more: {
+      what_it_does:
+        'Scans public sources for hiring spikes, news events, and tech adoption signals, then ranks them into an intent score with a suggested outreach opener — assembled from public data, not enterprise intent vendors.',
+      how_it_works: {
+        inputs: ['company domain'],
+        outputs: [
+          'intent score (0-100)',
+          'ranked signal feed with sources',
+          'strength chips (hot / warm / background)',
+          'suggested outreach angle',
+        ],
+      },
+      who_its_for:
+        'SDRs, AEs, and founders who want evidence-based context on whether a target account is "in motion" before outreach.',
+      build_potential:
+        'Collector architecture supports swapping in paid intent vendors; could merge with Outbound Trigger Radar and add scheduled re-scans.',
+    },
+    interest_context: 'intent-signals',
   },
   {
     id: 'outbound-radar',

@@ -12,9 +12,11 @@ import {
   askChatGpt,
   askClaude,
   askPerplexity,
+  CLAUDE_ANSWER_MODEL,
   CLAUDE_SETUP_MODEL,
   type AnswerCallResult,
 } from '@/lib/mini-apps/sov-providers'
+import { calculateCost, sumUsage } from '@/lib/llm/cost'
 import { saveSovScan, type SovScanRecord } from '@/lib/mini-apps/sov-storage'
 import type {
   BrandScore,
@@ -313,5 +315,32 @@ export async function POST(request: Request) {
 
   await saveSovScan(scanId, record)
 
-  return jsonScan({ ok: true, scanId, free }, 200)
+  // Cost: setup model (one call) + Claude answer calls. ChatGPT/Perplexity
+  // costs are tracked separately and not summed here; we record the dominant
+  // model_used as the answer model since most tokens flow there.
+  const setupCost = calculateCost({
+    model: CLAUDE_SETUP_MODEL,
+    inputTokens: setupTokensIn,
+    outputTokens: setupTokensOut,
+  })
+  const claudeAnswerUsages = answers
+    .filter((a) => a.provider === 'claude' && a.ok)
+    .map((a) => ({
+      model: CLAUDE_ANSWER_MODEL,
+      inputTokens: a.tokens_in,
+      outputTokens: a.tokens_out,
+    }))
+  const claudeAnswerCost =
+    claudeAnswerUsages.length > 0
+      ? calculateCost(sumUsage(claudeAnswerUsages))
+      : { model: CLAUDE_ANSWER_MODEL, inputTokens: 0, outputTokens: 0, costUsd: 0 }
+
+  const cost = {
+    model: CLAUDE_ANSWER_MODEL,
+    inputTokens: setupCost.inputTokens + claudeAnswerCost.inputTokens,
+    outputTokens: setupCost.outputTokens + claudeAnswerCost.outputTokens,
+    costUsd: Number((setupCost.costUsd + claudeAnswerCost.costUsd).toFixed(6)),
+  }
+
+  return jsonScan({ ok: true, scanId, free, cost }, 200)
 }

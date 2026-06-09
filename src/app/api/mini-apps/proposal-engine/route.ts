@@ -2,6 +2,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { NextResponse } from 'next/server'
 
+import { calculateCost, type CostBreakdown, usageFromAnthropic } from '@/lib/llm/cost'
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
@@ -39,7 +41,7 @@ export type ProposalResult = {
   tokens_out: number
 }
 
-type SuccessResponse = { ok: true; data: ProposalResult }
+type SuccessResponse = { ok: true; data: ProposalResult; cost?: CostBreakdown }
 type ErrorResponse = { ok: false; message: string }
 export type ApiResponse = SuccessResponse | ErrorResponse
 
@@ -175,7 +177,8 @@ export async function POST(request: Request) {
       )
     }
 
-    return jsonResponse({ ok: true, data: parsed }, 200)
+    const cost = calculateCost(usageFromAnthropic(message))
+    return jsonResponse({ ok: true, data: parsed, cost }, 200)
   } catch (err) {
     clearTimeout(timer)
     const isAbort = err instanceof Error && err.name === 'AbortError'
