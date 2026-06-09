@@ -1,3 +1,4 @@
+import type { CostBreakdown } from '@/lib/llm/cost'
 import type { AVSSubScoreKey } from '@/lib/mini-apps/avs-weights'
 
 export type SubScore = {
@@ -23,7 +24,9 @@ export type AVSResult = {
   tokens_out: number
 }
 
-export type AVSApiResponse = { ok: true; data: AVSResult } | { ok: false; message: string }
+export type AVSApiResponse =
+  | { ok: true; data: AVSResult; cost?: CostBreakdown }
+  | { ok: false; message: string }
 
 export type AvsScanSnapshot = {
   domain: string

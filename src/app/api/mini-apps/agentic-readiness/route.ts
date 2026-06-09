@@ -3,6 +3,7 @@ import { STYLE_SYSTEM_PROMPT } from '@/lib/llm/style'
 import { FirecrawlAppV1 as FirecrawlApp } from '@mendable/firecrawl-js'
 import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
+import { calculateCost, usageFromAnthropic } from '@/lib/llm/cost'
 import { buildAgenticSignals, type AgenticSignals } from '@/lib/mini-apps/agentic-signals'
 import { saveAgenticScan, type AgenticScanRecord } from '@/lib/mini-apps/agentic-storage'
 import {
@@ -248,7 +249,8 @@ export async function POST(request: Request) {
 
     await saveAgenticScan(scanId, record)
 
-    return jsonScan({ ok: true, scanId, free }, 200)
+    const cost = calculateCost(usageFromAnthropic(message))
+    return jsonScan({ ok: true, scanId, free, cost }, 200)
   } catch (err) {
     clearTimeout(timer)
     const isAbort = err instanceof Error && err.name === 'AbortError'

@@ -243,5 +243,16 @@ export function CardThumb({ thumb }: CardThumbProps) {
           </div>
         </div>
       )
+    case 'campaign':
+      return (
+        <div className="card-thumb thumb-campaign">
+          <span className="cp-bulb">💡</span>
+          <div className="cp-stack">
+            <span className="cp-card cp-card-1" />
+            <span className="cp-card cp-card-2" />
+            <span className="cp-card cp-card-3" />
+          </div>
+        </div>
+      )
   }
 }
