@@ -8,6 +8,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -164,6 +165,7 @@ export default function LinkedInProfileReviewerPage() {
   const [shakeInput, setShakeInput] = useState(0)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [errorCode, setErrorCode] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -353,6 +355,7 @@ export default function LinkedInProfileReviewerPage() {
               url: trimmedUrl || undefined,
               profileText: trimmedText || undefined,
             },
+            marketingConsent,
           }),
         })
         const leadJson = (await leadRes.json()) as {
@@ -424,7 +427,16 @@ export default function LinkedInProfileReviewerPage() {
         setSubmitting(false)
       }
     },
-    [mode, profileText, email, startLoadingAnimation, submitting, url, clearTimers]
+    [
+      mode,
+      profileText,
+      email,
+      marketingConsent,
+      startLoadingAnimation,
+      submitting,
+      url,
+      clearTimers,
+    ]
   )
 
   return (
@@ -570,6 +582,11 @@ export default function LinkedInProfileReviewerPage() {
                   <div className={clsx('pd-helper', { error: emailError })}>
                     {emailError ?? 'We send the report to your work email. No spam.'}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   <div className="pd-submit-row">
                     <button type="submit" className="pd-submit-btn" disabled={submitting}>
                       Review profile

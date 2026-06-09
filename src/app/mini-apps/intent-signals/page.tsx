@@ -9,6 +9,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -159,6 +160,7 @@ export default function IntentSignalsPage() {
   const [shakeDomain, setShakeDomain] = useState(0)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<IntentSignalsResult | null>(null)
@@ -305,6 +307,7 @@ export default function IntentSignalsPage() {
             email: emailClean,
             miniAppSlug: 'intent-signals',
             input: { domain: domainNormalized },
+            marketingConsent,
           }),
         })
         const json = (await res.json()) as {
@@ -377,7 +380,7 @@ export default function IntentSignalsPage() {
 
       setSubmitting(false)
     },
-    [clearTimers, domain, email, startLoadingAnimation, submitting]
+    [clearTimers, domain, email, marketingConsent, startLoadingAnimation, submitting]
   )
 
   const handleReset = useCallback(() => {
@@ -506,6 +509,11 @@ export default function IntentSignalsPage() {
                   <div className={clsx('pd-helper', { error: emailError })}>
                     {emailError ?? 'We send the report to your work email. No spam.'}
                   </div>
+                  <InlineConsentField
+                    checked={marketingConsent}
+                    disabled={submitting}
+                    onChange={setMarketingConsent}
+                  />
                   <div className="pd-submit-row">
                     <button type="submit" className="pd-submit-btn" disabled={submitting}>
                       Run scan

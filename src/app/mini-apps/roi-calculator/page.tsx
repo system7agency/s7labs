@@ -9,6 +9,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 
@@ -141,6 +142,7 @@ export default function RoiCalculatorPage() {
   const [inputs, setInputs] = useState<Inputs>(DEFAULT_INPUTS)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
   const topRef = useRef<HTMLElement | null>(null)
@@ -216,6 +218,7 @@ export default function RoiCalculatorPage() {
             email: emailClean,
             miniAppSlug: 'roi-calculator',
             input: buildLeadInput(nextInputs),
+            marketingConsent,
           }),
         })
         const json = (await res.json()) as { ok?: boolean; error?: string }
@@ -237,7 +240,7 @@ export default function RoiCalculatorPage() {
         return false
       }
     },
-    [email]
+    [email, marketingConsent]
   )
 
   const setInput = useCallback(
@@ -376,6 +379,7 @@ export default function RoiCalculatorPage() {
             <div className={clsx('pd-helper', { error: emailError })}>
               {emailError ?? 'We send the report to your work email. No spam.'}
             </div>
+            <InlineConsentField checked={marketingConsent} onChange={setMarketingConsent} />
           </div>
         </section>
 

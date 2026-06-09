@@ -27,6 +27,7 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 
@@ -274,7 +275,9 @@ function ExportPanel({
   emailError,
   shakeEmail,
   exportSubmitting,
+  marketingConsent,
   onEmailChange,
+  onMarketingConsentChange,
   onUnlock,
   onShare,
   onDownloadPng,
@@ -286,7 +289,9 @@ function ExportPanel({
   emailError: string | null
   shakeEmail: number
   exportSubmitting: boolean
+  marketingConsent: boolean
   onEmailChange: (value: string) => void
+  onMarketingConsentChange: (checked: boolean) => void
   onUnlock: () => void
   onShare: () => void
   onDownloadPng: () => void
@@ -329,6 +334,12 @@ function ExportPanel({
           <div className={clsx('pd-helper', { error: emailError })}>
             {emailError ?? 'We only use your email to unlock export. No spam.'}
           </div>
+          <InlineConsentField
+            id="gtm-flywheel-marketing-consent"
+            checked={marketingConsent}
+            disabled={exportSubmitting}
+            onChange={onMarketingConsentChange}
+          />
           <div className="pd-submit-row">
             <button type="submit" className="pd-submit-btn" disabled={exportSubmitting}>
               Unlock export
@@ -368,6 +379,7 @@ export default function GtmFlywheelPage() {
   )
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [exportUnlocked, setExportUnlocked] = useState(false)
   const [exportSubmitting, setExportSubmitting] = useState(false)
@@ -555,6 +567,7 @@ export default function GtmFlywheelPage() {
           miniAppSlug: 'gtm-flywheel',
           input: exportInput,
           output: exportOutput,
+          marketingConsent,
         }),
       })
       const json = (await res.json()) as { ok?: boolean; error?: string }
@@ -572,7 +585,7 @@ export default function GtmFlywheelPage() {
     } finally {
       setExportSubmitting(false)
     }
-  }, [exportUnlocked, email, exportInput, exportOutput])
+  }, [exportUnlocked, email, exportInput, exportOutput, marketingConsent])
 
   const handleShareLinkGated = useCallback(async () => {
     if (!(await ensureExportUnlocked())) return
@@ -657,7 +670,9 @@ export default function GtmFlywheelPage() {
                 emailError={emailError}
                 shakeEmail={shakeEmail}
                 exportSubmitting={exportSubmitting}
+                marketingConsent={marketingConsent}
                 onEmailChange={handleEmailChange}
+                onMarketingConsentChange={setMarketingConsent}
                 onUnlock={() => void ensureExportUnlocked()}
                 onShare={() => void handleShareLinkGated()}
                 onDownloadPng={() => void handleDownloadPngGated()}
