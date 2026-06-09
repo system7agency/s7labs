@@ -19,6 +19,7 @@ export type AppThumb =
   | 'emailopt'
   | 'flywheel'
   | 'intents'
+  | 'roi'
   | 'techfind'
 
 export type MiniApp = {
@@ -178,6 +179,45 @@ export const APPS: MiniApp[] = [
         'Could learn from reply rates, A/B test variations in a sequencer, and generate follow-up sequences from the winning angle.',
     },
     interest_context: 'email-copy-optimizer',
+  },
+  {
+    id: 'roi-calculator',
+    name: 'ROI Calculator',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Model outbound campaign inputs and see expected pipeline, closed revenue, ROI multiple, and cost per meeting — live as you move the sliders.',
+    tags: ['roi', 'outbound', 'pipeline', 'calculator', 'gtm'],
+    thumb: 'roi',
+    launch_url: '/mini-apps/roi-calculator',
+    learn_more: {
+      what_it_does:
+        'Takes leads contacted, reply rate, meeting conversion, close rate, average deal size, and campaign cost — then calculates pipeline value, expected revenue, ROI, and cost efficiency metrics with a visual funnel breakdown.',
+      how_it_works: {
+        inputs: [
+          'leads contacted',
+          'reply rate %',
+          'meeting conversion %',
+          'deal close rate %',
+          'avg deal size',
+          'campaign cost',
+        ],
+        outputs: [
+          'pipeline value',
+          'expected closed revenue',
+          'ROI multiple',
+          'cost per meeting',
+          'cost per deal',
+          'what-if sensitivity line',
+        ],
+      },
+      who_its_for:
+        'RevOps leaders, founders, and GTM teams who need a quick, defensible ROI model before scaling outbound spend.',
+      build_potential:
+        'Could save scenarios per client, benchmark against industry averages, and connect to live CRM data for actual vs projected.',
+    },
+    interest_context: 'roi-calculator',
   },
   {
     id: 'tech-stack-finder',
