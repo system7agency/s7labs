@@ -110,9 +110,38 @@
 }
 
 .consentReassurance {
-  color: var(--s7-accent, var(--color-accent, #04e3ee));
-  font-weight: 500;
+  position: relative;
+  display: inline-block;
   white-space: nowrap;
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(4, 227, 238, 0.08) 0%,
+    rgba(4, 227, 238, 0.22) 50%,
+    rgba(4, 227, 238, 0.08) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 100% 0;
+  box-shadow: inset 0 0 0 1px rgba(4, 227, 238, 0.18);
+  animation: consent-shimmer 4.5s ease-in-out infinite;
+}
+
+@keyframes consent-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consentReassurance {
+    animation: none;
+    background-position: 50% 0;
+  }
 }
 
 .consentHint {
