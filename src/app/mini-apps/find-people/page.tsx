@@ -402,10 +402,22 @@ export default function FindPeoplePage() {
       setActiveStage(STAGES.length - 1)
       setDoneStages([0, 1, 2, 3])
 
+      // find-people is a non-LLM stub. Record ZERO_COST so model_used='none'.
+      const zeroCost = { model: 'none', inputTokens: 0, outputTokens: 0, costUsd: 0 }
+
       if (!data.ok) {
         setErrorMsg(data.error)
         setAppState('error')
         setSubmitting(false)
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            status: 'failed',
+            errorMessage: data.error?.slice(0, 500),
+          }),
+        }).catch((err) => console.error('[find-people] leads/complete fail', err))
         return
       }
 
@@ -418,6 +430,7 @@ export default function FindPeoplePage() {
           body: JSON.stringify({
             submissionId,
             output: { result: data.result },
+            cost: zeroCost,
           }),
         }).catch((err) => console.error('[find-people] leads/complete', err))
         return
@@ -433,6 +446,7 @@ export default function FindPeoplePage() {
         body: JSON.stringify({
           submissionId,
           output: data.result,
+          cost: zeroCost,
         }),
       }).catch((err) => console.error('[find-people] leads/complete', err))
     },

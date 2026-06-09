@@ -517,10 +517,12 @@ export default function ShareOfVoicePage() {
 
       const completeOutput: Record<string, unknown> = { free: data.free }
       if (unlockData?.ok) completeOutput.gated = unlockData.data
+      const completeBody: Record<string, unknown> = { submissionId, output: completeOutput }
+      if (data.cost) completeBody.cost = data.cost
       fetch('/api/leads/complete', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ submissionId, output: completeOutput }),
+        body: JSON.stringify(completeBody),
       }).catch((err) => console.error('[share-of-voice] leads/complete', err))
 
       setSubmitting(false)

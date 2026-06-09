@@ -465,6 +465,15 @@ export default function LinkedInHookPage() {
         setErrorMsg(data.message)
         setSysState('error')
         setAppState('error')
+        fetch('/api/leads/complete', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            submissionId,
+            status: 'failed',
+            errorMessage: data.message?.slice(0, 500),
+          }),
+        }).catch((err) => console.error('[linkedin-hook] leads/complete fail', err))
       }
       setSubmitting(false)
     },

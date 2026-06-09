@@ -1,3 +1,5 @@
+import type { CostBreakdown } from '@/lib/llm/cost'
+
 export type Provider = 'claude' | 'chatgpt' | 'perplexity'
 
 export type BrandScore = {
@@ -41,7 +43,7 @@ export type ScanGated = {
   tokens_out: number
 }
 
-export type ScanSuccess = { ok: true; scanId: string; free: ScanFree }
+export type ScanSuccess = { ok: true; scanId: string; free: ScanFree; cost?: CostBreakdown }
 export type ScanError = { ok: false; message: string }
 export type ScanApiResponse = ScanSuccess | ScanError
 
