@@ -5,6 +5,11 @@
   --border: rgba(149, 173, 230, 0.24);
   --text: #e8f0ff;
   --text-muted: #95a5c6;
+  --text-faint: #6b7a96;
+  --error: #ff5c7a;
+  --cyan: #04e3ee;
+  --mono:
+    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
   --accent: #7fa2ff;
   --grid: #243043;
   min-height: 100vh;
@@ -250,6 +255,126 @@
   color: var(--text-muted);
 }
 
+.gtm-flywheel .idle-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gtm-flywheel .idle-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+.gtm-flywheel .required-mark {
+  color: var(--error);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.gtm-flywheel .pd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gtm-flywheel .pd-input-box {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.gtm-flywheel .pd-input-box:focus-within {
+  border-color: rgba(79, 140, 255, 0.55);
+  background: rgba(79, 140, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12);
+}
+
+.gtm-flywheel .pd-input-box.error {
+  border-color: rgba(255, 92, 122, 0.6);
+}
+
+.gtm-flywheel .pd-input-box input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 14px 16px;
+  letter-spacing: -0.005em;
+}
+
+.gtm-flywheel .pd-input-box input::placeholder {
+  color: var(--text-faint);
+}
+
+.gtm-flywheel .pd-input-box input:disabled {
+  color: var(--text-muted);
+}
+
+.gtm-flywheel .pd-helper {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.gtm-flywheel .pd-helper.error {
+  color: var(--error);
+}
+
+.gtm-flywheel .pd-submit-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.gtm-flywheel .pd-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #5a98ff, #4f8cff);
+  color: #060608;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 200ms ease,
+    opacity 200ms ease;
+  box-shadow: 0 6px 22px -8px rgba(79, 140, 255, 0.7);
+}
+
+.gtm-flywheel .pd-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -10px rgba(79, 140, 255, 0.9);
+}
+
+.gtm-flywheel .pd-submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .gtm-flywheel .export-actions {
   display: flex;
   gap: 8px;
@@ -399,9 +524,10 @@
   }
 }
 
-.gtm-flywheel .input-box input:-webkit-autofill,
-.gtm-flywheel .input-box input:-webkit-autofill:hover,
-.gtm-flywheel .input-box input:-webkit-autofill:focus {
+.gtm-flywheel .pd-input-box input:-webkit-autofill,
+.gtm-flywheel .pd-input-box input:-webkit-autofill:hover,
+.gtm-flywheel .pd-input-box input:-webkit-autofill:focus,
+.gtm-flywheel .pd-input-box input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--text);
   -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
   caret-color: var(--text);

@@ -275,6 +275,7 @@ function ExportPanel({
   shakeEmail,
   exportSubmitting,
   onEmailChange,
+  onUnlock,
   onShare,
   onDownloadPng,
   onCopyLink,
@@ -286,6 +287,7 @@ function ExportPanel({
   shakeEmail: number
   exportSubmitting: boolean
   onEmailChange: (value: string) => void
+  onUnlock: () => void
   onShare: () => void
   onDownloadPng: () => void
   onCopyLink: () => void
@@ -301,11 +303,19 @@ function ExportPanel({
         </p>
       </div>
       {!exportUnlocked && (
-        <div className="input-field">
-          <label>
-            Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-          </label>
-          <div key={`e-${shakeEmail}`} className={clsx('input-box', { error: emailError })}>
+        <form
+          key={`e-${shakeEmail}`}
+          className="pd-form"
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault()
+            onUnlock()
+          }}
+        >
+          <div className="idle-label">
+            Work email <span className="required-mark">*</span>
+          </div>
+          <div className={clsx('pd-input-box', { error: emailError })}>
             <input
               type="email"
               inputMode="email"
@@ -316,8 +326,15 @@ function ExportPanel({
               onChange={(e) => onEmailChange(e.target.value)}
             />
           </div>
-          {emailError && <div className="field-error">{emailError}</div>}
-        </div>
+          <div className={clsx('pd-helper', { error: emailError })}>
+            {emailError ?? 'We only use your email to unlock export. No spam.'}
+          </div>
+          <div className="pd-submit-row">
+            <button type="submit" className="pd-submit-btn" disabled={exportSubmitting}>
+              Unlock export
+            </button>
+          </div>
+        </form>
       )}
       <div className="export-actions">
         <button type="button" onClick={onShare} disabled={exportSubmitting}>
@@ -641,6 +658,7 @@ export default function GtmFlywheelPage() {
                 shakeEmail={shakeEmail}
                 exportSubmitting={exportSubmitting}
                 onEmailChange={handleEmailChange}
+                onUnlock={() => void ensureExportUnlocked()}
                 onShare={() => void handleShareLinkGated()}
                 onDownloadPng={() => void handleDownloadPngGated()}
                 onCopyLink={() => void handleCopyLinkGated()}
