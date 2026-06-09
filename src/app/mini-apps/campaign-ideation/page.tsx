@@ -593,63 +593,63 @@ export default function CampaignIdeationPage() {
 
             {appState === 'loading' && (
               <section className="ci-loading">
-              <div className="ci-progress-track">
-                <div className="ci-progress-bar" style={{ width: `${progress}%` }} />
-              </div>
-              <div className="ci-progress-label">{Math.floor(progress)}%</div>
-              <div className="ci-stage-list">
-                {STAGES.map((stage, idx) => (
-                  <div key={stage} className={clsx('ci-stage', { on: idx <= activeStage })}>
-                    <span>{String(idx + 1).padStart(2, '0')}</span>
-                    <strong>{stage}</strong>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+                <div className="ci-progress-track">
+                  <div className="ci-progress-bar" style={{ width: `${progress}%` }} />
+                </div>
+                <div className="ci-progress-label">{Math.floor(progress)}%</div>
+                <div className="ci-stage-list">
+                  {STAGES.map((stage, idx) => (
+                    <div key={stage} className={clsx('ci-stage', { on: idx <= activeStage })}>
+                      <span>{String(idx + 1).padStart(2, '0')}</span>
+                      <strong>{stage}</strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {appState === 'result' && result && (
-            <section className="ci-result-wrap">
-              <div className="ci-report-head">
-                <span className="ci-report-title">Campaign ideas ready</span>
-                <span className="ci-report-ts">{resultTs}</span>
-              </div>
+            {appState === 'result' && result && (
+              <section className="ci-result-wrap">
+                <div className="ci-report-head">
+                  <span className="ci-report-title">Campaign ideas ready</span>
+                  <span className="ci-report-ts">{resultTs}</span>
+                </div>
 
-              <article className="ci-positioning">
-                <span>{'// Positioning summary'}</span>
-                <p>{result.summary.positioning}</p>
-              </article>
+                <article className="ci-positioning">
+                  <span>{'// Positioning summary'}</span>
+                  <p>{result.summary.positioning}</p>
+                </article>
 
-              <div className="ci-grid">
-                {result.ideas.map((idea, index) => (
-                  <IdeaCard key={index} idea={idea} index={index} />
-                ))}
-              </div>
+                <div className="ci-grid">
+                  {result.ideas.map((idea, index) => (
+                    <IdeaCard key={index} idea={idea} index={index} />
+                  ))}
+                </div>
 
-              <div className="ci-footer-actions">
-                <button
-                  className={clsx('ci-copy-all', { copied: copyState === 'copied' })}
-                  type="button"
-                  onClick={handleCopyAll}
-                >
-                  {copyState === 'copied' ? 'Copied' : 'Copy all'}
+                <div className="ci-footer-actions">
+                  <button
+                    className={clsx('ci-copy-all', { copied: copyState === 'copied' })}
+                    type="button"
+                    onClick={handleCopyAll}
+                  >
+                    {copyState === 'copied' ? 'Copied' : 'Copy all'}
+                  </button>
+                  <button className="ci-ghost" type="button" onClick={() => window.print()}>
+                    Print
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {appState === 'error' && (
+              <section className="ci-error">
+                <h2>Couldn&apos;t generate ideas</h2>
+                <p>{errorMsg}</p>
+                <button className="ci-submit" type="button" onClick={handleReset}>
+                  Try again
                 </button>
-                <button className="ci-ghost" type="button" onClick={() => window.print()}>
-                  Print
-                </button>
-              </div>
-            </section>
-          )}
-
-          {appState === 'error' && (
-            <section className="ci-error">
-              <h2>Couldn&apos;t generate ideas</h2>
-              <p>{errorMsg}</p>
-              <button className="ci-submit" type="button" onClick={handleReset}>
-                Try again
-              </button>
-            </section>
-          )}
+              </section>
+            )}
           </section>
         </div>
 

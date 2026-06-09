@@ -12,7 +12,6 @@ const MIN_REQUIRED = 20
 const MAX_REQUIRED = 1500
 const MAX_OPTIONAL = 800
 
-
 const CAMPAIGN_MODEL = 'claude-opus-4-5'
 
 const ALLOWED_EFFORT = new Set(['low', 'medium', 'high'])
@@ -39,8 +38,6 @@ export type CampaignIdeationResult = {
 type SuccessResponse = { ok: true; data: CampaignIdeationResult; cost?: CostBreakdown }
 type ErrorResponse = { ok: false; message: string }
 export type ApiResponse = SuccessResponse | ErrorResponse
-
-
 
 function costFromPass(tokensIn: number, tokensOut: number): CostBreakdown {
   return calculateCost({
@@ -251,7 +248,14 @@ export async function POST(request: Request) {
     const firstPass = await runClaude(anthropic, prompt)
     firstPass.parsed.tokens_in = firstPass.tokensIn
     firstPass.parsed.tokens_out = firstPass.tokensOut
-    return jsonResponse({ ok: true, data: firstPass.parsed, cost: costFromPass(firstPass.tokensIn, firstPass.tokensOut) }, 200)
+    return jsonResponse(
+      {
+        ok: true,
+        data: firstPass.parsed,
+        cost: costFromPass(firstPass.tokensIn, firstPass.tokensOut),
+      },
+      200
+    )
   } catch (firstErr) {
     try {
       const retryPrompt = `${prompt}
