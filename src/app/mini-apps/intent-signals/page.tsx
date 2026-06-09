@@ -432,6 +432,10 @@ export default function IntentSignalsPage() {
 
         <div className="panel-wrap">
           <div className="panel">
+            <span className="corner tl" aria-hidden="true" />
+            <span className="corner tr" aria-hidden="true" />
+            <span className="corner bl" aria-hidden="true" />
+            <span className="corner br" aria-hidden="true" />
             {appState !== 'idle' && (
               <div className="panel-readouts">
                 <div className="prl">
@@ -455,50 +459,68 @@ export default function IntentSignalsPage() {
 
             <div className="panel-body">
               <section className={clsx('state', { active: appState === 'idle' })}>
-                <div className="idle-label">Input target domain</div>
-                <form className="domain-form" onSubmit={handleSubmit} noValidate>
-                  <div
-                    key={`d-${shakeDomain}`}
-                    className={clsx('input-box', { error: domainError })}
-                  >
+                <div className="idle-label">
+                  Company domain <span className="required-mark">*</span>
+                </div>
+                <form
+                  key={`d-${shakeDomain}-e-${shakeEmail}`}
+                  className="pd-form"
+                  onSubmit={handleSubmit}
+                  noValidate
+                  autoComplete="off"
+                >
+                  <div className={clsx('pd-input-box', { error: domainError })}>
                     <input
                       ref={inputRef}
                       type="text"
                       value={domain}
                       placeholder="acme.com"
+                      spellCheck={false}
                       onChange={(event) => {
                         setDomain(event.target.value)
                         if (domainError) setDomainError(null)
                       }}
                       disabled={submitting}
                     />
-                    <button type="submit" disabled={submitting}>
-                      Run scan
-                    </button>
                   </div>
-                  {domainError ? <p className="field-error">{domainError}</p> : null}
-                  <div className="input-field" style={{ marginTop: 14 }}>
-                    <label>
-                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-                    </label>
-                    <div
-                      key={`e-${shakeEmail}`}
-                      className={clsx('input-box', { error: emailError })}
-                    >
-                      <input
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
-                        placeholder="you@company.com"
-                        value={email}
-                        disabled={submitting}
-                        onChange={(event) => {
-                          setEmail(event.target.value)
-                          if (emailError) setEmailError(null)
-                        }}
-                      />
-                    </div>
-                    {emailError ? <div className="field-error">{emailError}</div> : null}
+                  <div className={clsx('pd-helper', { error: domainError })}>
+                    {domainError ?? 'Enter a target domain, e.g. acme.com'}
+                  </div>
+                  <div className="idle-label">
+                    Work email <span className="required-mark">*</span>
+                  </div>
+                  <div className={clsx('pd-input-box', { error: emailError })}>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={email}
+                      disabled={submitting}
+                      onChange={(event) => {
+                        setEmail(event.target.value)
+                        if (emailError) setEmailError(null)
+                      }}
+                    />
+                  </div>
+                  <div className={clsx('pd-helper', { error: emailError })}>
+                    {emailError ?? 'We send the report to your work email. No spam.'}
+                  </div>
+                  <div className="pd-submit-row">
+                    <button type="submit" className="pd-submit-btn" disabled={submitting}>
+                      Run scan
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="M13 5l7 7-7 7" />
+                      </svg>
+                    </button>
                   </div>
                 </form>
               </section>
