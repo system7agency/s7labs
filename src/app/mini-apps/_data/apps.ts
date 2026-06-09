@@ -19,6 +19,7 @@ export type AppThumb =
   | 'emailopt'
   | 'flywheel'
   | 'intents'
+  | 'liprofile'
   | 'roi'
   | 'techfind'
 
@@ -631,6 +632,37 @@ export const APPS: MiniApp[] = [
         'Collector architecture supports swapping in paid intent vendors; could merge with Outbound Trigger Radar and add scheduled re-scans.',
     },
     interest_context: 'intent-signals',
+  },
+  {
+    id: 'linkedin-profile-reviewer',
+    author: 'YA',
+    name: 'LinkedIn Profile Reviewer',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm'],
+    short_description:
+      'Paste a LinkedIn profile URL or copy-paste your profile text. Get a scored review with rewrite-ready tips for headline, About, experience, and more.',
+    tags: ['linkedin', 'profile', 'personal brand', 'gtm', 'ai'],
+    thumb: 'liprofile',
+    launch_url: '/mini-apps/linkedin-profile-reviewer',
+    learn_more: {
+      what_it_does:
+        'Reviews a LinkedIn profile from a URL scrape or pasted text, scores each section (headline, About, experience, skills, recommendations, photo & banner), and returns five ranked actions with specific rewrite-ready suggestions.',
+      how_it_works: {
+        inputs: ['LinkedIn profile URL or pasted profile text'],
+        outputs: [
+          'overall profile score',
+          'section scores and verdicts',
+          'rewrite-ready suggestions',
+          'top 5 ranked actions',
+        ],
+      },
+      who_its_for:
+        'Founders, sellers, and marketers who want a fast, honest LinkedIn audit with concrete copy improvements — not generic advice.',
+      build_potential:
+        'Could track score over time, compare against role benchmarks, and generate full section rewrites on demand.',
+    },
+    interest_context: 'linkedin-profile-reviewer',
   },
   {
     id: 'outbound-radar',

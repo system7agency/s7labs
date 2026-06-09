@@ -275,6 +275,14 @@ export function CardThumb({ thumb }: CardThumbProps) {
           <span className="fw-node fw-node-4" />
         </div>
       )
+    case 'liprofile':
+      return (
+        <div className="card-thumb thumb-liprofile">
+          <span className="lp-ring" />
+          <span className="lp-avatar" />
+          <span className="lp-score">72</span>
+        </div>
+      )
     case 'roi':
       return (
         <div className="card-thumb thumb-roi">
