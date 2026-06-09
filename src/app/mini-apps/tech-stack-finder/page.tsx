@@ -233,7 +233,6 @@ export default function TechStackFinderPage() {
   const [shakeKey, setShakeKey] = useState(0)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<TechStackFinderResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -355,23 +354,25 @@ export default function TechStackFinderPage() {
       const normalized = trimDomain(domain)
       if (!normalized || !/^(?:[a-z0-9-]+\.)+[a-z]{2,63}$/i.test(normalized)) {
         setInputError('Enter a valid domain like acme.com')
-        setShakeKey((k) => k + 1)
         valid = false
+      } else {
+        setInputError(null)
       }
       const emailClean = email.trim().toLowerCase()
       if (!emailClean) {
         setEmailError('Please enter your work email.')
-        setShakeEmail((k) => k + 1)
         valid = false
       } else if (!EMAIL_REGEX.test(emailClean)) {
         setEmailError('Please enter a valid email.')
-        setShakeEmail((k) => k + 1)
         valid = false
+      } else {
+        setEmailError(null)
       }
-      if (!valid) return
+      if (!valid) {
+        setShakeKey((k) => k + 1)
+        return
+      }
 
-      setInputError(null)
-      setEmailError(null)
       setSubmitting(true)
       setResult(null)
       setErrorMsg('')
@@ -394,14 +395,14 @@ export default function TechStackFinderPage() {
         }
         if (!res.ok || !json.ok || !json.submissionId) {
           setEmailError(json.error || "Couldn't save your info. Try again.")
-          setShakeEmail((k) => k + 1)
+          setShakeKey((k) => k + 1)
           setSubmitting(false)
           return
         }
         submissionId = json.submissionId
       } catch {
         setEmailError("Couldn't save your info. Try again.")
-        setShakeEmail((k) => k + 1)
+        setShakeKey((k) => k + 1)
         setSubmitting(false)
         return
       }
@@ -510,6 +511,11 @@ export default function TechStackFinderPage() {
 
         <div className="tsf-panel-wrap">
           <div className="tsf-panel">
+            <span className="corner tl" />
+            <span className="corner tr" />
+            <span className="corner bl" />
+            <span className="corner br" />
+
             {appState !== 'idle' ? (
               <div className="tsf-readouts">
                 <span>
@@ -528,9 +534,17 @@ export default function TechStackFinderPage() {
 
             <div className="tsf-panel-body">
               <section className={clsx('tsf-state', { active: appState === 'idle' })}>
-                <div className="tsf-input-label">Target domain</div>
-                <form key={shakeKey} onSubmit={handleSubmit} noValidate>
-                  <div className="tsf-domain-form">
+                <div className="idle-label">
+                  Target domain <span className="required-mark">*</span>
+                </div>
+                <form
+                  key={shakeKey}
+                  className="pd-form"
+                  noValidate
+                  onSubmit={handleSubmit}
+                  autoComplete="off"
+                >
+                  <div className={clsx('pd-input-box', { error: inputError })}>
                     <input
                       ref={domainInputRef}
                       type="text"
@@ -543,35 +557,45 @@ export default function TechStackFinderPage() {
                         if (inputError) setInputError(null)
                       }}
                     />
-                    <button type="submit" disabled={submitting}>
-                      Analyze
-                    </button>
                   </div>
-                  <p className={clsx('tsf-helper', { error: Boolean(inputError) })}>
+                  <div className={clsx('pd-helper', { error: inputError })}>
                     {inputError ?? 'Examples: stripe.com · shopify.com · linear.app'}
-                  </p>
-                  <div className="input-field" style={{ marginTop: 14 }}>
-                    <label>
-                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-                    </label>
-                    <div
-                      key={`e-${shakeEmail}`}
-                      className={clsx('input-box', { error: emailError })}
-                    >
-                      <input
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
-                        placeholder="you@company.com"
-                        value={email}
-                        disabled={submitting}
-                        onChange={(event) => {
-                          setEmail(event.target.value)
-                          if (emailError) setEmailError(null)
-                        }}
-                      />
-                    </div>
-                    {emailError ? <div className="field-error">{emailError}</div> : null}
+                  </div>
+                  <div className="idle-label">
+                    Work email <span className="required-mark">*</span>
+                  </div>
+                  <div className={clsx('pd-input-box', { error: emailError })}>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={email}
+                      disabled={submitting}
+                      onChange={(event) => {
+                        setEmail(event.target.value)
+                        if (emailError) setEmailError(null)
+                      }}
+                    />
+                  </div>
+                  <div className={clsx('pd-helper', { error: emailError })}>
+                    {emailError ?? 'We send the report to your work email. No spam.'}
+                  </div>
+                  <div className="pd-submit-row">
+                    <button type="submit" className="pd-submit-btn" disabled={submitting}>
+                      Analyze Stack
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="M13 5l7 7-7 7" />
+                      </svg>
+                    </button>
                   </div>
                 </form>
               </section>
@@ -634,12 +658,16 @@ export default function TechStackFinderPage() {
                       <div className="tsf-actions">
                         <button
                           type="button"
-                          className={clsx({ done: copyState === 'done' })}
+                          className={clsx('tsf-action-btn', { done: copyState === 'done' })}
                           onClick={handleCopy}
                         >
                           {copyState === 'done' ? 'Copied' : 'Copy summary'}
                         </button>
-                        <button type="button" className="secondary" onClick={handleReset}>
+                        <button
+                          type="button"
+                          className={clsx('tsf-action-btn', 'secondary')}
+                          onClick={handleReset}
+                        >
                           Analyze another
                         </button>
                       </div>
