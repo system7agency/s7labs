@@ -12,11 +12,27 @@ const costSchema = z.object({
   costUsd: z.number().nonnegative(),
 })
 
-const bodySchema = z.object({
+// Success path: completion of a pending/processing submission with the model output.
+const successBodySchema = z.object({
   submissionId: z.string().uuid(),
   output: z.record(z.string(), z.unknown()),
   cost: costSchema.optional(),
+  status: z.literal('completed').optional(),
+  errorMessage: z.never().optional(),
 })
+
+// Failure path: explicit marker so pending rows don't sit forever when the
+// downstream model call errors out. SYS-543 introduced this so we can wire
+// SYS-545 email delivery off the `failed` status as well.
+const failureBodySchema = z.object({
+  submissionId: z.string().uuid(),
+  status: z.literal('failed'),
+  errorMessage: z.string().max(500).optional(),
+  output: z.record(z.string(), z.unknown()).optional(),
+  cost: costSchema.optional(),
+})
+
+const bodySchema = z.union([failureBodySchema, successBodySchema])
 
 function errorResponse(message: string, status: number) {
   return NextResponse.json({ ok: false, error: message }, { status })
@@ -35,13 +51,12 @@ export async function POST(request: Request) {
     return errorResponse('Invalid input', 400)
   }
 
-  const { submissionId, output, cost } = parsed.data
   const supabase = getSupabaseServerClient()
 
   const { data: existing, error: lookupErr } = await supabase
     .from('submissions')
     .select('id, status')
-    .eq('id', submissionId)
+    .eq('id', parsed.data.submissionId)
     .maybeSingle()
 
   if (lookupErr) {
@@ -56,10 +71,19 @@ export async function POST(request: Request) {
   }
 
   const update: Record<string, unknown> = {
-    output,
-    status: 'completed',
     completed_at: new Date().toISOString(),
   }
+
+  if (parsed.data.status === 'failed') {
+    update.status = 'failed'
+    if (parsed.data.errorMessage) update.error_message = parsed.data.errorMessage
+    if (parsed.data.output) update.output = parsed.data.output
+  } else {
+    update.status = 'completed'
+    update.output = parsed.data.output
+  }
+
+  const cost = parsed.data.cost
   if (cost) {
     update.model_used = cost.model
     update.input_tokens = cost.inputTokens
@@ -70,7 +94,7 @@ export async function POST(request: Request) {
   const { error: updateErr } = await supabase
     .from('submissions')
     .update(update)
-    .eq('id', submissionId)
+    .eq('id', parsed.data.submissionId)
 
   if (updateErr) {
     console.error('[leads/complete] update error', updateErr)
