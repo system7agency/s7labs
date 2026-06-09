@@ -246,7 +246,7 @@ export default function AutomationBlueprintPage() {
   const [shakeInput, setShakeInput] = useState(0)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [marketingConsent, setMarketingConsent] = useState(false)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<BlueprintResult | null>(null)

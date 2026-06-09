@@ -247,7 +247,7 @@ export default function TechStackRecommenderPage() {
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [marketingConsent, setMarketingConsent] = useState(false)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
 
   const [activeStage, setActiveStage] = useState(-1)

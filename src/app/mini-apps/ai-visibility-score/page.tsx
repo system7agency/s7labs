@@ -193,7 +193,7 @@ export default function AiVisibilityScorePage() {
   const [domainError, setDomainError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [marketingConsent, setMarketingConsent] = useState(false)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [shakeKey, setShakeKey] = useState(0)
   const [submitting, setSubmitting] = useState(false)

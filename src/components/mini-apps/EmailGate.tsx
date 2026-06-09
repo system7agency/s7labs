@@ -51,7 +51,7 @@ export function EmailGate({ miniAppSlug, pattern, teaser, children, initialInput
   const [company, setCompany] = useState('')
   const [role, setRole] = useState('')
   const [emailInput, setEmailInput] = useState('')
-  const [marketingConsent, setMarketingConsent] = useState(false)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 

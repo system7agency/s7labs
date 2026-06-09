@@ -150,7 +150,7 @@ export default function PricingDiagnosticPage() {
   const [urlError, setUrlError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [marketingConsent, setMarketingConsent] = useState(false)
+  const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeKey, setShakeKey] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<DiagnosticResult | null>(null)
