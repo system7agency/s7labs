@@ -111,7 +111,7 @@ export default function EmailCopyOptimizerPage() {
   const [bodyError, setBodyError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [shakeEmail, setShakeEmail] = useState(0)
+  const [shakeKey, setShakeKey] = useState(0)
 
   useEffect(() => {
     if (appState !== 'loading') return
@@ -183,11 +183,11 @@ export default function EmailCopyOptimizerPage() {
       const emailClean = email.trim().toLowerCase()
       if (!emailClean) {
         setEmailError('Please enter your work email.')
-        setShakeEmail((k) => k + 1)
+        setShakeKey((k) => k + 1)
         valid = false
       } else if (!EMAIL_REGEX.test(emailClean)) {
         setEmailError('Please enter a valid email.')
-        setShakeEmail((k) => k + 1)
+        setShakeKey((k) => k + 1)
         valid = false
       }
       if (!valid) return
@@ -227,14 +227,14 @@ export default function EmailCopyOptimizerPage() {
         }
         if (!res.ok || !json.ok || !json.submissionId) {
           setEmailError(json.error || "Couldn't save your info. Try again.")
-          setShakeEmail((k) => k + 1)
+          setShakeKey((k) => k + 1)
           setSubmitting(false)
           return
         }
         submissionId = json.submissionId
       } catch {
         setEmailError("Couldn't save your info. Try again.")
-        setShakeEmail((k) => k + 1)
+        setShakeKey((k) => k + 1)
         setSubmitting(false)
         return
       }
@@ -332,8 +332,13 @@ export default function EmailCopyOptimizerPage() {
           </p>
         </section>
 
-        <section className="panel">
-          {appState !== 'input' && (
+        <div className="panel-wrap">
+          <section className="panel">
+            <span className="corner tl" aria-hidden />
+            <span className="corner tr" aria-hidden />
+            <span className="corner bl" aria-hidden />
+            <span className="corner br" aria-hidden />
+            {appState !== 'input' && (
             <div className="panel-readouts">
               <span>
                 <span className="readout-key">sys</span>{' '}
@@ -360,34 +365,51 @@ export default function EmailCopyOptimizerPage() {
 
           <div className="panel-body">
             <section className={clsx('view', { active: appState === 'input' })}>
-              <form className="idle-form" onSubmit={handleSubmit} noValidate>
-                <label htmlFor="eco-subject">Subject</label>
-                <input
-                  id="eco-subject"
-                  type="text"
-                  value={subject}
-                  disabled={submitting}
-                  placeholder="Quick way to unblock outbound this month"
-                  onChange={(event) => {
-                    setSubject(event.target.value)
-                    if (subjectError) setSubjectError(null)
-                  }}
-                />
-                {subjectError ? <p className="field-error">{subjectError}</p> : null}
+              <form
+                key={shakeKey}
+                className="pd-form"
+                onSubmit={handleSubmit}
+                noValidate
+                autoComplete="off"
+              >
+                <div className="idle-label">
+                  Subject <span className="required-mark">*</span>
+                </div>
+                <div className={clsx('pd-input-box', { error: subjectError })}>
+                  <input
+                    id="eco-subject"
+                    type="text"
+                    value={subject}
+                    disabled={submitting}
+                    placeholder="Quick way to unblock outbound this month"
+                    onChange={(event) => {
+                      setSubject(event.target.value)
+                      if (subjectError) setSubjectError(null)
+                    }}
+                  />
+                </div>
+                <div className={clsx('pd-helper', { error: subjectError })}>
+                  {subjectError ?? 'Required · 200 characters max'}
+                </div>
 
-                <label htmlFor="eco-body">Email body</label>
-                <textarea
-                  id="eco-body"
-                  value={body}
-                  disabled={submitting}
-                  placeholder="Paste your draft email here..."
-                  onChange={(event) => {
-                    setBody(event.target.value)
-                    if (bodyError) setBodyError(null)
-                  }}
-                />
-                <div className="body-meta">{body.length} / 4000 chars</div>
-                {bodyError ? <p className="field-error">{bodyError}</p> : null}
+                <div className="idle-label">
+                  Email body <span className="required-mark">*</span>
+                </div>
+                <div className={clsx('pd-input-box', { error: bodyError })}>
+                  <textarea
+                    id="eco-body"
+                    value={body}
+                    disabled={submitting}
+                    placeholder="Paste your draft email here..."
+                    onChange={(event) => {
+                      setBody(event.target.value)
+                      if (bodyError) setBodyError(null)
+                    }}
+                  />
+                </div>
+                <div className={clsx('pd-helper', { error: bodyError })}>
+                  {bodyError ?? `${body.length} / 4000 chars (min 50)`}
+                </div>
 
                 <button
                   type="button"
@@ -400,25 +422,29 @@ export default function EmailCopyOptimizerPage() {
 
                 {showContext && (
                   <div className="context-wrap">
-                    <label htmlFor="eco-goal">Goal (optional)</label>
-                    <input
-                      id="eco-goal"
-                      type="text"
-                      value={goal}
-                      disabled={submitting}
-                      placeholder="Book demos with VP Sales leaders"
-                      onChange={(event) => setGoal(event.target.value)}
-                    />
+                    <div className="idle-label">Goal (optional)</div>
+                    <div className="pd-input-box">
+                      <input
+                        id="eco-goal"
+                        type="text"
+                        value={goal}
+                        disabled={submitting}
+                        placeholder="Book demos with VP Sales leaders"
+                        onChange={(event) => setGoal(event.target.value)}
+                      />
+                    </div>
 
-                    <label htmlFor="eco-audience">Audience (optional)</label>
-                    <input
-                      id="eco-audience"
-                      type="text"
-                      value={audience}
-                      disabled={submitting}
-                      placeholder="Mid-market B2B SaaS"
-                      onChange={(event) => setAudience(event.target.value)}
-                    />
+                    <div className="idle-label">Audience (optional)</div>
+                    <div className="pd-input-box">
+                      <input
+                        id="eco-audience"
+                        type="text"
+                        value={audience}
+                        disabled={submitting}
+                        placeholder="Mid-market B2B SaaS"
+                        onChange={(event) => setAudience(event.target.value)}
+                      />
+                    </div>
 
                     <span className="chip-label">Tone</span>
                     <div className="tone-chips">
@@ -436,33 +462,44 @@ export default function EmailCopyOptimizerPage() {
                   </div>
                 )}
 
-                <div className="input-field" style={{ marginTop: 14 }}>
-                  <label>
-                    Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-                  </label>
-                  <div key={`e-${shakeEmail}`} className={clsx('input-box', { error: emailError })}>
-                    <input
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={email}
-                      disabled={submitting}
-                      onChange={(event) => {
-                        setEmail(event.target.value)
-                        if (emailError) setEmailError(null)
-                      }}
-                    />
-                  </div>
-                  {emailError ? <div className="field-error">{emailError}</div> : null}
+                <div className="idle-label">
+                  Work email <span className="required-mark">*</span>
+                </div>
+                <div className={clsx('pd-input-box', { error: emailError })}>
+                  <input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    disabled={submitting}
+                    onChange={(event) => {
+                      setEmail(event.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
+                </div>
+                <div className={clsx('pd-helper', { error: emailError })}>
+                  {emailError ?? 'We send the report to your work email. No spam.'}
                 </div>
 
-                <div className="form-actions">
+                <div className="pd-submit-row">
                   <button type="button" className="secondary-btn" onClick={handleTrySample}>
                     Try a sample
                   </button>
-                  <button type="submit" className="primary-btn" disabled={submitting}>
+                  <button type="submit" className="pd-submit-btn" disabled={submitting}>
                     Optimize copy
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="M13 5l7 7-7 7" />
+                    </svg>
                   </button>
                 </div>
               </form>
@@ -551,7 +588,8 @@ export default function EmailCopyOptimizerPage() {
               </button>
             </section>
           </div>
-        </section>
+          </section>
+        </div>
 
         <HowItWorks
           title={
