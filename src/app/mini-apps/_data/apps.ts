@@ -17,6 +17,7 @@ export type AppThumb =
   | 'bulkemail'
   | 'campaign'
   | 'emailopt'
+  | 'flywheel'
   | 'intents'
 
 export type MiniApp = {
@@ -507,6 +508,32 @@ export const APPS: MiniApp[] = [
         'Could save briefs, pair with ROI Calculator scenarios, and generate full launch copy per idea.',
     },
     interest_context: 'campaign-ideation',
+  },
+  {
+    id: 'gtm-flywheel',
+    author: 'YA',
+    name: 'GTM Flywheel',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'software'],
+    short_description:
+      'Drag GTM motions onto a canvas, connect them into a compounding loop, and share your flywheel as a link or PNG — free to build, email to export.',
+    tags: ['gtm', 'strategy', 'flywheel', 'canvas', 'visual'],
+    thumb: 'flywheel',
+    launch_url: '/mini-apps/gtm-flywheel',
+    learn_more: {
+      what_it_does:
+        'An interactive canvas for mapping how inbound, outbound, content, partnerships, and other motions feed each other over time. Build from a template or scratch, connect nodes with directional edges, and export a shareable link or PNG.',
+      how_it_works: {
+        inputs: ['GTM motion library', 'custom labels and notes', 'connections between motions'],
+        outputs: ['visual flywheel map', 'shareable URL', 'PNG export'],
+      },
+      who_its_for:
+        'Founders and GTM leaders who need to visualize how their motions compound — and share that story with the team or board.',
+      build_potential:
+        'Could add AI-suggested connections, team collaboration, and CRM-linked motion health scores.',
+    },
+    interest_context: 'gtm-flywheel',
   },
   {
     id: 'intent-signals',

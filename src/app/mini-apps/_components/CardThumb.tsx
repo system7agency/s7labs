@@ -265,5 +265,15 @@ export function CardThumb({ thumb }: CardThumbProps) {
           </div>
         </div>
       )
+    case 'flywheel':
+      return (
+        <div className="card-thumb thumb-flywheel">
+          <span className="fw-ring fw-ring-outer" />
+          <span className="fw-node fw-node-1" />
+          <span className="fw-node fw-node-2" />
+          <span className="fw-node fw-node-3" />
+          <span className="fw-node fw-node-4" />
+        </div>
+      )
   }
 }
