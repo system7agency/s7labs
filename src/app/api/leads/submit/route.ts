@@ -15,6 +15,7 @@ const bodySchema = z.object({
   input: z.record(z.string(), z.unknown()),
   output: z.record(z.string(), z.unknown()).optional(),
   enrichment: enrichmentSchema,
+  marketingConsent: z.boolean().optional(),
 })
 
 function errorResponse(message: string, status: number) {
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
   const email = parsed.data.email.trim().toLowerCase()
   const { miniAppSlug, input, output } = parsed.data
   const enrichment = parsed.data.enrichment ?? {}
+  const marketingConsent = parsed.data.marketingConsent ?? false
 
   if (!EMAIL_REGEX.test(email)) {
     return errorResponse('Please enter a valid email', 400)
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
 
   const { data: existingLead, error: leadLookupErr } = await supabase
     .from('leads')
-    .select('id, enrichment')
+    .select('id, enrichment, marketing_consent, unsubscribed_at')
     .ilike('email', email)
     .maybeSingle()
 
@@ -89,12 +91,38 @@ export async function POST(request: Request) {
       ...((existingLead.enrichment as Record<string, unknown> | null) ?? {}),
       ...enrichment,
     }
+    const nowIso = new Date().toISOString()
+    const existingConsent = Boolean(
+      (existingLead as { marketing_consent?: boolean }).marketing_consent
+    )
+    const wasUnsubscribed = Boolean(
+      (existingLead as { unsubscribed_at?: string | null }).unsubscribed_at
+    )
+
+    const updatePayload: Record<string, unknown> = {
+      last_seen_at: nowIso,
+      enrichment: mergedEnrichment,
+    }
+
+    // Never silently revoke consent. Only upgrade or resubscribe.
+    if (marketingConsent === true) {
+      if (wasUnsubscribed) {
+        updatePayload.marketing_consent = true
+        updatePayload.marketing_consent_at = nowIso
+        updatePayload.marketing_consent_source = 'email_gate_v2_resubscribe'
+        updatePayload.unsubscribed_at = null
+      } else if (existingConsent === false) {
+        updatePayload.marketing_consent = true
+        updatePayload.marketing_consent_at = nowIso
+        updatePayload.marketing_consent_source = 'email_gate_v2'
+      }
+      // else: already consented, no-op
+    }
+    // incoming false: NO-OP (never revoke silently)
+
     const { error: updateErr } = await supabase
       .from('leads')
-      .update({
-        last_seen_at: new Date().toISOString(),
-        enrichment: mergedEnrichment,
-      })
+      .update(updatePayload)
       .eq('id', existingLead.id)
     if (updateErr) {
       console.error('[leads/submit] lead update error', updateErr)
@@ -102,12 +130,16 @@ export async function POST(request: Request) {
     }
     leadId = existingLead.id as string
   } else {
+    const nowIso = new Date().toISOString()
     const { data: inserted, error: insertErr } = await supabase
       .from('leads')
       .insert({
         email,
         first_source: miniAppSlug,
         enrichment,
+        marketing_consent: marketingConsent,
+        marketing_consent_at: marketingConsent ? nowIso : null,
+        marketing_consent_source: marketingConsent ? 'email_gate_v2' : null,
       })
       .select('id')
       .single()
