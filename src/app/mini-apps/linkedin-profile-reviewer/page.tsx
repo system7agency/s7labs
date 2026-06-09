@@ -17,7 +17,7 @@ import type {
 } from '@/app/api/mini-apps/linkedin-profile-reviewer/route'
 import { PageScripts } from './PageScripts'
 
-type AppState = 'input' | 'loading' | 'result' | 'error'
+type AppState = 'idle' | 'loading' | 'result' | 'error'
 type InputMode = 'url' | 'paste'
 
 const STAGES = [
@@ -156,7 +156,7 @@ function buildPlainText(result: ProfileReviewResult): string {
 }
 
 export default function LinkedInProfileReviewerPage() {
-  const [appState, setAppState] = useState<AppState>('input')
+  const [appState, setAppState] = useState<AppState>('idle')
   const [mode, setMode] = useState<InputMode>('url')
   const [url, setUrl] = useState('')
   const [profileText, setProfileText] = useState('')
@@ -197,7 +197,7 @@ export default function LinkedInProfileReviewerPage() {
   }, [])
 
   useEffect(() => {
-    if (appState !== 'input') return
+    if (appState !== 'idle') return
     const t = setTimeout(() => {
       if (mode === 'url') {
         urlInputRef.current?.focus()
@@ -288,7 +288,7 @@ export default function LinkedInProfileReviewerPage() {
 
   const resetToInput = useCallback(() => {
     clearTimers()
-    setAppState('input')
+    setAppState('idle')
     setInputError(null)
     setErrorCode(null)
     setErrorMsg('')
@@ -446,7 +446,11 @@ export default function LinkedInProfileReviewerPage() {
 
         <div className="panel-wrap">
           <div className="panel">
-            {(appState === 'loading' || appState === 'result') && (
+            <span className="corner tl" aria-hidden="true" />
+            <span className="corner tr" aria-hidden="true" />
+            <span className="corner bl" aria-hidden="true" />
+            <span className="corner br" aria-hidden="true" />
+            {appState !== 'idle' && (
               <div className="panel-readouts">
                 <div className="pr-left">
                   <span className="stat-key">mode</span>
@@ -463,7 +467,7 @@ export default function LinkedInProfileReviewerPage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('state', { active: appState === 'input' })}>
+              <section className={clsx('lpr-state', { active: appState === 'idle' })}>
                 <div className="mode-toggle">
                   <button
                     type="button"
@@ -487,51 +491,74 @@ export default function LinkedInProfileReviewerPage() {
                   </button>
                 </div>
 
-                <form noValidate onSubmit={handleSubmit}>
+                <form className="pd-form" noValidate onSubmit={handleSubmit}>
                   {mode === 'url' ? (
-                    <div key={`u-${shakeInput}`} className="field">
-                      <label htmlFor="linkedin-url">Profile URL</label>
-                      <input
-                        id="linkedin-url"
-                        ref={urlInputRef}
-                        className={clsx({ error: !!inputError })}
-                        type="url"
-                        placeholder="https://www.linkedin.com/in/username"
-                        value={url}
-                        disabled={submitting}
-                        onChange={(e) => setUrl(e.target.value)}
-                      />
-                      <p className="helper">Only individual profile URLs are supported.</p>
-                    </div>
+                    <>
+                      <div className="idle-label">
+                        Profile URL <span className="required-mark">*</span>
+                      </div>
+                      <div
+                        key={`u-${shakeInput}`}
+                        className={clsx('pd-input-box', { error: inputError })}
+                      >
+                        <input
+                          id="linkedin-url"
+                          ref={urlInputRef}
+                          type="url"
+                          placeholder="https://www.linkedin.com/in/username"
+                          spellCheck={false}
+                          value={url}
+                          disabled={submitting}
+                          onChange={(e) => {
+                            setUrl(e.target.value)
+                            if (inputError) setInputError(null)
+                          }}
+                        />
+                      </div>
+                      <div className={clsx('pd-helper', { error: inputError })}>
+                        {inputError ?? 'Only individual profile URLs are supported.'}
+                      </div>
+                    </>
                   ) : (
-                    <div key={`t-${shakeInput}`} className="field">
-                      <label htmlFor="profile-text">Profile text</label>
-                      <textarea
-                        id="profile-text"
-                        ref={textAreaRef}
-                        className={clsx({ error: !!inputError })}
-                        placeholder="Paste headline, about, experience, skills, and recommendations here..."
-                        value={profileText}
-                        disabled={submitting}
-                        onChange={(e) => setProfileText(e.target.value)}
-                      />
-                      <p className="helper">{profileText.length} chars (100-8000)</p>
-                    </div>
+                    <>
+                      <div className="idle-label">
+                        Profile text <span className="required-mark">*</span>
+                      </div>
+                      <div
+                        key={`t-${shakeInput}`}
+                        className={clsx('pd-input-box textarea-box', { error: inputError })}
+                      >
+                        <textarea
+                          id="profile-text"
+                          ref={textAreaRef}
+                          placeholder="Paste headline, about, experience, skills, and recommendations here..."
+                          value={profileText}
+                          disabled={submitting}
+                          onChange={(e) => {
+                            setProfileText(e.target.value)
+                            if (inputError) setInputError(null)
+                          }}
+                        />
+                      </div>
+                      <div className={clsx('pd-helper', { error: inputError })}>
+                        {inputError ?? `${profileText.length} chars (100-8000)`}
+                      </div>
+                    </>
                   )}
 
-                  {inputError && <p className="field-error">{inputError}</p>}
-
-                  <div key={`e-${shakeEmail}`} className="field" style={{ marginTop: 14 }}>
-                    <label htmlFor="work-email">
-                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-                    </label>
+                  <div className="idle-label">
+                    Work email <span className="required-mark">*</span>
+                  </div>
+                  <div
+                    key={`e-${shakeEmail}`}
+                    className={clsx('pd-input-box', { error: emailError })}
+                  >
                     <input
                       id="work-email"
                       type="email"
                       inputMode="email"
                       autoComplete="email"
                       placeholder="you@company.com"
-                      className={clsx({ error: !!emailError })}
                       value={email}
                       disabled={submitting}
                       onChange={(e) => {
@@ -539,16 +566,30 @@ export default function LinkedInProfileReviewerPage() {
                         if (emailError) setEmailError(null)
                       }}
                     />
-                    {emailError && <p className="field-error">{emailError}</p>}
                   </div>
-
-                  <button className="submit-btn" type="submit" disabled={submitting}>
-                    Review profile
-                  </button>
+                  <div className={clsx('pd-helper', { error: emailError })}>
+                    {emailError ?? 'We send the report to your work email. No spam.'}
+                  </div>
+                  <div className="pd-submit-row">
+                    <button type="submit" className="pd-submit-btn" disabled={submitting}>
+                      Review profile
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="M13 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
                 </form>
               </section>
 
-              <section className={clsx('state', { active: appState === 'loading' })}>
+              <section className={clsx('lpr-state', { active: appState === 'loading' })}>
                 <div className="progress-track">
                   <div className="progress-bar" style={{ width: `${progressPct}%` }} />
                 </div>
@@ -573,7 +614,7 @@ export default function LinkedInProfileReviewerPage() {
                 </div>
               </section>
 
-              <section className={clsx('state', { active: appState === 'result' })}>
+              <section className={clsx('lpr-state', { active: appState === 'result' })}>
                 {result && (
                   <>
                     <div className="result-head">
@@ -644,7 +685,9 @@ export default function LinkedInProfileReviewerPage() {
                 )}
               </section>
 
-              <section className={clsx('state error', { active: appState === 'error' })}>
+              <section
+                className={clsx('lpr-state', 'error-state', { active: appState === 'error' })}
+              >
                 <h2>Review failed</h2>
                 <p>{errorMsg}</p>
                 <div className="error-actions">
@@ -657,7 +700,7 @@ export default function LinkedInProfileReviewerPage() {
                       className="primary-btn"
                       onClick={() => {
                         setMode('paste')
-                        setAppState('input')
+                        setAppState('idle')
                         setInputError(null)
                       }}
                     >
