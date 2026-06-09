@@ -12,6 +12,9 @@
   --good: #4fcf8a;
   --warn: #f5a623;
   --bad: #ff5c7a;
+  --error: #ff5c7a;
+  --mono:
+    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
 
   background: var(--bg);
   color: var(--text);
@@ -76,12 +79,61 @@
   line-height: 1.55;
 }
 
+.campaign-ideation .panel-wrap {
+  position: relative;
+}
+
 .campaign-ideation .panel {
+  position: relative;
   background: linear-gradient(180deg, rgba(22, 22, 27, 0.86), rgba(16, 16, 20, 0.86));
   border: 1px solid var(--border);
   border-radius: 14px;
   backdrop-filter: blur(12px);
   overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 30px 80px -30px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.campaign-ideation .corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--blue);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
+.campaign-ideation .corner.tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+  border-top-left-radius: 14px;
+}
+.campaign-ideation .corner.tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+  border-top-right-radius: 14px;
+}
+.campaign-ideation .corner.bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+  border-bottom-left-radius: 14px;
+}
+.campaign-ideation .corner.br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+  border-bottom-right-radius: 14px;
 }
 
 .campaign-ideation .panel-topline {
@@ -95,61 +147,145 @@
   text-transform: uppercase;
 }
 
-.campaign-ideation .ci-form,
+.campaign-ideation .pd-form,
 .campaign-ideation .ci-loading,
 .campaign-ideation .ci-result-wrap,
 .campaign-ideation .ci-error {
   padding: 22px;
 }
 
-.campaign-ideation .ci-form {
-  display: grid;
-  gap: 14px;
-}
-
-.campaign-ideation .ci-field {
-  display: grid;
-  gap: 8px;
-}
-
-.campaign-ideation .ci-field-label {
-  font-size: 11px;
-  letter-spacing: 0.12em;
+.campaign-ideation .idle-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.campaign-ideation .idle-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+.campaign-ideation .pd-form .idle-label {
+  margin-top: 14px;
+}
+.campaign-ideation .pd-form .idle-label:first-of-type {
+  margin-top: 0;
+}
+.campaign-ideation .required-mark {
+  color: var(--error);
+  font-size: 13px;
+  letter-spacing: 0;
 }
 
-.campaign-ideation .ci-field textarea {
-  width: 100%;
-  resize: vertical;
-  min-height: 80px;
-  border-radius: 10px;
+.campaign-ideation .pd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.campaign-ideation .pd-input-box {
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--border);
-  padding: 12px 13px;
-  background: #0d0f13;
+  border-radius: 10px;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+.campaign-ideation .pd-input-box:focus-within {
+  border-color: rgba(79, 140, 255, 0.55);
+  background: rgba(79, 140, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12);
+}
+.campaign-ideation .pd-input-box.error {
+  border-color: rgba(255, 92, 122, 0.6);
+}
+.campaign-ideation .pd-input-box input,
+.campaign-ideation .pd-input-box textarea {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
   color: var(--text);
-  font: inherit;
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 14px 16px;
+  letter-spacing: -0.005em;
   line-height: 1.5;
+  resize: vertical;
 }
-
-.campaign-ideation .ci-field textarea:focus {
-  outline: 2px solid rgba(79, 140, 255, 0.34);
-  border-color: var(--blue);
+.campaign-ideation .pd-input-box textarea {
+  min-height: 80px;
 }
-
-.campaign-ideation .ci-meta {
+.campaign-ideation .pd-input-box input::placeholder,
+.campaign-ideation .pd-input-box textarea::placeholder {
+  color: var(--text-faint, #3a3b42);
+}
+.campaign-ideation .pd-input-box input:disabled,
+.campaign-ideation .pd-input-box textarea:disabled {
+  color: var(--text-muted);
+}
+.campaign-ideation .pd-helper {
   font-size: 12px;
   color: var(--text-muted);
 }
-
-.campaign-ideation .ci-meta.error {
-  color: var(--bad);
+.campaign-ideation .pd-helper.error {
+  color: var(--error);
+}
+.campaign-ideation .pd-submit-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.campaign-ideation .pd-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, #5a98ff, #4f8cff);
+  color: #060608;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 200ms ease,
+    opacity 200ms ease;
+  box-shadow: 0 6px 22px -8px rgba(79, 140, 255, 0.7);
+}
+.campaign-ideation .pd-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -10px rgba(79, 140, 255, 0.9);
+}
+.campaign-ideation .pd-submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.campaign-ideation .pd-submit-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .campaign-ideation .ci-chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: -2px;
 }
 
 .campaign-ideation .ci-chip {
@@ -174,7 +310,6 @@
   flex-wrap: wrap;
 }
 
-.campaign-ideation .ci-submit,
 .campaign-ideation .ci-ghost,
 .campaign-ideation .ci-copy-all {
   border-radius: 8px;
@@ -422,7 +557,7 @@
 
 @media print {
   .campaign-ideation .panel-topline,
-  .campaign-ideation .ci-form,
+  .campaign-ideation .pd-form,
   .campaign-ideation .ci-loading,
   .campaign-ideation .ci-footer-actions,
   .campaign-ideation .ci-result-footer,
@@ -452,11 +587,12 @@
   }
 }
 
-.campaign-ideation .input-box input:-webkit-autofill,
-.campaign-ideation .input-box input:-webkit-autofill:hover,
-.campaign-ideation .input-box input:-webkit-autofill:focus {
+.campaign-ideation .pd-input-box input:-webkit-autofill,
+.campaign-ideation .pd-input-box input:-webkit-autofill:hover,
+.campaign-ideation .pd-input-box input:-webkit-autofill:focus,
+.campaign-ideation .pd-input-box input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-1) inset;
   caret-color: var(--text);
   transition: background-color 9999s ease-in-out 0s;
 }

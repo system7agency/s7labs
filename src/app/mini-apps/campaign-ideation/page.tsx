@@ -142,37 +142,47 @@ function buildPlainText(result: CampaignIdeationResult) {
 
 function Field({
   label,
+  required,
   value,
   placeholder,
   onChange,
   disabled,
   minChars,
   error,
+  helper,
   rows = 4,
 }: {
   label: string
+  required?: boolean
   value: string
   placeholder: string
   onChange: (next: string) => void
   disabled: boolean
   minChars?: number
   error?: string | null
+  helper?: string
   rows?: number
 }) {
+  const defaultHelper = `${value.length} chars${minChars ? ` (min ${minChars})` : ''}`
   return (
-    <label className="ci-field">
-      <span className="ci-field-label">{label}</span>
-      <textarea
-        value={value}
-        rows={rows}
-        disabled={disabled}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <span className={clsx('ci-meta', { error: !!error })}>
-        {error ?? `${value.length} chars${minChars ? ` (min ${minChars})` : ''}`}
-      </span>
-    </label>
+    <>
+      <div className="idle-label">
+        {label}
+        {required ? <span className="required-mark">*</span> : null}
+      </div>
+      <div className={clsx('pd-input-box', { error: !!error })}>
+        <textarea
+          value={value}
+          rows={rows}
+          disabled={disabled}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </div>
+      <div className={clsx('pd-helper', { error: !!error })}>
+        {error ?? helper ?? defaultHelper}
+      </div>
+    </>
   )
 }
 
@@ -246,7 +256,7 @@ export default function CampaignIdeationPage() {
   const [audError, setAudError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
-  const [shakeEmail, setShakeEmail] = useState(0)
+  const [shakeKey, setShakeKey] = useState(0)
 
   const stageTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -321,11 +331,11 @@ export default function CampaignIdeationPage() {
       const emailClean = email.trim().toLowerCase()
       if (!emailClean) {
         setEmailError('Please enter your work email.')
-        setShakeEmail((k) => k + 1)
+        setShakeKey((k) => k + 1)
         valid = false
       } else if (!EMAIL_REGEX.test(emailClean)) {
         setEmailError('Please enter a valid email.')
-        setShakeEmail((k) => k + 1)
+        setShakeKey((k) => k + 1)
         valid = false
       }
       if (!valid) return
@@ -360,14 +370,14 @@ export default function CampaignIdeationPage() {
         }
         if (!leadRes.ok || !leadJson.ok || !leadJson.submissionId) {
           setEmailError(leadJson.error || "Couldn't save your info. Try again.")
-          setShakeEmail((k) => k + 1)
+          setShakeKey((k) => k + 1)
           setSubmitting(false)
           return
         }
         submissionId = leadJson.submissionId
       } catch {
         setEmailError("Couldn't save your info. Try again.")
-        setShakeEmail((k) => k + 1)
+        setShakeKey((k) => k + 1)
         setSubmitting(false)
         return
       }
@@ -465,98 +475,124 @@ export default function CampaignIdeationPage() {
           </p>
         </section>
 
-        <section className="panel">
-          <div className="panel-topline">
-            <span>campaign ideation engine</span>
-            <span>{clock}</span>
-          </div>
+        <div className="panel-wrap">
+          <section className="panel">
+            <span className="corner tl" aria-hidden />
+            <span className="corner tr" aria-hidden />
+            <span className="corner bl" aria-hidden />
+            <span className="corner br" aria-hidden />
+            <div className="panel-topline">
+              <span>campaign ideation engine</span>
+              <span>{clock}</span>
+            </div>
 
-          {appState === 'idle' && (
-            <form className="ci-form" onSubmit={handleSubmit} noValidate>
-              <Field
-                label="Product / Offer *"
-                value={product}
-                placeholder="What you sell, for whom, and why it matters."
-                onChange={setProduct}
-                disabled={submitting}
-                minChars={20}
-                error={prodError}
-                rows={4}
-              />
-              <Field
-                label="Audience *"
-                value={audience}
-                placeholder="ICP, role, company stage, and pain points."
-                onChange={setAudience}
-                disabled={submitting}
-                minChars={20}
-                error={audError}
-                rows={4}
-              />
-              <Field
-                label="Current Motion (optional)"
-                value={currentMotion}
-                placeholder="How you currently go to market."
-                onChange={setCurrentMotion}
-                disabled={submitting}
-                rows={3}
-              />
-              <div className="ci-chip-row">
-                {MOTION_CHIPS.map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    className={clsx('ci-chip', { active: selectedMotion === chip })}
-                    onClick={() => {
-                      setSelectedMotion(chip)
-                      setCurrentMotion(chip)
-                    }}
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
-              <Field
-                label="Primary Goal (optional)"
-                value={goal}
-                placeholder="What outcome matters most in this cycle."
-                onChange={setGoal}
-                disabled={submitting}
-                rows={3}
-              />
-
-              <label key={`e-${shakeEmail}`} className={clsx('ci-field', 'input-box', { error: !!emailError })}>
-                <span className="ci-field-label">
-                  Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-                </span>
-                <input
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  placeholder="you@company.com"
-                  value={email}
+            {appState === 'idle' && (
+              <form
+                key={shakeKey}
+                className="pd-form"
+                onSubmit={handleSubmit}
+                noValidate
+                autoComplete="off"
+              >
+                <Field
+                  label="Product / Offer"
+                  required
+                  value={product}
+                  placeholder="What you sell, for whom, and why it matters."
+                  onChange={setProduct}
                   disabled={submitting}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    if (emailError) setEmailError(null)
-                  }}
+                  minChars={20}
+                  error={prodError}
+                  rows={4}
                 />
-                {emailError && <span className={clsx('ci-meta', { error: true })}>{emailError}</span>}
-              </label>
+                <Field
+                  label="Audience"
+                  required
+                  value={audience}
+                  placeholder="ICP, role, company stage, and pain points."
+                  onChange={setAudience}
+                  disabled={submitting}
+                  minChars={20}
+                  error={audError}
+                  rows={4}
+                />
+                <Field
+                  label="Current Motion (optional)"
+                  value={currentMotion}
+                  placeholder="How you currently go to market."
+                  onChange={setCurrentMotion}
+                  disabled={submitting}
+                  rows={3}
+                />
+                <div className="ci-chip-row">
+                  {MOTION_CHIPS.map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      className={clsx('ci-chip', { active: selectedMotion === chip })}
+                      onClick={() => {
+                        setSelectedMotion(chip)
+                        setCurrentMotion(chip)
+                      }}
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+                <Field
+                  label="Primary Goal (optional)"
+                  value={goal}
+                  placeholder="What outcome matters most in this cycle."
+                  onChange={setGoal}
+                  disabled={submitting}
+                  rows={3}
+                />
 
-              <div className="ci-actions">
-                <button className="ci-submit" type="submit" disabled={submitting}>
-                  Generate ideas
-                </button>
-                <button className="ci-ghost" type="button" onClick={handleTrySample}>
-                  Try a sample
-                </button>
-              </div>
-            </form>
-          )}
+                <div className="idle-label">
+                  Work email <span className="required-mark">*</span>
+                </div>
+                <div className={clsx('pd-input-box', { error: emailError })}>
+                  <input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    disabled={submitting}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
+                </div>
+                <div className={clsx('pd-helper', { error: emailError })}>
+                  {emailError ?? 'We send the report to your work email. No spam.'}
+                </div>
 
-          {appState === 'loading' && (
-            <section className="ci-loading">
+                <div className="pd-submit-row">
+                  <button className="ci-ghost" type="button" onClick={handleTrySample}>
+                    Try a sample
+                  </button>
+                  <button className="pd-submit-btn" type="submit" disabled={submitting}>
+                    Generate ideas
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="M13 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {appState === 'loading' && (
+              <section className="ci-loading">
               <div className="ci-progress-track">
                 <div className="ci-progress-bar" style={{ width: `${progress}%` }} />
               </div>
@@ -614,7 +650,8 @@ export default function CampaignIdeationPage() {
               </button>
             </section>
           )}
-        </section>
+          </section>
+        </div>
 
         {appState === 'result' && (
           <section className="ci-result-footer">
