@@ -1,98 +1,121 @@
-import {
-  ResultCard,
-  BigScore,
-  GradePill,
-  KeyValueGrid,
-  BulletList,
-  SubScoreCards,
-} from '@/app/results/[submissionId]/_components/ResultPrimitives'
+'use client'
 
-// Loose typing: AVS output is large and the route re-exports zod-inferred types.
-// We type only the fields we render.
+import type { AVSResult } from '@/app/api/mini-apps/ai-visibility-score/route'
+import '../page-styles.css'
+
 export type AiVisibilityScoreInput = { domain?: string }
-export type AiVisibilityScoreOutput = {
-  avs?: number
-  brand?: string
-  grade?: string
-  domain?: string
-  category?: string
-  one_liner?: string
-  short_read?: Array<{ diagnosis: string; sub_score: string }>
-  sub_scores?: Array<{ key: string; name: string; grade: string; score: number; coverage?: string }>
-  biggest_drag?: { why: string; sub_score: string }
-  fix_recommendations?: string[]
+export type AiVisibilityScoreOutput = AVSResult
+
+type Props = {
+  input: AiVisibilityScoreInput
+  output: AiVisibilityScoreOutput
+  /**
+   * When true, render only the inner result body (shareable hero + sub-score
+   * grid + short-read block) without surrounding panel wrappers or the
+   * result-footer. The inline mini-app page provides those itself and keeps
+   * its own export buttons. The standalone `/results/[id]` route uses the
+   * default (full) render.
+   */
+  bare?: boolean
 }
 
-type Props = { input: AiVisibilityScoreInput; output: AiVisibilityScoreOutput }
+export function gradeClass(grade: string): string {
+  const g = grade.toLowerCase()
+  if (g === 'a' || g === 'b') return 'grade-a'
+  if (g === 'c') return 'grade-c'
+  return 'grade-d'
+}
 
-export function AiVisibilityScoreResult({ input, output }: Props) {
+export function buildAiVisibilityScorePlainText(r: AVSResult): string {
+  const lines = [
+    `AI Visibility Score — ${r.domain}`,
+    `Brand: ${r.brand} · ${r.category}`,
+    '='.repeat(60),
+    '',
+    `AVS: ${r.avs}/100 (${r.grade})`,
+    `"${r.one_liner}"`,
+    '',
+    '// SUB-SCORES',
+    ...r.sub_scores.map((s) => `  ${s.name}: ${s.score}/100 (${s.grade}) — ${s.coverage}`),
+    '',
+    '// BIGGEST DRAG',
+    `${r.biggest_drag.sub_score}: ${r.biggest_drag.why}`,
+    '',
+    '// SHORT READ',
+    ...r.short_read.map((s) => `  ${s.sub_score}: ${s.diagnosis}`),
+  ]
+  return lines.join('\n')
+}
+
+function AvsHero({ result }: { result: AVSResult }) {
+  return (
+    <div className="shareable-block">
+      <div className="avs-hero">
+        <div className="avs-hero-top">
+          <div>
+            <div className={`avs-number ${gradeClass(result.grade)}`}>{result.avs}</div>
+            <div className="avs-of">/100</div>
+          </div>
+          <span className={`grade-badge ${gradeClass(result.grade)}`}>{result.grade}</span>
+        </div>
+        <p className="avs-one-liner">&ldquo;{result.one_liner}&rdquo;</p>
+        <div className="avs-meta">
+          <span className="type-pill">{result.brand}</span>
+          <span className="type-pill">{result.category}</span>
+        </div>
+      </div>
+      <div className="subscore-grid">
+        {result.sub_scores.map((s) => (
+          <div key={s.key} className={`subscore-card ${gradeClass(s.grade)}`}>
+            <div className="subscore-name">{s.name}</div>
+            <div>
+              <span className="subscore-value">{s.score}</span>
+              <span className="subscore-grade">{s.grade}</span>
+            </div>
+            <div className="coverage-note">{s.coverage}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ResultBody({ result }: { result: AVSResult }) {
   return (
     <>
-      <ResultCard label="// AI VISIBILITY SCORE">
-        <h1 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600 }}>
-          {output.brand ?? input.domain ?? 'Brand'}
-        </h1>
-        <p style={{ margin: '0 0 16px', color: 'var(--color-fg-dim)', fontSize: 13 }}>
-          {output.domain ?? input.domain} · {output.category ?? '—'}
+      <AvsHero result={result} />
+      <div className="short-read-block">
+        <div className="section-header">{"// what's dragging your score down"}</div>
+        <p className="biggest-drag">
+          <span>{result.biggest_drag.sub_score}</span>: {result.biggest_drag.why}
         </p>
-        {output.one_liner && (
-          <p style={{ margin: '0 0 20px', fontStyle: 'italic' }}>“{output.one_liner}”</p>
-        )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
-          <BigScore value={output.avs ?? '—'} suffix="/100" />
-          {output.grade && <GradePill grade={output.grade} />}
-        </div>
-      </ResultCard>
-
-      {output.sub_scores && output.sub_scores.length > 0 && (
-        <ResultCard label="// SUB-SCORES">
-          <SubScoreCards
-            scores={output.sub_scores.map((s) => ({
-              label: s.name,
-              value: `${s.score} · ${s.grade}`,
-            }))}
-          />
-        </ResultCard>
-      )}
-
-      {output.biggest_drag && (
-        <ResultCard label="// BIGGEST DRAG">
-          <KeyValueGrid
-            rows={[
-              { key: 'SUB-SCORE', value: output.biggest_drag.sub_score },
-              { key: 'WHY', value: output.biggest_drag.why },
-            ]}
-          />
-        </ResultCard>
-      )}
-
-      {output.short_read && output.short_read.length > 0 && (
-        <ResultCard label="// SHORT READ">
-          {output.short_read.map((r, i) => (
-            <div key={i} style={{ marginBottom: 12 }}>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 11,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  color: '#04e3ee',
-                  marginBottom: 4,
-                }}
-              >
-                {r.sub_score}
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{r.diagnosis}</p>
-            </div>
-          ))}
-        </ResultCard>
-      )}
-
-      {output.fix_recommendations && output.fix_recommendations.length > 0 && (
-        <ResultCard label="// FIX RECOMMENDATIONS">
-          <BulletList items={output.fix_recommendations} />
-        </ResultCard>
-      )}
+        {result.short_read.map((item) => (
+          <div key={item.sub_score} className="short-read-item">
+            <h4>{item.sub_score}</h4>
+            <p>{item.diagnosis}</p>
+          </div>
+        ))}
+      </div>
     </>
+  )
+}
+
+export function AiVisibilityScoreResult({ input, output, bare = false }: Props) {
+  void input
+  if (bare) {
+    return <ResultBody result={output} />
+  }
+  return (
+    <div className="ai-visibility-score">
+      <div className="panel-wrap">
+        <div className="panel">
+          <div className="panel-body">
+            <section className="avs-state active">
+              <ResultBody result={output} />
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
