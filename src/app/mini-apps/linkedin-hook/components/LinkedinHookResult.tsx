@@ -79,8 +79,9 @@ export function buildLinkedinHookPlainText(r: HookResult): string {
 }
 
 function PureHookCard({ hook, isBest }: { hook: Hook; isBest: boolean }) {
+  const cls = isBest ? 'hook-card best' : 'hook-card'
   return (
-    <div className={`hook-card${isBest ? 'best' : ''}`}>
+    <div className={cls}>
       <div className="hook-card-header">
         <span className="hook-angle">{`// ${hook.angle}`}</span>
         <div className="hook-badges">
