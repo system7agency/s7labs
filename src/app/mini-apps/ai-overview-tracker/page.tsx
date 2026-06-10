@@ -9,9 +9,13 @@ import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
-import type { KeywordStatus, ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/aio-types'
+import type { ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/aio-types'
 import { parseScanApiResponse } from '@/lib/mini-apps/aio-types'
 import { GatedBreakdown } from './GatedBreakdown'
+import {
+  AiOverviewTrackerResult,
+  buildAiOverviewTrackerPlainText,
+} from './components/AiOverviewTrackerResult'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
@@ -218,43 +222,9 @@ function keywordsFromText(value: string): string[] {
   return out
 }
 
-function statusLabel(status: KeywordStatus): string {
-  if (status === 'blind_spot') return 'Blind spot'
-  if (status === 'no_aio') return 'No AI Overview'
-  if (status === 'error') return 'Error'
-  if (status === 'ghost') return 'Ghost'
-  return 'Cited'
-}
-
 function fmtTs(d: Date) {
   const p = (n: number) => String(n).padStart(2, '0')
   return `AIO · ${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} · ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`
-}
-
-function buildPlainText(free: ScanFree, gated: ScanGated | null): string {
-  const lines = [
-    `AI Overview Tracker — ${free.domain}`,
-    `Location: ${free.location}`,
-    '='.repeat(60),
-    '',
-    free.one_liner,
-    '',
-    `Citation rate: ${free.citation_rate}%`,
-    `AIO trigger rate: ${free.aio_trigger_rate}%`,
-    `Blind spots: ${free.blind_spot_count}`,
-    `Ghost keywords: ${free.ghost_count}`,
-    '',
-    '// KEYWORDS',
-    ...free.keyword_statuses.map((k) => `  ${k.keyword}: ${statusLabel(k.status)}`),
-  ]
-  if (gated) {
-    lines.push('', '// CITATION LEADERS')
-    gated.citation_leaders.forEach((l) => lines.push(`  ${l.domain}: ${l.appearances}`))
-    lines.push('', '// RECOMMENDATIONS')
-    gated.recommendations.forEach((r, i) => lines.push(`  ${i + 1}. ${r}`))
-    lines.push('', `Tokens: ${(gated.tokens_in + gated.tokens_out).toLocaleString()}`)
-  }
-  return lines.join('\n')
 }
 
 export default function AiOverviewTrackerPage() {
@@ -549,10 +519,10 @@ export default function AiOverviewTrackerPage() {
     if (!free) return
     setExportState('copying')
     try {
-      await navigator.clipboard.writeText(buildPlainText(free, gated))
+      await navigator.clipboard.writeText(buildAiOverviewTrackerPlainText(free, gated))
     } catch {
       const ta = document.createElement('textarea')
-      ta.value = buildPlainText(free, gated)
+      ta.value = buildAiOverviewTrackerPlainText(free, gated)
       ta.style.cssText = 'position:fixed;opacity:0'
       document.body.appendChild(ta)
       ta.select()
@@ -834,64 +804,8 @@ export default function AiOverviewTrackerPage() {
               <section className={clsx('aio-state', { active: appState === 'result' })}>
                 {free && scanId && (
                   <>
-                    <div ref={shareableRef} className="shareable-block">
-                      <div className="one-liner-block">
-                        <p className="one-liner-text">&ldquo;{free.one_liner}&rdquo;</p>
-                        <div className="one-liner-meta">
-                          <span className="project-name">{free.domain}</span>
-                          <span className="type-pill">{free.verdict_label}</span>
-                        </div>
-                      </div>
-                      <div className="score-row">
-                        <div className="score-card">
-                          <div className="sc-label">Citation rate</div>
-                          <div className="sc-value">
-                            <span className="sc-big">{free.citation_rate}%</span>
-                          </div>
-                          <div className="sc-delta">
-                            {free.aio_trigger_rate}% of your keywords trigger an AI Overview
-                          </div>
-                        </div>
-                        <div className="score-card">
-                          <div className="sc-label">Gap snapshot</div>
-                          <div className="stat-grid">
-                            <div>
-                              <span>Keywords</span>
-                              <strong>{free.keywords_scored}</strong>
-                            </div>
-                            <div>
-                              <span>AI Overviews</span>
-                              <strong>
-                                {Math.round((free.keywords_scored * free.aio_trigger_rate) / 100)}
-                              </strong>
-                            </div>
-                            <div>
-                              <span>Blind spots</span>
-                              <strong>{free.blind_spot_count}</strong>
-                            </div>
-                            <div>
-                              <span>Ghosts</span>
-                              <strong>{free.ghost_count}</strong>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="keyword-strip">
-                        {(free.keyword_statuses ?? []).map((k) => (
-                          <div key={k.keyword} className="keyword-row">
-                            <span className="keyword-label">{k.keyword}</span>
-                            <span className={`status-pill is-${k.status}`}>
-                              {statusLabel(k.status)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {free.top_cited_competitor && (
-                        <div className="hook-line">
-                          {free.top_cited_competitor.domain} is cited in{' '}
-                          {free.top_cited_competitor.appearances} of your keywords.
-                        </div>
-                      )}
+                    <div ref={shareableRef}>
+                      <AiOverviewTrackerResult bare input={leadInput} output={{ free, scanId }} />
                     </div>
                     <GatedBreakdown
                       scanId={scanId}
