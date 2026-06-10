@@ -87,8 +87,12 @@ function getChangedFolderNames() {
 function extractSlug(source) {
   // Inline pattern: a POST body to /api/leads/submit with `miniAppSlug: '<slug>'`.
   // Matches both `miniAppSlug: 'slug'` and `miniAppSlug: "slug"`.
-  const m = source.match(/miniAppSlug:\s*["']([a-z0-9-]+)["']/)
-  return m ? m[1] : null
+  const inline = source.match(/miniAppSlug:\s*["']([a-z0-9-]+)["']/)
+  if (inline) return inline[1]
+  // Overlay pattern: <EmailGate miniAppSlug="slug" ... /> wraps lead capture.
+  // Used by bulk-email-finder and any other future overlay-flow mini-apps.
+  const overlay = source.match(/<EmailGate[\s\S]*?\bminiAppSlug=["']([a-z0-9-]+)["']/)
+  return overlay ? overlay[1] : null
 }
 
 function hasHowItWorks(source) {
@@ -109,6 +113,19 @@ function hasInlineEmailGate(source) {
     /from\s+['"]@\/lib\/leads\/disposable['"]/.test(source) &&
     /['"]\/api\/leads\/submit['"]/.test(source)
   )
+}
+
+function hasEmailGateOverlay(source) {
+  // The overlay pattern delegates lead capture to <EmailGate>, which itself
+  // imports EMAIL_REGEX and POSTs to /api/leads/submit internally.
+  return (
+    /from\s+['"]@\/components\/mini-apps\/EmailGate['"]/.test(source) &&
+    /<EmailGate[\s>]/.test(source)
+  )
+}
+
+function hasLeadCapturePattern(source) {
+  return hasInlineEmailGate(source) || hasEmailGateOverlay(source)
 }
 
 // --- supabase query --------------------------------------------------------
@@ -165,11 +182,13 @@ for (const folder of folders) {
   const pageSource = readFileSync(join(folder, 'page.tsx'), 'utf8')
   const problems = []
 
-  if (!hasInlineEmailGate(pageSource)) {
+  if (!hasLeadCapturePattern(pageSource)) {
     problems.push(
-      `must use the inline email gate pattern: import EMAIL_REGEX from ` +
-        `@/lib/leads/disposable AND POST to /api/leads/submit BEFORE the ` +
-        `model call. See ${DOC_LINK}.`
+      `must use a lead capture pattern: either the inline gate ` +
+        `(import EMAIL_REGEX from @/lib/leads/disposable AND POST to ` +
+        `/api/leads/submit BEFORE the model call) OR the EmailGate ` +
+        `overlay (import <EmailGate> from @/components/mini-apps/EmailGate). ` +
+        `See ${DOC_LINK}.`
     )
   }
 
