@@ -12,7 +12,12 @@ import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWor
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
-import type { ApiResponse, EmailFinderResult } from '@/app/api/mini-apps/email-finder/route'
+import type {
+  ApiResponse,
+  EmailFinderResult as EmailFinderResultData,
+} from '@/app/api/mini-apps/email-finder/route'
+
+import { EmailFinderResult } from './components/EmailFinderResult'
 import { PageScripts } from './PageScripts'
 
 // ---------- feature flag ----------
@@ -164,7 +169,7 @@ function LookupRunner({
   onReset: () => void
 }) {
   const [state, setState] = useState<LookupState>('loading')
-  const [result, setResult] = useState<EmailFinderResult | null>(null)
+  const [result, setResult] = useState<EmailFinderResultData | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [progressPct, setProgressPct] = useState(0)
   const [loadingPct, setLoadingPct] = useState('0%')
@@ -400,112 +405,69 @@ function LookupRunner({
       {/* Result */}
       <section className={clsx('ef-state', { active: state === 'result' })}>
         {result && (
-          <>
-            <div className="result-head">
-              <span className="title">Email found</span>
-              <span className="ts-label">{resultTs}</span>
-            </div>
-
-            <div className="ef-email-hero">
-              <div className="ef-email-row">
-                <span className="ef-email">{result.email}</span>
-                <span
-                  className={clsx('ef-confidence', {
-                    high: result.confidence === 'HIGH',
-                    medium: result.confidence === 'MEDIUM',
-                    low: result.confidence === 'LOW',
-                  })}
-                >
-                  {result.confidence}
-                </span>
-                <button
-                  type="button"
-                  className={clsx('ef-copy-btn', { copied })}
-                  onClick={handleCopy}
-                  aria-label="Copy email to clipboard"
-                >
-                  {copied ? (
-                    <>
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                      </svg>
-                      Copy
-                    </>
-                  )}
+          <EmailFinderResult
+            bare
+            input={{ name: input.name, company: input.company }}
+            output={result}
+            tsLabel={resultTs}
+            renderCopyButton={() => (
+              <button
+                type="button"
+                className={clsx('ef-copy-btn', { copied })}
+                onClick={handleCopy}
+                aria-label="Copy email to clipboard"
+              >
+                {copied ? (
+                  <>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                    Copy
+                  </>
+                )}
+              </button>
+            )}
+            renderFooter={() => (
+              <div className="ef-result-footer">
+                <button type="button" className="ef-run-again" onClick={onReset}>
+                  Run another
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="M13 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
-            </div>
-
-            <div className="ef-meta-grid">
-              <div className="ef-meta-item">
-                <span className="ef-meta-label">Full name</span>
-                <span className="ef-meta-value">{result.fullName}</span>
-              </div>
-              <div className="ef-meta-item">
-                <span className="ef-meta-label">Title</span>
-                <span className="ef-meta-value">{result.title ?? '—'}</span>
-              </div>
-              <div className="ef-meta-item">
-                <span className="ef-meta-label">Company</span>
-                <span className="ef-meta-value">
-                  {result.companyName || result.companyDomain || '—'}
-                </span>
-              </div>
-              <div className="ef-meta-item">
-                <span className="ef-meta-label">LinkedIn</span>
-                <span className="ef-meta-value">
-                  {result.linkedinUrl ? (
-                    <a href={result.linkedinUrl} target="_blank" rel="noopener noreferrer">
-                      View profile →
-                    </a>
-                  ) : (
-                    '—'
-                  )}
-                </span>
-              </div>
-            </div>
-
-            <div className="ef-verified-line">Verified via Apollo</div>
-
-            <div className="ef-result-footer">
-              <button type="button" className="ef-run-again" onClick={onReset}>
-                Run another
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 12h14" />
-                  <path d="M13 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </>
+            )}
+          />
         )}
       </section>
 

@@ -18,6 +18,8 @@ import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { EmailGate } from '@/components/mini-apps/EmailGate'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { SubmitOnce } from '@/components/mini-apps/SubmitOnce'
+
+import { BulkEmailFinderResult } from './components/BulkEmailFinderResult'
 import { PageScripts } from './PageScripts'
 
 type AppState = 'upload' | 'mapping' | 'gate' | 'processing' | 'results' | 'error'
@@ -682,42 +684,24 @@ export default function BulkEmailFinderPage() {
               output={{ stage: 'job_completed', total, found: foundCount }}
             />
           ) : null}
-          <h2>
-            {foundCount}/{total} found
-          </h2>
-          <p>Review statuses below and export the full CSV.</p>
-          <div className="preview-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Company</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((row) => (
-                  <tr key={`${row.row}-${row.company}-${row.firstName}`}>
-                    <td>{`${row.firstName} ${row.lastName}`.trim()}</td>
-                    <td>{row.company}</td>
-                    <td>{row.email ?? '—'}</td>
-                    <td>
-                      <span className={`chip ${row.status}`}>{row.status}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="actions">
-            <button type="button" className="ghost" onClick={handleReset}>
-              New run
-            </button>
-            <button type="button" onClick={() => void handleDownload()} disabled={downloadBusy}>
-              {downloadBusy ? 'Preparing…' : 'Download CSV'}
-            </button>
-          </div>
+          <BulkEmailFinderResult
+            bare
+            input={{ jobId, rows_count: total }}
+            output={{ total, found: foundCount, results }}
+            rows={results}
+            total={total}
+            found={foundCount}
+            renderFooter={() => (
+              <div className="actions">
+                <button type="button" className="ghost" onClick={handleReset}>
+                  New run
+                </button>
+                <button type="button" onClick={() => void handleDownload()} disabled={downloadBusy}>
+                  {downloadBusy ? 'Preparing…' : 'Download CSV'}
+                </button>
+              </div>
+            )}
+          />
         </>
       )}
     </section>

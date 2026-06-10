@@ -14,13 +14,17 @@ import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
   ApiResponse,
-  Department,
-  FindPeopleResult,
+  FindPeopleResult as FindPeopleResultData,
   Person,
-  Seniority,
 } from '@/app/api/mini-apps/find-people/types'
 
-import { EmployeeCard } from './components/EmployeeCard'
+import {
+  DEPARTMENTS,
+  FindPeopleResult,
+  PAGE_INCREMENT,
+  SENIORITIES,
+} from './components/FindPeopleResult'
+
 import { PageScripts } from './PageScripts'
 
 // ---------- kill-switch ----------
@@ -35,25 +39,6 @@ const APP_ENABLED = process.env.NEXT_PUBLIC_FIND_PEOPLE_ENABLED === 'true'
 // ---------- constants ----------
 
 type AppState = 'idle' | 'loading' | 'result' | 'no-result' | 'error'
-
-const SENIORITIES: Array<'All' | Seniority> = [
-  'All',
-  'C-suite',
-  'VP',
-  'Director',
-  'Manager',
-  'Individual',
-]
-const DEPARTMENTS: Array<'All' | Department> = [
-  'All',
-  'Engineering',
-  'Sales',
-  'Marketing',
-  'Product',
-  'Operations',
-  'Other',
-]
-const PAGE_INCREMENT = 25
 
 const STAGES = [
   {
@@ -199,7 +184,7 @@ export default function FindPeoplePage() {
   const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-  const [result, setResult] = useState<FindPeopleResult | null>(null)
+  const [result, setResult] = useState<FindPeopleResultData | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [submittedCompany, setSubmittedCompany] = useState('')
 
@@ -646,80 +631,74 @@ export default function FindPeoplePage() {
               {/* RESULT */}
               <section className={clsx('fp-state', { active: appState === 'result' })}>
                 {result && (
-                  <>
-                    <div className="fp-result-head">
-                      <div>
-                        <span className="company">{result.companyName}</span>
-                        <span className="domain">{result.companyDomain}</span>
-                      </div>
-                      <span className="count">
-                        Showing {visiblePeople.length} of ~{result.totalEmployees} employees
-                      </span>
-                    </div>
+                  <FindPeopleResult
+                    bare
+                    input={{ company: submittedCompany }}
+                    output={result}
+                    visiblePeople={visiblePeople}
+                    countLabel={`Showing ${visiblePeople.length} of ~${result.totalEmployees} employees`}
+                    renderFilters={() => (
+                      <>
+                        <FilterPills
+                          label="Seniority"
+                          values={SENIORITIES}
+                          active={seniority}
+                          onChange={(v) => {
+                            setSeniority(v)
+                            setVisibleCount(PAGE_INCREMENT)
+                          }}
+                        />
+                        <FilterPills
+                          label="Department"
+                          values={DEPARTMENTS}
+                          active={department}
+                          onChange={(v) => {
+                            setDepartment(v)
+                            setVisibleCount(PAGE_INCREMENT)
+                          }}
+                        />
+                      </>
+                    )}
+                    renderFooter={() => (
+                      <>
+                        <div className="fp-list-footer">
+                          <span className="fp-pagination-info">
+                            {visiblePeople.length} of {filteredPeople.length} shown
+                          </span>
+                          <button
+                            type="button"
+                            className="fp-load-more"
+                            disabled={!canLoadMore}
+                            onClick={() =>
+                              setVisibleCount((c) =>
+                                Math.min(c + PAGE_INCREMENT, filteredPeople.length, 100)
+                              )
+                            }
+                          >
+                            {canLoadMore ? 'Load more' : 'No more results'}
+                          </button>
+                        </div>
 
-                    <div className="fp-filters">
-                      <FilterPills
-                        label="Seniority"
-                        values={SENIORITIES}
-                        active={seniority}
-                        onChange={(v) => {
-                          setSeniority(v)
-                          setVisibleCount(PAGE_INCREMENT)
-                        }}
-                      />
-                      <FilterPills
-                        label="Department"
-                        values={DEPARTMENTS}
-                        active={department}
-                        onChange={(v) => {
-                          setDepartment(v)
-                          setVisibleCount(PAGE_INCREMENT)
-                        }}
-                      />
-                    </div>
-
-                    <div className="fp-list">
-                      {visiblePeople.map((p, i) => (
-                        <EmployeeCard key={`${p.fullName}-${i}`} person={p} linkable />
-                      ))}
-                    </div>
-
-                    <div className="fp-list-footer">
-                      <span className="fp-pagination-info">
-                        {visiblePeople.length} of {filteredPeople.length} shown
-                      </span>
-                      <button
-                        type="button"
-                        className="fp-load-more"
-                        disabled={!canLoadMore}
-                        onClick={() =>
-                          setVisibleCount((c) =>
-                            Math.min(c + PAGE_INCREMENT, filteredPeople.length, 100)
-                          )
-                        }
-                      >
-                        {canLoadMore ? 'Load more' : 'No more results'}
-                      </button>
-                    </div>
-
-                    <div className="fp-list-footer">
-                      <button type="button" className="fp-load-more" onClick={handleReset}>
-                        Search another company
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          style={{ width: 12, height: 12, marginLeft: 6 }}
-                        >
-                          <path d="M5 12h14" />
-                          <path d="M13 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
-                  </>
+                        <div className="fp-list-footer">
+                          <button type="button" className="fp-load-more" onClick={handleReset}>
+                            Search another company
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ width: 12, height: 12, marginLeft: 6 }}
+                            >
+                              <path d="M5 12h14" />
+                              <path d="M13 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  />
                 )}
               </section>
 
