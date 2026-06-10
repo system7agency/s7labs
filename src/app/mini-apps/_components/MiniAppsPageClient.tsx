@@ -23,8 +23,9 @@ const STATUS_ORDER: Record<MiniApp['status'], number> = {
   live: 0,
   new: 1,
   beta: 2,
-  prototype: 3,
-  'coming-soon': 4,
+  draft: 3,
+  prototype: 4,
+  'coming-soon': 5,
 }
 
 export function MiniAppsPageClient() {

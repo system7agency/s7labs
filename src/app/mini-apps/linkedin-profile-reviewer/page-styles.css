@@ -1,23 +1,7 @@
 .linkedin-profile-reviewer {
-  --bg: #060608;
-  --surface-1: #101014;
-  --surface-2: #17171c;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --text: #f2f3f5;
-  --text-dim: #9799a4;
-  --text-muted: #666975;
-  --text-faint: #444754;
-  --blue: #4f8cff;
-  --cyan: #04e3ee;
-  --success: #4fcf8a;
-  --warning: #f5a623;
-  --danger: #ff5c7a;
-  --mono:
-    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
-  --sans:
-    var(--font-sans), 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
-    Arial, sans-serif;
+  /* Design tokens come from the canonical .mini-app-scope layer in mini-app-tokens.css. */
+  /* --danger has no canonical alias; map it to the canonical --error (same value). */
+  --danger: var(--error);
 
   background: var(--bg);
   color: var(--text);

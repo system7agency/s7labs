@@ -9,6 +9,7 @@ import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { ApiResponse, StackResult } from '@/app/api/mini-apps/tech-stack-recommender/route'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 import {
@@ -144,7 +145,6 @@ export default function TechStackRecommenderPage() {
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<StackResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -394,70 +394,8 @@ export default function TechStackRecommenderPage() {
     setTokens(null)
   }, [clearTimers])
 
-  const handleCopy = useCallback(async () => {
-    if (!result) return
-    setExportState('copying')
-    try {
-      await navigator.clipboard.writeText(buildTechStackRecommenderPlainText(result))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildTechStackRecommenderPlainText(result)
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setTimeout(() => setExportState('idle'), 1800)
-  }, [result])
-
-  const captureDiagram = useCallback(async () => {
-    if (!stackDiagramRef.current || !result) return null
-    const { default: html2canvas } = await import('html2canvas')
-    return html2canvas(stackDiagramRef.current, {
-      backgroundColor: '#101014',
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    })
-  }, [result])
-
-  const handleDownloadPng = useCallback(async () => {
-    if (!result) return
-    setExportState('png')
-    try {
-      const canvas = await captureDiagram()
-      if (!canvas) return
-      const a = document.createElement('a')
-      a.download = `stack-${result.project_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`
-      a.href = canvas.toDataURL('image/png')
-      a.click()
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result, captureDiagram])
-
-  const handleDownloadPdf = useCallback(async () => {
-    if (!result) return
-    setExportState('pdf')
-    try {
-      const canvas = await captureDiagram()
-      if (!canvas) return
-      const { jsPDF } = await import('jspdf')
-      const imgW = 190
-      const imgH = (canvas.height / canvas.width) * imgW
-      const pdf = new jsPDF({ orientation: imgH > imgW ? 'portrait' : 'landscape', unit: 'mm' })
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-      pdf.save(`stack-${result.project_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`)
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result, captureDiagram])
-
   return (
-    <div className="tech-stack-recommender">
+    <div className="tech-stack-recommender mini-app-scope">
       <AuroraBackground />
 
       <Header />
@@ -660,93 +598,14 @@ export default function TechStackRecommenderPage() {
 
                     <div className="result-footer">
                       <div className="export-actions">
-                        <button
-                          className={clsx('export-btn', { done: exportState === 'copying' })}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? (
-                            <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
-                            </>
-                          ) : (
-                            <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                              </svg>
-                              Copy
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={clsx('export-btn', { loading: exportState === 'png' })}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                          title="Exports architecture card"
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                          title="Exports architecture card"
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
+                        <ExportControls
+                          resultRef={stackDiagramRef}
+                          slug="tech-stack-recommender"
+                          appName="Tech Stack Recommender"
+                          filename={`stack-${result.project_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`}
+                          subject={result.project_name}
+                          plainText={buildTechStackRecommenderPlainText(result)}
+                        />
                         <button className="run-again" type="button" onClick={handleReset}>
                           New project
                           <svg

@@ -1,5 +1,8 @@
 .consentRow {
-  margin-top: 14px;
+  /* No top margin: the preceding field's canonical margin-bottom (20px) owns
+   * the gap, so the field → consent spacing matches field → field. A top margin
+   * here stacks on top of it and creates an oversized gap. */
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -140,15 +143,6 @@
     animation: none;
     background-image: none;
   }
-}
-
-.consentHint {
-  font-family: var(--font-mono, 'Geist Mono', ui-monospace, monospace);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-fg-dim, var(--fg-muted, rgba(255, 255, 255, 0.5)));
-  padding-left: 28px;
 }
 
 @media (prefers-reduced-motion: reduce) {

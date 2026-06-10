@@ -4,26 +4,7 @@
  */
 
 .website-roast {
-  --bg: #060608;
-  --surface-1: #101014;
-  --surface-2: #16161b;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --text: #f2f3f5;
-  --text-dim: #9395a0;
-  --text-muted: #5e6068;
-  --text-faint: #3a3b42;
-  --blue: #4f8cff;
-  --cyan: #04e3ee;
-  --error: #ff5c7a;
-  --warning: #f5a623;
-  --success: #4fcf8a;
-  --mono:
-    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
-  --sans:
-    var(--font-sans), 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
-    Arial, sans-serif;
-
+  /* Design tokens come from the canonical .mini-app-scope layer in mini-app-tokens.css. */
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
@@ -427,39 +408,8 @@
   justify-content: flex-end;
   margin-top: 4px;
 }
-.website-roast .submit-btn {
-  border: 0;
-  background: linear-gradient(180deg, #5a96ff 0%, #3a78f0 100%);
-  color: white;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 12px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-    0 0 24px -6px rgba(79, 140, 255, 0.6);
-  transition:
-    filter 160ms ease,
-    transform 160ms ease;
-}
-.website-roast .submit-btn:hover {
-  filter: brightness(1.1);
-}
-.website-roast .submit-btn:active {
-  transform: scale(0.97);
-}
-.website-roast .submit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* .submit-btn comes from the canonical mini-app-ui.css (pill, gradient, hover,
+ * disabled, focus). Only the app-specific icon size is kept here. */
 .website-roast .submit-btn svg {
   width: 16px;
   height: 16px;
@@ -1016,43 +966,7 @@
   gap: 6px;
   flex-shrink: 0;
 }
-.website-roast .export-btn {
-  border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.025);
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 7px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition:
-    border-color 160ms,
-    background 160ms,
-    color 160ms;
-  white-space: nowrap;
-}
-.website-roast .export-btn:hover:not(:disabled) {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.05);
-}
-.website-roast .export-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.website-roast .export-btn.done {
-  border-color: rgba(79, 200, 138, 0.4);
-  color: var(--success);
-  background: rgba(79, 200, 138, 0.07);
-}
-.website-roast .export-btn.loading {
-  border-color: rgba(79, 140, 255, 0.35);
-  color: var(--blue);
-}
+/* .export-btn (pill, states) comes from the canonical mini-app-ui.css. */
 .website-roast .run-again {
   border: 1px solid var(--border-strong);
   background: rgba(255, 255, 255, 0.025);
@@ -1180,63 +1094,9 @@
   line-height: 1.5;
 }
 
-/* ── URL INPUT ── */
-.website-roast .input-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.website-roast .input-field label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.website-roast .input-box {
-  display: flex;
-  align-items: center;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-.website-roast .input-box:focus-within {
-  border-color: var(--blue);
-  box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.18),
-    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
-}
-.website-roast .input-box.error {
-  border-color: var(--error);
-  animation: wr-shake 0.35s ease;
-}
-.website-roast .input-box .prompt {
-  padding: 0 10px 0 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--blue);
-  user-select: none;
-}
-.website-roast .input-box input {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 15px 14px 15px 18px;
-  letter-spacing: -0.01em;
-  min-width: 0;
-}
-.website-roast .input-box input::placeholder {
-  color: var(--text-faint);
-}
+/* Input field, label, box, and inner-input typography ALL come from the
+ * canonical mini-app-ui.css (sans input, 14px 16px box, mono 11px label,
+ * 8px label-gap / 20px field-gap). No per-app input overrides. */
 
 /* ── ROAST RESULT ── */
 .website-roast .one-liner-block {

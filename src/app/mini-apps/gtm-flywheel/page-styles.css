@@ -1,17 +1,12 @@
 .gtm-flywheel {
-  --bg: #05070d;
-  --surface: #0d111a;
-  --surface-2: #101724;
-  --border: rgba(149, 173, 230, 0.24);
-  --text: #e8f0ff;
-  --text-muted: #95a5c6;
-  --text-faint: #6b7a96;
-  --error: #ff5c7a;
-  --cyan: #04e3ee;
-  --mono:
-    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+  /* Canonical tokens (--bg, --border, --text, --text-muted, --text-faint,
+   * --error, --cyan, --mono) come from the `.mini-app-scope` layer in
+   * mini-app-tokens.css; the root element carries both `.gtm-flywheel` and
+   * `.mini-app-scope`. The former drifted overrides (--border
+   * rgba(149,173,230,0.24), --text-muted #95a5c6, --text #e8f0ff, …) now
+   * resolve to the canonical values. --accent has no canonical alias yet and
+   * remains app-local; the unused --surface/--surface-2/--grid were removed. */
   --accent: #7fa2ff;
-  --grid: #243043;
   min-height: 100vh;
   color: var(--text);
   background: var(--bg);

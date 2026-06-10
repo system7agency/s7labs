@@ -1,4 +1,8 @@
-export type AppStatus = 'live' | 'beta' | 'new' | 'prototype' | 'coming-soon'
+// `draft` is an internal QA-tracking status used during the design-system
+// migration: the app is fully usable and launches normally, but the card shows
+// a DRAFT badge so we can see at a glance which apps have not yet been reviewed
+// and flipped to `live`. It has no effect on whether the app works.
+export type AppStatus = 'live' | 'beta' | 'new' | 'prototype' | 'coming-soon' | 'draft'
 
 export type AppThumb =
   | 'score'
@@ -92,7 +96,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'ai-overview-tracker',
     name: 'AI Overview Tracker',
-    status: 'live',
+    status: 'draft',
     category: 'Software / AI',
     cats: ['ai', 'gtm'],
     short_description:
@@ -124,7 +128,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'ai-visibility-score',
     name: 'AI Visibility Score',
-    status: 'live',
+    status: 'draft',
     category: 'Software / AI',
     cats: ['ai', 'gtm'],
     short_description:
@@ -154,7 +158,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'email-copy-optimizer',
     name: 'Email Copy Optimizer',
-    status: 'live',
+    status: 'draft',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -184,7 +188,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'roi-calculator',
     name: 'ROI Calculator',
-    status: 'live',
+    status: 'draft',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -223,7 +227,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'tech-stack-finder',
     name: 'Tech Stack Finder',
-    status: 'live',
+    status: 'draft',
     category: 'Software / AI',
     cats: ['ai', 'gtm', 'software'],
     short_description:
@@ -249,7 +253,7 @@ export const APPS: MiniApp[] = [
     id: 'share-of-voice',
     author: 'SK',
     name: 'AI Share of Voice Scorer',
-    status: 'live',
+    status: 'draft',
     category: 'Software / AI',
     cats: ['ai', 'gtm'],
     short_description:
@@ -281,7 +285,7 @@ export const APPS: MiniApp[] = [
     id: 'tech-stack-recommender',
     author: 'SK',
     name: 'Tech Stack Recommender',
-    status: 'live',
+    status: 'draft',
     category: 'Software / AI',
     cats: ['ai', 'software'],
     short_description:
@@ -314,7 +318,7 @@ export const APPS: MiniApp[] = [
     id: 'automation-blueprint',
     author: 'SK',
     name: 'Automation Blueprint',
-    status: 'live',
+    status: 'draft',
     category: 'Automations / AI',
     cats: ['ai', 'automations'],
     short_description:
@@ -379,7 +383,7 @@ export const APPS: MiniApp[] = [
     id: 'crm-sanity',
     author: 'YA',
     name: 'CRM Field Sanity Check',
-    status: 'live',
+    status: 'draft',
     category: 'AI / Operations',
     cats: ['ai', 'operations'],
     short_description:
@@ -405,7 +409,7 @@ export const APPS: MiniApp[] = [
     id: 'job-brief',
     author: 'YA',
     name: 'Job Posting to Sales Brief',
-    status: 'live',
+    status: 'draft',
     category: 'AI / Operations',
     cats: ['ai', 'operations'],
     short_description:
@@ -431,7 +435,7 @@ export const APPS: MiniApp[] = [
     id: 'linkedin-hook',
     author: 'YA',
     name: 'LinkedIn Post to Outbound Hook',
-    status: 'live',
+    status: 'draft',
     category: 'AI / Operations',
     cats: ['ai', 'operations'],
     short_description:
@@ -457,7 +461,7 @@ export const APPS: MiniApp[] = [
     id: 'email-finder',
     author: 'YA',
     name: 'Email Finder',
-    status: 'live',
+    status: 'draft',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -482,7 +486,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'bulk-email-finder',
     name: 'Bulk Email Finder',
-    status: 'live',
+    status: 'draft',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -513,7 +517,7 @@ export const APPS: MiniApp[] = [
     id: 'find-people',
     author: 'YA',
     name: 'Find People',
-    status: 'live',
+    status: 'draft',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -544,7 +548,7 @@ export const APPS: MiniApp[] = [
     id: 'campaign-ideation',
     author: 'YA',
     name: 'Campaign Ideation',
-    status: 'live',
+    status: 'draft',
     category: 'AI / GTM',
     cats: ['ai', 'gtm'],
     short_description:
@@ -580,7 +584,7 @@ export const APPS: MiniApp[] = [
     id: 'gtm-flywheel',
     author: 'YA',
     name: 'GTM Flywheel',
-    status: 'live',
+    status: 'draft',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'software'],
     short_description:
@@ -606,7 +610,7 @@ export const APPS: MiniApp[] = [
     id: 'intent-signals',
     author: 'YA',
     name: 'Intent Signals',
-    status: 'live',
+    status: 'draft',
     category: 'AI / Operations',
     cats: ['ai', 'operations', 'gtm'],
     short_description:
@@ -637,7 +641,7 @@ export const APPS: MiniApp[] = [
     id: 'linkedin-profile-reviewer',
     author: 'YA',
     name: 'LinkedIn Profile Reviewer',
-    status: 'live',
+    status: 'draft',
     category: 'AI / GTM',
     cats: ['ai', 'gtm'],
     short_description:
@@ -668,7 +672,7 @@ export const APPS: MiniApp[] = [
     id: 'outbound-radar',
     author: 'YA',
     name: 'Outbound Trigger Radar',
-    status: 'live',
+    status: 'draft',
     category: 'AI / Operations',
     cats: ['ai', 'operations'],
     short_description:
@@ -694,7 +698,7 @@ export const APPS: MiniApp[] = [
     id: 'pricing-diagnostic',
     author: 'YA',
     name: 'Pricing Page Diagnostic',
-    status: 'live',
+    status: 'draft',
     category: 'AI / Utilities',
     cats: ['ai', 'utilities'],
     short_description:
@@ -719,7 +723,7 @@ export const APPS: MiniApp[] = [
     id: 'proposal-engine',
     author: 'SK',
     name: 'Proposal Draft Engine',
-    status: 'live',
+    status: 'draft',
     category: 'AI / Utilities',
     cats: ['ai', 'utilities'],
     short_description:

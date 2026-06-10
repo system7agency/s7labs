@@ -1,12 +1,9 @@
 .bulk-email-finder {
-  --bg: #060608;
+  /* Canonical tokens (--bg, --border, --text, --text-muted, --blue, --cyan)
+   * come from the `.mini-app-scope` layer in mini-app-tokens.css; the root
+   * element carries both `.bulk-email-finder` and `.mini-app-scope`. The
+   * tokens below have no canonical alias yet and remain app-local. */
   --surface: #121218;
-  --surface-2: #181821;
-  --border: rgba(255, 255, 255, 0.12);
-  --text: #f2f3f5;
-  --text-muted: #9a9dab;
-  --blue: #4f8cff;
-  --cyan: #04e3ee;
   --good: #4fcf8a;
   --warn: #f5a623;
   --bad: #ff5c7a;

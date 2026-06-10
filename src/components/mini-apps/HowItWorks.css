@@ -2,7 +2,10 @@
  * Uses each mini-app's standard palette: --blue, --text, --text-muted, --border. */
 
 .how-it-works {
-  margin: 96px auto 0;
+  /* Mini-app shells already carry ~96px bottom padding; a further 96px here
+   * doubled into a ~190px void above this section. 56px gives one clean
+   * section break instead of two. */
+  margin: 56px auto 0;
   width: min(100%, 920px);
 }
 .how-it-works .hiw-head {
@@ -32,17 +35,16 @@
   max-width: 640px;
 }
 .how-it-works .hiw-head h2 .accent {
-  font-style: italic;
+  /* Solid blue, no italic / gradient-clip — matches the simplified hero
+   * .accent treatment used across all mini-apps. */
   color: var(--blue, #4f8cff);
-  background: linear-gradient(135deg, #4f8cff, #7aa9ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 .how-it-works .hiw-head p {
   font-size: 15px;
-  color: var(--text-muted, #5e6068);
-  margin: 0;
+  line-height: 1.55;
+  color: var(--text-dim, #9395a0);
+  max-width: 560px;
+  margin: 0 auto;
 }
 
 .how-it-works .hiw-steps {
@@ -201,8 +203,8 @@
 }
 .how-it-works .hiw-text p {
   font-size: 13.5px;
-  color: var(--text-muted, #5e6068);
-  line-height: 1.55;
+  color: var(--text-dim, #9395a0);
+  line-height: 1.6;
   margin: 0;
 }
 

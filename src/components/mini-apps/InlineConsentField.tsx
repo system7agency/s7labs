@@ -53,7 +53,6 @@ export function InlineConsentField({
           <span className={styles.consentReassurance}>Unsubscribe anytime.</span>
         </span>
       </label>
-      <div className={styles.consentHint}>WE&apos;LL SEND YOUR RESULT EITHER WAY</div>
     </div>
   )
 }

@@ -1,20 +1,9 @@
 .campaign-ideation {
-  --bg: #060608;
-  --surface-1: #101014;
-  --surface-2: #16161b;
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --text: #f2f3f5;
-  --text-dim: #9ea2af;
-  --text-muted: #6c7180;
-  --blue: #4f8cff;
-  --cyan: #04e3ee;
+  /* Design tokens come from the canonical .mini-app-scope layer in mini-app-tokens.css. */
+  /* App-specific grade tokens (no canonical equivalent) are retained below. */
   --good: #4fcf8a;
   --warn: #f5a623;
   --bad: #ff5c7a;
-  --error: #ff5c7a;
-  --mono:
-    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
 
   background: var(--bg);
   color: var(--text);

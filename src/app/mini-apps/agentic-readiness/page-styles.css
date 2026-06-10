@@ -4,26 +4,11 @@
  */
 
 .agentic-readiness {
-  --bg: #060608;
-  --surface-1: #101014;
-  --surface-2: #16161b;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --text: #f2f3f5;
-  --text-dim: #9395a0;
-  --text-muted: #5e6068;
-  --text-faint: #3a3b42;
-  --blue: #4f8cff;
-  --cyan: #04e3ee;
-  --error: #ff5c7a;
-  --warning: #f5a623;
-  --success: #4fcf8a;
-  --mono:
-    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
-  --sans:
-    var(--font-sans), 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
-    Arial, sans-serif;
-
+  /* Design tokens (--bg, --surface-1, --surface-2, --border, --border-strong,
+   * --text, --text-dim, --text-muted, --text-faint, --blue, --cyan, --error,
+   * --warning, --success, --mono, --sans) come from the canonical
+   * `.mini-app-scope` layer in mini-app-tokens.css. The root element carries
+   * both `.agentic-readiness` and `.mini-app-scope`. */
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
@@ -331,156 +316,10 @@
   box-shadow: 0 0 8px var(--cyan);
 }
 
-.agentic-readiness .textarea-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-.agentic-readiness .textarea-field label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.agentic-readiness .textarea-box {
-  display: flex;
-  align-items: flex-start;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-.agentic-readiness .textarea-box:focus-within {
-  border-color: var(--blue);
-  box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.18),
-    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
-}
-.agentic-readiness .textarea-box.error,
-.agentic-readiness .input-box.error {
-  border-color: var(--error);
-  animation: ar-shake 0.35s ease;
-}
-@keyframes ar-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-5px);
-  }
-  40% {
-    transform: translateX(5px);
-  }
-  60% {
-    transform: translateX(-3px);
-  }
-  80% {
-    transform: translateX(3px);
-  }
-}
-.agentic-readiness .textarea-box .prompt {
-  padding: 14px 10px 0 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--blue);
-  user-select: none;
-  flex-shrink: 0;
-  line-height: 1.6;
-}
-.agentic-readiness .textarea-box textarea {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12.5px;
-  padding: 14px 14px 14px 0;
-  letter-spacing: -0.01em;
-  resize: vertical;
-  min-height: 160px;
-  line-height: 1.7;
-}
-.agentic-readiness .textarea-box textarea::placeholder {
-  color: var(--text-faint);
-}
-
-.agentic-readiness .input-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-.agentic-readiness .input-field label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.agentic-readiness .input-box {
-  display: flex;
-  align-items: center;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-.agentic-readiness .input-box:focus-within {
-  border-color: var(--blue);
-  box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.18),
-    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
-}
-.agentic-readiness .input-box .prompt {
-  padding: 0 10px 0 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--blue);
-  user-select: none;
-}
-.agentic-readiness .input-box input {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 15px 14px;
-  letter-spacing: -0.01em;
-  min-width: 0;
-}
-.agentic-readiness .input-box .prompt + input {
-  padding-left: 0;
-}
-.agentic-readiness .input-box input::placeholder {
-  color: var(--text-faint);
-}
-/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
-.agentic-readiness .input-box input:-webkit-autofill,
-.agentic-readiness .input-box input:-webkit-autofill:hover,
-.agentic-readiness .input-box input:-webkit-autofill:focus,
-.agentic-readiness .input-box input:-webkit-autofill:active {
-  -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
-  caret-color: var(--text);
-  transition: background-color 9999s ease-in-out 0s;
-}
-.agentic-readiness .field-error {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  color: var(--error);
-}
+/* .input-field rhythm + label styling come from the canonical mini-app-ui.css
+ * (label → input 8px, field → field 20px, mono 11px uppercase label). Do not
+ * redeclare here — a second gap stacks on the canonical margin and doubles the
+ * spacing. .input-box glassy fill / focus / error also come from canonical. */
 .agentic-readiness .field-error {
   font-family: var(--mono);
   font-size: 10.5px;
@@ -497,13 +336,6 @@
 .agentic-readiness .idle-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.agentic-readiness .result-actions-pre-gate {
-  margin-top: 16px;
-  display: flex;
-  justify-content: center;
 }
 
 .agentic-readiness .submit-row {
@@ -511,39 +343,8 @@
   justify-content: flex-end;
   margin-top: 4px;
 }
-.agentic-readiness .submit-btn {
-  border: 0;
-  background: linear-gradient(180deg, #5a96ff 0%, #3a78f0 100%);
-  color: white;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 12px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-    0 0 24px -6px rgba(79, 140, 255, 0.6);
-  transition:
-    filter 160ms ease,
-    transform 160ms ease;
-}
-.agentic-readiness .submit-btn:hover {
-  filter: brightness(1.1);
-}
-.agentic-readiness .submit-btn:active {
-  transform: scale(0.97);
-}
-.agentic-readiness .submit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* .submit-btn (pill, gradient, hover, disabled, focus) comes from the canonical
+ * mini-app-ui.css. Only the app-specific icon sizing remains here. */
 .agentic-readiness .submit-btn svg {
   width: 16px;
   height: 16px;
@@ -1177,12 +978,6 @@
   color: var(--error);
   border-color: rgba(255, 92, 122, 0.35);
 }
-.agentic-readiness .result-ts {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  color: var(--text-faint);
-}
 .agentic-readiness .score-card {
   position: relative;
   border: 1px solid var(--border);
@@ -1529,75 +1324,8 @@
   line-height: 1.5;
 }
 
-/* Result footer */
-.agentic-readiness .result-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-  gap: 12px;
-}
-.agentic-readiness .token-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-muted);
-}
-.agentic-readiness .token-pill::before {
-  content: '';
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--success);
-  box-shadow: 0 0 8px var(--success);
-}
-.agentic-readiness .export-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.agentic-readiness .export-btn {
-  border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.025);
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 7px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition:
-    border-color 160ms,
-    background 160ms,
-    color 160ms;
-  white-space: nowrap;
-}
-.agentic-readiness .export-btn:hover:not(:disabled) {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.05);
-}
-.agentic-readiness .export-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.agentic-readiness .export-btn.done {
-  border-color: rgba(79, 200, 138, 0.4);
-  color: var(--success);
-  background: rgba(79, 200, 138, 0.07);
-}
-.agentic-readiness .export-btn.loading {
-  border-color: rgba(79, 140, 255, 0.35);
-  color: var(--blue);
-}
+/* Result footer: .result-actions (centered layout) and .export-btn (pill,
+ * states) come from the canonical mini-app-ui.css. */
 .agentic-readiness .run-again {
   border: 1px solid var(--border-strong);
   background: rgba(255, 255, 255, 0.025);
@@ -1750,14 +1478,6 @@
   }
   .agentic-readiness .info-strip {
     grid-template-columns: 1fr;
-  }
-  .agentic-readiness .result-footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .agentic-readiness .export-actions {
-    flex-wrap: wrap;
-    justify-content: center;
   }
   .agentic-readiness .run-again {
     justify-content: center;

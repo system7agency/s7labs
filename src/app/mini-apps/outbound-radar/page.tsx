@@ -8,6 +8,7 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type { ApiResponse, RadarResult } from '@/app/api/mini-apps/outbound-radar/route'
 import { PageScripts } from './PageScripts'
@@ -137,7 +138,6 @@ export default function OutboundRadarPage() {
   const [result, setResult] = useState<RadarResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [resultTs, setResultTs] = useState('')
-  const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
 
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -398,71 +398,10 @@ export default function OutboundRadarPage() {
     setTokens(null)
   }, [clearTimers])
 
-  const handleCopy = useCallback(async () => {
-    if (!result) return
-    setExportState('copying')
-    try {
-      await navigator.clipboard.writeText(buildOutboundRadarPlainText(result))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildOutboundRadarPlainText(result)
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setTimeout(() => setExportState('idle'), 1800)
-  }, [result])
-
-  const handleDownloadPng = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('png')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
-      const a = document.createElement('a')
-      a.download = `radar-${result.domain.replace(/[^a-z0-9]/gi, '-')}.png`
-      a.href = canvas.toDataURL('image/png')
-      a.click()
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result])
-
-  const handleDownloadPdf = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('pdf')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const { jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
-      const imgW = 190
-      const imgH = (canvas.height / canvas.width) * imgW
-      const pdf = new jsPDF({ orientation: imgH > imgW ? 'portrait' : 'landscape', unit: 'mm' })
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-      pdf.save(`radar-${result.domain.replace(/[^a-z0-9]/gi, '-')}.pdf`)
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result])
-
   const loadingTarget = domain ? domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '') : 'target'
 
   return (
-    <div className="outbound-radar">
+    <div className="outbound-radar mini-app-scope">
       <AuroraBackground />
 
       <Header />
@@ -670,91 +609,14 @@ export default function OutboundRadarPage() {
                         <span>{result.domain}</span>
                       </span>
                       <div className="export-actions">
-                        <button
-                          className={`export-btn${exportState === 'copying' ? 'done' : ''}`}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? (
-                            <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
-                            </>
-                          ) : (
-                            <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                              </svg>
-                              Copy
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'png' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={`export-btn${exportState === 'pdf' ? 'loading' : ''}`}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
+                        <ExportControls
+                          resultRef={resultPanelRef}
+                          slug="outbound-radar"
+                          appName="Outbound Trigger Radar"
+                          filename={`radar-${result.domain.replace(/[^a-z0-9]/gi, '-')}`}
+                          subject={result.domain}
+                          plainText={buildOutboundRadarPlainText(result)}
+                        />
                         <button className="run-again" type="button" onClick={handleReset}>
                           Scan another
                           <svg

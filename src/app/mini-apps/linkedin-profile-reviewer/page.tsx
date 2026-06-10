@@ -440,7 +440,7 @@ export default function LinkedInProfileReviewerPage() {
   )
 
   return (
-    <div className="linkedin-profile-reviewer">
+    <div className="linkedin-profile-reviewer mini-app-scope">
       <AuroraBackground />
       <Header />
 

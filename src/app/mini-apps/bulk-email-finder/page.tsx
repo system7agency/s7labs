@@ -724,7 +724,7 @@ export default function BulkEmailFinderPage() {
   )
 
   return (
-    <div className="bulk-email-finder">
+    <div className="bulk-email-finder mini-app-scope">
       <AuroraBackground />
       <Header />
       <main className="shell">

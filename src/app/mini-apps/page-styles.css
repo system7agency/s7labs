@@ -1538,6 +1538,15 @@
 .mini-apps-lab .mx-chip.soon i {
   background: var(--fg-deep);
 }
+/* DRAFT — internal QA-tracking badge (amber). App still works; just flags that
+ * it hasn't been reviewed/approved in the design-system migration yet. */
+.mini-apps-lab .mx-chip.draft {
+  color: #f5a623;
+  border-color: rgba(245, 166, 35, 0.4);
+}
+.mini-apps-lab .mx-chip.draft i {
+  background: #f5a623;
+}
 
 /* ========== OLD CARD (kept harmless; no DOM uses .card now) ========== */
 .mini-apps-lab .card {

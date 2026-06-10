@@ -9,6 +9,7 @@ import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { ApiResponse, ProposalResult } from '@/app/api/mini-apps/proposal-engine/route'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 import {
@@ -141,7 +142,6 @@ export default function ProposalEnginePage() {
   const [result, setResult] = useState<ProposalResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [resultTs, setResultTs] = useState('')
-  const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -398,69 +398,8 @@ export default function ProposalEnginePage() {
     setTokens(null)
   }, [clearTimers])
 
-  const handleCopy = useCallback(async () => {
-    if (!result) return
-    setExportState('copying')
-    try {
-      await navigator.clipboard.writeText(buildProposalEnginePlainText(result))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildProposalEnginePlainText(result)
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setTimeout(() => setExportState('idle'), 1800)
-  }, [result])
-
-  const handleDownloadPng = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('png')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
-      const a = document.createElement('a')
-      a.download = 'proposal-draft.png'
-      a.href = canvas.toDataURL('image/png')
-      a.click()
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result])
-
-  const handleDownloadPdf = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('pdf')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const { jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
-      const imgW = 190
-      const imgH = (canvas.height / canvas.width) * imgW
-      const pdf = new jsPDF({ orientation: imgH > imgW ? 'portrait' : 'landscape', unit: 'mm' })
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-      pdf.save('proposal-draft.pdf')
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result])
-
   return (
-    <div className="proposal-engine">
+    <div className="proposal-engine mini-app-scope">
       <AuroraBackground />
 
       <Header />
@@ -666,91 +605,13 @@ export default function ProposalEnginePage() {
 
                     <div className="result-footer">
                       <div className="export-actions">
-                        <button
-                          className={clsx('export-btn', { done: exportState === 'copying' })}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? (
-                            <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M20 6L9 17l-5-5" />
-                              </svg>
-                              Copied
-                            </>
-                          ) : (
-                            <>
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <rect x="9" y="9" width="13" height="13" rx="2" />
-                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                              </svg>
-                              Copy
-                            </>
-                          )}
-                        </button>
-                        <button
-                          className={clsx('export-btn', { loading: exportState === 'png' })}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 15l-5-5L5 21" />
-                          </svg>
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M12 18v-6M9 15l3 3 3-3" />
-                          </svg>
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
+                        <ExportControls
+                          resultRef={resultPanelRef}
+                          slug="proposal-engine"
+                          appName="Proposal Draft Engine"
+                          filename="proposal-draft"
+                          plainText={buildProposalEnginePlainText(result)}
+                        />
                         <button className="run-again" type="button" onClick={handleReset}>
                           New proposal
                           <svg

@@ -485,7 +485,7 @@ export default function FindPeoplePage() {
   const canLoadMore = visibleCount < filteredPeople.length && visibleCount < 100
 
   return (
-    <div className="find-people">
+    <div className="find-people mini-app-scope">
       <AuroraBackground />
 
       <Header />

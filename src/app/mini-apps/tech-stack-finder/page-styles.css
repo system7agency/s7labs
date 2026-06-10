@@ -1,23 +1,5 @@
 .tech-stack-finder {
-  --bg: #060608;
-  --surface-1: #101014;
-  --surface-2: #17171c;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.18);
-  --text: #f2f3f5;
-  --text-dim: #a0a3ad;
-  --text-muted: #6f7380;
-  --text-faint: #3a3b42;
-  --blue: #4f8cff;
-  --cyan: #04e3ee;
-  --error: #ff5c7a;
-  --success: #4fcf8a;
-  --mono:
-    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
-  --sans:
-    var(--font-sans), 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
-    Arial, sans-serif;
-
+  /* Design tokens come from the canonical .mini-app-scope layer in mini-app-tokens.css. */
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);

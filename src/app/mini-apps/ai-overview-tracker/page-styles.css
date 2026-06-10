@@ -4,29 +4,12 @@
  */
 
 .ai-overview-tracker {
-  --bg: #060608;
-  --surface-1: #101014;
-  --surface-2: #16161b;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --text: #f2f3f5;
-  --text-dim: #9395a0;
-  --text-muted: #5e6068;
-  --text-faint: #3a3b42;
-  --blue: #4f8cff;
-  --cyan: #04e3ee;
-  --error: #ff5c7a;
-  --warning: #f5a623;
-  --success: #4fcf8a;
-  --grade-good: #4fcf8a;
-  --grade-mid: #f5a623;
-  --grade-bad: #ff5c7a;
-  --mono:
-    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
-  --sans:
-    var(--font-sans), 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
-    Arial, sans-serif;
-
+  /* Design tokens (--bg, --surface-1, --surface-2, --border, --border-strong,
+   * --text, --text-dim, --text-muted, --text-faint, --blue, --cyan, --error,
+   * --warning, --success, --grade-good, --grade-mid, --grade-bad, --mono,
+   * --sans) come from the canonical `.mini-app-scope` layer in
+   * mini-app-tokens.css. The root element carries both `.ai-overview-tracker`
+   * and `.mini-app-scope`. */
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
@@ -346,57 +329,10 @@
   gap: 12px;
   margin-bottom: 16px;
 }
-.ai-overview-tracker .input-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.ai-overview-tracker .input-field label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.ai-overview-tracker .input-box {
-  display: flex;
-  align-items: center;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-.ai-overview-tracker .input-box:focus-within {
-  border-color: var(--blue);
-  box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.18),
-    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
-}
-.ai-overview-tracker .input-box.error {
-  border-color: var(--error);
-  animation: or-shake 0.35s ease;
-}
-@keyframes aio-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-5px);
-  }
-  40% {
-    transform: translateX(5px);
-  }
-  60% {
-    transform: translateX(-3px);
-  }
-  80% {
-    transform: translateX(3px);
-  }
-}
+/* .input-field rhythm + label come from the canonical mini-app-ui.css. */
+/* .input-box (glassy fill, border, focus glow, error shake) comes from the
+ * canonical mini-app-ui.css. ai-overview-tracker only customizes the inner
+ * input typography/padding to fit its mono @-prefixed domain field. */
 .ai-overview-tracker .input-box .prompt {
   padding: 0 10px 0 14px;
   font-family: var(--mono);
@@ -412,7 +348,7 @@
   color: var(--text);
   font-family: var(--mono);
   font-size: 13px;
-  padding: 15px 14px 15px 18px;
+  padding: 0;
   letter-spacing: -0.01em;
   min-width: 0;
 }
@@ -430,39 +366,8 @@
   display: flex;
   justify-content: flex-end;
 }
-.ai-overview-tracker .submit-btn {
-  border: 0;
-  background: linear-gradient(180deg, #5a96ff 0%, #3a78f0 100%);
-  color: white;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 12px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-    0 0 24px -6px rgba(79, 140, 255, 0.6);
-  transition:
-    filter 160ms ease,
-    transform 160ms ease;
-}
-.ai-overview-tracker .submit-btn:hover {
-  filter: brightness(1.1);
-}
-.ai-overview-tracker .submit-btn:active {
-  transform: scale(0.97);
-}
-.ai-overview-tracker .submit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* .submit-btn comes from the canonical mini-app-ui.css (pill, gradient, hover,
+ * disabled, focus). Only the app-specific icon size is kept here. */
 .ai-overview-tracker .submit-btn svg {
   width: 16px;
   height: 16px;
@@ -889,14 +794,6 @@
 }
 
 /* Result footer */
-.ai-overview-tracker .result-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-  gap: 12px;
-}
 .ai-overview-tracker .url-pill {
   display: inline-flex;
   align-items: center;
@@ -924,49 +821,7 @@
   text-overflow: ellipsis;
 }
 
-.ai-overview-tracker .export-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.ai-overview-tracker .export-btn {
-  border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.025);
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 7px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition:
-    border-color 160ms,
-    background 160ms,
-    color 160ms;
-  white-space: nowrap;
-}
-.ai-overview-tracker .export-btn:hover:not(:disabled) {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.05);
-}
-.ai-overview-tracker .export-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.ai-overview-tracker .export-btn.done {
-  border-color: rgba(79, 200, 138, 0.4);
-  color: var(--success);
-  background: rgba(79, 200, 138, 0.07);
-}
-.ai-overview-tracker .export-btn.loading {
-  border-color: rgba(79, 140, 255, 0.35);
-  color: var(--blue);
-}
+/* .export-btn (pill, states) comes from the canonical mini-app-ui.css. */
 
 .ai-overview-tracker .run-again {
   border: 1px solid var(--border-strong);
@@ -1124,14 +979,6 @@
   .ai-overview-tracker .signal-strength {
     grid-column: 1 / -1;
     justify-self: start;
-  }
-  .ai-overview-tracker .result-footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .ai-overview-tracker .export-actions {
-    flex-wrap: wrap;
-    justify-content: center;
   }
   .ai-overview-tracker .run-again {
     justify-content: center;
@@ -1463,27 +1310,9 @@
   margin: 20px 0;
 }
 
-.ai-overview-tracker .result-actions-pre-gate {
-  margin-top: 16px;
-  display: flex;
-  justify-content: center;
-}
-
-.ai-overview-tracker .run-again-ghost {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
 .ai-overview-tracker .idle-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
 /* ============== Themed Market dropdown (replaces native <select>) ============== */
@@ -1604,8 +1433,7 @@
   content: '✓ ';
 }
 
-.ai-overview-tracker .textarea-box.error,
-.ai-overview-tracker .input-box.error {
+.ai-overview-tracker .textarea-box.error {
   animation: aio-shake 0.35s ease;
 }
 

@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/agentic-types'
@@ -118,11 +119,6 @@ const AGENTIC_STEPS: HowItWorksStep[] = [
   },
 ]
 
-function fmtTs(d: Date) {
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `AGENTIC · ${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} · ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`
-}
-
 function normalizeUrlInput(input: string): string | null {
   const trimmed = input.trim()
   if (!trimmed) return null
@@ -151,8 +147,6 @@ export default function AgenticReadinessPage() {
   const [free, setFree] = useState<ScanFree | null>(null)
   const [gated, setGated] = useState<ScanGated | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [resultTs, setResultTs] = useState('')
-  const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
 
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -316,6 +310,15 @@ export default function AgenticReadinessPage() {
       setScanId(null)
       setErrorMsg('')
 
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. If the lead-save fails (e.g. a
+      // disposable / free-provider email the server rejects), we revert to the
+      // idle form below and surface the error.
+      const host = new URL(normalized).hostname
+      setSysState('running')
+      setAppState('loading')
+      startLoadingAnimation(host)
+
       let submissionId: string | null = null
       try {
         const res = await fetch('/api/leads/submit', {
@@ -334,6 +337,9 @@ export default function AgenticReadinessPage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          clearTimers()
+          setSysState('idle')
+          setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeEmail((k) => k + 1)
           setSubmitting(false)
@@ -342,16 +348,14 @@ export default function AgenticReadinessPage() {
         submissionId = json.submissionId
         submissionIdRef.current = submissionId
       } catch {
+        clearTimers()
+        setSysState('idle')
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeEmail((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setSysState('running')
-      setAppState('loading')
-      const host = new URL(normalized).hostname
-      startLoadingAnimation(host)
 
       let data: ScanApiResponse
       try {
@@ -380,7 +384,6 @@ export default function AgenticReadinessPage() {
         await new Promise((r) => setTimeout(r, 400))
         setScanId(data.scanId)
         setFree(data.free)
-        setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
 
@@ -427,90 +430,6 @@ export default function AgenticReadinessPage() {
     setTokens(null)
   }, [clearTimers])
 
-  const handleCopy = useCallback(async () => {
-    if (!free) return
-    setExportState('copying')
-    try {
-      await navigator.clipboard.writeText(buildAgenticReadinessPlainText(free, gated))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildAgenticReadinessPlainText(free, gated)
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setTimeout(() => setExportState('idle'), 1800)
-  }, [free, gated])
-
-  const captureShareable = useCallback(async () => {
-    if (!shareableRef.current) return null
-    const { default: html2canvas } = await import('html2canvas')
-    const capture = html2canvas(shareableRef.current, {
-      backgroundColor: '#101014',
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      onclone: (_doc, cloned) => {
-        let node: HTMLElement | null = cloned
-        while (node) {
-          node.style.backdropFilter = 'none'
-          node.style.setProperty('-webkit-backdrop-filter', 'none')
-          node = node.parentElement
-        }
-      },
-    })
-    const timeoutMs = 30_000
-    let timer: ReturnType<typeof setTimeout> | undefined
-    try {
-      return await Promise.race([
-        capture,
-        new Promise<never>((_, reject) => {
-          timer = setTimeout(() => reject(new Error('Screenshot capture timed out')), timeoutMs)
-        }),
-      ])
-    } finally {
-      if (timer) clearTimeout(timer)
-    }
-  }, [])
-
-  const handleDownloadPng = useCallback(async () => {
-    if (!free) return
-    setExportState('png')
-    try {
-      const canvas = await captureShareable()
-      if (!canvas) return
-      const a = document.createElement('a')
-      a.download = `agentic-${free.site_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`
-      a.href = canvas.toDataURL('image/png')
-      a.click()
-    } catch (err) {
-      console.error('[agentic-readiness] PNG export failed', err)
-    } finally {
-      setExportState('idle')
-    }
-  }, [free, captureShareable])
-
-  const handleDownloadPdf = useCallback(async () => {
-    if (!free) return
-    setExportState('pdf')
-    try {
-      const canvas = await captureShareable()
-      if (!canvas) return
-      const { jsPDF } = await import('jspdf')
-      const imgW = 190
-      const imgH = (canvas.height / canvas.width) * imgW
-      const pdf = new jsPDF({ orientation: imgH > imgW ? 'portrait' : 'landscape', unit: 'mm' })
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-      pdf.save(`agentic-${free.site_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`)
-    } catch (err) {
-      console.error('[agentic-readiness] PDF export failed', err)
-    } finally {
-      setExportState('idle')
-    }
-  }, [free, captureShareable])
-
   const loadingHost = url
     ? (normalizeUrlInput(url)
         ?.replace(/^https?:\/\//, '')
@@ -518,7 +437,7 @@ export default function AgenticReadinessPage() {
     : 'site'
 
   return (
-    <div className="agentic-readiness">
+    <div className="agentic-readiness mini-app-scope">
       <AuroraBackground />
 
       <Header />
@@ -534,11 +453,6 @@ export default function AgenticReadinessPage() {
             dependency, and machine-readable actions) then score how ready you are for the agentic
             web.
           </p>
-          <div className="meta-tags">
-            <span>· 6 readiness checks</span>
-            <span>· Biggest blockers free</span>
-            <span>· Full checklist by email</span>
-          </div>
         </section>
 
         <div className="panel-wrap panel-wrap-wide">
@@ -600,7 +514,7 @@ export default function AgenticReadinessPage() {
                     </div>
                     {urlError && <div className="field-error">{urlError}</div>}
                   </div>
-                  <div className="input-field" style={{ marginTop: 14 }}>
+                  <div className="input-field">
                     <label>
                       Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
                     </label>
@@ -692,95 +606,87 @@ export default function AgenticReadinessPage() {
               <section className={clsx('ar-state', { active: appState === 'result' })}>
                 {free && scanId && (
                   <>
+                    {/* Both the free result AND the gated breakdown live inside
+                     * shareableRef so the PNG/PDF export captures the full report
+                     * (score + checks + blockers + the detailed per-check cards,
+                     * quick-wins, and plan), not just the free teaser. */}
                     <div ref={shareableRef}>
                       <AgenticReadinessResult
                         bare
                         input={{ url: free.url }}
                         output={{ scanId, free }}
                       />
+                      <GatedBreakdown
+                        scanId={scanId}
+                        email={email}
+                        free={free}
+                        leadInput={leadInput}
+                        submitToApi={async (_input, output) => {
+                          const submissionId = submissionIdRef.current
+                          if (!submissionId || !output) return
+                          try {
+                            await fetch('/api/leads/complete', {
+                              method: 'POST',
+                              headers: { 'content-type': 'application/json' },
+                              body: JSON.stringify({ submissionId, output }),
+                            })
+                          } catch (err) {
+                            console.error('[agentic-readiness] gated leads/complete', err)
+                          }
+                        }}
+                        onTokens={handleTokens}
+                        onGatedLoaded={handleGatedLoaded}
+                      />
                     </div>
-                    <GatedBreakdown
-                      scanId={scanId}
-                      email={email}
-                      free={free}
-                      leadInput={leadInput}
-                      submitToApi={async (_input, output) => {
-                        const submissionId = submissionIdRef.current
-                        if (!submissionId || !output) return
-                        try {
-                          await fetch('/api/leads/complete', {
-                            method: 'POST',
-                            headers: { 'content-type': 'application/json' },
-                            body: JSON.stringify({ submissionId, output }),
-                          })
-                        } catch (err) {
-                          console.error('[agentic-readiness] gated leads/complete', err)
-                        }
-                      }}
-                      onTokens={handleTokens}
-                      onGatedLoaded={handleGatedLoaded}
-                    />
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : 'Loading…'}
-                      </span>
-                      <span className="result-ts hide-sm">{resultTs}</span>
-                      <div className="export-actions">
-                        <button
-                          type="button"
-                          className={clsx('export-btn', { done: exportState === 'copying' })}
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
+                    <div className="result-actions">
+                      <ExportControls
+                        resultRef={shareableRef}
+                        slug="agentic-readiness"
+                        appName="Agentic Readiness Checker"
+                        filename={`agentic-${free.site_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`}
+                        subject={free.site_name}
+                        plainText={buildAgenticReadinessPlainText(free, gated)}
+                      />
+                      <button type="button" className="run-again" onClick={handleReset}>
+                        Check another site
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         >
-                          {exportState === 'copying' ? 'Copied' : 'Copy'}
-                        </button>
-                        <button
-                          type="button"
-                          className={clsx('export-btn', { loading: exportState === 'png' })}
-                          onClick={() => void handleDownloadPng()}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          type="button"
-                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
-                          onClick={() => void handleDownloadPdf()}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button type="button" className="run-again" onClick={handleReset}>
-                          Check another site
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
+                          <path d="M5 12h14" />
+                          <path d="M13 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
                   </>
                 )}
 
-                {free && (
-                  <div className="result-actions-pre-gate">
-                    <button
-                      className="run-again run-again-ghost"
-                      type="button"
-                      onClick={handleReset}
-                    >
+                {/* Fallback reset for the rare case where we have a free result
+                 * but no scanId (e.g. an expired scan), so the main result +
+                 * export block above didn't render. */}
+                {free && !scanId && (
+                  <div className="result-actions">
+                    <button className="run-again" type="button" onClick={handleReset}>
                       Check another site
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="M13 5l7 7-7 7" />
+                      </svg>
                     </button>
                   </div>
                 )}

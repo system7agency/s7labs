@@ -9,6 +9,7 @@ import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import type { ApiResponse, RoastResult } from '@/app/api/mini-apps/website-roast/route'
 import { PageScripts } from './PageScripts'
 import { WebsiteRoastResult, buildWebsiteRoastPlainText } from './components/WebsiteRoastResult'
@@ -116,11 +117,6 @@ const STAGES = [
 ]
 const STAGE_MS = 5000
 
-function fmtTs(d: Date) {
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `ROAST · ${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} · ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`
-}
-
 export default function WebsiteRoastPage() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [url, setUrl] = useState('')
@@ -129,8 +125,6 @@ export default function WebsiteRoastPage() {
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<RoastResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [resultTs, setResultTs] = useState('')
-  const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
@@ -279,6 +273,15 @@ export default function WebsiteRoastPage() {
       setResult(null)
       setErrorMsg('')
 
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. If the lead-save fails (e.g. a
+      // disposable / free-provider email the server rejects), we revert to the
+      // idle form below and surface the error.
+      const host = trimmed.replace(/^https?:\/\//, '').split('/')[0] ?? trimmed
+      setSysState('running')
+      setAppState('loading')
+      startLoadingAnimation(host)
+
       let submissionId: string | null = null
       try {
         const res = await fetch('/api/leads/submit', {
@@ -297,6 +300,9 @@ export default function WebsiteRoastPage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          clearTimers()
+          setSysState('idle')
+          setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeEmail((k) => k + 1)
           setSubmitting(false)
@@ -304,16 +310,14 @@ export default function WebsiteRoastPage() {
         }
         submissionId = json.submissionId
       } catch {
+        clearTimers()
+        setSysState('idle')
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeEmail((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setSysState('running')
-      setAppState('loading')
-      const host = trimmed.replace(/^https?:\/\//, '').split('/')[0] ?? trimmed
-      startLoadingAnimation(host)
 
       let data: ApiResponse
       try {
@@ -343,7 +347,6 @@ export default function WebsiteRoastPage() {
         await new Promise((r) => setTimeout(r, 400))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
-        setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
 
@@ -389,69 +392,8 @@ export default function WebsiteRoastPage() {
     setTokens(null)
   }, [clearTimers])
 
-  const handleCopy = useCallback(async () => {
-    if (!result) return
-    setExportState('copying')
-    try {
-      await navigator.clipboard.writeText(buildWebsiteRoastPlainText(result))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildWebsiteRoastPlainText(result)
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setTimeout(() => setExportState('idle'), 1800)
-  }, [result])
-
-  const handleDownloadPng = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('png')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
-      const a = document.createElement('a')
-      a.download = `roast-${result.site_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`
-      a.href = canvas.toDataURL('image/png')
-      a.click()
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result])
-
-  const handleDownloadPdf = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('pdf')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const { jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
-      const imgW = 190
-      const imgH = (canvas.height / canvas.width) * imgW
-      const pdf = new jsPDF({ orientation: imgH > imgW ? 'portrait' : 'landscape', unit: 'mm' })
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-      pdf.save(`roast-${result.site_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`)
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result])
-
   return (
-    <div className="website-roast">
+    <div className="website-roast mini-app-scope">
       <AuroraBackground />
 
       <Header />
@@ -527,7 +469,7 @@ export default function WebsiteRoastPage() {
                     </div>
                     {urlError && <div className="field-error">{urlError}</div>}
                   </div>
-                  <div className="input-field" style={{ marginTop: 14 }}>
+                  <div className="input-field">
                     <label>
                       Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
                     </label>
@@ -622,55 +564,31 @@ export default function WebsiteRoastPage() {
                       <WebsiteRoastResult bare input={{ url: result.url }} output={result} />
                     </div>
 
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens · ${tokens.in.toLocaleString()} in / ${tokens.out.toLocaleString()} out`
-                          : ''}
-                      </span>
-                      <span className="result-ts hide-sm">{resultTs}</span>
-                      <div className="export-actions">
-                        <button
-                          className={clsx('export-btn', { done: exportState === 'copying' })}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
+                    <div className="result-actions">
+                      <ExportControls
+                        resultRef={resultPanelRef}
+                        slug="website-roast"
+                        appName="Website Roast"
+                        filename={`roast-${result.site_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`}
+                        subject={result.url}
+                        plainText={buildWebsiteRoastPlainText(result)}
+                      />
+                      <button className="run-again" type="button" onClick={handleReset}>
+                        Roast another
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         >
-                          {exportState === 'copying' ? 'Copied' : 'Copy'}
-                        </button>
-                        <button
-                          className={clsx('export-btn', { loading: exportState === 'png' })}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          Roast another
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
+                          <path d="M5 12h14" />
+                          <path d="M13 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
                   </>
                 )}

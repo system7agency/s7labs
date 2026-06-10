@@ -1,0 +1,828 @@
+/*
+ * Shared canonical UI layer for the mini-apps gallery.
+ *
+ * This is the SECOND half of the mini-app design system. Its sibling,
+ * `mini-app-tokens.css`, owns the values (the `--ma-*` primitives + the
+ * legacy `--bg` / `--text` / `--blue` ... aliases). This file owns the
+ * COMPONENT CLASSES — the buttons, inputs, panels, score cards, issue
+ * lists, and error states that the 23 dark-themed mini-apps share.
+ *
+ * Import it ONCE, in `src/app/mini-apps/layout.tsx` (right after the token
+ * file). It is intentionally NOT scoped: classes are written as plain
+ * selectors (`.submit-btn`, `.input-box`, ...) so existing per-app markup
+ * picks them up without edits.
+ *
+ * BUT — every class resolves its colours through the legacy aliases
+ * (`var(--text)`, `var(--blue)`, `var(--border)`, ...), which are only
+ * defined under the `.mini-app-scope` class in `mini-app-tokens.css`.
+ * So in practice these classes only "light up" inside a `.mini-app-scope`
+ * ancestor. Outside that scope the custom properties are undefined and the
+ * components render inert — which is the desired containment.
+ *
+ * Dimensions (spacing / radius / width) snap to the canonical `--ma-*`
+ * scale so migrated apps land on a shared grid; colours use the legacy
+ * aliases so the migrated markup keeps its existing look.
+ *
+ * Organised in the same order as the design system docs:
+ *   1. Buttons
+ *   2. Inputs / forms
+ *   3. Panel / cards
+ *   4. Result blocks
+ *   5. Error state
+ *   6. Keyframes + reduced-motion guard
+ */
+
+/* ============================================================ *
+ * 1. BUTTONS
+ * ============================================================ */
+
+/* Primary CTA — gradient fill, blue glow on hover. */
+.submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ma-space-2);
+  border: 0;
+  background: linear-gradient(180deg, #5a96ff, #4f8cff);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: var(--ma-text-xs);
+  font-weight: var(--ma-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 13px 26px;
+  min-height: 48px;
+  border-radius: var(--ma-radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 6px 22px -8px rgba(79, 140, 255, 0.7);
+  transition:
+    transform var(--ma-dur-fast) var(--ma-ease-out),
+    box-shadow var(--ma-dur-base) var(--ma-ease-out),
+    opacity var(--ma-dur-base) var(--ma-ease-out);
+}
+.submit-btn:hover:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -10px rgba(79, 140, 255, 0.9);
+}
+.submit-btn:active:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(0);
+}
+.submit-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.5);
+}
+.submit-btn:disabled,
+.submit-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 6px 22px -8px rgba(79, 140, 255, 0.4);
+}
+.submit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Bordered, near-transparent secondary action. */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ma-space-2);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: var(--ma-text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border-radius: var(--ma-radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color var(--ma-dur-fast) var(--ma-ease-out),
+    background var(--ma-dur-fast) var(--ma-ease-out),
+    color var(--ma-dur-fast) var(--ma-ease-out);
+}
+.btn-secondary:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: rgba(79, 140, 255, 0.08);
+}
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.5);
+}
+.btn-secondary:disabled,
+.btn-secondary[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Quietest action — no chrome until hover. */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ma-space-2);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: var(--ma-text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border-radius: var(--ma-radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--ma-dur-fast) var(--ma-ease-out),
+    color var(--ma-dur-fast) var(--ma-ease-out),
+    border-color var(--ma-dur-fast) var(--ma-ease-out);
+}
+.btn-ghost:hover:not(:disabled):not([aria-disabled='true']) {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border);
+  color: var(--text);
+}
+.btn-ghost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.5);
+}
+.btn-ghost:disabled,
+.btn-ghost[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Compact action button. */
+.btn-small {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: var(--ma-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border-radius: var(--ma-radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color var(--ma-dur-fast) var(--ma-ease-out),
+    background var(--ma-dur-fast) var(--ma-ease-out),
+    color var(--ma-dur-fast) var(--ma-ease-out);
+}
+.btn-small:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--blue);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+.btn-small:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.5);
+}
+.btn-small:disabled,
+.btn-small[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Export controls — the Copy / PNG / PDF row buttons. */
+.export-btn {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: var(--ma-radius-pill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition:
+    border-color var(--ma-dur-fast) var(--ma-ease-out),
+    background var(--ma-dur-fast) var(--ma-ease-out),
+    color var(--ma-dur-fast) var(--ma-ease-out);
+}
+.export-btn:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+.export-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.5);
+}
+.export-btn:disabled,
+.export-btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+/* Green-tinted "copied" confirmation. */
+.export-btn.done {
+  border-color: rgba(79, 200, 138, 0.4);
+  color: var(--success);
+  background: rgba(79, 200, 138, 0.07);
+}
+/* In-flight (rasterizing PNG/PDF). */
+.export-btn.loading {
+  border-color: rgba(79, 140, 255, 0.35);
+  color: var(--blue);
+}
+.export-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+/*
+ * Export-button row. Keeps the buttons visually compact (per spec) while
+ * giving the clickable row comfortable vertical breathing room so the tap
+ * targets stay easy to hit on touch.
+ */
+.submit-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--ma-space-2);
+  flex-wrap: wrap;
+  margin-top: var(--ma-space-5);
+}
+
+/* ============================================================ *
+ * 2. INPUTS / FORMS
+ * ============================================================ */
+
+/* Labelled field wrapper. */
+/* Canonical form rhythm: one spacing mechanism only.
+ *  - label → input  = 8px  (the flex `gap`; label has NO extra margin)
+ *  - field → field  = 20px (margin-bottom)
+ * Apps must NOT redeclare .input-field / .textarea-field gaps or add a
+ * container flex-gap on top of this, or spacing doubles. */
+.input-field,
+.textarea-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ma-space-2);
+  margin-bottom: var(--ma-space-5);
+}
+.input-field label,
+.textarea-field label {
+  display: block;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* The bordered input shell. */
+.input-box {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+  border-radius: var(--ma-radius-md);
+  padding: 14px 16px;
+  overflow: hidden;
+  transition:
+    border-color var(--ma-dur-base) var(--ma-ease-out),
+    box-shadow var(--ma-dur-base) var(--ma-ease-out),
+    background var(--ma-dur-base) var(--ma-ease-out);
+}
+.input-box:focus-within {
+  border-color: rgba(79, 140, 255, 0.55);
+  background: rgba(79, 140, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12);
+}
+/* Validation error — red border + a one-shot shake. */
+.input-box.error {
+  border-color: var(--error);
+  animation: ma-shake 0.35s var(--ma-ease-out);
+}
+
+/* Canonical input typography — SANS, one size, applied to EVERY mini-app
+ * field. Apps must not override font/size/padding here (that is exactly what
+ * caused field-to-field drift). The box owns the height via its 14px 16px
+ * padding; the input itself is padding:0. */
+.input-box input,
+.input-box textarea,
+.textarea-box textarea {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: var(--ma-text-base);
+  letter-spacing: -0.005em;
+  line-height: var(--ma-leading-snug);
+  padding: 0;
+}
+.input-box input::placeholder,
+.input-box textarea::placeholder {
+  color: var(--text-faint);
+}
+.input-box input:disabled,
+.input-box textarea:disabled {
+  color: var(--text-muted);
+}
+
+/* Multi-line variant. (.textarea-field / label rhythm is defined alongside
+ * .input-field above so single- and multi-line fields share one system.) */
+.textarea-box {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border);
+  border-radius: var(--ma-radius-md);
+  padding: 14px 16px;
+  transition:
+    border-color var(--ma-dur-base) var(--ma-ease-out),
+    box-shadow var(--ma-dur-base) var(--ma-ease-out),
+    background var(--ma-dur-base) var(--ma-ease-out);
+}
+.textarea-box:focus-within {
+  border-color: rgba(79, 140, 255, 0.55);
+  background: rgba(79, 140, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12);
+}
+.textarea-box.error {
+  border-color: var(--error);
+  animation: ma-shake 0.35s var(--ma-ease-out);
+}
+.textarea-box textarea {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: var(--ma-text-base);
+  letter-spacing: -0.005em;
+  line-height: var(--ma-leading-normal);
+  padding: 0;
+  min-height: 160px;
+  resize: vertical;
+}
+.textarea-box textarea::placeholder {
+  color: var(--text-faint);
+}
+.textarea-box textarea:disabled {
+  color: var(--text-muted);
+}
+
+/* Error text beneath a field. Style only — the component adds role="alert". */
+.field-error {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--error);
+  margin-top: var(--ma-space-1);
+  line-height: var(--ma-leading-snug);
+}
+
+/* Character counter — neutral, then amber at the warn threshold, red over. */
+.char-counter {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-align: right;
+  margin-top: var(--ma-space-1);
+}
+.char-counter.warn {
+  color: var(--warning);
+}
+.char-counter.over {
+  color: var(--error);
+}
+
+/*
+ * Keep the dark theme through browser autofill (Chrome / Edge / Safari).
+ * Without this, autofilled inputs flash white-on-blue and break the theme.
+ */
+.input-box input:-webkit-autofill,
+.input-box input:-webkit-autofill:hover,
+.input-box input:-webkit-autofill:focus,
+.input-box input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* ============================================================ *
+ * 3. PANEL / CARDS
+ * ============================================================ */
+
+/* Centering wrapper for the main panel column. */
+.panel-wrap {
+  width: min(100%, var(--ma-width-narrow));
+  margin: 0 auto;
+  position: relative;
+}
+
+/* The glassy dark panel. */
+.panel {
+  position: relative;
+  background: linear-gradient(180deg, rgba(22, 22, 27, 0.85), rgba(16, 16, 20, 0.85));
+  border: 1px solid var(--border);
+  border-radius: var(--ma-radius-lg);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 30px 80px -30px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+/* L-shaped corner accent marks. */
+.corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--blue);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
+.corner.tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+  border-top-left-radius: var(--ma-radius-lg);
+}
+.corner.tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+  border-top-right-radius: var(--ma-radius-lg);
+}
+.corner.bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+  border-bottom-left-radius: var(--ma-radius-lg);
+}
+.corner.br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+  border-bottom-right-radius: var(--ma-radius-lg);
+}
+
+/* Result header — title left, mono timestamp label right. */
+.result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--ma-space-2);
+  margin-bottom: var(--ma-space-5);
+}
+.result-head .title {
+  font-size: var(--ma-text-sm);
+  color: var(--text-dim);
+  font-weight: var(--ma-weight-medium);
+}
+.result-head .ts-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Export-button row at the foot of a result, with a divider above.
+ * Centered: the Copy / PNG / PDF chips sit centered as a group. */
+.result-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--ma-space-2);
+  padding-top: var(--ma-space-4);
+  margin-top: var(--ma-space-5);
+  border-top: 1px solid var(--border);
+}
+
+/* Canonical result action area: a centered column holding the export chips
+ * (.result-footer, rendered by <ExportControls>) and the primary
+ * "Run another" action below them. Use this as the wrapper around
+ * <ExportControls> + the reset button in every app's result state. */
+.result-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ma-space-4);
+  padding-top: var(--ma-space-5);
+  margin-top: var(--ma-space-5);
+  border-top: 1px solid var(--border);
+}
+/* When the chips live inside .result-actions, the wrapper already owns the
+ * divider + top spacing, so the inner row drops its own. */
+.result-actions .result-footer {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* ============================================================ *
+ * 4. RESULT BLOCKS
+ * ============================================================ */
+
+/* Score tiles — auto-fit grid of headline metrics. */
+.score-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: var(--ma-space-3);
+  margin-bottom: var(--ma-space-5);
+}
+.score-card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--ma-radius-md);
+  padding: 16px 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.005));
+  overflow: hidden;
+}
+/* 2px left-accent bar, colour-coded by severity. */
+.score-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--border-strong);
+}
+.score-card.good::before {
+  background: var(--grade-good);
+  box-shadow: 0 0 12px var(--grade-good);
+}
+.score-card.mid::before {
+  background: var(--grade-mid);
+  box-shadow: 0 0 10px var(--grade-mid);
+}
+.score-card.bad::before {
+  background: var(--grade-bad);
+  box-shadow: 0 0 10px var(--grade-bad);
+}
+.score-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--ma-space-2);
+}
+.score-value {
+  font-family: var(--sans);
+  font-size: var(--ma-text-2xl);
+  font-weight: var(--ma-weight-semibold);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.score-card.good .score-value {
+  color: var(--grade-good);
+}
+.score-card.mid .score-value {
+  color: var(--grade-mid);
+}
+.score-card.bad .score-value {
+  color: var(--grade-bad);
+}
+
+/* Left-ruled prose summary. */
+.summary-block {
+  border-left: 2px solid var(--blue);
+  padding-left: var(--ma-space-4);
+  margin-bottom: var(--ma-space-5);
+  color: var(--text-dim);
+  font-size: var(--ma-text-base);
+  line-height: var(--ma-leading-normal);
+}
+
+/* Numbered issue / improvement cards. */
+.issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ma-space-2);
+  margin-bottom: var(--ma-space-5);
+}
+.issue-card {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.012);
+  border-radius: var(--ma-radius-md);
+  padding: 14px 16px;
+}
+.issue-card.critical {
+  border-color: rgba(255, 92, 122, 0.35);
+  background: linear-gradient(180deg, rgba(255, 92, 122, 0.06), rgba(255, 92, 122, 0.01));
+}
+.issue-card.warning {
+  border-color: rgba(245, 166, 35, 0.3);
+  background: linear-gradient(180deg, rgba(245, 166, 35, 0.05), rgba(245, 166, 35, 0.01));
+}
+.issue-card.suggestion {
+  border-color: rgba(79, 140, 255, 0.3);
+  background: linear-gradient(180deg, rgba(79, 140, 255, 0.05), rgba(79, 140, 255, 0.01));
+}
+.issue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ma-space-2);
+  margin-bottom: var(--ma-space-2);
+  flex-wrap: wrap;
+}
+/* Severity pill — always paired with a text label by the component, so
+ * severity is never conveyed by colour alone. */
+.issue-badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--ma-radius-sm);
+  border: 1px solid var(--border-strong);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.issue-badge.critical {
+  color: var(--error);
+  border-color: rgba(255, 92, 122, 0.4);
+  background: rgba(255, 92, 122, 0.1);
+}
+.issue-badge.warning {
+  color: var(--warning);
+  border-color: rgba(245, 166, 35, 0.35);
+  background: rgba(245, 166, 35, 0.08);
+}
+.issue-badge.suggestion {
+  color: var(--blue);
+  border-color: rgba(79, 140, 255, 0.35);
+  background: rgba(79, 140, 255, 0.08);
+}
+.issue-title {
+  font-size: var(--ma-text-base);
+  font-weight: var(--ma-weight-medium);
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.issue-desc {
+  font-size: var(--ma-text-sm);
+  color: var(--text-dim);
+  line-height: var(--ma-leading-normal);
+  margin-top: var(--ma-space-2);
+}
+/* Tinted "here's the fix" callout. */
+.issue-fix {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ma-space-2);
+  margin-top: var(--ma-space-3);
+  padding: 8px 10px;
+  background: rgba(79, 200, 138, 0.04);
+  border: 1px solid rgba(79, 200, 138, 0.15);
+  border-radius: var(--ma-radius-sm);
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: var(--ma-leading-snug);
+}
+
+/* ============================================================ *
+ * 5. ERROR STATE
+ * ============================================================ */
+
+.err-icon {
+  width: 64px;
+  height: 64px;
+  border: 1.5px solid rgba(255, 92, 122, 0.4);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--error);
+  margin: 0 auto var(--ma-space-5);
+  background: rgba(255, 92, 122, 0.05);
+  box-shadow: 0 0 30px -6px rgba(255, 92, 122, 0.3);
+}
+.err-icon svg {
+  width: 28px;
+  height: 28px;
+}
+.err-title {
+  font-size: var(--ma-text-lg);
+  font-weight: var(--ma-weight-medium);
+  text-align: center;
+  margin: 0 0 var(--ma-space-2);
+  letter-spacing: -0.01em;
+}
+.err-msg {
+  color: var(--text-dim);
+  font-size: var(--ma-text-base);
+  line-height: var(--ma-leading-normal);
+  text-align: center;
+  max-width: 380px;
+  margin: 0 auto var(--ma-space-5);
+}
+.err-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ma-space-2);
+  border: 0;
+  background: linear-gradient(180deg, #5a96ff, #4f8cff);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border-radius: var(--ma-radius-sm);
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 0 24px -6px rgba(79, 140, 255, 0.6);
+  transition:
+    transform var(--ma-dur-fast) var(--ma-ease-out),
+    box-shadow var(--ma-dur-base) var(--ma-ease-out);
+}
+.err-btn:hover:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 0 28px -6px rgba(79, 140, 255, 0.8);
+}
+.err-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 140, 255, 0.5);
+}
+
+/* ============================================================ *
+ * 6. KEYFRAMES + REDUCED-MOTION GUARD
+ * ============================================================ */
+
+@keyframes ma-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+/*
+ * Honour the user's reduced-motion preference: kill the error shake, the
+ * button lift, and any non-trivial transition. Focus rings (which are not
+ * animated) are preserved.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .input-box.error,
+  .textarea-box.error {
+    animation: none;
+  }
+  .submit-btn,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-small,
+  .export-btn,
+  .err-btn,
+  .input-box,
+  .textarea-box {
+    transition: none;
+  }
+  .submit-btn:hover:not(:disabled):not([aria-disabled='true']),
+  .submit-btn:active:not(:disabled):not([aria-disabled='true']),
+  .err-btn:hover:not(:disabled):not([aria-disabled='true']) {
+    transform: none;
+  }
+}

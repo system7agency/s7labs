@@ -8,6 +8,7 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type { ApiResponse, BlueprintResult } from '@/app/api/mini-apps/automation-blueprint/route'
 import { BlueprintDiagram, PageScripts } from './PageScripts'
@@ -155,7 +156,6 @@ export default function AutomationBlueprintPage() {
   const [result, setResult] = useState<BlueprintResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [resultTs, setResultTs] = useState('')
-  const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [configCopied, setConfigCopied] = useState(false)
   const [configOpen, setConfigOpen] = useState(true)
   const [diagramFailed, setDiagramFailed] = useState(false)
@@ -408,23 +408,6 @@ export default function AutomationBlueprintPage() {
     setDiagramFailed(false)
   }, [clearTimers])
 
-  const handleCopy = useCallback(async () => {
-    if (!result) return
-    setExportState('copying')
-    try {
-      await navigator.clipboard.writeText(buildAutomationBlueprintPlainText(result))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildAutomationBlueprintPlainText(result)
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setTimeout(() => setExportState('idle'), 1800)
-  }, [result])
-
   const handleCopyConfig = useCallback(async () => {
     if (!result) return
     const text = prettyConfigJson(result.starter_config.json)
@@ -443,52 +426,8 @@ export default function AutomationBlueprintPage() {
     setTimeout(() => setConfigCopied(false), 1800)
   }, [result])
 
-  const handleDownloadPng = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('png')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
-      const a = document.createElement('a')
-      a.download = `blueprint-${result.process_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`
-      a.href = canvas.toDataURL('image/png')
-      a.click()
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result])
-
-  const handleDownloadPdf = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('pdf')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const { jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(resultPanelRef.current, {
-        backgroundColor: '#101014',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      })
-      const imgW = 190
-      const imgH = (canvas.height / canvas.width) * imgW
-      const pdf = new jsPDF({ orientation: imgH > imgW ? 'portrait' : 'landscape', unit: 'mm' })
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-      pdf.save(`blueprint-${result.process_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`)
-    } catch (e) {
-      console.error(e)
-    }
-    setExportState('idle')
-  }, [result])
-
   return (
-    <div className="automation-blueprint">
+    <div className="automation-blueprint mini-app-scope">
       <AuroraBackground />
 
       <Header />
@@ -745,30 +684,14 @@ export default function AutomationBlueprintPage() {
                       </span>
                       <span className="result-ts hide-sm">{resultTs}</span>
                       <div className="export-actions">
-                        <button
-                          className={clsx('export-btn', { done: exportState === 'copying' })}
-                          type="button"
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'copying' ? 'Copied' : 'Copy'}
-                        </button>
-                        <button
-                          className={clsx('export-btn', { loading: exportState === 'png' })}
-                          type="button"
-                          onClick={handleDownloadPng}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
-                          type="button"
-                          onClick={handleDownloadPdf}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
+                        <ExportControls
+                          resultRef={resultPanelRef}
+                          slug="automation-blueprint"
+                          appName="Automation Blueprint"
+                          filename={`blueprint-${result.process_name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`}
+                          subject={result.process_name}
+                          plainText={buildAutomationBlueprintPlainText(result)}
+                        />
                         <button className="run-again" type="button" onClick={handleReset}>
                           Map another process
                           <svg

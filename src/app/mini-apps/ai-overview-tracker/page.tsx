@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/aio-types'
@@ -222,11 +223,6 @@ function keywordsFromText(value: string): string[] {
   return out
 }
 
-function fmtTs(d: Date) {
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `AIO · ${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} · ${p(d.getUTCHours())}:${p(d.getUTCMinutes())} UTC`
-}
-
 export default function AiOverviewTrackerPage() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [domain, setDomain] = useState('')
@@ -244,8 +240,6 @@ export default function AiOverviewTrackerPage() {
   const [free, setFree] = useState<ScanFree | null>(null)
   const [gated, setGated] = useState<ScanGated | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [resultTs, setResultTs] = useState('')
-  const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -396,6 +390,14 @@ export default function AiOverviewTrackerPage() {
       setErrorMsg('')
       setTokens(null)
 
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. If the lead-save fails (e.g. a
+      // disposable / free-provider email the server rejects), we revert to the
+      // idle form below and surface the error.
+      setSysState('running')
+      setAppState('loading')
+      startLoadingAnimation()
+
       let submissionId: string | null = null
       try {
         const res = await fetch('/api/leads/submit', {
@@ -414,6 +416,9 @@ export default function AiOverviewTrackerPage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          clearTimers()
+          setSysState('idle')
+          setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeEmail((k) => k + 1)
           setSubmitting(false)
@@ -422,15 +427,14 @@ export default function AiOverviewTrackerPage() {
         submissionId = json.submissionId
         submissionIdRef.current = submissionId
       } catch {
+        clearTimers()
+        setSysState('idle')
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeEmail((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setAppState('loading')
-      setSysState('running')
-      startLoadingAnimation()
 
       let data: ScanApiResponse
       try {
@@ -459,7 +463,6 @@ export default function AiOverviewTrackerPage() {
         await new Promise((r) => setTimeout(r, 350))
         setScanId(data.scanId)
         setFree(data.free)
-        setResultTs(fmtTs(new Date()))
         setSysState('complete')
         setAppState('result')
 
@@ -515,98 +518,8 @@ export default function AiOverviewTrackerPage() {
     setTokens(null)
   }, [clearTimers])
 
-  const handleCopy = useCallback(async () => {
-    if (!free) return
-    setExportState('copying')
-    try {
-      await navigator.clipboard.writeText(buildAiOverviewTrackerPlainText(free, gated))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildAiOverviewTrackerPlainText(free, gated)
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setTimeout(() => setExportState('idle'), 1800)
-  }, [free, gated])
-
-  const captureShareable = useCallback(async () => {
-    const el = shareableRef.current
-    if (!el) return null
-    const { default: html2canvas } = await import('html2canvas')
-    const capture = html2canvas(el, {
-      backgroundColor: '#101014',
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      onclone: (_doc, cloned) => {
-        let node: HTMLElement | null = cloned
-        while (node) {
-          node.style.backdropFilter = 'none'
-          node.style.setProperty('-webkit-backdrop-filter', 'none')
-          node = node.parentElement
-        }
-      },
-    })
-    const timeoutMs = 30_000
-    let timer: ReturnType<typeof setTimeout> | undefined
-    try {
-      return await Promise.race([
-        capture,
-        new Promise<never>((_, reject) => {
-          timer = setTimeout(() => reject(new Error('Screenshot capture timed out')), timeoutMs)
-        }),
-      ])
-    } finally {
-      if (timer) clearTimeout(timer)
-    }
-  }, [])
-
-  const handleDownloadPng = useCallback(async () => {
-    if (!shareableRef.current || !free) return
-    setExportState('png')
-    try {
-      const canvas = await captureShareable()
-      if (!canvas) return
-      const link = document.createElement('a')
-      link.download = `aio-${free.domain}.png`
-      link.href = canvas.toDataURL('image/png')
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    } catch (e) {
-      console.error('[ai-overview-tracker] PNG export failed', e)
-    } finally {
-      setExportState('idle')
-    }
-  }, [free, captureShareable])
-
-  const handleDownloadPdf = useCallback(async () => {
-    if (!shareableRef.current || !free) return
-    setExportState('pdf')
-    try {
-      const canvas = await captureShareable()
-      if (!canvas) return
-      const { jsPDF } = await import('jspdf')
-      const imgW = 190
-      const imgH = (canvas.height / canvas.width) * imgW
-      const pdf = new jsPDF({
-        orientation: imgH > imgW ? 'portrait' : 'landscape',
-        unit: 'mm',
-      })
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-      pdf.save(`aio-${free.domain}.pdf`)
-    } catch (e) {
-      console.error('[ai-overview-tracker] PDF export failed', e)
-    } finally {
-      setExportState('idle')
-    }
-  }, [free, captureShareable])
-
   return (
-    <div className="ai-overview-tracker">
+    <div className="ai-overview-tracker mini-app-scope">
       <AuroraBackground />
       <Header />
       <main className="shell">
@@ -827,69 +740,33 @@ export default function AiOverviewTrackerPage() {
                       onTokens={handleTokens}
                       onGatedLoaded={handleGatedLoaded}
                     />
-                    <div className="result-footer">
-                      <span className="token-pill">
-                        {tokens
-                          ? `${(tokens.in + tokens.out).toLocaleString()} tokens`
-                          : 'Loading…'}
-                      </span>
-                      <span className="result-ts hide-sm">{resultTs}</span>
-                      <div className="export-actions">
-                        <button
-                          type="button"
-                          className={clsx('export-btn', { done: exportState === 'copying' })}
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
+                    <div className="result-actions">
+                      <ExportControls
+                        resultRef={shareableRef}
+                        slug="ai-overview-tracker"
+                        appName="AI Overview Tracker"
+                        filename={`aio-${free.domain}`}
+                        subject={free.domain}
+                        plainText={buildAiOverviewTrackerPlainText(free, gated)}
+                      />
+                      <button className="run-again" type="button" onClick={handleReset}>
+                        Check again
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         >
-                          {exportState === 'copying' ? 'Copied' : 'Copy'}
-                        </button>
-                        <button
-                          type="button"
-                          className={clsx('export-btn', { loading: exportState === 'png' })}
-                          onClick={() => void handleDownloadPng()}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          type="button"
-                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
-                          onClick={() => void handleDownloadPdf()}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          Check again
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
+                          <path d="M5 12h14" />
+                          <path d="M13 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
                   </>
-                )}
-
-                {free && (
-                  <div className="result-actions-pre-gate">
-                    <button
-                      className="run-again run-again-ghost"
-                      type="button"
-                      onClick={handleReset}
-                    >
-                      Check again
-                    </button>
-                  </div>
                 )}
               </section>
               <section

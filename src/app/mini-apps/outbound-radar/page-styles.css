@@ -4,29 +4,7 @@
  */
 
 .outbound-radar {
-  --bg: #060608;
-  --surface-1: #101014;
-  --surface-2: #16161b;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --text: #f2f3f5;
-  --text-dim: #9395a0;
-  --text-muted: #5e6068;
-  --text-faint: #3a3b42;
-  --blue: #4f8cff;
-  --cyan: #04e3ee;
-  --error: #ff5c7a;
-  --warning: #f5a623;
-  --success: #4fcf8a;
-  --grade-good: #4fcf8a;
-  --grade-mid: #f5a623;
-  --grade-bad: #ff5c7a;
-  --mono:
-    var(--font-mono), 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
-  --sans:
-    var(--font-sans), 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
-    Arial, sans-serif;
-
+  /* Design tokens come from the canonical .mini-app-scope layer in mini-app-tokens.css. */
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);

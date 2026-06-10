@@ -711,7 +711,7 @@ export default function EmailFinderPage() {
   }, [])
 
   return (
-    <div className="email-finder">
+    <div className="email-finder mini-app-scope">
       <AuroraBackground />
 
       <Header />

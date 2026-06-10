@@ -8,6 +8,7 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type { AVSApiResponse, AVSResult } from '@/app/api/mini-apps/ai-visibility-score/route'
 import { PageScripts } from './PageScripts'
@@ -142,7 +143,6 @@ export default function AiVisibilityScorePage() {
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<AVSResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [exportState, setExportState] = useState<'idle' | 'copying' | 'png' | 'pdf'>('idle')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
   const [activeStage, setActiveStage] = useState(-1)
   const [doneStages, setDoneStages] = useState<number[]>([])
@@ -268,6 +268,14 @@ export default function AiVisibilityScorePage() {
       setErrorMsg('')
       setTokens(null)
 
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. If the lead-save fails (e.g. a
+      // disposable / free-provider email the server rejects), we revert to the
+      // idle form below and surface the error.
+      setSysState('running')
+      setAppState('loading')
+      startLoadingAnimation()
+
       // 1) Save the lead first.
       let submissionId: string | null = null
       try {
@@ -287,6 +295,9 @@ export default function AiVisibilityScorePage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          clearTimers()
+          setSysState('idle')
+          setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeEmail((k) => k + 1)
           setSubmitting(false)
@@ -294,15 +305,14 @@ export default function AiVisibilityScorePage() {
         }
         submissionId = json.submissionId
       } catch {
+        clearTimers()
+        setSysState('idle')
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeEmail((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setAppState('loading')
-      setSysState('running')
-      startLoadingAnimation()
 
       let data: AVSApiResponse
       try {
@@ -364,110 +374,10 @@ export default function AiVisibilityScorePage() {
     setTokens(null)
   }, [clearTimers])
 
-  const handleCopy = useCallback(async () => {
-    if (!result) return
-    setExportState('copying')
-    try {
-      await navigator.clipboard.writeText(buildAiVisibilityScorePlainText(result))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildAiVisibilityScorePlainText(result)
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setTimeout(() => setExportState('idle'), 1800)
-  }, [result])
-
-  const captureShareable = useCallback(async () => {
-    const el = resultPanelRef.current
-    if (!el) return null
-    const { default: html2canvas } = await import('html2canvas')
-    const capture = html2canvas(el, {
-      backgroundColor: '#101014',
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      onclone: (_doc, cloned) => {
-        let node: HTMLElement | null = cloned
-        while (node) {
-          node.style.backdropFilter = 'none'
-          node.style.setProperty('-webkit-backdrop-filter', 'none')
-          node = node.parentElement
-        }
-      },
-    })
-    const timeoutMs = 30_000
-    let timer: ReturnType<typeof setTimeout> | undefined
-    try {
-      return await Promise.race([
-        capture,
-        new Promise<never>((_, reject) => {
-          timer = setTimeout(() => reject(new Error('Screenshot capture timed out')), timeoutMs)
-        }),
-      ])
-    } finally {
-      if (timer) clearTimeout(timer)
-    }
-  }, [])
-
-  const downloadCanvasPng = useCallback((canvas: HTMLCanvasElement, filename: string) => {
-    const link = document.createElement('a')
-    link.download = filename
-    link.href = canvas.toDataURL('image/png')
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-  }, [])
-
-  const handleDownloadPng = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('png')
-    try {
-      const canvas = await captureShareable()
-      if (!canvas) {
-        console.error('[ai-visibility-score] PNG export: capture target not found')
-        return
-      }
-      downloadCanvasPng(canvas, `avs-${result.domain}.png`)
-    } catch (e) {
-      console.error('[ai-visibility-score] PNG export failed', e)
-    } finally {
-      setExportState('idle')
-    }
-  }, [result, captureShareable, downloadCanvasPng])
-
-  const handleDownloadPdf = useCallback(async () => {
-    if (!resultPanelRef.current || !result) return
-    setExportState('pdf')
-    try {
-      const canvas = await captureShareable()
-      if (!canvas) {
-        console.error('[ai-visibility-score] PDF export: capture target not found')
-        return
-      }
-      const { jsPDF } = await import('jspdf')
-      const imgW = 190
-      const imgH = (canvas.height / canvas.width) * imgW
-      const pdf = new jsPDF({
-        orientation: imgH > imgW ? 'portrait' : 'landscape',
-        unit: 'mm',
-      })
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH)
-      pdf.save(`avs-${result.domain}.pdf`)
-    } catch (e) {
-      console.error('[ai-visibility-score] PDF export failed', e)
-    } finally {
-      setExportState('idle')
-    }
-  }, [result, captureShareable])
-
   const loadingDomain = normalizeDomainInput(domain) || 'domain'
 
   return (
-    <div className="ai-visibility-score">
+    <div className="ai-visibility-score mini-app-scope">
       <AuroraBackground />
 
       <Header />
@@ -644,49 +554,31 @@ export default function AiVisibilityScorePage() {
                         output={result}
                       />
                     </div>
-                    <div className="result-footer">
-                      <div className="export-actions">
-                        <button
-                          type="button"
-                          className={clsx('export-btn', { done: exportState === 'copying' })}
-                          onClick={handleCopy}
-                          disabled={exportState !== 'idle'}
+                    <div className="result-actions">
+                      <ExportControls
+                        resultRef={resultPanelRef}
+                        slug="ai-visibility-score"
+                        appName="AI Visibility Score"
+                        filename={`avs-${result.domain}`}
+                        subject={result.domain}
+                        plainText={buildAiVisibilityScorePlainText(result)}
+                      />
+                      <button type="button" className="run-again" onClick={handleReset}>
+                        Score another
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         >
-                          {exportState === 'copying' ? 'Copied' : 'Copy'}
-                        </button>
-                        <button
-                          type="button"
-                          className={clsx('export-btn', { loading: exportState === 'png' })}
-                          onClick={() => void handleDownloadPng()}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'png' ? '…' : 'PNG'}
-                        </button>
-                        <button
-                          type="button"
-                          className={clsx('export-btn', { loading: exportState === 'pdf' })}
-                          onClick={() => void handleDownloadPdf()}
-                          disabled={exportState !== 'idle'}
-                        >
-                          {exportState === 'pdf' ? '…' : 'PDF'}
-                        </button>
-                        <button type="button" className="run-again" onClick={handleReset}>
-                          Score another
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
+                          <path d="M5 12h14" />
+                          <path d="M13 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
                   </>
                 )}

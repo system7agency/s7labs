@@ -29,6 +29,7 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
+import { capturePng } from '@/lib/mini-apps/export'
 import { PageScripts } from './PageScripts'
 
 type MotionType =
@@ -496,18 +497,17 @@ export default function GtmFlywheelPage() {
   const handleDownloadPng = useCallback(async () => {
     const viewport = canvasRef.current?.querySelector<HTMLElement>('.react-flow__viewport')
     if (!viewport) return
-    const { default: html2canvas } = await import('html2canvas')
-    const canvas = await html2canvas(viewport, {
-      backgroundColor: '#06080f',
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    })
-    const link = document.createElement('a')
-    link.download = 'gtm-flywheel.png'
-    link.href = canvas.toDataURL('image/png')
-    link.click()
-    setShareMessage('PNG downloaded')
+    try {
+      await capturePng(viewport, {
+        slug: 'gtm-flywheel',
+        appName: 'GTM Flywheel',
+        filename: 'gtm-flywheel',
+      })
+      setShareMessage('PNG downloaded')
+    } catch (err) {
+      console.error('[gtm-flywheel] PNG export failed', err)
+      setShareMessage('PNG export failed. Please try again.')
+    }
   }, [])
 
   const libraryItems = useMemo(
@@ -611,7 +611,7 @@ export default function GtmFlywheelPage() {
   )
 
   return (
-    <div className="gtm-flywheel">
+    <div className="gtm-flywheel mini-app-scope">
       <AuroraBackground />
       <Header />
 

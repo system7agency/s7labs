@@ -304,7 +304,7 @@ export default function RoiCalculatorPage() {
   }
 
   return (
-    <div className="roi-calculator">
+    <div className="roi-calculator mini-app-scope">
       <AuroraBackground />
       <Header />
 

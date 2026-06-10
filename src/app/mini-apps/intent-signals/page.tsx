@@ -417,7 +417,7 @@ export default function IntentSignalsPage() {
   const targetLabel = useMemo(() => normalizeHostInput(domain) || 'target', [domain])
 
   return (
-    <div className="intent-signals">
+    <div className="intent-signals mini-app-scope">
       <AuroraBackground />
       <Header />
 

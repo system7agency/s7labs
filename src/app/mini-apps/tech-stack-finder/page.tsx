@@ -496,7 +496,7 @@ export default function TechStackFinderPage() {
   }, [result])
 
   return (
-    <div className="tech-stack-finder">
+    <div className="tech-stack-finder mini-app-scope">
       <AuroraBackground />
       <Header />
 

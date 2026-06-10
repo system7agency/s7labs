@@ -472,7 +472,7 @@ export default function CampaignIdeationPage() {
   }, [clearLoadTimers])
 
   return (
-    <div className="campaign-ideation">
+    <div className="campaign-ideation mini-app-scope">
       <AuroraBackground />
       <Header />
 

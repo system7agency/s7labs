@@ -1,20 +1,7 @@
 .intent-signals {
-  --bg: #060608;
-  --surface: #121218;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.18);
-  --text: #f2f3f5;
-  --text-dim: #9395a0;
-  --text-muted: #7a7c86;
-  --text-faint: #555760;
-  --error: #ff5c7a;
-  --blue: #4f8cff;
-  --cyan: #04e3ee;
-  --success: #4fcf8a;
-  --warning: #f5a623;
-  --danger: #ff5c7a;
-  --mono: var(--font-mono), 'Geist Mono', ui-monospace, monospace;
-  --sans: var(--font-sans), 'Geist', ui-sans-serif, system-ui, sans-serif;
+  /* Design tokens come from the canonical .mini-app-scope layer in mini-app-tokens.css. */
+  /* --danger has no canonical alias; map it to the canonical --error (same value). */
+  --danger: var(--error);
 
   background: var(--bg);
   color: var(--text);

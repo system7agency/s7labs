@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { clsx } from 'clsx'
 
@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -106,7 +107,6 @@ export default function EmailCopyOptimizerPage() {
   const [result, setResult] = useState<EmailCopyOptimizerResult | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [copiedVariation, setCopiedVariation] = useState<number | null>(null)
-  const [copiedAll, setCopiedAll] = useState(false)
 
   const [subjectError, setSubjectError] = useState<string | null>(null)
   const [bodyError, setBodyError] = useState<string | null>(null)
@@ -114,6 +114,8 @@ export default function EmailCopyOptimizerPage() {
   const [emailError, setEmailError] = useState<string | null>(null)
   const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeKey, setShakeKey] = useState(0)
+
+  const resultPanelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (appState !== 'loading') return
@@ -199,7 +201,6 @@ export default function EmailCopyOptimizerPage() {
       setResult(null)
       setErrorMessage('')
       setCopiedVariation(null)
-      setCopiedAll(false)
 
       const leadInput = {
         subject: trimmedSubject,
@@ -210,6 +211,12 @@ export default function EmailCopyOptimizerPage() {
           tone,
         },
       }
+
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. If the lead-save fails (e.g. a
+      // disposable / free-provider email the server rejects), we revert to the
+      // idle form below and surface the error.
+      setAppState('loading')
 
       let submissionId: string | null = null
       try {
@@ -229,6 +236,7 @@ export default function EmailCopyOptimizerPage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          setAppState('input')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeKey((k) => k + 1)
           setSubmitting(false)
@@ -236,13 +244,12 @@ export default function EmailCopyOptimizerPage() {
         }
         submissionId = json.submissionId
       } catch {
+        setAppState('input')
         setEmailError("Couldn't save your info. Try again.")
         setShakeKey((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setAppState('loading')
 
       try {
         const response = await fetch('/api/mini-apps/email-copy-optimizer', {
@@ -294,7 +301,6 @@ export default function EmailCopyOptimizerPage() {
     setResult(null)
     setErrorMessage('')
     setCopiedVariation(null)
-    setCopiedAll(false)
   }, [])
 
   const handleCopyVariation = useCallback(
@@ -310,16 +316,8 @@ export default function EmailCopyOptimizerPage() {
     [copyToClipboard, result]
   )
 
-  const handleCopyAll = useCallback(async () => {
-    if (!result) return
-    const copied = await copyToClipboard(buildAllVariations(result))
-    if (!copied) return
-    setCopiedAll(true)
-    setTimeout(() => setCopiedAll(false), 1500)
-  }, [copyToClipboard, result])
-
   return (
-    <div className="eco-page">
+    <div className="eco-page mini-app-scope">
       <AuroraBackground />
       <Header />
 
@@ -378,7 +376,7 @@ export default function EmailCopyOptimizerPage() {
                   <div className="idle-label">
                     Subject <span className="required-mark">*</span>
                   </div>
-                  <div className={clsx('pd-input-box', { error: subjectError })}>
+                  <div className={clsx('input-box', { error: subjectError })}>
                     <input
                       id="eco-subject"
                       type="text"
@@ -398,7 +396,7 @@ export default function EmailCopyOptimizerPage() {
                   <div className="idle-label">
                     Email body <span className="required-mark">*</span>
                   </div>
-                  <div className={clsx('pd-input-box', { error: bodyError })}>
+                  <div className={clsx('input-box', { error: bodyError })}>
                     <textarea
                       id="eco-body"
                       value={body}
@@ -426,7 +424,7 @@ export default function EmailCopyOptimizerPage() {
                   {showContext && (
                     <div className="context-wrap">
                       <div className="idle-label">Goal (optional)</div>
-                      <div className="pd-input-box">
+                      <div className="input-box">
                         <input
                           id="eco-goal"
                           type="text"
@@ -438,7 +436,7 @@ export default function EmailCopyOptimizerPage() {
                       </div>
 
                       <div className="idle-label">Audience (optional)</div>
-                      <div className="pd-input-box">
+                      <div className="input-box">
                         <input
                           id="eco-audience"
                           type="text"
@@ -468,7 +466,7 @@ export default function EmailCopyOptimizerPage() {
                   <div className="idle-label">
                     Work email <span className="required-mark">*</span>
                   </div>
-                  <div className={clsx('pd-input-box', { error: emailError })}>
+                  <div className={clsx('input-box', { error: emailError })}>
                     <input
                       type="email"
                       inputMode="email"
@@ -495,7 +493,7 @@ export default function EmailCopyOptimizerPage() {
                     <button type="button" className="secondary-btn" onClick={handleTrySample}>
                       Try a sample
                     </button>
-                    <button type="submit" className="pd-submit-btn" disabled={submitting}>
+                    <button type="submit" className="submit-btn" disabled={submitting}>
                       Optimize copy
                       <svg
                         viewBox="0 0 24 24"
@@ -532,57 +530,82 @@ export default function EmailCopyOptimizerPage() {
               <section className={clsx('view', { active: appState === 'result' })}>
                 {result && (
                   <>
-                    <div className="result-hero">
-                      <p className="result-title">Diagnostic score</p>
-                      <p className="result-score">{result.diagnosis.score}/100</p>
-                      <div className="issues">
-                        {result.diagnosis.issues.map((issue) => (
-                          <article key={`${issue.label}-${issue.severity}`} className="issue-card">
-                            <div className="issue-head">
-                              <h3>{issue.label}</h3>
-                              <span className={clsx('severity-chip', issue.severity)}>
-                                {issue.severity}
-                              </span>
+                    <div ref={resultPanelRef}>
+                      <div className="result-hero">
+                        <p className="result-title">Diagnostic score</p>
+                        <p className="result-score">{result.diagnosis.score}/100</p>
+                        <div className="issues">
+                          {result.diagnosis.issues.map((issue) => (
+                            <article
+                              key={`${issue.label}-${issue.severity}`}
+                              className="issue-card"
+                            >
+                              <div className="issue-head">
+                                <h3>{issue.label}</h3>
+                                <span className={clsx('severity-chip', issue.severity)}>
+                                  {issue.severity}
+                                </span>
+                              </div>
+                              <p>{issue.note}</p>
+                            </article>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="variations-grid">
+                        {result.variations.map((variation, index) => (
+                          <article key={`${variation.name}-${index}`} className="variation-card">
+                            <div className="variation-head">
+                              <h3>{variation.name}</h3>
+                              <button type="button" onClick={() => void handleCopyVariation(index)}>
+                                {copiedVariation === index ? 'Copied' : 'Copy'}
+                              </button>
                             </div>
-                            <p>{issue.note}</p>
+                            <p className="variation-subject">{variation.subject}</p>
+                            <p className="variation-body">{variation.body}</p>
+                            <div className="change-list">
+                              {variation.changes.map((change, changeIndex) => (
+                                <div
+                                  key={`${change.change}-${changeIndex}`}
+                                  className="change-item"
+                                >
+                                  <p className="change-text">{change.change}</p>
+                                  <p className="change-reason">{change.reason}</p>
+                                </div>
+                              ))}
+                            </div>
                           </article>
                         ))}
                       </div>
                     </div>
 
-                    <div className="variations-grid">
-                      {result.variations.map((variation, index) => (
-                        <article key={`${variation.name}-${index}`} className="variation-card">
-                          <div className="variation-head">
-                            <h3>{variation.name}</h3>
-                            <button type="button" onClick={() => void handleCopyVariation(index)}>
-                              {copiedVariation === index ? 'Copied' : 'Copy'}
-                            </button>
-                          </div>
-                          <p className="variation-subject">{variation.subject}</p>
-                          <p className="variation-body">{variation.body}</p>
-                          <div className="change-list">
-                            {variation.changes.map((change, changeIndex) => (
-                              <div key={`${change.change}-${changeIndex}`} className="change-item">
-                                <p className="change-text">{change.change}</p>
-                                <p className="change-reason">{change.reason}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-
-                    <div className="result-footer">
-                      <button type="button" onClick={handleReset}>
+                    <div className="result-actions">
+                      <ExportControls
+                        resultRef={resultPanelRef}
+                        slug="email-copy-optimizer"
+                        appName="Email Copy Optimizer"
+                        filename={`email-copy-optimizer-${(subject.trim() || result.variations[0].subject)
+                          .replace(/[^a-z0-9]/gi, '-')
+                          .toLowerCase()}`}
+                        subject={subject.trim() || result.variations[0].subject}
+                        plainText={buildAllVariations(result)}
+                      />
+                      <button className="run-again" type="button" onClick={handleReset}>
                         Optimize another
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M5 12h14" />
+                          <path d="M13 5l7 7-7 7" />
+                        </svg>
                       </button>
-                      <button type="button" onClick={() => void handleCopyAll()}>
-                        {copiedAll ? 'Copied all' : 'Copy all'}
-                      </button>
-                      <a href="https://www.system7.ai/contact" target="_blank" rel="noreferrer">
-                        Book a call
-                      </a>
                     </div>
                   </>
                 )}
