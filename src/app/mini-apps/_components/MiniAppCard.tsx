@@ -79,11 +79,6 @@ export function MiniAppCard({ app, index, onInterested, onLearnMore, onLaunch }:
         <i />
         {CHIP_LABEL[app.status]}
       </span>
-      {process.env.NODE_ENV !== 'production' && app.author ? (
-        <span className="mx-author" title={`Author: ${app.author}`} aria-hidden>
-          {app.author}
-        </span>
-      ) : null}
       <div className="mx-card-inner">
         <span className="mx-index">
           APP_{routeNum}

@@ -108,9 +108,6 @@
   width: min(100%, 680px);
   position: relative;
 }
-.tech-stack-recommender .panel-wrap-wide {
-  width: min(100%, 900px);
-}
 .tech-stack-recommender .panel {
   position: relative;
   background: linear-gradient(180deg, rgba(22, 22, 27, 0.85), rgba(16, 16, 20, 0.85));
@@ -124,45 +121,6 @@
     0 0 0 1px rgba(0, 0, 0, 0.4);
   overflow: hidden;
 }
-.tech-stack-recommender .corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: var(--blue);
-  border-style: solid;
-  border-width: 0;
-  opacity: 0.85;
-  pointer-events: none;
-}
-.tech-stack-recommender .corner.tl {
-  top: -1px;
-  left: -1px;
-  border-top-width: 2px;
-  border-left-width: 2px;
-  border-top-left-radius: 14px;
-}
-.tech-stack-recommender .corner.tr {
-  top: -1px;
-  right: -1px;
-  border-top-width: 2px;
-  border-right-width: 2px;
-  border-top-right-radius: 14px;
-}
-.tech-stack-recommender .corner.bl {
-  bottom: -1px;
-  left: -1px;
-  border-bottom-width: 2px;
-  border-left-width: 2px;
-  border-bottom-left-radius: 14px;
-}
-.tech-stack-recommender .corner.br {
-  bottom: -1px;
-  right: -1px;
-  border-bottom-width: 2px;
-  border-right-width: 2px;
-  border-bottom-right-radius: 14px;
-}
-
 .tech-stack-recommender .panel-readouts {
   display: flex;
   justify-content: space-between;
@@ -227,113 +185,10 @@
   box-shadow: 0 0 8px var(--cyan);
 }
 
-.tech-stack-recommender .input-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.tech-stack-recommender .input-field label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.tech-stack-recommender .input-box {
-  display: flex;
-  align-items: center;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-.tech-stack-recommender .input-box:focus-within {
-  border-color: var(--blue);
-  box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.18),
-    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
-}
-.tech-stack-recommender .input-box.error {
-  border-color: var(--error);
-  animation: tsr-shake 0.35s ease;
-}
-@keyframes tsr-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-5px);
-  }
-  40% {
-    transform: translateX(5px);
-  }
-  60% {
-    transform: translateX(-3px);
-  }
-  80% {
-    transform: translateX(3px);
-  }
-}
-.tech-stack-recommender .input-box input {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 14px 16px;
-  letter-spacing: -0.005em;
-  min-width: 0;
-}
-.tech-stack-recommender .input-box input::placeholder {
-  color: var(--text-faint);
-}
-
-.tech-stack-recommender .textarea-box {
-  display: flex;
-  align-items: flex-start;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-.tech-stack-recommender .textarea-box:focus-within {
-  border-color: var(--blue);
-  box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.18),
-    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
-}
-.tech-stack-recommender .textarea-box.error {
-  border-color: var(--error);
-  animation: tsr-shake 0.35s ease;
-}
-.tech-stack-recommender .textarea-box textarea {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 14px 16px;
-  letter-spacing: -0.01em;
-  resize: vertical;
-  min-height: 140px;
-  line-height: 1.6;
-}
-.tech-stack-recommender .textarea-box textarea::placeholder {
-  color: var(--text-faint);
-}
-
+/* .input-field rhythm + label, the glassy .input-box / .textarea-box (fill,
+ * focus glow, error shake) and the inner input/textarea typography all come from
+ * the canonical mini-app-ui.css — never redeclare them here (input = SANS,
+ * textarea = MONO, both canonical). Per-app copies caused field drift. */
 .tech-stack-recommender .field-error {
   font-family: var(--mono);
   font-size: 10.5px;
@@ -347,44 +202,8 @@
   letter-spacing: 0.1em;
 }
 
-.tech-stack-recommender .submit-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
-.tech-stack-recommender .submit-btn {
-  border: 0;
-  background: linear-gradient(180deg, #5a96ff 0%, #3a78f0 100%);
-  color: white;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 12px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-    0 0 24px -6px rgba(79, 140, 255, 0.6);
-  transition:
-    filter 160ms ease,
-    transform 160ms ease;
-}
-.tech-stack-recommender .submit-btn:hover {
-  filter: brightness(1.1);
-}
-.tech-stack-recommender .submit-btn:active {
-  transform: scale(0.97);
-}
-.tech-stack-recommender .submit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* .submit-row + the pill .submit-btn (gradient, hover, disabled, focus) come
+ * from canonical mini-app-ui.css. Only the app-specific icon size is kept. */
 .tech-stack-recommender .submit-btn svg {
   width: 16px;
   height: 16px;
@@ -419,154 +238,7 @@
   cursor: not-allowed;
 }
 
-/* ── LOADING ── */
-.tech-stack-recommender .progress-track {
-  height: 2px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 22px;
-}
-.tech-stack-recommender .progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--cyan), var(--blue));
-  box-shadow: 0 0 14px rgba(79, 140, 255, 0.6);
-  transition: width 0.4s ease;
-}
-.tech-stack-recommender .loading-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 14px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.tech-stack-recommender .loading-header strong {
-  color: var(--text);
-  font-weight: 500;
-}
-
-.tech-stack-recommender .stages {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.tech-stack-recommender .stage {
-  position: relative;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.012);
-  border-radius: 10px;
-  padding: 16px 16px 18px;
-  transition:
-    border-color 240ms ease,
-    background 240ms ease,
-    opacity 240ms ease;
-}
-.tech-stack-recommender .stage-num-row {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: var(--text-faint);
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.tech-stack-recommender .stage-title {
-  font-size: 14px;
-  color: var(--text-dim);
-  font-weight: 500;
-  transition: color 240ms ease;
-}
-.tech-stack-recommender .stage-status-icon {
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.3);
-  position: relative;
-  flex-shrink: 0;
-}
-.tech-stack-recommender .stage-status-icon svg {
-  width: 8px;
-  height: 8px;
-  opacity: 0;
-  transition: opacity 200ms;
-}
-.tech-stack-recommender .stage.active {
-  border-color: rgba(79, 140, 255, 0.55);
-  background: linear-gradient(180deg, rgba(79, 140, 255, 0.06), rgba(79, 140, 255, 0.01));
-  box-shadow:
-    0 0 0 1px rgba(79, 140, 255, 0.15),
-    0 0 30px -8px rgba(79, 140, 255, 0.4),
-    0 0 60px -20px rgba(79, 140, 255, 0.3) inset;
-}
-.tech-stack-recommender .stage.active .stage-title {
-  color: var(--text);
-}
-.tech-stack-recommender .stage.active .stage-status-icon {
-  border-color: var(--blue);
-  background: var(--blue);
-  box-shadow: 0 0 12px rgba(79, 140, 255, 0.7);
-  animation: tsr-spin-pulse 1.2s ease-in-out infinite;
-}
-.tech-stack-recommender .stage.active .stage-status-icon::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 1px solid var(--blue);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: tsr-spin 1.1s linear infinite;
-}
-@keyframes tsr-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes tsr-spin-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 12px rgba(79, 140, 255, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 18px rgba(79, 140, 255, 1);
-  }
-}
-.tech-stack-recommender .stage.done {
-  opacity: 0.55;
-}
-.tech-stack-recommender .stage.done .stage-status-icon {
-  border-color: var(--success);
-  background: var(--success);
-}
-.tech-stack-recommender .stage.done .stage-status-icon svg {
-  opacity: 1;
-}
-.tech-stack-recommender .stage.done .stage-status-icon svg path {
-  stroke: #0b1410;
-}
-.tech-stack-recommender .stage-log {
-  margin-top: 10px;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  color: var(--text-faint);
-  line-height: 1.5;
-  min-height: 14px;
-  overflow: hidden;
-  transition: color 240ms;
-}
-.tech-stack-recommender .stage.active .stage-log {
-  color: var(--text-dim);
-}
-.tech-stack-recommender .stage.done .stage-log {
-  color: var(--text-faint);
-}
+/* Loading state comes from the shared <LoadingStages> + canonical mini-app-ui.css. */
 
 /* ── RESULT ── */
 .tech-stack-recommender .result-head {
@@ -985,59 +657,9 @@
   line-height: 1.55;
 }
 
-/* Result footer */
-.tech-stack-recommender .result-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding-top: 18px;
-  margin-top: 18px;
-  border-top: 1px solid var(--border);
-  gap: 12px;
-}
-.tech-stack-recommender .export-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.tech-stack-recommender .export-btn {
-  border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.025);
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 7px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition:
-    border-color 160ms,
-    background 160ms,
-    color 160ms;
-  white-space: nowrap;
-}
-.tech-stack-recommender .export-btn:hover:not(:disabled) {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.05);
-}
-.tech-stack-recommender .export-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.tech-stack-recommender .export-btn.done {
-  border-color: rgba(79, 200, 138, 0.4);
-  color: var(--success);
-  background: rgba(79, 200, 138, 0.07);
-}
-.tech-stack-recommender .export-btn.loading {
-  border-color: rgba(79, 140, 255, 0.35);
-  color: var(--blue);
-}
+/* Result footer: the centered .result-actions wrapper, the .result-footer chip
+ * row, and the pill .export-btn (Copy/PNG/PDF) all come from canonical
+ * mini-app-ui.css. Only the app-specific .run-again reset button is kept. */
 .tech-stack-recommender .run-again {
   border: 1px solid var(--border-strong);
   background: rgba(255, 255, 255, 0.025);
@@ -1155,17 +777,6 @@
   .tech-stack-recommender .panel-body {
     padding: 20px;
   }
-  .tech-stack-recommender .stages {
-    grid-template-columns: 1fr;
-  }
-  .tech-stack-recommender .result-footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .tech-stack-recommender .export-actions {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
   .tech-stack-recommender .run-again {
     justify-content: center;
   }
@@ -1183,15 +794,4 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-}
-
-/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
-.tech-stack-recommender .input-box input:-webkit-autofill,
-.tech-stack-recommender .input-box input:-webkit-autofill:hover,
-.tech-stack-recommender .input-box input:-webkit-autofill:focus,
-.tech-stack-recommender .input-box input:-webkit-autofill:active {
-  -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
-  caret-color: var(--text);
-  transition: background-color 9999s ease-in-out 0s;
 }

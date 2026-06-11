@@ -9,6 +9,11 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { Input } from '@/components/mini-apps/ui/Input'
+import { Textarea } from '@/components/mini-apps/ui/Textarea'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -172,20 +177,25 @@ export default function LinkedInProfileReviewerPage() {
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<ProfileReviewResult | null>(null)
   const [resultTs, setResultTs] = useState('')
-  const [copyState, setCopyState] = useState<'idle' | 'done'>('idle')
-  const [activeStage, setActiveStage] = useState(-1)
-  const [doneStages, setDoneStages] = useState<number[]>([])
-  const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
-  const [progressPct, setProgressPct] = useState(0)
-  const [loadingPct, setLoadingPct] = useState('0%')
-  const [latency, setLatency] = useState('—')
   const [clock, setClock] = useState('—')
+
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    reset: resetLoader,
+    latency,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_MS)
 
   const urlInputRef = useRef<HTMLInputElement | null>(null)
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const rafRef = useRef<number | null>(null)
-  const runStartRef = useRef(0)
+  const resultPanelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const tick = () => {
@@ -210,97 +220,16 @@ export default function LinkedInProfileReviewerPage() {
     return () => clearTimeout(t)
   }, [appState, mode])
 
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((timer) => clearTimeout(timer))
-    timersRef.current = []
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
-  }, [])
-
-  useEffect(() => () => clearTimers(), [clearTimers])
-
-  const startLoadingAnimation = useCallback(() => {
-    clearTimers()
-    setActiveStage(0)
-    setDoneStages([])
-    setStageLogs(['', '', '', ''])
-    setProgressPct(0)
-    setLoadingPct('0%')
-    setLatency('0.0s')
-    runStartRef.current = performance.now()
-
-    const total = STAGES.length * STAGE_MS
-    const tick = (now: number) => {
-      const pct = Math.min(98, ((now - runStartRef.current) / total) * 100)
-      setProgressPct(pct)
-      setLoadingPct(`${Math.floor(pct)}%`)
-      setLatency(`${((now - runStartRef.current) / 1000).toFixed(1)}s`)
-      if (pct < 98) {
-        rafRef.current = requestAnimationFrame(tick)
-      }
-    }
-    rafRef.current = requestAnimationFrame(tick)
-
-    STAGES.forEach((stage, index) => {
-      timersRef.current.push(
-        setTimeout(() => {
-          setActiveStage(index)
-          setStageLogs((prev) => {
-            const next = [...prev]
-            next[index] = stage.logs[0] ?? ''
-            return next
-          })
-        }, index * STAGE_MS)
-      )
-      timersRef.current.push(
-        setTimeout(
-          () => {
-            setDoneStages((prev) => [...prev, index])
-            setStageLogs((prev) => {
-              const next = [...prev]
-              next[index] = stage.logs[stage.logs.length - 1] ?? ''
-              return next
-            })
-          },
-          (index + 1) * STAGE_MS
-        )
-      )
-    })
-  }, [clearTimers])
-
-  const handleCopy = useCallback(async () => {
-    if (!result) return
-    const text = buildPlainText(result)
-    try {
-      await navigator.clipboard.writeText(text)
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = text
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setCopyState('done')
-    setTimeout(() => setCopyState('idle'), 1800)
-  }, [result])
-
   const resetToInput = useCallback(() => {
-    clearTimers()
+    resetLoader()
     setAppState('idle')
     setInputError(null)
     setErrorCode(null)
     setErrorMsg('')
     setSubmitting(false)
     setResult(null)
-    setProgressPct(0)
-    setLoadingPct('0%')
-    setLatency('—')
     setEmailError(null)
-  }, [clearTimers])
+  }, [resetLoader])
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -342,6 +271,12 @@ export default function LinkedInProfileReviewerPage() {
       setSubmitting(true)
       setResult(null)
 
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. On lead-save failure, revert to the
+      // idle form and surface the error.
+      setAppState('loading')
+      startLoader()
+
       let submissionId: string | null = null
       try {
         const leadRes = await fetch('/api/leads/submit', {
@@ -364,6 +299,8 @@ export default function LinkedInProfileReviewerPage() {
           error?: string
         }
         if (!leadRes.ok || !leadJson.ok || !leadJson.submissionId) {
+          resetLoader()
+          setAppState('idle')
           setEmailError(leadJson.error || "Couldn't save your info. Try again.")
           setShakeEmail((k) => k + 1)
           setSubmitting(false)
@@ -371,14 +308,13 @@ export default function LinkedInProfileReviewerPage() {
         }
         submissionId = leadJson.submissionId
       } catch {
+        resetLoader()
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeEmail((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setAppState('loading')
-      startLoadingAnimation()
 
       try {
         const res = await fetch('/api/mini-apps/linkedin-profile-reviewer', {
@@ -392,14 +328,8 @@ export default function LinkedInProfileReviewerPage() {
         })
         const data = (await res.json()) as ApiResponse
 
-        clearTimers()
-        const elapsed = ((performance.now() - runStartRef.current) / 1000).toFixed(1)
-        setLatency(`${elapsed}s`)
-        setProgressPct(100)
-        setLoadingPct('100%')
-
         if (data.ok) {
-          setDoneStages([0, 1, 2, 3])
+          completeLoader()
           setResult(data.data)
           setResultTs(fmtTs(new Date()))
           setAppState('result')
@@ -414,12 +344,13 @@ export default function LinkedInProfileReviewerPage() {
             }),
           }).catch((err) => console.error('[linkedin-profile-reviewer] leads/complete', err))
         } else {
+          stopLoader()
           setErrorCode(data.code ?? null)
           setErrorMsg(data.message)
           setAppState('error')
         }
       } catch {
-        clearTimers()
+        stopLoader()
         setErrorCode(null)
         setErrorMsg('Network error. Please check your connection and try again.')
         setAppState('error')
@@ -432,10 +363,12 @@ export default function LinkedInProfileReviewerPage() {
       profileText,
       email,
       marketingConsent,
-      startLoadingAnimation,
+      startLoader,
+      stopLoader,
+      completeLoader,
+      resetLoader,
       submitting,
       url,
-      clearTimers,
     ]
   )
 
@@ -458,10 +391,6 @@ export default function LinkedInProfileReviewerPage() {
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" aria-hidden="true" />
-            <span className="corner tr" aria-hidden="true" />
-            <span className="corner bl" aria-hidden="true" />
-            <span className="corner br" aria-hidden="true" />
             {appState !== 'idle' && (
               <div className="panel-readouts">
                 <div className="pr-left">
@@ -503,200 +432,173 @@ export default function LinkedInProfileReviewerPage() {
                   </button>
                 </div>
 
-                <form className="pd-form" noValidate onSubmit={handleSubmit}>
+                <form className="idle-form" noValidate onSubmit={handleSubmit}>
                   {mode === 'url' ? (
-                    <>
-                      <div className="idle-label">
-                        Profile URL <span className="required-mark">*</span>
-                      </div>
-                      <div
-                        key={`u-${shakeInput}`}
-                        className={clsx('pd-input-box', { error: inputError })}
-                      >
-                        <input
-                          id="linkedin-url"
-                          ref={urlInputRef}
-                          type="url"
-                          placeholder="https://www.linkedin.com/in/username"
-                          spellCheck={false}
-                          value={url}
-                          disabled={submitting}
-                          onChange={(e) => {
-                            setUrl(e.target.value)
-                            if (inputError) setInputError(null)
-                          }}
-                        />
-                      </div>
-                      <div className={clsx('pd-helper', { error: inputError })}>
-                        {inputError ?? 'Only individual profile URLs are supported.'}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="idle-label">
-                        Profile text <span className="required-mark">*</span>
-                      </div>
-                      <div
-                        key={`t-${shakeInput}`}
-                        className={clsx('pd-input-box textarea-box', { error: inputError })}
-                      >
-                        <textarea
-                          id="profile-text"
-                          ref={textAreaRef}
-                          placeholder="Paste headline, about, experience, skills, and recommendations here..."
-                          value={profileText}
-                          disabled={submitting}
-                          onChange={(e) => {
-                            setProfileText(e.target.value)
-                            if (inputError) setInputError(null)
-                          }}
-                        />
-                      </div>
-                      <div className={clsx('pd-helper', { error: inputError })}>
-                        {inputError ?? `${profileText.length} chars (100-8000)`}
-                      </div>
-                    </>
-                  )}
-
-                  <div className="idle-label">
-                    Work email <span className="required-mark">*</span>
-                  </div>
-                  <div
-                    key={`e-${shakeEmail}`}
-                    className={clsx('pd-input-box', { error: emailError })}
-                  >
-                    <input
-                      id="work-email"
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={email}
+                    <Input
+                      ref={urlInputRef}
+                      id="linkedin-url"
+                      label="Profile URL"
+                      required
+                      type="url"
+                      placeholder="https://www.linkedin.com/in/username"
+                      spellCheck={false}
+                      value={url}
                       disabled={submitting}
+                      error={inputError}
+                      shakeKey={shakeInput}
                       onChange={(e) => {
-                        setEmail(e.target.value)
-                        if (emailError) setEmailError(null)
+                        setUrl(e.target.value)
+                        if (inputError) setInputError(null)
                       }}
                     />
-                  </div>
-                  <div className={clsx('pd-helper', { error: emailError })}>
-                    {emailError ?? 'We send the report to your work email. No spam.'}
-                  </div>
+                  ) : (
+                    <Textarea
+                      ref={textAreaRef}
+                      id="profile-text"
+                      label="Profile text"
+                      required
+                      placeholder="Paste headline, about, experience, skills, and recommendations here..."
+                      value={profileText}
+                      disabled={submitting}
+                      error={inputError}
+                      shakeKey={shakeInput}
+                      count={profileText.length}
+                      maxLength={8000}
+                      onChange={(e) => {
+                        setProfileText(e.target.value)
+                        if (inputError) setInputError(null)
+                      }}
+                    />
+                  )}
+
+                  <Input
+                    id="work-email"
+                    label="Work email"
+                    required
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    disabled={submitting}
+                    error={emailError}
+                    shakeKey={shakeEmail}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
                   <InlineConsentField
                     checked={marketingConsent}
                     disabled={submitting}
                     onChange={setMarketingConsent}
                   />
-                  <div className="pd-submit-row">
-                    <button type="submit" className="pd-submit-btn" disabled={submitting}>
-                      Review profile
+                  <div className="submit-row" style={{ marginTop: 18 }}>
+                    <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2.4"
+                        strokeWidth="2.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
                         <path d="M5 12h14" />
                         <path d="M13 5l7 7-7 7" />
                       </svg>
+                      Review profile
                     </button>
                   </div>
                 </form>
               </section>
 
               <section className={clsx('lpr-state', { active: appState === 'loading' })}>
-                <div className="progress-track">
-                  <div className="progress-bar" style={{ width: `${progressPct}%` }} />
-                </div>
-                <div className="loading-header">
-                  <span>Analyzing profile</span>
-                  <span>{loadingPct}</span>
-                </div>
-                <div className="stages">
-                  {STAGES.map((stage, i) => {
-                    const active = activeStage === i && !doneStages.includes(i)
-                    const done = doneStages.includes(i)
-                    return (
-                      <div key={stage.num} className={clsx('stage', { active, done })}>
-                        <div className="stage-row">
-                          <span>{stage.num}</span>
-                          <span>{stage.title}</span>
-                        </div>
-                        <div className="stage-log">{stageLogs[i]}</div>
-                      </div>
-                    )
-                  })}
-                </div>
+                <LoadingStages
+                  stages={STAGES}
+                  label="Analyzing profile"
+                  progressPct={progressPct}
+                  loadingPct={loadingPct}
+                  activeStage={activeStage}
+                  doneStages={doneStages}
+                  stageLogs={stageLogs}
+                  waiting={waiting}
+                />
               </section>
 
               <section className={clsx('lpr-state', { active: appState === 'result' })}>
                 {result && (
                   <>
-                    <div className="result-head">
-                      <span className="ts">{resultTs}</span>
-                      <span className={clsx('score-pill', scoreClass(result.score))}>
-                        Score {result.score}/100
-                      </span>
-                    </div>
-                    <p className="result-summary">{result.summary}</p>
-
-                    <div className="section-grid">
-                      {result.sections.map((section) => (
-                        <article key={section.name} className="section-card">
-                          <div className="section-row">
-                            <span className="section-name">{section.name}</span>
-                            <span className={clsx('section-score', scoreClass(section.score))}>
-                              {section.score}
-                            </span>
-                          </div>
-                          <p className="section-verdict">{section.verdict}</p>
-                          <p className="section-feedback">{section.feedback}</p>
-                        </article>
-                      ))}
-                    </div>
-
-                    <div className="actions-block">
-                      <div className="actions-header">
-                        <span>{'// Top 5 actions'}</span>
-                        <span className="actions-sub">ranked by impact</span>
+                    <div ref={resultPanelRef}>
+                      <div className="result-head">
+                        <span className="ts">{resultTs}</span>
+                        <span className={clsx('score-pill', scoreClass(result.score))}>
+                          Score {result.score}/100
+                        </span>
                       </div>
-                      <div className="actions-list">
-                        {result.topActions.map((item) => (
-                          <article key={item.rank} className="action-card">
-                            <div className="action-row">
-                              <span className="action-rank">0{item.rank}</span>
-                              <span className={clsx('impact-chip', impactClass(item.impact))}>
-                                {item.impact}
+                      <p className="result-summary">{result.summary}</p>
+
+                      <div className="section-grid">
+                        {result.sections.map((section) => (
+                          <article key={section.name} className="section-card">
+                            <div className="section-row">
+                              <span className="section-name">{section.name}</span>
+                              <span className={clsx('section-score', scoreClass(section.score))}>
+                                {section.score}
                               </span>
                             </div>
-                            <h3>{item.action}</h3>
-                            <p>{item.rationale}</p>
+                            <p className="section-verdict">{section.verdict}</p>
+                            <p className="section-feedback">{section.feedback}</p>
                           </article>
                         ))}
                       </div>
+
+                      <div className="actions-block">
+                        <div className="actions-header">
+                          <span>{'// Top 5 actions'}</span>
+                          <span className="actions-sub">ranked by impact</span>
+                        </div>
+                        <div className="actions-list">
+                          {result.topActions.map((item) => (
+                            <article key={item.rank} className="action-card">
+                              <div className="action-row">
+                                <span className="action-rank">0{item.rank}</span>
+                                <span className={clsx('impact-chip', impactClass(item.impact))}>
+                                  {item.impact}
+                                </span>
+                              </div>
+                              <h3>{item.action}</h3>
+                              <p>{item.rationale}</p>
+                            </article>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="result-footer">
-                      <button type="button" className="ghost-btn" onClick={resetToInput}>
+                    <div className="result-actions">
+                      <ExportControls
+                        resultRef={resultPanelRef}
+                        slug="linkedin-profile-reviewer"
+                        appName="LinkedIn Profile Reviewer"
+                        filename={`linkedin-review-score-${result.score}`}
+                        subject={result.sourceUrl ?? 'pasted profile'}
+                        plainText={buildPlainText(result)}
+                      />
+                      <button className="run-again" type="button" onClick={resetToInput}>
                         Review another
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M5 12h14" />
+                          <path d="M13 5l7 7-7 7" />
+                        </svg>
                       </button>
-                      <button
-                        type="button"
-                        className={clsx('ghost-btn', { done: copyState === 'done' })}
-                        onClick={handleCopy}
-                      >
-                        {copyState === 'done' ? 'Copied' : 'Copy review'}
-                      </button>
-                      <a
-                        className="primary-link"
-                        href="https://www.system7.ai/contact"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Book a call
-                      </a>
                     </div>
                   </>
                 )}
@@ -705,16 +607,29 @@ export default function LinkedInProfileReviewerPage() {
               <section
                 className={clsx('lpr-state', 'error-state', { active: appState === 'error' })}
               >
-                <h2>Review failed</h2>
-                <p>{errorMsg}</p>
+                <div className="err-icon">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+                  </svg>
+                </div>
+                <h2 className="err-title">Review failed</h2>
+                <p className="err-msg">{errorMsg}</p>
                 <div className="error-actions">
-                  <button type="button" className="ghost-btn" onClick={resetToInput}>
+                  <button type="button" className="err-btn" onClick={resetToInput}>
                     Try again
                   </button>
                   {errorCode === 'SCRAPE_BLOCKED' && (
                     <button
                       type="button"
-                      className="primary-btn"
+                      className="run-again"
                       onClick={() => {
                         setMode('paste')
                         setAppState('idle')

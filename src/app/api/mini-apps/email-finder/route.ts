@@ -139,7 +139,15 @@ async function apolloPeopleMatch(
     body: JSON.stringify(body),
     signal,
   })
-  if (!res.ok) return { status: res.status, data: null }
+  if (!res.ok) {
+    // Surface Apollo's actual rejection reason (e.g. plan/scope/param errors on
+    // a 422) — it is otherwise swallowed, which makes the client-side 502 opaque.
+    const detail = await res.text().catch(() => '')
+    console.error(
+      `[email-finder] Apollo /people/match ${res.status} — body=${JSON.stringify(body)} resp=${detail.slice(0, 400)}`
+    )
+    return { status: res.status, data: null }
+  }
   const data = (await res.json()) as ApolloMatchResponse
   return { status: res.status, data }
 }

@@ -11,7 +11,7 @@
  */
 
 import { useId } from 'react'
-import type { TextareaHTMLAttributes } from 'react'
+import type { Ref, TextareaHTMLAttributes } from 'react'
 import clsx from 'clsx'
 
 type Props = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'className'> & {
@@ -22,6 +22,8 @@ type Props = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'className'> & {
   /** Current value length, for the counter. Pass value.length. */
   count?: number
   className?: string
+  /** Forwarded to the inner <textarea> (React 19 ref-as-prop) — used for autofocus. */
+  ref?: Ref<HTMLTextAreaElement>
 }
 
 export function Textarea({
@@ -32,17 +34,21 @@ export function Textarea({
   count,
   maxLength,
   id,
+  ref,
   ...rest
 }: Props) {
   const autoId = useId()
   const taId = id ?? autoId
   const errId = `${taId}-err`
 
-  const showCounter = typeof maxLength === 'number' && typeof count === 'number'
-  const ratio = showCounter ? count / maxLength : 0
+  // Counter shows whenever a count is passed. With a maxLength it reads
+  // "n/max" and turns amber/red near the cap; without one it reads "n chars".
+  const showCounter = typeof count === 'number'
+  const hasCap = typeof maxLength === 'number'
+  const ratio = typeof count === 'number' && typeof maxLength === 'number' ? count / maxLength : 0
   const counterClass = clsx('char-counter', {
-    warn: ratio >= 0.8 && ratio < 1,
-    over: ratio >= 1,
+    warn: hasCap && ratio >= 0.8 && ratio < 1,
+    over: hasCap && ratio >= 1,
   })
 
   return (
@@ -58,6 +64,7 @@ export function Textarea({
       </label>
       <div key={`box-${shakeKey}`} className={clsx('textarea-box', { error: !!error })}>
         <textarea
+          ref={ref}
           id={taId}
           maxLength={maxLength}
           aria-required={required}
@@ -76,7 +83,7 @@ export function Textarea({
         )}
         {showCounter && (
           <span className={counterClass} aria-hidden="true">
-            {count}/{maxLength}
+            {hasCap ? `${count}/${maxLength}` : `${count} chars`}
           </span>
         )}
       </div>

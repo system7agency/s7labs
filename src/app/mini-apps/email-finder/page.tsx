@@ -10,20 +10,13 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { Input } from '@/components/mini-apps/ui/Input'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type { ApiResponse, EmailFinderResult } from '@/app/api/mini-apps/email-finder/route'
 import { PageScripts } from './PageScripts'
-
-// ---------- feature flag ----------
-
-/**
- * Flip to `true` once APOLLO_API_KEY is provisioned with a paid plan that
- * includes the /people/match endpoint. Until then the form is read-only and
- * users see a "coming soon" notice instead of hitting the API and getting a
- * 502.
- */
-const APP_ENABLED = false
 
 // ---------- helpers ----------
 
@@ -67,7 +60,7 @@ const STAGES = [
     title: 'Composing result',
     logs: ['mapping fields', 'scoring confidence', 'result ready'],
   },
-] as const
+]
 
 const STAGE_DURATION_MS = 1800
 
@@ -166,21 +159,22 @@ function LookupRunner({
   const [state, setState] = useState<LookupState>('loading')
   const [result, setResult] = useState<EmailFinderResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [progressPct, setProgressPct] = useState(0)
-  const [loadingPct, setLoadingPct] = useState('0%')
-  const [latency, setLatency] = useState('0.0s')
-  const [activeStage, setActiveStage] = useState(0)
-  const [doneStages, setDoneStages] = useState<number[]>([])
-  const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
   const [copied, setCopied] = useState(false)
   const [resultTs, setResultTs] = useState('')
   const [clock, setClock] = useState('—')
   const [sysState, setSysState] = useState('running')
 
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const rafRef = useRef<number | null>(null)
-  const startTimeRef = useRef(0)
-  const firedRef = useRef(false)
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_DURATION_MS)
 
   // Live clock
   useEffect(() => {
@@ -194,85 +188,26 @@ function LookupRunner({
     return () => clearInterval(id)
   }, [])
 
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
-  }, [])
-
-  useEffect(() => () => clearTimers(), [clearTimers])
-
-  // Kick off Apollo lookup + animation on mount (once).
+  // Kick off Apollo lookup + animation on mount. Each run cancels its
+  // predecessor via the `cancelled` cleanup below, which keeps React StrictMode's
+  // dev double-invoke correct (the first run is torn down, the real mount runs to
+  // completion). A persistent fired-once ref must NOT be used here — under
+  // StrictMode it would survive the remount and skip the real run.
   useEffect(() => {
-    if (firedRef.current) return
-    firedRef.current = true
-
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const startTime = performance.now()
-    startTimeRef.current = startTime
-    const totalMs = STAGE_DURATION_MS * STAGES.length
+    startLoader()
 
-    if (!prefersReduced) {
-      const tick = (now: number) => {
-        const elapsed = now - startTime
-        const pct = Math.min(98, (elapsed / totalMs) * 100)
-        setProgressPct(pct)
-        setLoadingPct(Math.floor(pct) + '%')
-        setLatency((elapsed / 1000).toFixed(1) + 's')
-        if (pct < 98) rafRef.current = requestAnimationFrame(tick)
-      }
-      rafRef.current = requestAnimationFrame(tick)
-    }
-
-    STAGES.forEach((stage, i) => {
-      const tActivate = setTimeout(() => {
-        setActiveStage(i)
-        setStageLogs((prev) => {
-          const next = [...prev]
-          next[i] = stage.logs[0] ?? ''
-          return next
-        })
-        stage.logs.forEach((log, li) => {
-          if (li === 0) return
-          const tLog = setTimeout(
-            () => {
-              setStageLogs((prev) => {
-                const next = [...prev]
-                next[i] = log
-                return next
-              })
-            },
-            (li * STAGE_DURATION_MS) / stage.logs.length
-          )
-          timersRef.current.push(tLog)
-        })
-      }, i * STAGE_DURATION_MS)
-      timersRef.current.push(tActivate)
-      const tDone = setTimeout(
-        () => {
-          setDoneStages((prev) => [...prev, i])
-          setStageLogs((prev) => {
-            const next = [...prev]
-            next[i] = stage.logs[stage.logs.length - 1] ?? ''
-            return next
-          })
-        },
-        (i + 1) * STAGE_DURATION_MS
-      )
-      timersRef.current.push(tDone)
-    })
-
-    // Fire the actual API call in parallel with the animation.
+    // Fire the actual API call in parallel with the animation. Aborted on
+    // teardown so StrictMode's discarded dev mount doesn't waste an Apollo call.
     let cancelled = false
+    const controller = new AbortController()
     void (async () => {
       try {
         const res = await fetch('/api/mini-apps/email-finder', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(input),
+          signal: controller.signal,
         })
         const data = (await res.json()) as ApiResponse
         if (cancelled) return
@@ -285,11 +220,7 @@ function LookupRunner({
         }
         if (cancelled) return
 
-        clearTimers()
-        setProgressPct(100)
-        setLoadingPct('100%')
-        setActiveStage(STAGES.length - 1)
-        setDoneStages([0, 1, 2, 3])
+        completeLoader()
 
         // email-finder is a provider lookup (Apollo), no LLM. Record ZERO_COST.
         const zeroCost = { model: 'none', inputTokens: 0, outputTokens: 0, costUsd: 0 }
@@ -333,7 +264,7 @@ function LookupRunner({
         }).catch((err) => console.error('[email-finder] leads/complete', err))
       } catch {
         if (cancelled) return
-        clearTimers()
+        stopLoader()
         setErrorMsg('Network error. Please check your connection and try again.')
         setSysState('error')
         setState('error')
@@ -341,6 +272,7 @@ function LookupRunner({
     })()
     return () => {
       cancelled = true
+      controller.abort()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -360,41 +292,20 @@ function LookupRunner({
     <div className="panel-body">
       {/* Loading */}
       <section className={clsx('ef-state', { active: state === 'loading' })}>
-        <div className="progress-track">
-          <div className="progress-bar" style={{ width: `${progressPct}%` }} />
-        </div>
-        <div className="loading-header">
-          <span>
-            Looking up <strong>{input.name}</strong>
-          </span>
-          <span>{loadingPct}</span>
-        </div>
-        <div className="stages">
-          {STAGES.map((s, i) => {
-            const isActive = activeStage === i && !doneStages.includes(i)
-            const isDone = doneStages.includes(i)
-            return (
-              <div key={s.num} className={clsx('stage', { active: isActive, done: isDone })}>
-                <div className="stage-num-row">
-                  <span>{s.num}</span>
-                  <span className="stage-status-icon">
-                    <svg viewBox="0 0 12 12" fill="none">
-                      <path
-                        d="M2 6.5l2.5 2.5L10 3"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                </div>
-                <div className="stage-title">{s.title}</div>
-                <div className="stage-log">{stageLogs[i]}</div>
-              </div>
-            )
-          })}
-        </div>
+        <LoadingStages
+          stages={STAGES}
+          label={
+            <>
+              Looking up <strong>{input.name}</strong>
+            </>
+          }
+          progressPct={progressPct}
+          loadingPct={loadingPct}
+          activeStage={activeStage}
+          doneStages={doneStages}
+          stageLogs={stageLogs}
+          waiting={waiting}
+        />
       </section>
 
       {/* Result */}
@@ -489,10 +400,12 @@ function LookupRunner({
 
             <div className="ef-verified-line">Verified via Apollo</div>
 
-            <div className="ef-result-footer">
-              <button type="button" className="ef-run-again" onClick={onReset}>
+            <div className="result-actions">
+              <button type="button" className="run-again" onClick={onReset}>
                 Run another
                 <svg
+                  width="12"
+                  height="12"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -586,7 +499,7 @@ function LookupRunner({
       </section>
 
       {/* Hidden status props used by panel-readouts */}
-      <span hidden data-sys={sysState} data-lat={latency} data-clock={clock} />
+      <span hidden data-sys={sysState} data-clock={clock} />
     </div>
   )
 }
@@ -620,7 +533,6 @@ export default function EmailFinderPage() {
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
-      if (!APP_ENABLED) return
       if (submitting) return
       const trimmedName = name.trim()
       const trimmedCompany = company.trim()
@@ -744,99 +656,69 @@ export default function EmailFinderPage() {
                   <div className="idle-label">Person to find</div>
                   <form
                     key={shakeKey}
-                    className="ef-form-grid"
+                    className="idle-form"
                     onSubmit={handleSubmit}
                     noValidate
                     autoComplete="off"
                   >
-                    <div>
-                      <label className="ef-field-label" htmlFor="ef-name">
-                        Full name
-                      </label>
-                      <div className={clsx('ef-text-box', { error: !!errors.name })}>
-                        <input
-                          ref={nameRef}
-                          id="ef-name"
-                          type="text"
-                          placeholder="Jane Smith"
-                          value={name}
-                          maxLength={100}
-                          onChange={(e) => {
-                            setName(e.target.value)
-                            if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }))
-                          }}
-                        />
-                      </div>
-                      {errors.name ? <div className="ef-helper error">{errors.name}</div> : null}
-                    </div>
+                    <Input
+                      ref={nameRef}
+                      label="Full name"
+                      required
+                      type="text"
+                      placeholder="Jane Smith"
+                      value={name}
+                      maxLength={100}
+                      disabled={submitting}
+                      error={errors.name ?? null}
+                      shakeKey={shakeKey}
+                      onChange={(e) => {
+                        setName(e.target.value)
+                        if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }))
+                      }}
+                    />
 
-                    <div>
-                      <label className="ef-field-label" htmlFor="ef-company">
-                        Company
-                      </label>
-                      <div className={clsx('ef-text-box', { error: !!errors.company })}>
-                        <input
-                          id="ef-company"
-                          type="text"
-                          placeholder="stripe.com or https://linkedin.com/company/stripe"
-                          value={company}
-                          onChange={(e) => {
-                            setCompany(e.target.value)
-                            if (errors.company)
-                              setErrors((prev) => ({ ...prev, company: undefined }))
-                          }}
-                        />
-                      </div>
-                      <div className={clsx('ef-helper', { error: !!errors.company })}>
-                        {errors.company ?? 'Domain or LinkedIn company URL.'}
-                      </div>
-                    </div>
+                    <Input
+                      label="Company"
+                      required
+                      type="text"
+                      placeholder="stripe.com or https://linkedin.com/company/stripe"
+                      value={company}
+                      disabled={submitting}
+                      error={errors.company ?? null}
+                      shakeKey={shakeKey}
+                      onChange={(e) => {
+                        setCompany(e.target.value)
+                        if (errors.company) setErrors((prev) => ({ ...prev, company: undefined }))
+                      }}
+                    />
 
-                    <div className="input-field" style={{ marginTop: 14 }}>
-                      <label>
-                        Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-                      </label>
-                      <div
-                        key={`e-${shakeEmail}`}
-                        className={clsx('input-box', { error: emailError })}
-                      >
-                        <input
-                          type="email"
-                          inputMode="email"
-                          autoComplete="email"
-                          placeholder="you@company.com"
-                          value={email}
-                          disabled={submitting || !APP_ENABLED}
-                          onChange={(e) => {
-                            setEmail(e.target.value)
-                            if (emailError) setEmailError(null)
-                          }}
-                        />
-                      </div>
-                      {emailError && <div className="field-error">{emailError}</div>}
-                    </div>
+                    <Input
+                      label="Work email"
+                      required
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      value={email}
+                      disabled={submitting}
+                      error={emailError}
+                      shakeKey={shakeEmail}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        if (emailError) setEmailError(null)
+                      }}
+                    />
                     <InlineConsentField
                       id="email-finder-marketing-consent"
                       checked={marketingConsent}
-                      disabled={submitting || !APP_ENABLED}
+                      disabled={submitting}
                       onChange={setMarketingConsent}
                     />
 
-                    {!APP_ENABLED ? (
-                      <div className="ef-coming-soon" role="status">
-                        <span className="ef-coming-soon-dot" />
-                        Coming soon. Apollo API access in review. Form is read-only for now.
-                      </div>
-                    ) : null}
-
-                    <div className="ef-submit-row" style={{ marginTop: 18 }}>
-                      <button
-                        type="submit"
-                        className="ef-submit-btn"
-                        disabled={!APP_ENABLED || submitting}
-                        aria-disabled={!APP_ENABLED || submitting}
-                      >
-                        {APP_ENABLED ? 'Find Email' : 'Coming soon'}
+                    <div className="submit-row" style={{ marginTop: 18 }}>
+                      <button type="submit" className="submit-btn" disabled={submitting}>
+                        Find Email
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"

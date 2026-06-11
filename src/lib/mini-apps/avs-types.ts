@@ -16,6 +16,10 @@ export type AVSResult = {
   avs: number
   grade: 'A' | 'B' | 'C' | 'D' | 'F'
   one_liner: string
+  /** The AI engines the brand's presence was actually checked across
+   * (e.g. ['Claude', 'ChatGPT', 'Perplexity']). Surfaced in the report so it's
+   * clear the score spans multiple engines, not just one. */
+  engines_checked: string[]
   sub_scores: SubScore[]
   biggest_drag: { sub_score: string; why: string }
   short_read: { sub_score: string; diagnosis: string }[]

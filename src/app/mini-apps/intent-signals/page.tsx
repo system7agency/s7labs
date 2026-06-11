@@ -10,6 +10,10 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { Input } from '@/components/mini-apps/ui/Input'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -166,20 +170,25 @@ export default function IntentSignalsPage() {
   const [result, setResult] = useState<IntentSignalsResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [resultTs, setResultTs] = useState('')
-  const [copying, setCopying] = useState(false)
 
-  const [activeStage, setActiveStage] = useState(-1)
-  const [doneStages, setDoneStages] = useState<number[]>([])
-  const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
-  const [progressPct, setProgressPct] = useState(0)
-  const [loadingPct, setLoadingPct] = useState('0%')
-  const [latency, setLatency] = useState('—')
   const [clock, setClock] = useState('—')
   const [sysState, setSysState] = useState('idle')
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const rafRef = useRef<number | null>(null)
-  const runStartRef = useRef(0)
+  const resultPanelRef = useRef<HTMLDivElement | null>(null)
+
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    reset: resetLoader,
+    latency,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_MS)
 
   useEffect(() => {
     const tick = () => {
@@ -197,76 +206,6 @@ export default function IntentSignalsPage() {
     const timer = setTimeout(() => inputRef.current?.focus(), 200)
     return () => clearTimeout(timer)
   }, [appState])
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((timer) => clearTimeout(timer))
-    timersRef.current = []
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
-  }, [])
-
-  useEffect(() => () => clearTimers(), [clearTimers])
-
-  const startLoadingAnimation = useCallback(() => {
-    clearTimers()
-    setActiveStage(0)
-    setDoneStages([])
-    setStageLogs(['', '', '', ''])
-    setProgressPct(0)
-    setLoadingPct('0%')
-    setLatency('0.0s')
-
-    const start = performance.now()
-    const totalMs = STAGE_MS * STAGES.length
-    runStartRef.current = start
-
-    const tick = (now: number) => {
-      const pct = Math.min(98, ((now - start) / totalMs) * 100)
-      setProgressPct(pct)
-      setLoadingPct(`${Math.floor(pct)}%`)
-      setLatency(`${((now - start) / 1000).toFixed(1)}s`)
-      if (pct < 98) rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
-
-    STAGES.forEach((stage, index) => {
-      timersRef.current.push(
-        setTimeout(() => {
-          setActiveStage(index)
-          setStageLogs((prev) => {
-            const next = [...prev]
-            next[index] = stage.logs[0] ?? ''
-            return next
-          })
-          stage.logs.forEach((log, logIndex) => {
-            if (logIndex === 0) return
-            timersRef.current.push(
-              setTimeout(
-                () => {
-                  setStageLogs((prev) => {
-                    const next = [...prev]
-                    next[index] = log
-                    return next
-                  })
-                },
-                (logIndex * STAGE_MS) / stage.logs.length
-              )
-            )
-          })
-        }, index * STAGE_MS)
-      )
-      timersRef.current.push(
-        setTimeout(
-          () => {
-            setDoneStages((prev) => [...prev, index])
-          },
-          (index + 1) * STAGE_MS
-        )
-      )
-    })
-  }, [clearTimers])
 
   const handleSubmit = useCallback(
     async (event: FormEvent) => {
@@ -298,6 +237,13 @@ export default function IntentSignalsPage() {
       setResult(null)
       setErrorMsg('')
 
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. On lead-save failure, revert to the
+      // idle form and surface the error.
+      setSysState('running')
+      setAppState('loading')
+      startLoader()
+
       let submissionId: string | null = null
       try {
         const res = await fetch('/api/leads/submit', {
@@ -316,6 +262,9 @@ export default function IntentSignalsPage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          resetLoader()
+          setSysState('idle')
+          setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeEmail((k) => k + 1)
           setSubmitting(false)
@@ -323,15 +272,14 @@ export default function IntentSignalsPage() {
         }
         submissionId = json.submissionId
       } catch {
+        resetLoader()
+        setSysState('idle')
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeEmail((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setSysState('running')
-      setAppState('loading')
-      startLoadingAnimation()
 
       let data: ApiResponse
       try {
@@ -342,7 +290,7 @@ export default function IntentSignalsPage() {
         })
         data = (await response.json()) as ApiResponse
       } catch {
-        clearTimers()
+        stopLoader()
         setErrorMsg('Network error. Please check your connection and try again.')
         setSysState('error')
         setAppState('error')
@@ -350,14 +298,8 @@ export default function IntentSignalsPage() {
         return
       }
 
-      clearTimers()
-      const elapsed = `${((performance.now() - runStartRef.current) / 1000).toFixed(1)}s`
-      setLatency(elapsed)
-      setProgressPct(100)
-      setLoadingPct('100%')
-
       if (data.ok) {
-        setDoneStages([0, 1, 2, 3])
+        completeLoader()
         setResult(data.data)
         setResultTs(formatReportTs(new Date()))
         setSysState('complete')
@@ -373,6 +315,7 @@ export default function IntentSignalsPage() {
           }),
         }).catch((err) => console.error('[intent-signals] leads/complete', err))
       } else {
+        stopLoader()
         setErrorMsg(data.message)
         setSysState('error')
         setAppState('error')
@@ -380,39 +323,27 @@ export default function IntentSignalsPage() {
 
       setSubmitting(false)
     },
-    [clearTimers, domain, email, marketingConsent, startLoadingAnimation, submitting]
+    [
+      domain,
+      email,
+      marketingConsent,
+      submitting,
+      startLoader,
+      stopLoader,
+      completeLoader,
+      resetLoader,
+    ]
   )
 
   const handleReset = useCallback(() => {
-    clearTimers()
+    resetLoader()
     setAppState('idle')
     setResult(null)
     setErrorMsg('')
     setDomainError(null)
     setSubmitting(false)
-    setProgressPct(0)
-    setLoadingPct('0%')
-    setLatency('—')
     setSysState('idle')
-  }, [clearTimers])
-
-  const handleCopy = useCallback(async () => {
-    if (!result || copying) return
-    setCopying(true)
-    try {
-      await navigator.clipboard.writeText(buildPlainText(result))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildPlainText(result)
-      ta.style.position = 'fixed'
-      ta.style.opacity = '0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    window.setTimeout(() => setCopying(false), 1500)
-  }, [copying, result])
+  }, [resetLoader])
 
   const targetLabel = useMemo(() => normalizeHostInput(domain) || 'target', [domain])
 
@@ -435,10 +366,6 @@ export default function IntentSignalsPage() {
 
         <div className="panel-wrap">
           <div className="panel">
-            <span className="corner tl" aria-hidden="true" />
-            <span className="corner tr" aria-hidden="true" />
-            <span className="corner bl" aria-hidden="true" />
-            <span className="corner br" aria-hidden="true" />
             {appState !== 'idle' && (
               <div className="panel-readouts">
                 <div className="prl">
@@ -462,181 +389,183 @@ export default function IntentSignalsPage() {
 
             <div className="panel-body">
               <section className={clsx('state', { active: appState === 'idle' })}>
-                <div className="idle-label">
-                  Company domain <span className="required-mark">*</span>
-                </div>
-                <form
-                  key={`d-${shakeDomain}-e-${shakeEmail}`}
-                  className="pd-form"
-                  onSubmit={handleSubmit}
-                  noValidate
-                  autoComplete="off"
-                >
-                  <div className={clsx('pd-input-box', { error: domainError })}>
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={domain}
-                      placeholder="acme.com"
-                      spellCheck={false}
-                      onChange={(event) => {
-                        setDomain(event.target.value)
-                        if (domainError) setDomainError(null)
-                      }}
-                      disabled={submitting}
-                    />
-                  </div>
-                  <div className={clsx('pd-helper', { error: domainError })}>
-                    {domainError ?? 'Enter a target domain, e.g. acme.com'}
-                  </div>
-                  <div className="idle-label">
-                    Work email <span className="required-mark">*</span>
-                  </div>
-                  <div className={clsx('pd-input-box', { error: emailError })}>
-                    <input
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={email}
-                      disabled={submitting}
-                      onChange={(event) => {
-                        setEmail(event.target.value)
-                        if (emailError) setEmailError(null)
-                      }}
-                    />
-                  </div>
-                  <div className={clsx('pd-helper', { error: emailError })}>
-                    {emailError ?? 'We send the report to your work email. No spam.'}
-                  </div>
+                <div className="idle-label">Scan a company for buyer intent</div>
+                <form className="idle-form" onSubmit={handleSubmit} noValidate autoComplete="off">
+                  <Input
+                    ref={inputRef}
+                    label="Company domain"
+                    required
+                    type="text"
+                    value={domain}
+                    placeholder="acme.com"
+                    spellCheck={false}
+                    disabled={submitting}
+                    error={domainError}
+                    shakeKey={shakeDomain}
+                    onChange={(event) => {
+                      setDomain(event.target.value)
+                      if (domainError) setDomainError(null)
+                    }}
+                  />
+                  <Input
+                    label="Work email"
+                    required
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    value={email}
+                    placeholder="you@company.com"
+                    disabled={submitting}
+                    error={emailError}
+                    shakeKey={shakeEmail}
+                    onChange={(event) => {
+                      setEmail(event.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
                   <InlineConsentField
                     checked={marketingConsent}
                     disabled={submitting}
                     onChange={setMarketingConsent}
                   />
-                  <div className="pd-submit-row">
-                    <button type="submit" className="pd-submit-btn" disabled={submitting}>
-                      Run scan
+                  <div className="submit-row" style={{ marginTop: 18 }}>
+                    <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2.4"
+                        strokeWidth="2.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <path d="M5 12h14" />
-                        <path d="M13 5l7 7-7 7" />
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="M21 21l-4.3-4.3" />
                       </svg>
+                      Run scan
                     </button>
                   </div>
                 </form>
               </section>
 
               <section className={clsx('state', { active: appState === 'loading' })}>
-                <div className="progress-track">
-                  <div className="progress-bar" style={{ width: `${progressPct}%` }} />
-                </div>
-                <div className="loading-header">
-                  <span>
-                    Scanning <strong>{targetLabel}</strong>
-                  </span>
-                  <span>{loadingPct}</span>
-                </div>
-                <div className="stages">
-                  {STAGES.map((stage, index) => {
-                    const isActive = activeStage === index && !doneStages.includes(index)
-                    const isDone = doneStages.includes(index)
-                    return (
-                      <div
-                        key={stage.num}
-                        className={clsx('stage', { active: isActive, done: isDone })}
-                      >
-                        <div className="stage-num-row">
-                          <span>{stage.num}</span>
-                        </div>
-                        <div className="stage-title">{stage.title}</div>
-                        <div className="stage-log">{stageLogs[index]}</div>
-                      </div>
-                    )
-                  })}
-                </div>
+                <LoadingStages
+                  stages={STAGES}
+                  label={
+                    <>
+                      Scanning <strong>{targetLabel}</strong>
+                    </>
+                  }
+                  progressPct={progressPct}
+                  loadingPct={loadingPct}
+                  activeStage={activeStage}
+                  doneStages={doneStages}
+                  stageLogs={stageLogs}
+                  waiting={waiting}
+                />
               </section>
 
               <section className={clsx('state', { active: appState === 'result' })}>
                 {result ? (
                   <>
-                    <div className="result-head">
-                      <span className="title">Signal report ready</span>
-                      <span className="ts-label">{resultTs}</span>
-                    </div>
+                    <div ref={resultPanelRef}>
+                      <div className="result-head">
+                        <span className="title">Signal report ready</span>
+                        <span className="ts-label">{resultTs}</span>
+                      </div>
 
-                    <div className="score-grid">
-                      <article className={clsx('score-card', scoreClass(result.intentScore))}>
-                        <div className="score-label">Intent score</div>
-                        <div className="score-value">{result.intentScore}</div>
-                        <div className="score-note">{scoreNote(result.intentScore)}</div>
-                      </article>
-                      <article className="summary-card">
-                        <div className="score-label">Summary</div>
-                        <p>{result.summary}</p>
-                      </article>
-                    </div>
-
-                    <article className="angle-card">
-                      <div className="angle-eyebrow">{'// Outreach angle'}</div>
-                      <p>{result.outreachAngle}</p>
-                    </article>
-
-                    <div className="section-head">
-                      <span>{'// Ranked signals'}</span>
-                      <span>{result.signals.length} found</span>
-                    </div>
-                    <div className="signal-list">
-                      {result.signals.map((signal, index) => (
-                        <article key={`${signal.sourceUrl}-${index}`} className="signal-item">
-                          <div className="signal-top">
-                            <h3>{signal.headline}</h3>
-                            <span className={clsx('chip', signal.strength)}>{signal.strength}</span>
-                          </div>
-                          <p>{signal.detail}</p>
-                          <div className="signal-meta">
-                            <span>{signalTypeLabel(signal.type)}</span>
-                            <span>{signal.source}</span>
-                          </div>
+                      <div className="score-grid">
+                        <article className={clsx('score-card', scoreClass(result.intentScore))}>
+                          <div className="score-label">Intent score</div>
+                          <div className="score-value">{result.intentScore}</div>
+                          <div className="score-note">{scoreNote(result.intentScore)}</div>
                         </article>
-                      ))}
-                      {result.signals.length === 0 ? (
-                        <article className="signal-item empty">
-                          <h3>Quiet signal profile</h3>
-                          <p>No strong public triggers were detected in this scan window.</p>
+                        <article className="summary-card">
+                          <div className="score-label">Summary</div>
+                          <p>{result.summary}</p>
                         </article>
-                      ) : null}
+                      </div>
+
+                      <article className="angle-card">
+                        <div className="angle-eyebrow">{'// Outreach angle'}</div>
+                        <p>{result.outreachAngle}</p>
+                      </article>
+
+                      <div className="section-head">
+                        <span>{'// Ranked signals'}</span>
+                        <span>{result.signals.length} found</span>
+                      </div>
+                      <div className="signal-list">
+                        {result.signals.map((signal, index) => (
+                          <article key={`${signal.sourceUrl}-${index}`} className="signal-item">
+                            <div className="signal-top">
+                              <h3>{signal.headline}</h3>
+                              <span className={clsx('chip', signal.strength)}>
+                                {signal.strength}
+                              </span>
+                            </div>
+                            <p>{signal.detail}</p>
+                            <div className="signal-meta">
+                              <span>{signalTypeLabel(signal.type)}</span>
+                              <span>{signal.source}</span>
+                            </div>
+                          </article>
+                        ))}
+                        {result.signals.length === 0 ? (
+                          <article className="signal-item empty">
+                            <h3>Quiet signal profile</h3>
+                            <p>No strong public triggers were detected in this scan window.</p>
+                          </article>
+                        ) : null}
+                      </div>
                     </div>
 
-                    <div className="result-footer">
-                      <button type="button" className="footer-btn" onClick={handleReset}>
+                    <div className="result-actions">
+                      <ExportControls
+                        resultRef={resultPanelRef}
+                        slug="intent-signals"
+                        appName="Intent Signals"
+                        filename={`intent-signals-${result.domain.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`}
+                        subject={result.domain}
+                        plainText={buildPlainText(result)}
+                      />
+                      <button className="run-again" type="button" onClick={handleReset}>
                         Scan another
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M5 12h14" />
+                          <path d="M13 5l7 7-7 7" />
+                        </svg>
                       </button>
-                      <button type="button" className="footer-btn" onClick={handleCopy}>
-                        {copying ? 'Copied' : 'Copy signals'}
-                      </button>
-                      <a
-                        className="footer-btn primary"
-                        href="https://www.system7.ai/contact"
-                        target="_blank"
-                      >
-                        Book a call
-                      </a>
                     </div>
                   </>
                 ) : null}
               </section>
 
               <section className={clsx('state', 'error', { active: appState === 'error' })}>
-                <h2>Scan failed</h2>
-                <p>{errorMsg}</p>
-                <button type="button" className="footer-btn" onClick={handleReset}>
+                <div className="err-icon">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+                  </svg>
+                </div>
+                <h2 className="err-title">Scan failed</h2>
+                <p className="err-msg">{errorMsg}</p>
+                <button className="err-btn" type="button" onClick={handleReset}>
                   Try again
                 </button>
               </section>

@@ -13,7 +13,7 @@
  */
 
 import { useId } from 'react'
-import type { InputHTMLAttributes } from 'react'
+import type { InputHTMLAttributes, Ref } from 'react'
 import clsx from 'clsx'
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'className'> & {
@@ -22,16 +22,11 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'className'> & {
   error?: string | null
   shakeKey?: number
   className?: string
+  /** Forwarded to the inner <input> (React 19 ref-as-prop) — used for autofocus. */
+  ref?: Ref<HTMLInputElement>
 }
 
-export function Input({
-  label,
-  required = false,
-  error,
-  shakeKey = 0,
-  id,
-  ...rest
-}: Props) {
+export function Input({ label, required = false, error, shakeKey = 0, id, ref, ...rest }: Props) {
   const autoId = useId()
   const inputId = id ?? autoId
   const errId = `${inputId}-err`
@@ -48,6 +43,7 @@ export function Input({
       </label>
       <div key={`box-${shakeKey}`} className={clsx('input-box', { error: !!error })}>
         <input
+          ref={ref}
           id={inputId}
           aria-required={required}
           aria-invalid={!!error}

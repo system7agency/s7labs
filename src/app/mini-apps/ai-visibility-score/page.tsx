@@ -8,7 +8,10 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { Input } from '@/components/mini-apps/ui/Input'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type { AVSApiResponse, AVSResult } from '@/app/api/mini-apps/ai-visibility-score/route'
 import { PageScripts } from './PageScripts'
@@ -144,20 +147,25 @@ export default function AiVisibilityScorePage() {
   const [result, setResult] = useState<AVSResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
-  const [activeStage, setActiveStage] = useState(-1)
-  const [doneStages, setDoneStages] = useState<number[]>([])
-  const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
-  const [progressPct, setProgressPct] = useState(0)
-  const [loadingPct, setLoadingPct] = useState('0%')
-  const [latency, setLatency] = useState('—')
   const [sysState, setSysState] = useState('idle')
   const [clock, setClock] = useState('—')
 
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    reset: resetLoader,
+    latency,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_MS)
+
   const domainInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const rafRef = useRef<number | null>(null)
-  const runStartRef = useRef(0)
 
   useEffect(() => {
     const tick = () => {
@@ -176,64 +184,6 @@ export default function AiVisibilityScorePage() {
       return () => clearTimeout(t)
     }
   }, [appState])
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
-  }, [])
-  useEffect(() => () => clearTimers(), [clearTimers])
-
-  const startLoadingAnimation = useCallback(() => {
-    clearTimers()
-    setActiveStage(0)
-    setDoneStages([])
-    setStageLogs(['', '', '', ''])
-    setProgressPct(0)
-    setLoadingPct('0%')
-    setLatency('0.0s')
-    const startTime = performance.now()
-    runStartRef.current = startTime
-    const totalMs = STAGE_MS * STAGES.length
-
-    const tick = (now: number) => {
-      const pct = Math.min(98, ((now - startTime) / totalMs) * 100)
-      setProgressPct(pct)
-      setLoadingPct(Math.floor(pct) + '%')
-      setLatency(((now - startTime) / 1000).toFixed(1) + 's')
-      if (pct < 98) rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
-
-    STAGES.forEach((stage, i) => {
-      timersRef.current.push(
-        setTimeout(() => {
-          setActiveStage(i)
-          setStageLogs((prev) => {
-            const n = [...prev]
-            n[i] = stage.logs[0] ?? ''
-            return n
-          })
-        }, i * STAGE_MS)
-      )
-      timersRef.current.push(
-        setTimeout(
-          () => {
-            setDoneStages((prev) => [...prev, i])
-            setStageLogs((prev) => {
-              const n = [...prev]
-              n[i] = stage.logs[stage.logs.length - 1] ?? ''
-              return n
-            })
-          },
-          (i + 1) * STAGE_MS
-        )
-      )
-    })
-  }, [clearTimers])
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -274,7 +224,7 @@ export default function AiVisibilityScorePage() {
       // idle form below and surface the error.
       setSysState('running')
       setAppState('loading')
-      startLoadingAnimation()
+      startLoader()
 
       // 1) Save the lead first.
       let submissionId: string | null = null
@@ -295,7 +245,7 @@ export default function AiVisibilityScorePage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
-          clearTimers()
+          resetLoader()
           setSysState('idle')
           setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
@@ -305,7 +255,7 @@ export default function AiVisibilityScorePage() {
         }
         submissionId = json.submissionId
       } catch {
-        clearTimers()
+        resetLoader()
         setSysState('idle')
         setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
@@ -323,7 +273,7 @@ export default function AiVisibilityScorePage() {
         })
         data = (await res.json()) as AVSApiResponse
       } catch {
-        clearTimers()
+        stopLoader()
         setErrorMsg('Network error. Please check your connection and try again.')
         setSysState('error')
         setAppState('error')
@@ -331,13 +281,8 @@ export default function AiVisibilityScorePage() {
         return
       }
 
-      clearTimers()
-      setLatency(((performance.now() - runStartRef.current) / 1000).toFixed(1) + 's')
-      setProgressPct(100)
-      setLoadingPct('100%')
-
       if (data.ok) {
-        setDoneStages([0, 1, 2, 3])
+        completeLoader()
         await new Promise((r) => setTimeout(r, 350))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
@@ -352,17 +297,27 @@ export default function AiVisibilityScorePage() {
           body: JSON.stringify(completeBody),
         }).catch((err) => console.error('[ai-visibility-score] leads/complete', err))
       } else {
+        stopLoader()
         setErrorMsg(data.message)
         setSysState('error')
         setAppState('error')
       }
       setSubmitting(false)
     },
-    [submitting, domain, email, marketingConsent, startLoadingAnimation, clearTimers]
+    [
+      submitting,
+      domain,
+      email,
+      marketingConsent,
+      startLoader,
+      stopLoader,
+      completeLoader,
+      resetLoader,
+    ]
   )
 
   const handleReset = useCallback(() => {
-    clearTimers()
+    resetLoader()
     setAppState('idle')
     setResult(null)
     setErrorMsg('')
@@ -370,9 +325,8 @@ export default function AiVisibilityScorePage() {
     setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
-    setLatency('—')
     setTokens(null)
-  }, [clearTimers])
+  }, [resetLoader])
 
   const loadingDomain = normalizeDomainInput(domain) || 'domain'
 
@@ -436,49 +390,36 @@ export default function AiVisibilityScorePage() {
               <section className={clsx('avs-state', { active: appState === 'idle' })}>
                 <div className="idle-label">Enter your domain</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
-                  <div className="input-field">
-                    <label>Domain</label>
-                    <div
-                      key={`d-${shakeKey}`}
-                      className={clsx('input-box', { error: domainError })}
-                    >
-                      <input
-                        ref={domainInputRef}
-                        type="text"
-                        placeholder="yourbrand.com"
-                        value={domain}
-                        disabled={submitting}
-                        onChange={(e) => {
-                          setDomain(e.target.value)
-                          if (domainError) setDomainError(null)
-                        }}
-                      />
-                    </div>
-                    {domainError && <div className="field-error">{domainError}</div>}
-                  </div>
-                  <div className="input-field" style={{ marginTop: 14 }}>
-                    <label>
-                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-                    </label>
-                    <div
-                      key={`e-${shakeEmail}`}
-                      className={clsx('input-box', { error: emailError })}
-                    >
-                      <input
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
-                        placeholder="you@company.com"
-                        value={email}
-                        disabled={submitting}
-                        onChange={(e) => {
-                          setEmail(e.target.value)
-                          if (emailError) setEmailError(null)
-                        }}
-                      />
-                    </div>
-                    {emailError && <div className="field-error">{emailError}</div>}
-                  </div>
+                  <Input
+                    ref={domainInputRef}
+                    label="Domain"
+                    type="text"
+                    placeholder="yourbrand.com"
+                    value={domain}
+                    disabled={submitting}
+                    error={domainError}
+                    shakeKey={shakeKey}
+                    onChange={(e) => {
+                      setDomain(e.target.value)
+                      if (domainError) setDomainError(null)
+                    }}
+                  />
+                  <Input
+                    label="Work email"
+                    required
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    disabled={submitting}
+                    error={emailError}
+                    shakeKey={shakeEmail}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
                   <InlineConsentField
                     checked={marketingConsent}
                     disabled={submitting}
@@ -504,44 +445,20 @@ export default function AiVisibilityScorePage() {
               </section>
 
               <section className={clsx('avs-state', { active: appState === 'loading' })}>
-                <div className="progress-track">
-                  <div className="progress-bar" style={{ width: `${progressPct}%` }} />
-                </div>
-                <div className="loading-header">
-                  <span>
-                    Scoring <strong>{loadingDomain}</strong>
-                  </span>
-                  <span>{loadingPct}</span>
-                </div>
-                <div className="stages">
-                  {STAGES.map((s, i) => {
-                    const isActive = activeStage === i && !doneStages.includes(i)
-                    const isDone = doneStages.includes(i)
-                    return (
-                      <div
-                        key={s.num}
-                        className={clsx('stage', { active: isActive, done: isDone })}
-                      >
-                        <div className="stage-num-row">
-                          <span>{s.num}</span>
-                          <span className="stage-status-icon">
-                            <svg viewBox="0 0 12 12" fill="none">
-                              <path
-                                d="M2 6.5l2.5 2.5L10 3"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </span>
-                        </div>
-                        <div className="stage-title">{s.title}</div>
-                        <div className="stage-log">{stageLogs[i]}</div>
-                      </div>
-                    )
-                  })}
-                </div>
+                <LoadingStages
+                  stages={STAGES}
+                  label={
+                    <>
+                      Scoring <strong>{loadingDomain}</strong>
+                    </>
+                  }
+                  progressPct={progressPct}
+                  loadingPct={loadingPct}
+                  activeStage={activeStage}
+                  doneStages={doneStages}
+                  stageLogs={stageLogs}
+                  waiting={waiting}
+                />
               </section>
 
               <section className={clsx('avs-state', { active: appState === 'result' })}>
