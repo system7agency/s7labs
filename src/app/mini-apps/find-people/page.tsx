@@ -10,6 +10,9 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { Input } from '@/components/mini-apps/ui/Input'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -22,15 +25,6 @@ import type {
 
 import { EmployeeCard } from './components/EmployeeCard'
 import { PageScripts } from './PageScripts'
-
-// ---------- kill-switch ----------
-
-/**
- * Flip via env: NEXT_PUBLIC_FIND_PEOPLE_ENABLED=true in Vercel + .env.local
- * once the Apollo integration lands. Off by default so the form is read-only
- * until then. See SYS-521.
- */
-const APP_ENABLED = process.env.NEXT_PUBLIC_FIND_PEOPLE_ENABLED === 'true'
 
 // ---------- constants ----------
 
@@ -76,7 +70,7 @@ const STAGES = [
     title: 'Composing roster',
     logs: ['mapping fields', 'sorting by seniority', 'result ready'],
   },
-] as const
+]
 
 const STAGE_DURATION_MS = 1500
 
@@ -203,11 +197,18 @@ export default function FindPeoplePage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [submittedCompany, setSubmittedCompany] = useState('')
 
-  const [progressPct, setProgressPct] = useState(0)
-  const [loadingPct, setLoadingPct] = useState('0%')
-  const [activeStage, setActiveStage] = useState(0)
-  const [doneStages, setDoneStages] = useState<number[]>([])
-  const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    reset: resetLoader,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_DURATION_MS)
 
   // Filter + pagination state
   const [seniority, setSeniority] = useState<string>('All')
@@ -215,8 +216,6 @@ export default function FindPeoplePage() {
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_INCREMENT)
 
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const rafRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (appState === 'idle') {
@@ -225,84 +224,9 @@ export default function FindPeoplePage() {
     }
   }, [appState])
 
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
-  }, [])
-
-  useEffect(() => () => clearTimers(), [clearTimers])
-
-  const startLoadingAnimation = useCallback(() => {
-    clearTimers()
-    setActiveStage(0)
-    setDoneStages([])
-    setStageLogs(['', '', '', ''])
-    setProgressPct(0)
-    setLoadingPct('0%')
-
-    const prefersReduced =
-      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const startTime = performance.now()
-    const totalMs = STAGE_DURATION_MS * STAGES.length
-
-    if (!prefersReduced) {
-      const tick = (now: number) => {
-        const elapsed = now - startTime
-        const pct = Math.min(98, (elapsed / totalMs) * 100)
-        setProgressPct(pct)
-        setLoadingPct(Math.floor(pct) + '%')
-        if (pct < 98) rafRef.current = requestAnimationFrame(tick)
-      }
-      rafRef.current = requestAnimationFrame(tick)
-    }
-
-    STAGES.forEach((stage, i) => {
-      const tActivate = setTimeout(() => {
-        setActiveStage(i)
-        setStageLogs((prev) => {
-          const next = [...prev]
-          next[i] = stage.logs[0] ?? ''
-          return next
-        })
-        stage.logs.forEach((log, li) => {
-          if (li === 0) return
-          const tLog = setTimeout(
-            () => {
-              setStageLogs((prev) => {
-                const next = [...prev]
-                next[i] = log
-                return next
-              })
-            },
-            (li * STAGE_DURATION_MS) / stage.logs.length
-          )
-          timersRef.current.push(tLog)
-        })
-      }, i * STAGE_DURATION_MS)
-      timersRef.current.push(tActivate)
-      const tDone = setTimeout(
-        () => {
-          setDoneStages((prev) => [...prev, i])
-          setStageLogs((prev) => {
-            const next = [...prev]
-            next[i] = stage.logs[stage.logs.length - 1] ?? ''
-            return next
-          })
-        },
-        (i + 1) * STAGE_DURATION_MS
-      )
-      timersRef.current.push(tDone)
-    })
-  }, [clearTimers])
-
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
-      if (!APP_ENABLED) return
       if (submitting) return
 
       let valid = true
@@ -336,6 +260,16 @@ export default function FindPeoplePage() {
 
       const input = { company: trimmed }
 
+      // Switch to the loading state immediately on a valid submit so there is no
+      // dead time while the lead-save round-trips. On lead-save failure, revert
+      // to the idle form and surface the error.
+      setSubmittedCompany(trimmed)
+      setSeniority('All')
+      setDepartment('All')
+      setVisibleCount(PAGE_INCREMENT)
+      setAppState('loading')
+      startLoader()
+
       // Step A: save lead FIRST
       let submissionId: string | null = null
       try {
@@ -355,6 +289,8 @@ export default function FindPeoplePage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          resetLoader()
+          setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeEmail((k) => k + 1)
           setSubmitting(false)
@@ -362,19 +298,13 @@ export default function FindPeoplePage() {
         }
         submissionId = json.submissionId
       } catch {
+        resetLoader()
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeEmail((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      // Step B: switch to loading state, start animation
-      setSubmittedCompany(trimmed)
-      setSeniority('All')
-      setDepartment('All')
-      setVisibleCount(PAGE_INCREMENT)
-      setAppState('loading')
-      startLoadingAnimation()
 
       const startTime = performance.now()
       let data: ApiResponse
@@ -386,7 +316,7 @@ export default function FindPeoplePage() {
         })
         data = (await res.json()) as ApiResponse
       } catch {
-        clearTimers()
+        stopLoader()
         setErrorMsg('Network error. Please check your connection and try again.')
         setAppState('error')
         setSubmitting(false)
@@ -399,11 +329,7 @@ export default function FindPeoplePage() {
         await new Promise((r) => setTimeout(r, minAnim - elapsed))
       }
 
-      clearTimers()
-      setProgressPct(100)
-      setLoadingPct('100%')
-      setActiveStage(STAGES.length - 1)
-      setDoneStages([0, 1, 2, 3])
+      completeLoader()
 
       // find-people is a non-LLM stub. Record ZERO_COST so model_used='none'.
       const zeroCost = { model: 'none', inputTokens: 0, outputTokens: 0, costUsd: 0 }
@@ -453,11 +379,20 @@ export default function FindPeoplePage() {
         }),
       }).catch((err) => console.error('[find-people] leads/complete', err))
     },
-    [company, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
+    [
+      company,
+      email,
+      marketingConsent,
+      submitting,
+      startLoader,
+      stopLoader,
+      completeLoader,
+      resetLoader,
+    ]
   )
 
   const handleReset = useCallback(() => {
-    clearTimers()
+    resetLoader()
     setAppState('idle')
     setCompany('')
     setError(null)
@@ -465,11 +400,10 @@ export default function FindPeoplePage() {
     setResult(null)
     setErrorMsg('')
     setSubmitting(false)
-    setProgressPct(0)
     setSeniority('All')
     setDepartment('All')
     setVisibleCount(PAGE_INCREMENT)
-  }, [clearTimers])
+  }, [resetLoader])
 
   // Filtered people derived from result + filter state.
   const filteredPeople = useMemo<Person[]>(() => {
@@ -510,58 +444,42 @@ export default function FindPeoplePage() {
                 <div className="idle-label">Target company</div>
                 <form
                   key={shakeKey}
-                  className="fp-form"
+                  className="idle-form"
                   onSubmit={handleSubmit}
                   noValidate
                   autoComplete="off"
                 >
-                  <div>
-                    <label className="fp-field-label" htmlFor="fp-company">
-                      Company name or domain
-                    </label>
-                    <div className={clsx('fp-text-box', { error: !!error })}>
-                      <input
-                        ref={inputRef}
-                        id="fp-company"
-                        type="text"
-                        placeholder="stripe.com  ·  or  ·  Stripe"
-                        value={company}
-                        maxLength={200}
-                        disabled={submitting}
-                        onChange={(e) => {
-                          setCompany(e.target.value)
-                          if (error) setError(null)
-                        }}
-                      />
-                    </div>
-                    <div className={clsx('fp-helper', { error: !!error })}>
-                      {error ?? 'Pass a domain (stripe.com) or just the company name.'}
-                    </div>
-                  </div>
+                  <Input
+                    ref={inputRef}
+                    label="Company name or domain"
+                    type="text"
+                    placeholder="stripe.com  ·  or  ·  Stripe"
+                    value={company}
+                    maxLength={200}
+                    disabled={submitting}
+                    error={error}
+                    onChange={(e) => {
+                      setCompany(e.target.value)
+                      if (error) setError(null)
+                    }}
+                  />
 
-                  <div className="input-field" style={{ marginTop: 14 }}>
-                    <label>
-                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-                    </label>
-                    <div
-                      key={`e-${shakeEmail}`}
-                      className={clsx('input-box', { error: emailError })}
-                    >
-                      <input
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
-                        placeholder="you@company.com"
-                        value={email}
-                        disabled={submitting}
-                        onChange={(e) => {
-                          setEmail(e.target.value)
-                          if (emailError) setEmailError(null)
-                        }}
-                      />
-                    </div>
-                    {emailError && <div className="field-error">{emailError}</div>}
-                  </div>
+                  <Input
+                    label="Work email"
+                    required
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    disabled={submitting}
+                    error={emailError}
+                    shakeKey={shakeEmail}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
 
                   <InlineConsentField
                     checked={marketingConsent}
@@ -569,22 +487,9 @@ export default function FindPeoplePage() {
                     onChange={setMarketingConsent}
                   />
 
-                  {!APP_ENABLED ? (
-                    <div className="fp-coming-soon" role="status">
-                      <span className="fp-coming-soon-dot" />
-                      Coming soon. Apollo API access in review. Form is read-only for now.
-                    </div>
-                  ) : null}
-
-                  <div className="fp-submit-row" style={{ marginTop: 18 }}>
-                    <button
-                      type="submit"
-                      className="fp-submit-btn"
-                      disabled={!APP_ENABLED || submitting}
-                      aria-disabled={!APP_ENABLED}
-                      title={!APP_ENABLED ? 'Coming soon: final wiring in progress' : undefined}
-                    >
-                      {APP_ENABLED ? 'Find People' : 'Coming soon'}
+                  <div className="submit-row" style={{ marginTop: 18 }}>
+                    <button type="submit" className="submit-btn" disabled={submitting}>
+                      Find People
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -603,44 +508,20 @@ export default function FindPeoplePage() {
 
               {/* LOADING */}
               <section className={clsx('fp-state', { active: appState === 'loading' })}>
-                <div className="progress-track">
-                  <div className="progress-bar" style={{ width: `${progressPct}%` }} />
-                </div>
-                <div className="loading-header">
-                  <span>
-                    Searching <strong>{submittedCompany}</strong>
-                  </span>
-                  <span>{loadingPct}</span>
-                </div>
-                <div className="stages">
-                  {STAGES.map((s, i) => {
-                    const isActive = activeStage === i && !doneStages.includes(i)
-                    const isDone = doneStages.includes(i)
-                    return (
-                      <div
-                        key={s.num}
-                        className={clsx('stage', { active: isActive, done: isDone })}
-                      >
-                        <div className="stage-num-row">
-                          <span>{s.num}</span>
-                          <span className="stage-status-icon">
-                            <svg viewBox="0 0 12 12" fill="none">
-                              <path
-                                d="M2 6.5l2.5 2.5L10 3"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </span>
-                        </div>
-                        <div className="stage-title">{s.title}</div>
-                        <div className="stage-log">{stageLogs[i]}</div>
-                      </div>
-                    )
-                  })}
-                </div>
+                <LoadingStages
+                  stages={STAGES}
+                  label={
+                    <>
+                      Searching <strong>{submittedCompany}</strong>
+                    </>
+                  }
+                  progressPct={progressPct}
+                  loadingPct={loadingPct}
+                  activeStage={activeStage}
+                  doneStages={doneStages}
+                  stageLogs={stageLogs}
+                  waiting={waiting}
+                />
               </section>
 
               {/* RESULT */}
@@ -702,17 +583,18 @@ export default function FindPeoplePage() {
                       </button>
                     </div>
 
-                    <div className="fp-list-footer">
-                      <button type="button" className="fp-load-more" onClick={handleReset}>
+                    <div className="result-actions">
+                      <button className="run-again" type="button" onClick={handleReset}>
                         Search another company
                         <svg
+                          width="12"
+                          height="12"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
-                          strokeWidth="2"
+                          strokeWidth="2.4"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          style={{ width: 12, height: 12, marginLeft: 6 }}
                         >
                           <path d="M5 12h14" />
                           <path d="M13 5l7 7-7 7" />
@@ -728,7 +610,7 @@ export default function FindPeoplePage() {
                 <div className="fp-no-result">
                   <h2>No employees found for that company.</h2>
                   <p>Try a different domain, or use the full company name instead.</p>
-                  <button type="button" className="fp-load-more" onClick={handleReset}>
+                  <button type="button" className="run-again" onClick={handleReset}>
                     Try again
                   </button>
                 </div>
@@ -754,7 +636,7 @@ export default function FindPeoplePage() {
                 </div>
                 <h2 className="err-title">Lookup failed</h2>
                 <p className="err-msg">{errorMsg}</p>
-                <button type="button" className="fp-load-more" onClick={handleReset}>
+                <button type="button" className="err-btn" onClick={handleReset}>
                   Try again
                 </button>
               </section>

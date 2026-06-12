@@ -96,7 +96,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'ai-overview-tracker',
     name: 'AI Overview Tracker',
-    status: 'draft',
+    status: 'live',
     category: 'Software / AI',
     cats: ['ai', 'gtm'],
     short_description:
@@ -128,7 +128,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'ai-visibility-score',
     name: 'AI Visibility Score',
-    status: 'draft',
+    status: 'live',
     category: 'Software / AI',
     cats: ['ai', 'gtm'],
     short_description:
@@ -158,7 +158,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'email-copy-optimizer',
     name: 'Email Copy Optimizer',
-    status: 'draft',
+    status: 'live',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -227,7 +227,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'tech-stack-finder',
     name: 'Tech Stack Finder',
-    status: 'draft',
+    status: 'live',
     category: 'Software / AI',
     cats: ['ai', 'gtm', 'software'],
     short_description:
@@ -253,7 +253,7 @@ export const APPS: MiniApp[] = [
     id: 'share-of-voice',
     author: 'SK',
     name: 'AI Share of Voice Scorer',
-    status: 'draft',
+    status: 'live',
     category: 'Software / AI',
     cats: ['ai', 'gtm'],
     short_description:
@@ -285,7 +285,7 @@ export const APPS: MiniApp[] = [
     id: 'tech-stack-recommender',
     author: 'SK',
     name: 'Tech Stack Recommender',
-    status: 'draft',
+    status: 'live',
     category: 'Software / AI',
     cats: ['ai', 'software'],
     short_description:
@@ -318,7 +318,7 @@ export const APPS: MiniApp[] = [
     id: 'automation-blueprint',
     author: 'SK',
     name: 'Automation Blueprint',
-    status: 'draft',
+    status: 'live',
     category: 'Automations / AI',
     cats: ['ai', 'automations'],
     short_description:
@@ -383,7 +383,7 @@ export const APPS: MiniApp[] = [
     id: 'crm-sanity',
     author: 'YA',
     name: 'CRM Field Sanity Check',
-    status: 'draft',
+    status: 'live',
     category: 'AI / Operations',
     cats: ['ai', 'operations'],
     short_description:
@@ -409,7 +409,7 @@ export const APPS: MiniApp[] = [
     id: 'job-brief',
     author: 'YA',
     name: 'Job Posting to Sales Brief',
-    status: 'draft',
+    status: 'live',
     category: 'AI / Operations',
     cats: ['ai', 'operations'],
     short_description:
@@ -435,7 +435,7 @@ export const APPS: MiniApp[] = [
     id: 'linkedin-hook',
     author: 'YA',
     name: 'LinkedIn Post to Outbound Hook',
-    status: 'draft',
+    status: 'live',
     category: 'AI / Operations',
     cats: ['ai', 'operations'],
     short_description:
@@ -461,7 +461,7 @@ export const APPS: MiniApp[] = [
     id: 'email-finder',
     author: 'YA',
     name: 'Email Finder',
-    status: 'draft',
+    status: 'live',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -517,7 +517,7 @@ export const APPS: MiniApp[] = [
     id: 'find-people',
     author: 'YA',
     name: 'Find People',
-    status: 'draft',
+    status: 'live',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -548,7 +548,7 @@ export const APPS: MiniApp[] = [
     id: 'campaign-ideation',
     author: 'YA',
     name: 'Campaign Ideation',
-    status: 'draft',
+    status: 'live',
     category: 'AI / GTM',
     cats: ['ai', 'gtm'],
     short_description:
@@ -610,7 +610,7 @@ export const APPS: MiniApp[] = [
     id: 'intent-signals',
     author: 'YA',
     name: 'Intent Signals',
-    status: 'draft',
+    status: 'live',
     category: 'AI / Operations',
     cats: ['ai', 'operations', 'gtm'],
     short_description:
@@ -641,7 +641,7 @@ export const APPS: MiniApp[] = [
     id: 'linkedin-profile-reviewer',
     author: 'YA',
     name: 'LinkedIn Profile Reviewer',
-    status: 'draft',
+    status: 'live',
     category: 'AI / GTM',
     cats: ['ai', 'gtm'],
     short_description:
@@ -672,7 +672,7 @@ export const APPS: MiniApp[] = [
     id: 'outbound-radar',
     author: 'YA',
     name: 'Outbound Trigger Radar',
-    status: 'draft',
+    status: 'live',
     category: 'AI / Operations',
     cats: ['ai', 'operations'],
     short_description:
@@ -698,7 +698,7 @@ export const APPS: MiniApp[] = [
     id: 'pricing-diagnostic',
     author: 'YA',
     name: 'Pricing Page Diagnostic',
-    status: 'draft',
+    status: 'live',
     category: 'AI / Utilities',
     cats: ['ai', 'utilities'],
     short_description:
@@ -723,7 +723,7 @@ export const APPS: MiniApp[] = [
     id: 'proposal-engine',
     author: 'SK',
     name: 'Proposal Draft Engine',
-    status: 'draft',
+    status: 'live',
     category: 'AI / Utilities',
     cats: ['ai', 'utilities'],
     short_description:

@@ -416,6 +416,7 @@ export async function POST(request: Request) {
       avs,
       grade,
       one_liner: interpreted.one_liner,
+      engines_checked: enginesUsed,
       sub_scores,
       biggest_drag: interpreted.biggest_drag,
       short_read: interpreted.short_read,

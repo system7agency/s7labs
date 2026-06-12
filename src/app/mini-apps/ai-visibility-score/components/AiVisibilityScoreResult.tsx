@@ -35,6 +35,8 @@ export function buildAiVisibilityScorePlainText(r: AVSResult): string {
     `AVS: ${r.avs}/100 (${r.grade})`,
     `"${r.one_liner}"`,
     '',
+    `Checked across: ${(r.engines_checked ?? []).join(' · ')}`,
+    '',
     '// SUB-SCORES',
     ...r.sub_scores.map((s) => `  ${s.name}: ${s.score}/100 (${s.grade}) — ${s.coverage}`),
     '',
@@ -63,6 +65,16 @@ function AvsHero({ result }: { result: AVSResult }) {
           <span className="type-pill">{result.brand}</span>
           <span className="type-pill">{result.category}</span>
         </div>
+        {(result.engines_checked ?? []).length > 0 && (
+          <div className="avs-engines">
+            <span className="avs-engines-label">Checked across</span>
+            {(result.engines_checked ?? []).map((e) => (
+              <span key={e} className="avs-engine-pill">
+                {e}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <div className="subscore-grid">
         {result.sub_scores.map((s) => (

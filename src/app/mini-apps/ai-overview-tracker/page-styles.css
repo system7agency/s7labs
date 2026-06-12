@@ -218,46 +218,6 @@
     0 0 0 1px rgba(0, 0, 0, 0.4);
   overflow: hidden;
 }
-.ai-overview-tracker .corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: var(--blue);
-  border-style: solid;
-  border-width: 0;
-  opacity: 0.85;
-  pointer-events: none;
-}
-.ai-overview-tracker .corner.tl {
-  top: -1px;
-  left: -1px;
-  border-top-width: 2px;
-  border-left-width: 2px;
-  border-top-left-radius: 14px;
-}
-.ai-overview-tracker .corner.tr {
-  top: -1px;
-  right: -1px;
-  border-top-width: 2px;
-  border-right-width: 2px;
-  border-top-right-radius: 14px;
-}
-.ai-overview-tracker .corner.bl {
-  bottom: -1px;
-  left: -1px;
-  border-bottom-width: 2px;
-  border-left-width: 2px;
-  border-bottom-left-radius: 14px;
-}
-.ai-overview-tracker .corner.br {
-  bottom: -1px;
-  right: -1px;
-  border-bottom-width: 2px;
-  border-right-width: 2px;
-  border-bottom-right-radius: 14px;
-}
-
-/* Panel readouts */
 .ai-overview-tracker .panel-readouts {
   display: flex;
   justify-content: space-between;
@@ -333,29 +293,7 @@
 /* .input-box (glassy fill, border, focus glow, error shake) comes from the
  * canonical mini-app-ui.css. ai-overview-tracker only customizes the inner
  * input typography/padding to fit its mono @-prefixed domain field. */
-.ai-overview-tracker .input-box .prompt {
-  padding: 0 10px 0 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--blue);
-  user-select: none;
-}
-.ai-overview-tracker .input-box input {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 0;
-  letter-spacing: -0.01em;
-  min-width: 0;
-}
-.ai-overview-tracker .input-box input::placeholder {
-  color: var(--text-faint);
-}
-
+/* .input-box input (glassy SANS) comes from canonical mini-app-ui.css. */
 .ai-overview-tracker .field-error {
   font-family: var(--mono);
   font-size: 10.5px;
@@ -373,155 +311,7 @@
   height: 16px;
 }
 
-/* ── LOADING ── */
-.ai-overview-tracker .progress-track {
-  height: 2px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 22px;
-}
-.ai-overview-tracker .progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--cyan), var(--blue));
-  box-shadow: 0 0 14px rgba(79, 140, 255, 0.6);
-  transition: width 0.4s ease;
-}
-.ai-overview-tracker .loading-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 14px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.ai-overview-tracker .loading-header strong {
-  color: var(--text);
-  font-weight: 500;
-}
-
-.ai-overview-tracker .stages {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.ai-overview-tracker .stage {
-  position: relative;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.012);
-  border-radius: 10px;
-  padding: 16px 16px 18px;
-  transition:
-    border-color 240ms ease,
-    background 240ms ease,
-    opacity 240ms ease;
-}
-.ai-overview-tracker .stage-num-row {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: var(--text-faint);
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.ai-overview-tracker .stage-title {
-  font-size: 14px;
-  color: var(--text-dim);
-  font-weight: 500;
-  transition: color 240ms ease;
-}
-.ai-overview-tracker .stage-status-icon {
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.3);
-  position: relative;
-  flex-shrink: 0;
-}
-.ai-overview-tracker .stage-status-icon svg {
-  width: 8px;
-  height: 8px;
-  opacity: 0;
-  transition: opacity 200ms;
-}
-
-.ai-overview-tracker .stage.active {
-  border-color: rgba(79, 140, 255, 0.55);
-  background: linear-gradient(180deg, rgba(79, 140, 255, 0.06), rgba(79, 140, 255, 0.01));
-  box-shadow:
-    0 0 0 1px rgba(79, 140, 255, 0.15),
-    0 0 30px -8px rgba(79, 140, 255, 0.4),
-    0 0 60px -20px rgba(79, 140, 255, 0.3) inset;
-}
-.ai-overview-tracker .stage.active .stage-title {
-  color: var(--text);
-}
-.ai-overview-tracker .stage.active .stage-status-icon {
-  border-color: var(--blue);
-  background: var(--blue);
-  box-shadow: 0 0 12px rgba(79, 140, 255, 0.7);
-  animation: or-spin-pulse 1.2s ease-in-out infinite;
-}
-.ai-overview-tracker .stage.active .stage-status-icon::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 1px solid var(--blue);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: or-spin 1.1s linear infinite;
-}
-@keyframes aio-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes aio-spin-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 12px rgba(79, 140, 255, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 18px rgba(79, 140, 255, 1);
-  }
-}
-.ai-overview-tracker .stage.done {
-  opacity: 0.55;
-}
-.ai-overview-tracker .stage.done .stage-status-icon {
-  border-color: var(--success);
-  background: var(--success);
-}
-.ai-overview-tracker .stage.done .stage-status-icon svg {
-  opacity: 1;
-}
-.ai-overview-tracker .stage.done .stage-status-icon svg path {
-  stroke: #0b1410;
-}
-.ai-overview-tracker .stage-log {
-  margin-top: 10px;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  color: var(--text-faint);
-  line-height: 1.5;
-  min-height: 14px;
-  overflow: hidden;
-  transition: color 240ms;
-}
-.ai-overview-tracker .stage.active .stage-log {
-  color: var(--text-dim);
-}
-.ai-overview-tracker .stage.done .stage-log {
-  color: var(--text-faint);
-}
+/* Loading state comes from the shared <LoadingStages> + canonical mini-app-ui.css. */
 
 /* ── RESULT ── */
 .ai-overview-tracker .result-head {
@@ -967,9 +757,6 @@
   .ai-overview-tracker .score-row {
     grid-template-columns: 1fr;
   }
-  .ai-overview-tracker .stages {
-    grid-template-columns: 1fr;
-  }
   .ai-overview-tracker .info-strip {
     grid-template-columns: 1fr;
   }
@@ -1006,74 +793,8 @@
     display: none;
   }
 }
-.ai-overview-tracker .textarea-box {
-  display: flex;
-  align-items: flex-start;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-.ai-overview-tracker .textarea-box:focus-within {
-  border-color: var(--blue);
-  box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.18),
-    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
-}
-.ai-overview-tracker .textarea-box.error {
-  border-color: var(--error);
-  animation: aio-shake 0.35s ease;
-}
-@keyframes aio-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-5px);
-  }
-  40% {
-    transform: translateX(5px);
-  }
-  60% {
-    transform: translateX(-3px);
-  }
-  80% {
-    transform: translateX(3px);
-  }
-}
-.ai-overview-tracker .textarea-box .prompt {
-  padding: 14px 10px 0 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--blue);
-  user-select: none;
-  flex-shrink: 0;
-  line-height: 1.6;
-}
-.ai-overview-tracker .textarea-box textarea {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12.5px;
-  padding: 14px 14px 14px 0;
-  letter-spacing: -0.01em;
-  resize: vertical;
-  min-height: 160px;
-  line-height: 1.7;
-}
-.ai-overview-tracker .textarea-box textarea::placeholder {
-  color: var(--text-faint);
-}
-.ai-overview-tracker .panel-wrap-wide {
-  width: min(100%, 900px);
-}
+/* .textarea-box (glassy MONO) comes from canonical mini-app-ui.css; the panel
+ * uses the canonical 680px width (panel-wrap-wide removed). */
 .ai-overview-tracker .info-strip {
   width: min(100%, 900px);
 }
@@ -1431,44 +1152,4 @@
 }
 .ai-overview-tracker .aio-dd-option.is-selected::before {
   content: '✓ ';
-}
-
-.ai-overview-tracker .textarea-box.error {
-  animation: aio-shake 0.35s ease;
-}
-
-/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
-.ai-overview-tracker .input-box input:-webkit-autofill,
-.ai-overview-tracker .input-box input:-webkit-autofill:hover,
-.ai-overview-tracker .input-box input:-webkit-autofill:focus,
-.ai-overview-tracker .input-box input:-webkit-autofill:active {
-  -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
-  caret-color: var(--text);
-  transition: background-color 9999s ease-in-out 0s;
-}
-
-/* ============== COMING-SOON NOTICE ============== */
-
-.ai-overview-tracker .aio-coming-soon {
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid rgba(245, 166, 35, 0.32);
-  background: rgba(245, 166, 35, 0.05);
-  border-radius: 10px;
-  font-family: var(--mono);
-  font-size: 11.5px;
-  letter-spacing: 0.04em;
-  color: var(--warning);
-}
-.ai-overview-tracker .aio-coming-soon-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--warning);
-  box-shadow: 0 0 12px var(--warning);
-  flex-shrink: 0;
 }

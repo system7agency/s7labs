@@ -118,45 +118,6 @@
     0 0 0 1px rgba(0, 0, 0, 0.4);
   overflow: hidden;
 }
-.automation-blueprint .corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: var(--blue);
-  border-style: solid;
-  border-width: 0;
-  opacity: 0.85;
-  pointer-events: none;
-}
-.automation-blueprint .corner.tl {
-  top: -1px;
-  left: -1px;
-  border-top-width: 2px;
-  border-left-width: 2px;
-  border-top-left-radius: 14px;
-}
-.automation-blueprint .corner.tr {
-  top: -1px;
-  right: -1px;
-  border-top-width: 2px;
-  border-right-width: 2px;
-  border-top-right-radius: 14px;
-}
-.automation-blueprint .corner.bl {
-  bottom: -1px;
-  left: -1px;
-  border-bottom-width: 2px;
-  border-left-width: 2px;
-  border-bottom-left-radius: 14px;
-}
-.automation-blueprint .corner.br {
-  bottom: -1px;
-  right: -1px;
-  border-bottom-width: 2px;
-  border-right-width: 2px;
-  border-bottom-right-radius: 14px;
-}
-
 .automation-blueprint .panel-readouts {
   display: flex;
   justify-content: space-between;
@@ -221,136 +182,18 @@
   box-shadow: 0 0 8px var(--cyan);
 }
 
-.automation-blueprint .textarea-field {
+/* Inputs come from the shared <Input>/<Textarea> + canonical mini-app-ui.css:
+ * .input-field / .input-box (glassy SANS email) / .textarea-box (glassy MONO
+ * workflow) / .submit-btn (pill) / autofill. The per-app glassless mono copies +
+ * rectangle button were removed. Only the compact error + char-count are kept. */
+.automation-blueprint .idle-form {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-.automation-blueprint .textarea-field label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.automation-blueprint .textarea-box {
-  display: flex;
-  align-items: flex-start;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-.automation-blueprint .textarea-box:focus-within {
-  border-color: var(--blue);
-  box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.18),
-    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
-}
-.automation-blueprint .textarea-box.error {
-  border-color: var(--error);
-  animation: ab-shake 0.35s ease;
-}
-@keyframes ab-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-5px);
-  }
-  40% {
-    transform: translateX(5px);
-  }
-  60% {
-    transform: translateX(-3px);
-  }
-  80% {
-    transform: translateX(3px);
-  }
-}
-.automation-blueprint .textarea-box .prompt {
-  padding: 14px 10px 0 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--blue);
-  user-select: none;
-  flex-shrink: 0;
-  line-height: 1.6;
-}
-.automation-blueprint .textarea-box textarea {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 12.5px;
-  padding: 14px 16px;
-  letter-spacing: -0.01em;
-  resize: vertical;
-  min-height: 160px;
-  line-height: 1.7;
-}
-.automation-blueprint .textarea-box textarea::placeholder {
-  color: var(--text-faint);
 }
 .automation-blueprint .field-error {
   font-family: var(--mono);
   font-size: 10.5px;
   color: var(--error);
-}
-.automation-blueprint .input-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.automation-blueprint .input-field label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.automation-blueprint .input-box {
-  display: flex;
-  align-items: center;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  overflow: hidden;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-.automation-blueprint .input-box:focus-within {
-  border-color: var(--blue);
-  box-shadow:
-    0 0 0 3px rgba(79, 140, 255, 0.18),
-    0 0 30px -8px rgba(79, 140, 255, 0.35) inset;
-}
-.automation-blueprint .input-box.error {
-  border-color: var(--error);
-  animation: ab-shake 0.35s ease;
-}
-.automation-blueprint .input-box input {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 14px 16px;
-  letter-spacing: -0.005em;
-  min-width: 0;
-}
-.automation-blueprint .input-box input::placeholder {
-  color: var(--text-faint);
 }
 .automation-blueprint .char-count {
   font-family: var(--mono);
@@ -365,187 +208,15 @@
   justify-content: flex-end;
   margin-top: 4px;
 }
-.automation-blueprint .submit-btn {
-  border: 0;
-  background: linear-gradient(180deg, #5a96ff 0%, #3a78f0 100%);
-  color: white;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 12px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-    0 0 24px -6px rgba(79, 140, 255, 0.6);
-  transition:
-    filter 160ms ease,
-    transform 160ms ease;
-}
-.automation-blueprint .submit-btn:hover {
-  filter: brightness(1.1);
-}
-.automation-blueprint .submit-btn:active {
-  transform: scale(0.97);
-}
-.automation-blueprint .submit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* .submit-row + pill .submit-btn come from canonical mini-app-ui.css. Only the
+ * app-specific icon size is kept. */
 .automation-blueprint .submit-btn svg {
   width: 16px;
   height: 16px;
 }
 
-/* ── LOADING ── */
-.automation-blueprint .progress-track {
-  height: 2px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 22px;
-}
-.automation-blueprint .progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--cyan), var(--blue));
-  box-shadow: 0 0 14px rgba(79, 140, 255, 0.6);
-  transition: width 0.4s ease;
-}
-.automation-blueprint .loading-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 14px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.automation-blueprint .stages {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.automation-blueprint .stage {
-  position: relative;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.012);
-  border-radius: 10px;
-  padding: 16px 16px 18px;
-  transition:
-    border-color 240ms ease,
-    background 240ms ease,
-    opacity 240ms ease;
-}
-.automation-blueprint .stage-num-row {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: var(--text-faint);
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.automation-blueprint .stage-title {
-  font-size: 14px;
-  color: var(--text-dim);
-  font-weight: 500;
-  transition: color 240ms ease;
-}
-.automation-blueprint .stage-status-icon {
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.3);
-  position: relative;
-  flex-shrink: 0;
-}
-.automation-blueprint .stage-status-icon svg {
-  width: 8px;
-  height: 8px;
-  opacity: 0;
-  transition: opacity 200ms;
-}
-.automation-blueprint .stage.active {
-  border-color: rgba(79, 140, 255, 0.55);
-  background: linear-gradient(180deg, rgba(79, 140, 255, 0.06), rgba(79, 140, 255, 0.01));
-  box-shadow:
-    0 0 0 1px rgba(79, 140, 255, 0.15),
-    0 0 30px -8px rgba(79, 140, 255, 0.4),
-    0 0 60px -20px rgba(79, 140, 255, 0.3) inset;
-}
-.automation-blueprint .stage.active .stage-title {
-  color: var(--text);
-}
-.automation-blueprint .stage.active .stage-status-icon {
-  border-color: var(--blue);
-  background: var(--blue);
-  box-shadow: 0 0 12px rgba(79, 140, 255, 0.7);
-  animation: ab-spin-pulse 1.2s ease-in-out infinite;
-}
-.automation-blueprint .stage.active .stage-status-icon::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 1px solid var(--blue);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: ab-spin 1.1s linear infinite;
-}
-@keyframes ab-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes ab-spin-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 12px rgba(79, 140, 255, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 18px rgba(79, 140, 255, 1);
-  }
-}
-.automation-blueprint .stage.done {
-  opacity: 0.55;
-}
-.automation-blueprint .stage.done .stage-status-icon {
-  border-color: var(--success);
-  background: var(--success);
-}
-.automation-blueprint .stage.done .stage-status-icon svg {
-  opacity: 1;
-}
-.automation-blueprint .stage.done .stage-status-icon svg path {
-  stroke: #0b1410;
-}
-.automation-blueprint .stage-log {
-  margin-top: 10px;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  color: var(--text-faint);
-  line-height: 1.5;
-  min-height: 14px;
-  overflow: hidden;
-  transition: color 240ms;
-}
-.automation-blueprint .stage.active .stage-log {
-  color: var(--text-dim);
-}
-.automation-blueprint .stage.done .stage-log {
-  color: var(--text-faint);
-}
+/* Loading state — progress bar + 2-col stage cards — comes from the shared
+ * <LoadingStages> component + canonical mini-app-ui.css (section 3b). */
 
 /* ── RESULT ── */
 .automation-blueprint .result-head {
@@ -923,74 +594,9 @@
 }
 
 /* Result footer */
-.automation-blueprint .result-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-  gap: 12px;
-}
-.automation-blueprint .token-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-muted);
-}
-.automation-blueprint .token-pill::before {
-  content: '';
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--success);
-  box-shadow: 0 0 8px var(--success);
-}
-.automation-blueprint .export-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.automation-blueprint .export-btn {
-  border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.025);
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 7px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition:
-    border-color 160ms,
-    background 160ms,
-    color 160ms;
-  white-space: nowrap;
-}
-.automation-blueprint .export-btn:hover:not(:disabled) {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.05);
-}
-.automation-blueprint .export-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.automation-blueprint .export-btn.done {
-  border-color: rgba(79, 200, 138, 0.4);
-  color: var(--success);
-  background: rgba(79, 200, 138, 0.07);
-}
-.automation-blueprint .export-btn.loading {
-  border-color: rgba(79, 140, 255, 0.35);
-  color: var(--blue);
-}
+/* Result footer: the centered .result-actions wrapper, the .result-footer chip
+ * row, and the pill .export-btn (Copy/PNG/PDF) come from canonical
+ * mini-app-ui.css. Only the .run-again reset button is kept. */
 .automation-blueprint .run-again {
   border: 1px solid var(--border-strong);
   background: rgba(255, 255, 255, 0.025);
@@ -1083,9 +689,6 @@
 }
 
 /* ── AUTOMATION BLUEPRINT SPECIFIC ── */
-.automation-blueprint .panel-wrap-wide {
-  width: min(100%, 900px);
-}
 .automation-blueprint .textarea-tall textarea {
   min-height: 160px;
 }
@@ -1550,14 +1153,6 @@
   .automation-blueprint .score-row {
     grid-template-columns: 1fr;
   }
-  .automation-blueprint .result-footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .automation-blueprint .export-actions {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
   .automation-blueprint .run-again {
     justify-content: center;
   }
@@ -1575,15 +1170,4 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-}
-
-/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
-.automation-blueprint .input-box input:-webkit-autofill,
-.automation-blueprint .input-box input:-webkit-autofill:hover,
-.automation-blueprint .input-box input:-webkit-autofill:focus,
-.automation-blueprint .input-box input:-webkit-autofill:active {
-  -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
-  caret-color: var(--text);
-  transition: background-color 9999s ease-in-out 0s;
 }

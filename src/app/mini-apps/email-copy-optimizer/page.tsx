@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { clsx } from 'clsx'
 
@@ -9,7 +9,11 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { Input } from '@/components/mini-apps/ui/Input'
+import { Textarea } from '@/components/mini-apps/ui/Textarea'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -22,7 +26,29 @@ import { PageScripts } from './PageScripts'
 type AppState = 'input' | 'loading' | 'result' | 'error'
 type Tone = 'Formal' | 'Conversational' | 'Direct'
 
-const LOADING_STAGES = ['Reading email', 'Diagnosing weak points', 'Writing variations']
+const STAGES = [
+  {
+    num: '01',
+    title: 'Reading your email',
+    logs: ['parsing subject + body', 'understanding the ask', 'email read'],
+  },
+  {
+    num: '02',
+    title: 'Diagnosing weak points',
+    logs: ['scoring clarity', 'flagging issues', 'diagnosis ready'],
+  },
+  {
+    num: '03',
+    title: 'Writing variations',
+    logs: ['drafting angles', 'tightening hooks', 'variations drafted'],
+  },
+  {
+    num: '04',
+    title: 'Polishing the rewrites',
+    logs: ['refining CTAs', 'final pass', 'copy ready'],
+  },
+]
+const STAGE_MS = 1700
 
 const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
   {
@@ -103,7 +129,6 @@ export default function EmailCopyOptimizerPage() {
   const [tone, setTone] = useState<Tone>('Conversational')
   const [showContext, setShowContext] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [stageIndex, setStageIndex] = useState(0)
   const [result, setResult] = useState<EmailCopyOptimizerResult | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [copiedVariation, setCopiedVariation] = useState<number | null>(null)
@@ -117,13 +142,18 @@ export default function EmailCopyOptimizerPage() {
 
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    if (appState !== 'loading') return
-    const interval = setInterval(() => {
-      setStageIndex((prev) => (prev < LOADING_STAGES.length - 1 ? prev + 1 : prev))
-    }, 1400)
-    return () => clearInterval(interval)
-  }, [appState])
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    reset: resetLoader,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_MS)
 
   const runReadout = useMemo(() => {
     if (appState === 'loading') return 'running'
@@ -197,7 +227,6 @@ export default function EmailCopyOptimizerPage() {
       if (!valid) return
 
       setSubmitting(true)
-      setStageIndex(0)
       setResult(null)
       setErrorMessage('')
       setCopiedVariation(null)
@@ -217,6 +246,7 @@ export default function EmailCopyOptimizerPage() {
       // disposable / free-provider email the server rejects), we revert to the
       // idle form below and surface the error.
       setAppState('loading')
+      startLoader()
 
       let submissionId: string | null = null
       try {
@@ -236,6 +266,7 @@ export default function EmailCopyOptimizerPage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          resetLoader()
           setAppState('input')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeKey((k) => k + 1)
@@ -244,6 +275,7 @@ export default function EmailCopyOptimizerPage() {
         }
         submissionId = json.submissionId
       } catch {
+        resetLoader()
         setAppState('input')
         setEmailError("Couldn't save your info. Try again.")
         setShakeKey((k) => k + 1)
@@ -264,6 +296,7 @@ export default function EmailCopyOptimizerPage() {
 
         const payload = (await response.json()) as ApiResponse
         if (!response.ok || !payload.ok) {
+          stopLoader()
           setErrorMessage(
             payload.ok ? 'Unable to optimize right now. Please try again.' : payload.message
           )
@@ -272,6 +305,7 @@ export default function EmailCopyOptimizerPage() {
           return
         }
 
+        completeLoader()
         setResult(payload.data)
         setAppState('result')
 
@@ -285,23 +319,38 @@ export default function EmailCopyOptimizerPage() {
           }),
         }).catch((err) => console.error('[email-copy-optimizer] leads/complete', err))
       } catch {
+        stopLoader()
         setErrorMessage('Network error. Please retry in a moment.')
         setAppState('error')
       } finally {
         setSubmitting(false)
       }
     },
-    [audience, body, clearErrors, email, goal, marketingConsent, subject, submitting, tone]
+    [
+      audience,
+      body,
+      clearErrors,
+      email,
+      goal,
+      marketingConsent,
+      startLoader,
+      stopLoader,
+      completeLoader,
+      resetLoader,
+      subject,
+      submitting,
+      tone,
+    ]
   )
 
   const handleReset = useCallback(() => {
+    resetLoader()
     setAppState('input')
     setSubmitting(false)
-    setStageIndex(0)
     setResult(null)
     setErrorMessage('')
     setCopiedVariation(null)
-  }, [])
+  }, [resetLoader])
 
   const handleCopyVariation = useCallback(
     async (index: number) => {
@@ -335,10 +384,6 @@ export default function EmailCopyOptimizerPage() {
 
         <div className="panel-wrap">
           <section className="panel">
-            <span className="corner tl" aria-hidden />
-            <span className="corner tr" aria-hidden />
-            <span className="corner bl" aria-hidden />
-            <span className="corner br" aria-hidden />
             {appState !== 'input' && (
               <div className="panel-readouts">
                 <span>
@@ -368,49 +413,41 @@ export default function EmailCopyOptimizerPage() {
               <section className={clsx('view', { active: appState === 'input' })}>
                 <form
                   key={shakeKey}
-                  className="pd-form"
+                  className="idle-form"
                   onSubmit={handleSubmit}
                   noValidate
                   autoComplete="off"
                 >
-                  <div className="idle-label">
-                    Subject <span className="required-mark">*</span>
-                  </div>
-                  <div className={clsx('input-box', { error: subjectError })}>
-                    <input
-                      id="eco-subject"
-                      type="text"
-                      value={subject}
-                      disabled={submitting}
-                      placeholder="Quick way to unblock outbound this month"
-                      onChange={(event) => {
-                        setSubject(event.target.value)
-                        if (subjectError) setSubjectError(null)
-                      }}
-                    />
-                  </div>
-                  <div className={clsx('pd-helper', { error: subjectError })}>
-                    {subjectError ?? 'Required · 200 characters max'}
-                  </div>
-
-                  <div className="idle-label">
-                    Email body <span className="required-mark">*</span>
-                  </div>
-                  <div className={clsx('input-box', { error: bodyError })}>
-                    <textarea
-                      id="eco-body"
-                      value={body}
-                      disabled={submitting}
-                      placeholder="Paste your draft email here..."
-                      onChange={(event) => {
-                        setBody(event.target.value)
-                        if (bodyError) setBodyError(null)
-                      }}
-                    />
-                  </div>
-                  <div className={clsx('pd-helper', { error: bodyError })}>
-                    {bodyError ?? `${body.length} / 4000 chars (min 50)`}
-                  </div>
+                  <div className="idle-label">Your email draft</div>
+                  <Input
+                    id="eco-subject"
+                    label="Subject"
+                    required
+                    type="text"
+                    value={subject}
+                    disabled={submitting}
+                    placeholder="Quick way to unblock outbound this month"
+                    error={subjectError}
+                    onChange={(event) => {
+                      setSubject(event.target.value)
+                      if (subjectError) setSubjectError(null)
+                    }}
+                  />
+                  <Textarea
+                    id="eco-body"
+                    label="Email body"
+                    required
+                    value={body}
+                    disabled={submitting}
+                    placeholder="Paste your draft email here..."
+                    maxLength={4000}
+                    count={body.length}
+                    error={bodyError}
+                    onChange={(event) => {
+                      setBody(event.target.value)
+                      if (bodyError) setBodyError(null)
+                    }}
+                  />
 
                   <button
                     type="button"
@@ -423,29 +460,24 @@ export default function EmailCopyOptimizerPage() {
 
                   {showContext && (
                     <div className="context-wrap">
-                      <div className="idle-label">Goal (optional)</div>
-                      <div className="input-box">
-                        <input
-                          id="eco-goal"
-                          type="text"
-                          value={goal}
-                          disabled={submitting}
-                          placeholder="Book demos with VP Sales leaders"
-                          onChange={(event) => setGoal(event.target.value)}
-                        />
-                      </div>
-
-                      <div className="idle-label">Audience (optional)</div>
-                      <div className="input-box">
-                        <input
-                          id="eco-audience"
-                          type="text"
-                          value={audience}
-                          disabled={submitting}
-                          placeholder="Mid-market B2B SaaS"
-                          onChange={(event) => setAudience(event.target.value)}
-                        />
-                      </div>
+                      <Input
+                        id="eco-goal"
+                        label="Goal (optional)"
+                        type="text"
+                        value={goal}
+                        disabled={submitting}
+                        placeholder="Book demos with VP Sales leaders"
+                        onChange={(event) => setGoal(event.target.value)}
+                      />
+                      <Input
+                        id="eco-audience"
+                        label="Audience (optional)"
+                        type="text"
+                        value={audience}
+                        disabled={submitting}
+                        placeholder="Mid-market B2B SaaS"
+                        onChange={(event) => setAudience(event.target.value)}
+                      />
 
                       <span className="chip-label">Tone</span>
                       <div className="tone-chips">
@@ -463,33 +495,28 @@ export default function EmailCopyOptimizerPage() {
                     </div>
                   )}
 
-                  <div className="idle-label">
-                    Work email <span className="required-mark">*</span>
-                  </div>
-                  <div className={clsx('input-box', { error: emailError })}>
-                    <input
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={email}
-                      disabled={submitting}
-                      onChange={(event) => {
-                        setEmail(event.target.value)
-                        if (emailError) setEmailError(null)
-                      }}
-                    />
-                  </div>
-                  <div className={clsx('pd-helper', { error: emailError })}>
-                    {emailError ?? 'We send the report to your work email. No spam.'}
-                  </div>
+                  <Input
+                    label="Work email"
+                    required
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    disabled={submitting}
+                    error={emailError}
+                    onChange={(event) => {
+                      setEmail(event.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
                   <InlineConsentField
                     checked={marketingConsent}
                     disabled={submitting}
                     onChange={setMarketingConsent}
                   />
 
-                  <div className="pd-submit-row">
+                  <div className="submit-row" style={{ marginTop: 18 }}>
                     <button type="button" className="secondary-btn" onClick={handleTrySample}>
                       Try a sample
                     </button>
@@ -512,19 +539,20 @@ export default function EmailCopyOptimizerPage() {
               </section>
 
               <section className={clsx('view', { active: appState === 'loading' })}>
-                <div className="loading-stage">
-                  <span className="loading-label">Working...</span>
-                  <ul>
-                    {LOADING_STAGES.map((stage, index) => (
-                      <li
-                        key={stage}
-                        className={clsx({ active: index === stageIndex, done: index < stageIndex })}
-                      >
-                        {stage}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <LoadingStages
+                  stages={STAGES}
+                  label={
+                    <>
+                      Optimizing <strong>your copy</strong>
+                    </>
+                  }
+                  progressPct={progressPct}
+                  loadingPct={loadingPct}
+                  activeStage={activeStage}
+                  doneStages={doneStages}
+                  stageLogs={stageLogs}
+                  waiting={waiting}
+                />
               </section>
 
               <section className={clsx('view', { active: appState === 'result' })}>
@@ -557,7 +585,11 @@ export default function EmailCopyOptimizerPage() {
                           <article key={`${variation.name}-${index}`} className="variation-card">
                             <div className="variation-head">
                               <h3>{variation.name}</h3>
-                              <button type="button" onClick={() => void handleCopyVariation(index)}>
+                              <button
+                                type="button"
+                                onClick={() => void handleCopyVariation(index)}
+                                data-export-ignore="true"
+                              >
                                 {copiedVariation === index ? 'Copied' : 'Copy'}
                               </button>
                             </div>
@@ -584,7 +616,9 @@ export default function EmailCopyOptimizerPage() {
                         resultRef={resultPanelRef}
                         slug="email-copy-optimizer"
                         appName="Email Copy Optimizer"
-                        filename={`email-copy-optimizer-${(subject.trim() || result.variations[0].subject)
+                        filename={`email-copy-optimizer-${(
+                          subject.trim() || result.variations[0].subject
+                        )
                           .replace(/[^a-z0-9]/gi, '-')
                           .toLowerCase()}`}
                         subject={subject.trim() || result.variations[0].subject}

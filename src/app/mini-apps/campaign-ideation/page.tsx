@@ -8,6 +8,11 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { Input } from '@/components/mini-apps/ui/Input'
+import { Textarea } from '@/components/mini-apps/ui/Textarea'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type {
   ApiResponse,
@@ -93,11 +98,28 @@ const HIW_STEPS: HowItWorksStep[] = [
 ]
 
 const STAGES = [
-  'Framing campaign brief',
-  'Matching channels to audience',
-  'Drafting ideas and hooks',
-  'Finalizing execution steps',
+  {
+    num: '01',
+    title: 'Framing campaign brief',
+    logs: ['reading product + audience', 'finding the angle', 'brief framed'],
+  },
+  {
+    num: '02',
+    title: 'Matching channels to audience',
+    logs: ['mapping channels', 'weighing fit', 'channels matched'],
+  },
+  {
+    num: '03',
+    title: 'Drafting ideas and hooks',
+    logs: ['generating concepts', 'writing hooks', 'ideas drafted'],
+  },
+  {
+    num: '04',
+    title: 'Finalizing execution steps',
+    logs: ['adding first steps', 'setting outcomes', 'plan ready'],
+  },
 ]
+const STAGE_MS = 1700
 
 const SAMPLE_INPUT = {
   product:
@@ -148,9 +170,7 @@ function Field({
   placeholder,
   onChange,
   disabled,
-  minChars,
   error,
-  helper,
   rows = 4,
 }: {
   label: string
@@ -164,26 +184,21 @@ function Field({
   helper?: string
   rows?: number
 }) {
-  const defaultHelper = `${value.length} chars${minChars ? ` (min ${minChars})` : ''}`
+  // Canonical glassy MONO textarea + char counter come from the shared
+  // <Textarea> component (minChars/helper kept in the prop API but the counter
+  // now renders "n chars"; the min is still enforced in validation).
   return (
-    <>
-      <div className="idle-label">
-        {label}
-        {required ? <span className="required-mark">*</span> : null}
-      </div>
-      <div className={clsx('pd-input-box', { error: !!error })}>
-        <textarea
-          value={value}
-          rows={rows}
-          disabled={disabled}
-          placeholder={placeholder}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </div>
-      <div className={clsx('pd-helper', { error: !!error })}>
-        {error ?? helper ?? defaultHelper}
-      </div>
-    </>
+    <Textarea
+      label={label}
+      required={required}
+      value={value}
+      placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      error={error}
+      count={value.length}
+      rows={rows}
+    />
   )
 }
 
@@ -231,7 +246,7 @@ function IdeaCard({ idea, index }: { idea: CampaignIdea; index: number }) {
         <span className="ci-key">Expected outcome</span>
         <span className="ci-val">{idea.expectedOutcome}</span>
       </div>
-      <button className="ci-copy-btn" type="button" onClick={handleCopy}>
+      <button className="ci-copy-btn" type="button" onClick={handleCopy} data-export-ignore="true">
         {copied ? 'Copied' : 'Copy card'}
       </button>
     </article>
@@ -249,10 +264,7 @@ export default function CampaignIdeationPage() {
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<CampaignIdeationResult | null>(null)
   const [resultTs, setResultTs] = useState('')
-  const [activeStage, setActiveStage] = useState(0)
   const [clock, setClock] = useState('—')
-  const [progress, setProgress] = useState(0)
-  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
   const [prodError, setProdError] = useState<string | null>(null)
   const [audError, setAudError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
@@ -260,8 +272,20 @@ export default function CampaignIdeationPage() {
   const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeKey, setShakeKey] = useState(0)
 
-  const stageTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const resultPanelRef = useRef<HTMLDivElement | null>(null)
+
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    reset: resetLoader,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_MS)
 
   useEffect(() => {
     const tick = () => {
@@ -273,27 +297,6 @@ export default function CampaignIdeationPage() {
     const t = setInterval(tick, 1000)
     return () => clearInterval(t)
   }, [])
-
-  const clearLoadTimers = useCallback(() => {
-    if (stageTimerRef.current) clearInterval(stageTimerRef.current)
-    if (progressTimerRef.current) clearInterval(progressTimerRef.current)
-    stageTimerRef.current = null
-    progressTimerRef.current = null
-  }, [])
-
-  useEffect(() => () => clearLoadTimers(), [clearLoadTimers])
-
-  const startLoading = useCallback(() => {
-    clearLoadTimers()
-    setActiveStage(0)
-    setProgress(4)
-    stageTimerRef.current = setInterval(() => {
-      setActiveStage((prev) => Math.min(prev + 1, STAGES.length - 1))
-    }, 1700)
-    progressTimerRef.current = setInterval(() => {
-      setProgress((prev) => (prev >= 94 ? prev : prev + 3))
-    }, 220)
-  }, [clearLoadTimers])
 
   const handleTrySample = useCallback(() => {
     setProduct(SAMPLE_INPUT.product)
@@ -354,6 +357,12 @@ export default function CampaignIdeationPage() {
         ...(goalTrimmed ? { goal: goalTrimmed } : {}),
       }
 
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. On lead-save failure, revert to the
+      // idle form and surface the error.
+      setAppState('loading')
+      startLoader()
+
       let submissionId: string | null = null
       try {
         const leadRes = await fetch('/api/leads/submit', {
@@ -372,6 +381,8 @@ export default function CampaignIdeationPage() {
           error?: string
         }
         if (!leadRes.ok || !leadJson.ok || !leadJson.submissionId) {
+          resetLoader()
+          setAppState('idle')
           setEmailError(leadJson.error || "Couldn't save your info. Try again.")
           setShakeKey((k) => k + 1)
           setSubmitting(false)
@@ -379,14 +390,13 @@ export default function CampaignIdeationPage() {
         }
         submissionId = leadJson.submissionId
       } catch {
+        resetLoader()
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeKey((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setAppState('loading')
-      startLoading()
 
       let data: ApiResponse
       try {
@@ -402,16 +412,15 @@ export default function CampaignIdeationPage() {
         })
         data = (await res.json()) as ApiResponse
       } catch {
-        clearLoadTimers()
+        stopLoader()
         setErrorMsg('Network error. Please check your connection and try again.')
         setAppState('error')
         setSubmitting(false)
         return
       }
 
-      clearLoadTimers()
-      setProgress(100)
       if (data.ok) {
+        completeLoader()
         setResult(data.data)
         setResultTs(formatReportTs(new Date()))
         setAppState('result')
@@ -426,6 +435,7 @@ export default function CampaignIdeationPage() {
           }),
         }).catch((err) => console.error('[campaign-ideation] leads/complete', err))
       } else {
+        stopLoader()
         setErrorMsg(data.message)
         setAppState('error')
       }
@@ -433,43 +443,27 @@ export default function CampaignIdeationPage() {
     },
     [
       audience,
-      clearLoadTimers,
+      completeLoader,
       currentMotion,
       email,
       goal,
       marketingConsent,
       product,
-      startLoading,
+      resetLoader,
+      startLoader,
+      stopLoader,
       submitting,
     ]
   )
 
-  const handleCopyAll = useCallback(async () => {
-    if (!result) return
-    try {
-      await navigator.clipboard.writeText(buildPlainText(result))
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = buildPlainText(result)
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setCopyState('copied')
-    setTimeout(() => setCopyState('idle'), 1700)
-  }, [result])
-
   const handleReset = useCallback(() => {
-    clearLoadTimers()
+    resetLoader()
     setAppState('idle')
     setSubmitting(false)
     setErrorMsg('')
     setResult(null)
-    setProgress(0)
     setEmailError(null)
-  }, [clearLoadTimers])
+  }, [resetLoader])
 
   return (
     <div className="campaign-ideation mini-app-scope">
@@ -490,23 +484,22 @@ export default function CampaignIdeationPage() {
 
         <div className="panel-wrap">
           <section className="panel">
-            <span className="corner tl" aria-hidden />
-            <span className="corner tr" aria-hidden />
-            <span className="corner bl" aria-hidden />
-            <span className="corner br" aria-hidden />
-            <div className="panel-topline">
-              <span>campaign ideation engine</span>
-              <span>{clock}</span>
-            </div>
+            {appState !== 'idle' && (
+              <div className="panel-topline">
+                <span>campaign ideation engine</span>
+                <span>{clock}</span>
+              </div>
+            )}
 
             {appState === 'idle' && (
               <form
                 key={shakeKey}
-                className="pd-form"
+                className="idle-form"
                 onSubmit={handleSubmit}
                 noValidate
                 autoComplete="off"
               >
+                <div className="idle-label">Tell us about your campaign</div>
                 <Field
                   label="Product / Offer"
                   required
@@ -561,37 +554,33 @@ export default function CampaignIdeationPage() {
                   rows={3}
                 />
 
-                <div className="idle-label">
-                  Work email <span className="required-mark">*</span>
-                </div>
-                <div className={clsx('pd-input-box', { error: emailError })}>
-                  <input
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    placeholder="you@company.com"
-                    value={email}
-                    disabled={submitting}
-                    onChange={(e) => {
-                      setEmail(e.target.value)
-                      if (emailError) setEmailError(null)
-                    }}
-                  />
-                </div>
-                <div className={clsx('pd-helper', { error: emailError })}>
-                  {emailError ?? 'We send the report to your work email. No spam.'}
-                </div>
+                <Input
+                  label="Work email"
+                  required
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  value={email}
+                  disabled={submitting}
+                  error={emailError}
+                  shakeKey={shakeKey}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    if (emailError) setEmailError(null)
+                  }}
+                />
                 <InlineConsentField
                   checked={marketingConsent}
                   disabled={submitting}
                   onChange={setMarketingConsent}
                 />
 
-                <div className="pd-submit-row">
+                <div className="submit-row" style={{ marginTop: 18 }}>
                   <button className="ci-ghost" type="button" onClick={handleTrySample}>
                     Try a sample
                   </button>
-                  <button className="pd-submit-btn" type="submit" disabled={submitting}>
+                  <button className="submit-btn" type="submit" disabled={submitting}>
                     Generate ideas
                     <svg
                       viewBox="0 0 24 24"
@@ -611,49 +600,66 @@ export default function CampaignIdeationPage() {
 
             {appState === 'loading' && (
               <section className="ci-loading">
-                <div className="ci-progress-track">
-                  <div className="ci-progress-bar" style={{ width: `${progress}%` }} />
-                </div>
-                <div className="ci-progress-label">{Math.floor(progress)}%</div>
-                <div className="ci-stage-list">
-                  {STAGES.map((stage, idx) => (
-                    <div key={stage} className={clsx('ci-stage', { on: idx <= activeStage })}>
-                      <span>{String(idx + 1).padStart(2, '0')}</span>
-                      <strong>{stage}</strong>
-                    </div>
-                  ))}
-                </div>
+                <LoadingStages
+                  stages={STAGES}
+                  label={
+                    <>
+                      Generating <strong>campaign ideas</strong>
+                    </>
+                  }
+                  progressPct={progressPct}
+                  loadingPct={loadingPct}
+                  activeStage={activeStage}
+                  doneStages={doneStages}
+                  stageLogs={stageLogs}
+                  waiting={waiting}
+                />
               </section>
             )}
 
             {appState === 'result' && result && (
               <section className="ci-result-wrap">
-                <div className="ci-report-head">
-                  <span className="ci-report-title">Campaign ideas ready</span>
-                  <span className="ci-report-ts">{resultTs}</span>
+                <div ref={resultPanelRef}>
+                  <div className="ci-report-head">
+                    <span className="ci-report-title">Campaign ideas ready</span>
+                    <span className="ci-report-ts">{resultTs}</span>
+                  </div>
+
+                  <article className="ci-positioning">
+                    <span>{'// Positioning summary'}</span>
+                    <p>{result.summary.positioning}</p>
+                  </article>
+
+                  <div className="ci-grid">
+                    {result.ideas.map((idea, index) => (
+                      <IdeaCard key={index} idea={idea} index={index} />
+                    ))}
+                  </div>
                 </div>
 
-                <article className="ci-positioning">
-                  <span>{'// Positioning summary'}</span>
-                  <p>{result.summary.positioning}</p>
-                </article>
-
-                <div className="ci-grid">
-                  {result.ideas.map((idea, index) => (
-                    <IdeaCard key={index} idea={idea} index={index} />
-                  ))}
-                </div>
-
-                <div className="ci-footer-actions">
-                  <button
-                    className={clsx('ci-copy-all', { copied: copyState === 'copied' })}
-                    type="button"
-                    onClick={handleCopyAll}
-                  >
-                    {copyState === 'copied' ? 'Copied' : 'Copy all'}
-                  </button>
-                  <button className="ci-ghost" type="button" onClick={() => window.print()}>
-                    Print
+                <div className="result-actions">
+                  <ExportControls
+                    resultRef={resultPanelRef}
+                    slug="campaign-ideation"
+                    appName="Campaign Ideation"
+                    filename="campaign-ideas"
+                    plainText={buildPlainText(result)}
+                  />
+                  <button className="run-again" type="button" onClick={handleReset}>
+                    Generate again
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="M13 5l7 7-7 7" />
+                    </svg>
                   </button>
                 </div>
               </section>
@@ -661,37 +667,28 @@ export default function CampaignIdeationPage() {
 
             {appState === 'error' && (
               <section className="ci-error">
-                <h2>Couldn&apos;t generate ideas</h2>
-                <p>{errorMsg}</p>
-                <button className="ci-submit" type="button" onClick={handleReset}>
+                <div className="err-icon">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+                  </svg>
+                </div>
+                <h2 className="err-title">Couldn&apos;t generate ideas</h2>
+                <p className="err-msg">{errorMsg}</p>
+                <button className="err-btn" type="button" onClick={handleReset}>
                   Try again
                 </button>
               </section>
             )}
           </section>
         </div>
-
-        {appState === 'result' && (
-          <section className="ci-result-footer">
-            <button type="button" className="ci-submit" onClick={handleReset}>
-              Generate again
-            </button>
-            <button type="button" className="ci-ghost" onClick={handleCopyAll}>
-              Copy all
-            </button>
-            <a
-              className="ci-ghost"
-              href="https://www.system7.ai/contact"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Book a call
-            </a>
-            <a className="ci-ghost" href="/mini-apps/roi-calculator">
-              Open ROI calculator
-            </a>
-          </section>
-        )}
 
         <HowItWorks
           title={

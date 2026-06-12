@@ -10,6 +10,10 @@ import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
+import { Input } from '@/components/mini-apps/ui/Input'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type {
   TechStackFinderApiResponse,
@@ -41,7 +45,7 @@ const STAGES = [
     title: 'Assembling report',
     logs: ['category totals computed', 'tiles rendered', 'report ready'],
   },
-] as const
+]
 
 const STAGE_MS = 4200
 
@@ -207,12 +211,15 @@ function TechLogoTile({
 }
 
 function CategoryCard({ category }: { category: TechnologyCategory }) {
+  // Plain div/span (not article/header/h3): the html-to-image PNG/PDF export
+  // mis-positions semantic flow elements inside a <foreignObject>, which piled
+  // every category header at the top-left of the capture. Divs export cleanly.
   return (
-    <article className="tsf-category-card">
-      <header className="tsf-category-head">
-        <h3>{category.name}</h3>
-        <span>{category.technologies.length}</span>
-      </header>
+    <div className="tsf-category-card">
+      <div className="tsf-category-head">
+        <span className="tsf-category-name">{category.name}</span>
+        <span className="tsf-category-count">{category.technologies.length}</span>
+      </div>
       <div className="tsf-tech-grid">
         {category.technologies.map((tech) => (
           <TechLogoTile
@@ -223,7 +230,7 @@ function CategoryCard({ category }: { category: TechnologyCategory }) {
           />
         ))}
       </div>
-    </article>
+    </div>
   )
 }
 
@@ -239,21 +246,26 @@ export default function TechStackFinderPage() {
   const [result, setResult] = useState<TechStackFinderResult | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [resultTs, setResultTs] = useState('')
-  const [copyState, setCopyState] = useState<'idle' | 'done'>('idle')
 
-  const [activeStage, setActiveStage] = useState(-1)
-  const [doneStages, setDoneStages] = useState<number[]>([])
-  const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
-  const [progressPct, setProgressPct] = useState(0)
-  const [loadingPct, setLoadingPct] = useState('0%')
-  const [latency, setLatency] = useState('—')
   const [sysState, setSysState] = useState<'idle' | 'running' | 'complete' | 'error'>('idle')
   const [clock, setClock] = useState('—')
 
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    reset: resetLoader,
+    latency,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_MS)
+
   const domainInputRef = useRef<HTMLInputElement | null>(null)
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const rafRef = useRef<number | null>(null)
-  const runStartRef = useRef(0)
+  const resultPanelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const tick = () => {
@@ -271,81 +283,6 @@ export default function TechStackFinderPage() {
     const t = setTimeout(() => domainInputRef.current?.focus(), 200)
     return () => clearTimeout(t)
   }, [appState])
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
-  }, [])
-
-  useEffect(() => () => clearTimers(), [clearTimers])
-
-  const startLoadingAnimation = useCallback(() => {
-    clearTimers()
-    setActiveStage(0)
-    setDoneStages([])
-    setStageLogs(['', '', '', ''])
-    setProgressPct(0)
-    setLoadingPct('0%')
-    setLatency('0.0s')
-    const startTime = performance.now()
-    runStartRef.current = startTime
-    const totalMs = STAGE_MS * STAGES.length
-
-    const tick = (now: number) => {
-      const pct = Math.min(97, ((now - startTime) / totalMs) * 100)
-      setProgressPct(pct)
-      setLoadingPct(`${Math.floor(pct)}%`)
-      setLatency(`${((now - startTime) / 1000).toFixed(1)}s`)
-      if (pct < 97) rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
-
-    STAGES.forEach((stage, i) => {
-      timersRef.current.push(
-        setTimeout(() => {
-          setActiveStage(i)
-          setStageLogs((prev) => {
-            const next = [...prev]
-            next[i] = stage.logs[0] ?? ''
-            return next
-          })
-          stage.logs.forEach((log, li) => {
-            if (li === 0) return
-            timersRef.current.push(
-              setTimeout(
-                () => {
-                  setStageLogs((prev) => {
-                    const next = [...prev]
-                    next[i] = log
-                    return next
-                  })
-                },
-                (li * STAGE_MS) / stage.logs.length
-              )
-            )
-          })
-        }, i * STAGE_MS)
-      )
-
-      timersRef.current.push(
-        setTimeout(
-          () => {
-            setDoneStages((prev) => [...prev, i])
-            setStageLogs((prev) => {
-              const next = [...prev]
-              next[i] = stage.logs[stage.logs.length - 1] ?? ''
-              return next
-            })
-          },
-          (i + 1) * STAGE_MS
-        )
-      )
-    })
-  }, [clearTimers])
 
   const handleSubmit = useCallback(
     async (event: FormEvent) => {
@@ -379,6 +316,14 @@ export default function TechStackFinderPage() {
       setResult(null)
       setErrorMsg('')
 
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. If the lead-save fails (e.g. a
+      // disposable / free-provider email the server rejects), revert to the idle
+      // form below and surface the error. (Reference: website-roast handleSubmit.)
+      setSysState('running')
+      setAppState('loading')
+      startLoader()
+
       let submissionId: string | null = null
       try {
         const res = await fetch('/api/leads/submit', {
@@ -397,6 +342,9 @@ export default function TechStackFinderPage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          resetLoader()
+          setSysState('idle')
+          setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeKey((k) => k + 1)
           setSubmitting(false)
@@ -404,15 +352,14 @@ export default function TechStackFinderPage() {
         }
         submissionId = json.submissionId
       } catch {
+        resetLoader()
+        setSysState('idle')
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeKey((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setSysState('running')
-      setAppState('loading')
-      startLoadingAnimation()
 
       let data: TechStackFinderApiResponse
       try {
@@ -423,7 +370,7 @@ export default function TechStackFinderPage() {
         })
         data = (await res.json()) as TechStackFinderApiResponse
       } catch {
-        clearTimers()
+        stopLoader()
         setErrorMsg('Network error. Please check your connection and try again.')
         setSysState('error')
         setAppState('error')
@@ -431,13 +378,8 @@ export default function TechStackFinderPage() {
         return
       }
 
-      clearTimers()
-      setLatency(`${((performance.now() - runStartRef.current) / 1000).toFixed(1)}s`)
-      setProgressPct(100)
-      setLoadingPct('100%')
-
       if (data.ok) {
-        setDoneStages([0, 1, 2, 3])
+        completeLoader()
         await new Promise((r) => setTimeout(r, 220))
         setResult(data.data)
         setResultTs(formatResultTs(data.data.analyzedAt))
@@ -453,6 +395,7 @@ export default function TechStackFinderPage() {
           }),
         }).catch((err) => console.error('[tech-stack-finder] leads/complete', err))
       } else {
+        stopLoader()
         setErrorMsg(data.message)
         setSysState('error')
         setAppState('error')
@@ -460,11 +403,20 @@ export default function TechStackFinderPage() {
 
       setSubmitting(false)
     },
-    [clearTimers, domain, email, marketingConsent, startLoadingAnimation, submitting]
+    [
+      domain,
+      email,
+      marketingConsent,
+      submitting,
+      startLoader,
+      stopLoader,
+      completeLoader,
+      resetLoader,
+    ]
   )
 
   const handleReset = useCallback(() => {
-    clearTimers()
+    resetLoader()
     setAppState('idle')
     setResult(null)
     setErrorMsg('')
@@ -472,21 +424,7 @@ export default function TechStackFinderPage() {
     setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
-    setLatency('—')
-    setProgressPct(0)
-    setCopyState('idle')
-  }, [clearTimers])
-
-  const handleCopy = useCallback(async () => {
-    if (!result) return
-    try {
-      await navigator.clipboard.writeText(buildPlainText(result))
-      setCopyState('done')
-      setTimeout(() => setCopyState('idle'), 1400)
-    } catch {
-      setCopyState('idle')
-    }
-  }, [result])
+  }, [resetLoader])
 
   const loadingHost = trimDomain(domain) || 'target-domain'
 
@@ -514,11 +452,6 @@ export default function TechStackFinderPage() {
 
         <div className="tsf-panel-wrap">
           <div className="tsf-panel">
-            <span className="corner tl" />
-            <span className="corner tr" />
-            <span className="corner bl" />
-            <span className="corner br" />
-
             {appState !== 'idle' ? (
               <div className="tsf-readouts">
                 <span>
@@ -537,148 +470,130 @@ export default function TechStackFinderPage() {
 
             <div className="tsf-panel-body">
               <section className={clsx('tsf-state', { active: appState === 'idle' })}>
-                <div className="idle-label">
-                  Target domain <span className="required-mark">*</span>
-                </div>
-                <form
-                  key={shakeKey}
-                  className="pd-form"
-                  noValidate
-                  onSubmit={handleSubmit}
-                  autoComplete="off"
-                >
-                  <div className={clsx('pd-input-box', { error: inputError })}>
-                    <input
-                      ref={domainInputRef}
-                      type="text"
-                      value={domain}
-                      placeholder="acme.com"
-                      spellCheck={false}
-                      disabled={submitting}
-                      onChange={(event) => {
-                        setDomain(event.target.value)
-                        if (inputError) setInputError(null)
-                      }}
-                    />
-                  </div>
-                  <div className={clsx('pd-helper', { error: inputError })}>
-                    {inputError ?? 'Examples: stripe.com · shopify.com · linear.app'}
-                  </div>
-                  <div className="idle-label">
-                    Work email <span className="required-mark">*</span>
-                  </div>
-                  <div className={clsx('pd-input-box', { error: emailError })}>
-                    <input
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={email}
-                      disabled={submitting}
-                      onChange={(event) => {
-                        setEmail(event.target.value)
-                        if (emailError) setEmailError(null)
-                      }}
-                    />
-                  </div>
-                  <div className={clsx('pd-helper', { error: emailError })}>
-                    {emailError ?? 'We send the report to your work email. No spam.'}
-                  </div>
+                <div className="idle-label">Enter a company domain</div>
+                <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
+                  <Input
+                    label="Target domain"
+                    required
+                    error={inputError}
+                    shakeKey={shakeKey}
+                    ref={domainInputRef}
+                    type="text"
+                    value={domain}
+                    placeholder="acme.com"
+                    spellCheck={false}
+                    disabled={submitting}
+                    onChange={(event) => {
+                      setDomain(event.target.value)
+                      if (inputError) setInputError(null)
+                    }}
+                  />
+                  <Input
+                    label="Work email"
+                    required
+                    error={emailError}
+                    shakeKey={shakeKey}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    disabled={submitting}
+                    onChange={(event) => {
+                      setEmail(event.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
                   <InlineConsentField
                     checked={marketingConsent}
                     disabled={submitting}
                     onChange={setMarketingConsent}
                   />
-                  <div className="pd-submit-row">
-                    <button type="submit" className="pd-submit-btn" disabled={submitting}>
-                      Analyze Stack
+                  <div className="submit-row" style={{ marginTop: 18 }}>
+                    <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2.4"
+                        strokeWidth="2.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <path d="M5 12h14" />
-                        <path d="M13 5l7 7-7 7" />
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="M21 21l-4.3-4.3" />
                       </svg>
+                      Analyze Stack
                     </button>
                   </div>
                 </form>
               </section>
 
               <section className={clsx('tsf-state', { active: appState === 'loading' })}>
-                <div className="tsf-progress-track">
-                  <div className="tsf-progress-bar" style={{ width: `${progressPct}%` }} />
-                </div>
-                <div className="tsf-loading-head">
-                  <span>
-                    Analyzing <strong>{loadingHost}</strong>
-                  </span>
-                  <span>{loadingPct}</span>
-                </div>
-                <div className="tsf-stages">
-                  {STAGES.map((stage, idx) => {
-                    const isActive = idx === activeStage && !doneStages.includes(idx)
-                    const isDone = doneStages.includes(idx)
-                    return (
-                      <article
-                        key={stage.num}
-                        className={clsx('tsf-stage', { active: isActive, done: isDone })}
-                      >
-                        <div className="tsf-stage-top">
-                          <span>{stage.num}</span>
-                          <span className="tsf-stage-status">
-                            {isDone ? 'done' : isActive ? 'run' : '…'}
-                          </span>
-                        </div>
-                        <div className="tsf-stage-title">{stage.title}</div>
-                        <div className="tsf-stage-log">{stageLogs[idx]}</div>
-                      </article>
-                    )
-                  })}
-                </div>
+                <LoadingStages
+                  stages={STAGES}
+                  label={
+                    <>
+                      Analyzing <strong>{loadingHost}</strong>
+                    </>
+                  }
+                  progressPct={progressPct}
+                  loadingPct={loadingPct}
+                  activeStage={activeStage}
+                  doneStages={doneStages}
+                  stageLogs={stageLogs}
+                  waiting={waiting}
+                />
               </section>
 
               <section className={clsx('tsf-state', { active: appState === 'result' })}>
                 {result ? (
                   <>
-                    <div className="tsf-result-head">
-                      <div>
-                        <h2>{result.domain}</h2>
-                        <p>{categorySummary}</p>
+                    <div ref={resultPanelRef}>
+                      <div className="tsf-result-head">
+                        <div>
+                          <h2>{result.domain}</h2>
+                          <p>{categorySummary}</p>
+                        </div>
+                        <span className="tsf-result-ts">{resultTs}</span>
                       </div>
-                      <span className="tsf-result-ts">{resultTs}</span>
-                    </div>
 
-                    <div className="tsf-category-grid">
-                      {result.categories.map((category) => (
-                        <CategoryCard key={category.name} category={category} />
-                      ))}
-                    </div>
+                      <div className="tsf-category-grid">
+                        {result.categories.map((category) => (
+                          <CategoryCard key={category.name} category={category} />
+                        ))}
+                      </div>
 
-                    <div className="tsf-result-foot">
-                      <span className="tsf-provider-pill">
+                      <div className="tsf-provider-line">
                         provider: {result.provider}
                         {result.cached ? ' · cached 24h' : ''}
-                      </span>
-                      <div className="tsf-actions">
-                        <button
-                          type="button"
-                          className={clsx('tsf-action-btn', { done: copyState === 'done' })}
-                          onClick={handleCopy}
-                        >
-                          {copyState === 'done' ? 'Copied' : 'Copy summary'}
-                        </button>
-                        <button
-                          type="button"
-                          className={clsx('tsf-action-btn', 'secondary')}
-                          onClick={handleReset}
-                        >
-                          Analyze another
-                        </button>
                       </div>
+                    </div>
+
+                    <div className="result-actions">
+                      <ExportControls
+                        resultRef={resultPanelRef}
+                        slug="tech-stack-finder"
+                        appName="Tech Stack Finder"
+                        filename={`tech-stack-finder-${result.domain.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`}
+                        subject={result.domain}
+                        plainText={buildPlainText(result)}
+                      />
+                      <button type="button" className="run-again" onClick={handleReset}>
+                        Analyze another
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M5 12h14" />
+                          <path d="M13 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
                   </>
                 ) : null}

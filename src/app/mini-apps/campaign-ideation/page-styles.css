@@ -85,46 +85,6 @@
     0 0 0 1px rgba(0, 0, 0, 0.4);
 }
 
-.campaign-ideation .corner {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-color: var(--blue);
-  border-style: solid;
-  border-width: 0;
-  opacity: 0.85;
-  pointer-events: none;
-  z-index: 1;
-}
-.campaign-ideation .corner.tl {
-  top: -1px;
-  left: -1px;
-  border-top-width: 2px;
-  border-left-width: 2px;
-  border-top-left-radius: 14px;
-}
-.campaign-ideation .corner.tr {
-  top: -1px;
-  right: -1px;
-  border-top-width: 2px;
-  border-right-width: 2px;
-  border-top-right-radius: 14px;
-}
-.campaign-ideation .corner.bl {
-  bottom: -1px;
-  left: -1px;
-  border-bottom-width: 2px;
-  border-left-width: 2px;
-  border-bottom-left-radius: 14px;
-}
-.campaign-ideation .corner.br {
-  bottom: -1px;
-  right: -1px;
-  border-bottom-width: 2px;
-  border-right-width: 2px;
-  border-bottom-right-radius: 14px;
-}
-
 .campaign-ideation .panel-topline {
   display: flex;
   justify-content: space-between;
@@ -136,11 +96,11 @@
   text-transform: uppercase;
 }
 
-.campaign-ideation .pd-form,
+.campaign-ideation .idle-form,
 .campaign-ideation .ci-loading,
 .campaign-ideation .ci-result-wrap,
 .campaign-ideation .ci-error {
-  padding: 22px;
+  padding: 28px;
 }
 
 .campaign-ideation .idle-label {
@@ -162,119 +122,29 @@
   background: var(--cyan);
   box-shadow: 0 0 8px var(--cyan);
 }
-.campaign-ideation .pd-form .idle-label {
-  margin-top: 14px;
-}
-.campaign-ideation .pd-form .idle-label:first-of-type {
-  margin-top: 0;
-}
-.campaign-ideation .required-mark {
-  color: var(--error);
-  font-size: 13px;
-  letter-spacing: 0;
-}
-
-.campaign-ideation .pd-form {
+/* Inputs + submit come from the shared <Input>/<Textarea> + canonical
+ * mini-app-ui.css (.input-field / .input-box SANS / .textarea-box MONO /
+ * .submit-btn pill / autofill). The per-app .pd-* mono inputs + rectangle
+ * button were removed. Only the form flex column + compact error size remain. */
+.campaign-ideation .idle-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
-.campaign-ideation .pd-input-box {
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    background 180ms ease;
-}
-.campaign-ideation .pd-input-box:focus-within {
-  border-color: rgba(79, 140, 255, 0.55);
-  background: rgba(79, 140, 255, 0.03);
-  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.12);
-}
-.campaign-ideation .pd-input-box.error {
-  border-color: rgba(255, 92, 122, 0.6);
-}
-.campaign-ideation .pd-input-box input,
-.campaign-ideation .pd-input-box textarea {
-  width: 100%;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
+.campaign-ideation .field-error {
   font-family: var(--mono);
-  font-size: 14px;
-  padding: 14px 16px;
-  letter-spacing: -0.005em;
-  line-height: 1.5;
-  resize: vertical;
-}
-.campaign-ideation .pd-input-box textarea {
-  min-height: 80px;
-}
-.campaign-ideation .pd-input-box input::placeholder,
-.campaign-ideation .pd-input-box textarea::placeholder {
-  color: var(--text-faint, #3a3b42);
-}
-.campaign-ideation .pd-input-box input:disabled,
-.campaign-ideation .pd-input-box textarea:disabled {
-  color: var(--text-muted);
-}
-.campaign-ideation .pd-helper {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.campaign-ideation .pd-helper.error {
+  font-size: 10.5px;
   color: var(--error);
 }
-.campaign-ideation .pd-submit-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-.campaign-ideation .pd-submit-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(180deg, #5a98ff, #4f8cff);
-  color: #060608;
-  border: 0;
-  border-radius: 10px;
-  padding: 12px 22px;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    transform 120ms ease,
-    box-shadow 200ms ease,
-    opacity 200ms ease;
-  box-shadow: 0 6px 22px -8px rgba(79, 140, 255, 0.7);
-}
-.campaign-ideation .pd-submit-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 28px -10px rgba(79, 140, 255, 0.9);
-}
-.campaign-ideation .pd-submit-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-.campaign-ideation .pd-submit-btn svg {
-  width: 14px;
-  height: 14px;
-}
 
+/* Quick-pick chips for "Current Motion": tuck up under that field so they read
+ * as its shortcuts, then restore the canonical inter-field gap before the next
+ * field (--ma-space-5) so the form rhythm matches the rest of the design. */
 .campaign-ideation .ci-chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: -2px;
+  margin-top: calc(-1 * var(--ma-space-3));
+  margin-bottom: var(--ma-space-5);
 }
 
 .campaign-ideation .ci-chip {
@@ -323,50 +193,7 @@
   color: var(--text-dim);
 }
 
-.campaign-ideation .ci-loading {
-  text-align: center;
-}
-
-.campaign-ideation .ci-progress-track {
-  height: 5px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.campaign-ideation .ci-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--cyan), var(--blue));
-  transition: width 0.2s ease;
-}
-
-.campaign-ideation .ci-progress-label {
-  margin-top: 10px;
-  color: var(--text-dim);
-}
-
-.campaign-ideation .ci-stage-list {
-  margin-top: 18px;
-  display: grid;
-  gap: 8px;
-}
-
-.campaign-ideation .ci-stage {
-  text-align: left;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: var(--text-muted);
-}
-
-.campaign-ideation .ci-stage.on {
-  color: var(--text);
-  border-color: rgba(79, 140, 255, 0.55);
-  background: rgba(79, 140, 255, 0.09);
-}
+/* Loading state comes from the shared <LoadingStages> + canonical mini-app-ui.css. */
 
 .campaign-ideation .ci-report-head {
   display: flex;
@@ -376,8 +203,21 @@
   align-items: baseline;
 }
 
+/* Result labels / numbers / timestamps / badges render in MONO (Geist Mono),
+ * matching the reference apps — they were inheriting the SANS body font. */
+.campaign-ideation .ci-report-ts,
+.campaign-ideation .ci-positioning > span,
+.campaign-ideation .ci-idea-num,
+.campaign-ideation .ci-effort,
+.campaign-ideation .ci-key,
+.campaign-ideation .ci-copy-btn {
+  font-family: var(--mono);
+}
+
 .campaign-ideation .ci-report-title {
+  font-size: var(--ma-text-sm);
   font-weight: 500;
+  color: var(--text-dim);
 }
 
 .campaign-ideation .ci-report-ts {
@@ -405,6 +245,7 @@
 
 .campaign-ideation .ci-positioning p {
   margin: 8px 0 0;
+  font-size: var(--ma-text-base);
   line-height: 1.6;
 }
 
@@ -458,11 +299,13 @@
 
 .campaign-ideation .ci-idea-card h3 {
   margin: 0 0 8px;
-  font-size: 18px;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .campaign-ideation .ci-idea-card p {
   margin: 0 0 10px;
+  font-size: var(--ma-text-sm);
   color: var(--text-dim);
   line-height: 1.5;
 }
@@ -481,6 +324,7 @@
 }
 
 .campaign-ideation .ci-val {
+  font-size: var(--ma-text-sm);
   color: var(--text);
   line-height: 1.45;
 }
@@ -508,24 +352,10 @@
   background: rgba(79, 207, 138, 0.08);
 }
 
+/* Error state: layout only — .err-icon / .err-title / .err-msg / .err-btn
+ * styling comes from canonical mini-app-ui.css. */
 .campaign-ideation .ci-error {
   text-align: center;
-}
-
-.campaign-ideation .ci-error h2 {
-  margin: 2px 0 8px;
-}
-
-.campaign-ideation .ci-error p {
-  color: var(--text-dim);
-  margin: 0 0 14px;
-}
-
-.campaign-ideation .ci-result-footer {
-  margin-top: 16px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 @media (max-width: 820px) {
@@ -546,10 +376,9 @@
 
 @media print {
   .campaign-ideation .panel-topline,
-  .campaign-ideation .pd-form,
+  .campaign-ideation .idle-form,
   .campaign-ideation .ci-loading,
-  .campaign-ideation .ci-footer-actions,
-  .campaign-ideation .ci-result-footer,
+  .campaign-ideation .result-actions,
   .campaign-ideation .how-it-works,
   .campaign-ideation header,
   .campaign-ideation footer {
@@ -574,14 +403,4 @@
   .campaign-ideation .hero {
     margin-top: 0;
   }
-}
-
-.campaign-ideation .pd-input-box input:-webkit-autofill,
-.campaign-ideation .pd-input-box input:-webkit-autofill:hover,
-.campaign-ideation .pd-input-box input:-webkit-autofill:focus,
-.campaign-ideation .pd-input-box input:-webkit-autofill:active {
-  -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--surface-1) inset;
-  caret-color: var(--text);
-  transition: background-color 9999s ease-in-out 0s;
 }

@@ -8,8 +8,12 @@ import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
+import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
+import { Input } from '@/components/mini-apps/ui/Input'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type { ApiResponse, DiagnosticResult } from '@/app/api/mini-apps/pricing-diagnostic/route'
@@ -53,6 +57,80 @@ const STAGES: StageConfig[] = [
 
 const STAGE_DURATION_MS = 4800
 
+const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
+  {
+    title: 'Paste your pricing page URL',
+    description: "Yours, a competitor's, or any public pricing page you want to benchmark.",
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M7 13h8" />
+      </svg>
+    ),
+  },
+  {
+    title: 'We scrape and parse the page',
+    description: 'Plan tiers, CTAs, gates, copy, and trust signals, extracted in seconds.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M3 7l9-4 9 4-9 4-9-4z" />
+        <path d="M3 12l9 4 9-4" />
+        <path d="M3 17l9 4 9-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'AI evaluates four conversion dimensions',
+    description: 'Structure, friction, copy, and signal, scored against what actually converts.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Get your scores and the 3 quickest fixes',
+    description:
+      'Friction Score, Clarity Grade, Plan Legibility, plus top improvements ranked by impact.',
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 11l3 3 8-8" />
+        <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
+      </svg>
+    ),
+  },
+]
+
 function fmtTs(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `REPORT · ${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} · ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`
@@ -71,27 +149,26 @@ export default function PricingDiagnosticPage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [resultTs, setResultTs] = useState('')
 
-  // Loading stage animation state
-  const [activeStage, setActiveStage] = useState(-1)
-  const [doneStages, setDoneStages] = useState<number[]>([])
-  const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
-  const [progressPct, setProgressPct] = useState(0)
-  const [loadingPct, setLoadingPct] = useState('0%')
-  const [latency, setLatency] = useState('—')
   const [sysState, setSysState] = useState('idle')
   const [clock, setClock] = useState('—')
   const [tokens, setTokens] = useState<{ in: number; out: number } | null>(null)
 
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    reset: resetLoader,
+    latency,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_DURATION_MS)
+
   const urlInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const rafRef = useRef<number | null>(null)
-  const runStartRef = useRef(0)
-  const prefersReducedRef = useRef(false)
-
-  useEffect(() => {
-    prefersReducedRef.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  }, [])
 
   // Live clock
   useEffect(() => {
@@ -111,87 +188,6 @@ export default function PricingDiagnosticPage() {
       return () => clearTimeout(t)
     }
   }, [appState])
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
-  }, [])
-
-  useEffect(() => () => clearTimers(), [clearTimers])
-
-  const startLoadingAnimation = useCallback(() => {
-    clearTimers()
-    setActiveStage(0)
-    setDoneStages([])
-    setStageLogs(['', '', '', ''])
-    setProgressPct(0)
-    setLoadingPct('0%')
-    setLatency('0.0s')
-
-    const totalMs = STAGE_DURATION_MS * STAGES.length
-    const startTime = performance.now()
-    runStartRef.current = startTime
-
-    if (!prefersReducedRef.current) {
-      const tick = (now: number) => {
-        const elapsed = now - startTime
-        const pct = Math.min(98, (elapsed / totalMs) * 100)
-        setProgressPct(pct)
-        setLoadingPct(Math.floor(pct) + '%')
-        setLatency((elapsed / 1000).toFixed(1) + 's')
-        if (pct < 98) {
-          rafRef.current = requestAnimationFrame(tick)
-        }
-      }
-      rafRef.current = requestAnimationFrame(tick)
-    }
-
-    STAGES.forEach((stage, i) => {
-      // Activate stage
-      const tActivate = setTimeout(() => {
-        setActiveStage(i)
-        setStageLogs((prev) => {
-          const next = [...prev]
-          next[i] = stage.logs[0] ?? ''
-          return next
-        })
-        // Cycle logs while active
-        stage.logs.forEach((log, li) => {
-          if (li === 0) return
-          const tLog = setTimeout(
-            () => {
-              setStageLogs((prev) => {
-                const next = [...prev]
-                next[i] = log
-                return next
-              })
-            },
-            (li * STAGE_DURATION_MS) / stage.logs.length
-          )
-          timersRef.current.push(tLog)
-        })
-      }, i * STAGE_DURATION_MS)
-      timersRef.current.push(tActivate)
-
-      // Mark done
-      const tDone = setTimeout(
-        () => {
-          setDoneStages((prev) => [...prev, i])
-          setStageLogs((prev) => {
-            const next = [...prev]
-            next[i] = stage.logs[stage.logs.length - 1] ?? ''
-            return next
-          })
-        },
-        (i + 1) * STAGE_DURATION_MS
-      )
-      timersRef.current.push(tDone)
-    })
-  }, [clearTimers])
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -227,8 +223,13 @@ export default function PricingDiagnosticPage() {
       setResult(null)
       setErrorMsg('')
 
-      // 1) Save the lead first. If this fails (disposable email, rate limit,
-      // etc.) we bail BEFORE spending an Anthropic call.
+      // Show the loading state immediately on a valid submit so there is no dead
+      // time while the lead-save round-trips. On lead-save failure (disposable
+      // email, rate limit, etc.) revert to idle and surface the error.
+      setSysState('running')
+      setAppState('loading')
+      startLoader()
+
       let submissionId: string | null = null
       try {
         const res = await fetch('/api/leads/submit', {
@@ -247,6 +248,9 @@ export default function PricingDiagnosticPage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
+          resetLoader()
+          setSysState('idle')
+          setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
           setShakeKey((k) => k + 1)
           setSubmitting(false)
@@ -254,15 +258,14 @@ export default function PricingDiagnosticPage() {
         }
         submissionId = json.submissionId
       } catch {
+        resetLoader()
+        setSysState('idle')
+        setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
         setShakeKey((k) => k + 1)
         setSubmitting(false)
         return
       }
-
-      setSysState('running')
-      setAppState('loading')
-      startLoadingAnimation()
 
       let data: ApiResponse
       try {
@@ -273,7 +276,7 @@ export default function PricingDiagnosticPage() {
         })
         data = (await res.json()) as ApiResponse
       } catch {
-        clearTimers()
+        stopLoader()
         setErrorMsg('Network error. Please check your connection and try again.')
         setSysState('error')
         setAppState('error')
@@ -281,15 +284,8 @@ export default function PricingDiagnosticPage() {
         return
       }
 
-      clearTimers()
-      const elapsed = ((performance.now() - runStartRef.current) / 1000).toFixed(1) + 's'
-      setLatency(elapsed)
-      setProgressPct(100)
-      setLoadingPct('100%')
-
       if (data.ok) {
-        setActiveStage(STAGES.length - 1)
-        setDoneStages([0, 1, 2, 3])
+        completeLoader()
         await new Promise((r) => setTimeout(r, 400))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
@@ -308,6 +304,7 @@ export default function PricingDiagnosticPage() {
           }),
         }).catch((err) => console.error('[pricing-diagnostic] leads/complete', err))
       } else {
+        stopLoader()
         setErrorMsg(data.message)
         setSysState('error')
         setAppState('error')
@@ -323,11 +320,11 @@ export default function PricingDiagnosticPage() {
       }
       setSubmitting(false)
     },
-    [url, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
+    [url, email, marketingConsent, submitting, startLoader, stopLoader, completeLoader, resetLoader]
   )
 
   const handleReset = useCallback(() => {
-    clearTimers()
+    resetLoader()
     setAppState('idle')
     setResult(null)
     setErrorMsg('')
@@ -335,10 +332,8 @@ export default function PricingDiagnosticPage() {
     setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
-    setLatency('—')
-    setProgressPct(0)
     setTokens(null)
-  }, [clearTimers])
+  }, [resetLoader])
 
   const loadingHost = url ? trimUrl(url).split('/')[0] : 'target'
 
@@ -404,72 +399,59 @@ export default function PricingDiagnosticPage() {
             <div className="panel-body">
               {/* IDLE */}
               <section className={clsx('pd-state', { active: appState === 'idle' })}>
-                <div className="idle-label">
-                  Pricing URL <span className="required-mark">*</span>
-                </div>
-                <form
-                  key={shakeKey}
-                  className="pd-form"
-                  noValidate
-                  onSubmit={handleSubmit}
-                  autoComplete="off"
-                >
-                  <div className={clsx('pd-input-box', { error: urlError })}>
-                    <input
-                      ref={urlInputRef}
-                      type="text"
-                      placeholder="https://your-product.com/pricing"
-                      spellCheck={false}
-                      value={url}
-                      disabled={submitting}
-                      onChange={(e) => {
-                        setUrl(e.target.value)
-                        if (urlError) setUrlError(null)
-                      }}
-                    />
-                  </div>
-                  <div className={clsx('pd-helper', { error: urlError })}>
-                    {urlError ?? 'Paste your pricing URL'}
-                  </div>
-                  <div className="idle-label">
-                    Work email <span className="required-mark">*</span>
-                  </div>
-                  <div className={clsx('pd-input-box', { error: emailError })}>
-                    <input
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      placeholder="you@company.com"
-                      value={email}
-                      disabled={submitting}
-                      onChange={(e) => {
-                        setEmail(e.target.value)
-                        if (emailError) setEmailError(null)
-                      }}
-                    />
-                  </div>
-                  <div className={clsx('pd-helper', { error: emailError })}>
-                    {emailError ?? 'We send the report to your work email. No spam.'}
-                  </div>
+                <div className="idle-label">Diagnose a pricing page</div>
+                <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
+                  <Input
+                    label="Pricing URL"
+                    required
+                    error={urlError}
+                    shakeKey={shakeKey}
+                    ref={urlInputRef}
+                    type="text"
+                    placeholder="https://your-product.com/pricing"
+                    spellCheck={false}
+                    value={url}
+                    disabled={submitting}
+                    onChange={(e) => {
+                      setUrl(e.target.value)
+                      if (urlError) setUrlError(null)
+                    }}
+                  />
+                  <Input
+                    label="Work email"
+                    required
+                    error={emailError}
+                    shakeKey={shakeKey}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    disabled={submitting}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
                   <InlineConsentField
                     checked={marketingConsent}
                     disabled={submitting}
                     onChange={setMarketingConsent}
                   />
-                  <div className="pd-submit-row">
-                    <button type="submit" className="pd-submit-btn" disabled={submitting}>
-                      Find Diagnostic
+                  <div className="submit-row" style={{ marginTop: 18 }}>
+                    <button type="submit" className="submit-btn" disabled={submitting}>
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2.4"
+                        strokeWidth="2.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <path d="M5 12h14" />
-                        <path d="M13 5l7 7-7 7" />
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="M21 21l-4.3-4.3" />
                       </svg>
+                      Find Diagnostic
                     </button>
                   </div>
                 </form>
@@ -477,44 +459,20 @@ export default function PricingDiagnosticPage() {
 
               {/* LOADING */}
               <section className={clsx('pd-state', { active: appState === 'loading' })}>
-                <div className="progress-track">
-                  <div className="progress-bar" style={{ width: `${progressPct}%` }} />
-                </div>
-                <div className="loading-header">
-                  <span>
-                    Analysing <strong>{loadingHost}</strong>
-                  </span>
-                  <span>{loadingPct}</span>
-                </div>
-                <div className="stages">
-                  {STAGES.map((s, i) => {
-                    const isActive = activeStage === i && !doneStages.includes(i)
-                    const isDone = doneStages.includes(i)
-                    return (
-                      <div
-                        key={s.num}
-                        className={clsx('stage', { active: isActive, done: isDone })}
-                      >
-                        <div className="stage-num-row">
-                          <span>{s.num}</span>
-                          <span className="stage-status-icon">
-                            <svg viewBox="0 0 12 12" fill="none">
-                              <path
-                                d="M2 6.5l2.5 2.5L10 3"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </span>
-                        </div>
-                        <div className="stage-title">{s.title}</div>
-                        <div className="stage-log">{stageLogs[i]}</div>
-                      </div>
-                    )
-                  })}
-                </div>
+                <LoadingStages
+                  stages={STAGES}
+                  label={
+                    <>
+                      Analysing <strong>{loadingHost}</strong>
+                    </>
+                  }
+                  progressPct={progressPct}
+                  loadingPct={loadingPct}
+                  activeStage={activeStage}
+                  doneStages={doneStages}
+                  stageLogs={stageLogs}
+                  waiting={waiting}
+                />
               </section>
 
               {/* RESULT */}
@@ -531,36 +489,31 @@ export default function PricingDiagnosticPage() {
                     </div>
                     {/* end resultPanelRef */}
 
-                    <div className="result-footer">
-                      <span className="url-pill">
-                        <span>{trimUrl(result.url)}</span>
-                      </span>
-                      <div className="export-actions">
-                        <ExportControls
-                          resultRef={resultPanelRef}
-                          slug="pricing-diagnostic"
-                          appName="Pricing Page Diagnostic"
-                          filename={`pricing-diagnostic-${trimUrl(result.url).replace(/[^a-z0-9]/gi, '-')}`}
-                          subject={trimUrl(result.url)}
-                          plainText={buildPricingDiagnosticPlainText(result)}
-                        />
-                        <button className="run-again" type="button" onClick={handleReset}>
-                          Run another
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M5 12h14" />
-                            <path d="M13 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
+                    <div className="result-actions">
+                      <ExportControls
+                        resultRef={resultPanelRef}
+                        slug="pricing-diagnostic"
+                        appName="Pricing Page Diagnostic"
+                        filename={`pricing-diagnostic-${trimUrl(result.url).replace(/[^a-z0-9]/gi, '-')}`}
+                        subject={trimUrl(result.url)}
+                        plainText={buildPricingDiagnosticPlainText(result)}
+                      />
+                      <button className="run-again" type="button" onClick={handleReset}>
+                        Run another
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M5 12h14" />
+                          <path d="M13 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
                   </>
                 )}
@@ -593,139 +546,15 @@ export default function PricingDiagnosticPage() {
           </div>
         </div>
 
-        {/* How it works */}
-        <section className="how-it-works">
-          <div className="hiw-head">
-            <span className="hiw-eyebrow">How it works</span>
-            <h2>
+        <HowItWorks
+          title={
+            <>
               From URL to teardown in <span className="accent">under a minute</span>
-            </h2>
-            <p>No login, no install. Four steps from paste to ranked fixes.</p>
-          </div>
-
-          <ol className="hiw-steps">
-            <li className="hiw-step" data-side="left">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 01</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3" y="5" width="18" height="14" rx="2" />
-                      <path d="M3 9h18" />
-                      <path d="M7 13h8" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>Paste your pricing page URL</h3>
-                    <p>
-                      Yours, a competitor&apos;s, or any public pricing page you want to benchmark.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-
-            <li className="hiw-step" data-side="right">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 02</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M3 7l9-4 9 4-9 4-9-4z" />
-                      <path d="M3 12l9 4 9-4" />
-                      <path d="M3 17l9 4 9-4" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>We scrape and parse the page</h3>
-                    <p>Plan tiers, CTAs, gates, copy, and trust signals, extracted in seconds.</p>
-                  </div>
-                </div>
-              </div>
-            </li>
-
-            <li className="hiw-step" data-side="left">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 03</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>AI evaluates four conversion dimensions</h3>
-                    <p>
-                      Structure, friction, copy, and signal, scored against what actually converts.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-
-            <li className="hiw-step" data-side="right">
-              <div className="hiw-rail">
-                <span className="hiw-dot" />
-              </div>
-              <div className="hiw-card">
-                <span className="hiw-step-label">Step 04</span>
-                <div className="hiw-card-row">
-                  <div className="hiw-icon" aria-hidden>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M9 11l3 3 8-8" />
-                      <path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9" />
-                    </svg>
-                  </div>
-                  <div className="hiw-text">
-                    <h3>Get your scores and the 3 quickest fixes</h3>
-                    <p>
-                      Friction Score, Clarity Grade, Plan Legibility, plus top improvements ranked
-                      by impact.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-          </ol>
-        </section>
+            </>
+          }
+          subtitle="No login, no install. Four steps from paste to ranked fixes."
+          steps={HOW_IT_WORKS_STEPS}
+        />
       </main>
 
       <Footer />

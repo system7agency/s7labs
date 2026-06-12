@@ -7,6 +7,9 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
+import { Input } from '@/components/mini-apps/ui/Input'
+import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
@@ -131,21 +134,26 @@ export default function WebsiteRoastPage() {
   const [marketingConsent, setMarketingConsent] = useState(true)
   const [shakeEmail, setShakeEmail] = useState(0)
 
-  const [activeStage, setActiveStage] = useState(-1)
-  const [doneStages, setDoneStages] = useState<number[]>([])
-  const [stageLogs, setStageLogs] = useState<string[]>(['', '', '', ''])
-  const [progressPct, setProgressPct] = useState(0)
-  const [loadingPct, setLoadingPct] = useState('0%')
-  const [latency, setLatency] = useState('—')
   const [sysState, setSysState] = useState('idle')
   const [clock, setClock] = useState('—')
   const [loadingLabel, setLoadingLabel] = useState('')
 
+  const {
+    start: startLoader,
+    stop: stopLoader,
+    complete: completeLoader,
+    reset: resetLoader,
+    latency,
+    progressPct,
+    loadingPct,
+    activeStage,
+    doneStages,
+    stageLogs,
+    waiting,
+  } = useMiniAppLoader(STAGES, STAGE_MS)
+
   const urlInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const rafRef = useRef<number | null>(null)
-  const runStartRef = useRef(0)
 
   useEffect(() => {
     const tick = () => {
@@ -164,84 +172,6 @@ export default function WebsiteRoastPage() {
       return () => clearTimeout(t)
     }
   }, [appState])
-
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach((t) => clearTimeout(t))
-    timersRef.current = []
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
-  }, [])
-
-  useEffect(() => () => clearTimers(), [clearTimers])
-
-  const startLoadingAnimation = useCallback(
-    (label: string) => {
-      clearTimers()
-      setActiveStage(0)
-      setDoneStages([])
-      setStageLogs(['', '', '', ''])
-      setProgressPct(0)
-      setLoadingPct('0%')
-      setLatency('0.0s')
-      setLoadingLabel(label)
-      const startTime = performance.now()
-      runStartRef.current = startTime
-      const totalMs = STAGE_MS * STAGES.length
-
-      const tick = (now: number) => {
-        const pct = Math.min(98, ((now - startTime) / totalMs) * 100)
-        setProgressPct(pct)
-        setLoadingPct(Math.floor(pct) + '%')
-        setLatency(((now - startTime) / 1000).toFixed(1) + 's')
-        if (pct < 98) rafRef.current = requestAnimationFrame(tick)
-      }
-      rafRef.current = requestAnimationFrame(tick)
-
-      STAGES.forEach((stage, i) => {
-        timersRef.current.push(
-          setTimeout(() => {
-            setActiveStage(i)
-            setStageLogs((prev) => {
-              const n = [...prev]
-              n[i] = stage.logs[0] ?? ''
-              return n
-            })
-            stage.logs.forEach((log, li) => {
-              if (li === 0) return
-              timersRef.current.push(
-                setTimeout(
-                  () => {
-                    setStageLogs((prev) => {
-                      const n = [...prev]
-                      n[i] = log
-                      return n
-                    })
-                  },
-                  (li * STAGE_MS) / stage.logs.length
-                )
-              )
-            })
-          }, i * STAGE_MS)
-        )
-        timersRef.current.push(
-          setTimeout(
-            () => {
-              setDoneStages((prev) => [...prev, i])
-              setStageLogs((prev) => {
-                const n = [...prev]
-                n[i] = stage.logs[stage.logs.length - 1] ?? ''
-                return n
-              })
-            },
-            (i + 1) * STAGE_MS
-          )
-        )
-      })
-    },
-    [clearTimers]
-  )
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -278,9 +208,10 @@ export default function WebsiteRoastPage() {
       // disposable / free-provider email the server rejects), we revert to the
       // idle form below and surface the error.
       const host = trimmed.replace(/^https?:\/\//, '').split('/')[0] ?? trimmed
+      setLoadingLabel(host)
       setSysState('running')
       setAppState('loading')
-      startLoadingAnimation(host)
+      startLoader()
 
       let submissionId: string | null = null
       try {
@@ -300,7 +231,7 @@ export default function WebsiteRoastPage() {
           error?: string
         }
         if (!res.ok || !json.ok || !json.submissionId) {
-          clearTimers()
+          resetLoader()
           setSysState('idle')
           setAppState('idle')
           setEmailError(json.error || "Couldn't save your info. Try again.")
@@ -310,7 +241,7 @@ export default function WebsiteRoastPage() {
         }
         submissionId = json.submissionId
       } catch {
-        clearTimers()
+        resetLoader()
         setSysState('idle')
         setAppState('idle')
         setEmailError("Couldn't save your info. Try again.")
@@ -328,7 +259,7 @@ export default function WebsiteRoastPage() {
         })
         data = (await res.json()) as ApiResponse
       } catch {
-        clearTimers()
+        stopLoader()
         setErrorMsg('Network error. Please check your connection and try again.')
         setSysState('error')
         setAppState('error')
@@ -336,14 +267,8 @@ export default function WebsiteRoastPage() {
         return
       }
 
-      clearTimers()
-      const elapsed = ((performance.now() - runStartRef.current) / 1000).toFixed(1) + 's'
-      setLatency(elapsed)
-      setProgressPct(100)
-      setLoadingPct('100%')
-
       if (data.ok) {
-        setDoneStages([0, 1, 2, 3])
+        completeLoader()
         await new Promise((r) => setTimeout(r, 400))
         setResult(data.data)
         setTokens({ in: data.data.tokens_in, out: data.data.tokens_out })
@@ -360,6 +285,7 @@ export default function WebsiteRoastPage() {
           }),
         }).catch((err) => console.error('[website-roast] leads/complete', err))
       } else {
+        stopLoader()
         setErrorMsg(data.message)
         setSysState('error')
         setAppState('error')
@@ -375,11 +301,11 @@ export default function WebsiteRoastPage() {
       }
       setSubmitting(false)
     },
-    [url, email, marketingConsent, submitting, startLoadingAnimation, clearTimers]
+    [url, email, marketingConsent, submitting, startLoader, stopLoader, completeLoader, resetLoader]
   )
 
   const handleReset = useCallback(() => {
-    clearTimers()
+    resetLoader()
     setAppState('idle')
     setResult(null)
     setErrorMsg('')
@@ -387,10 +313,8 @@ export default function WebsiteRoastPage() {
     setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
-    setLatency('—')
-    setProgressPct(0)
     setTokens(null)
-  }, [clearTimers])
+  }, [resetLoader])
 
   return (
     <div className="website-roast mini-app-scope">
@@ -452,46 +376,36 @@ export default function WebsiteRoastPage() {
               <section className={clsx('wr-state', { active: appState === 'idle' })}>
                 <div className="idle-label">Drop a URL and get roasted</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
-                  <div className="input-field">
-                    <label>Website URL</label>
-                    <div key={`u-${shakeInput}`} className={clsx('input-box', { error: urlError })}>
-                      <input
-                        ref={urlInputRef}
-                        type="url"
-                        placeholder="https://yoursite.com"
-                        value={url}
-                        disabled={submitting}
-                        onChange={(e) => {
-                          setUrl(e.target.value)
-                          if (urlError) setUrlError(null)
-                        }}
-                      />
-                    </div>
-                    {urlError && <div className="field-error">{urlError}</div>}
-                  </div>
-                  <div className="input-field">
-                    <label>
-                      Work email <span style={{ color: 'var(--error, #ff5c7a)' }}>*</span>
-                    </label>
-                    <div
-                      key={`e-${shakeEmail}`}
-                      className={clsx('input-box', { error: emailError })}
-                    >
-                      <input
-                        type="email"
-                        inputMode="email"
-                        autoComplete="email"
-                        placeholder="you@company.com"
-                        value={email}
-                        disabled={submitting}
-                        onChange={(e) => {
-                          setEmail(e.target.value)
-                          if (emailError) setEmailError(null)
-                        }}
-                      />
-                    </div>
-                    {emailError && <div className="field-error">{emailError}</div>}
-                  </div>
+                  <Input
+                    label="Website URL"
+                    error={urlError}
+                    shakeKey={shakeInput}
+                    ref={urlInputRef}
+                    type="url"
+                    placeholder="https://yoursite.com"
+                    value={url}
+                    disabled={submitting}
+                    onChange={(e) => {
+                      setUrl(e.target.value)
+                      if (urlError) setUrlError(null)
+                    }}
+                  />
+                  <Input
+                    label="Work email"
+                    required
+                    error={emailError}
+                    shakeKey={shakeEmail}
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    disabled={submitting}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (emailError) setEmailError(null)
+                    }}
+                  />
                   <InlineConsentField
                     checked={marketingConsent}
                     disabled={submitting}
@@ -517,44 +431,20 @@ export default function WebsiteRoastPage() {
               </section>
 
               <section className={clsx('wr-state', { active: appState === 'loading' })}>
-                <div className="progress-track">
-                  <div className="progress-bar" style={{ width: `${progressPct}%` }} />
-                </div>
-                <div className="loading-header">
-                  <span>
-                    Roasting <strong>{loadingLabel}</strong>
-                  </span>
-                  <span>{loadingPct}</span>
-                </div>
-                <div className="stages">
-                  {STAGES.map((s, i) => {
-                    const isActive = activeStage === i && !doneStages.includes(i)
-                    const isDone = doneStages.includes(i)
-                    return (
-                      <div
-                        key={s.num}
-                        className={clsx('stage', { active: isActive, done: isDone })}
-                      >
-                        <div className="stage-num-row">
-                          <span>{s.num}</span>
-                          <span className="stage-status-icon">
-                            <svg viewBox="0 0 12 12" fill="none">
-                              <path
-                                d="M2 6.5l2.5 2.5L10 3"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </span>
-                        </div>
-                        <div className="stage-title">{s.title}</div>
-                        <div className="stage-log">{stageLogs[i]}</div>
-                      </div>
-                    )
-                  })}
-                </div>
+                <LoadingStages
+                  stages={STAGES}
+                  label={
+                    <>
+                      Roasting <strong>{loadingLabel}</strong>
+                    </>
+                  }
+                  progressPct={progressPct}
+                  loadingPct={loadingPct}
+                  activeStage={activeStage}
+                  doneStages={doneStages}
+                  stageLogs={stageLogs}
+                  waiting={waiting}
+                />
               </section>
 
               <section className={clsx('wr-state', { active: appState === 'result' })}>

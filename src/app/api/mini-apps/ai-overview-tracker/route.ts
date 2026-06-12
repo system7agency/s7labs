@@ -11,19 +11,13 @@ import type {
   ScanGated,
 } from '@/lib/mini-apps/aio-types'
 import { isValidDomain, normalizeDomain } from '@/lib/mini-apps/normalize-domain'
+import { askPerplexityWithCitations } from '@/lib/mini-apps/avs-perplexity'
 import { calculateCost, usageFromAnthropic } from '@/lib/llm/cost'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 55
 
-const TIMEOUT_MS = 55_000
-const DATAFORSEO_ENDPOINT = 'https://api.dataforseo.com/v3/serp/google/organic/live/advanced'
-const DATAFORSEO_LANGUAGE_CODE = 'en'
-const DATAFORSEO_DEFAULT_LOCATION_CODE = 2840 // United States
-const DATAFORSEO_DEVICE = 'mobile'
-const DATAFORSEO_OS = 'android'
-const DATAFORSEO_LOAD_ASYNC_AIO = true
 const MAX_KEYWORDS = 5
 const MAX_SOURCES_PER_KEYWORD = 10
 
@@ -32,16 +26,6 @@ type ClaudeAssessment = {
   verdict_label: string
   citation_leaders: { domain: string; appearances: number }[]
   recommendations: string[]
-}
-
-type DataforseoAiRef = { domain?: string; url?: string; title?: string; source?: string }
-type DataforseoItem = {
-  type?: string
-  domain?: string
-  url?: string
-  title?: string
-  items?: DataforseoItem[]
-  references?: DataforseoAiRef[]
 }
 
 function jsonScan(body: ScanApiResponse, status: number) {
@@ -77,65 +61,29 @@ function sanitizeKeywords(raw: unknown): string[] {
   return out
 }
 
-function locationNameToCode(location?: string): { name: string; code: number } {
-  const map: Record<string, number> = {
-    'United States': 2840,
-    'United Kingdom': 2826,
-    Canada: 2124,
-    Australia: 2036,
-    India: 2356,
-  }
-  if (!location) return { name: 'United States', code: DATAFORSEO_DEFAULT_LOCATION_CODE }
-  return { name: location, code: map[location] ?? DATAFORSEO_DEFAULT_LOCATION_CODE }
-}
-
-function collectAioSources(
-  item: DataforseoItem | undefined
-): { domain: string; url: string; title: string }[] {
-  if (!item) return []
-  const out: { domain: string; url: string; title: string }[] = []
-  const pushRef = (ref: DataforseoAiRef) => {
-    const domain = (ref.domain ?? '').toLowerCase().replace(/^www\./, '')
-    const url = ref.url ?? ''
-    const title = ref.title ?? ref.source ?? domain
-    if (!domain || !url) return
-    if (out.some((s) => s.url === url)) return
-    out.push({ domain, url, title })
-  }
-
-  for (const ref of item.references ?? []) pushRef(ref)
-  for (const child of item.items ?? []) {
-    for (const ref of child.references ?? []) pushRef(ref)
-    if (child.type === 'ai_overview_reference') {
-      pushRef({
-        domain: child.domain,
-        url: child.url,
-        title: child.title,
-      })
-    }
-  }
-
-  return out.slice(0, MAX_SOURCES_PER_KEYWORD)
+function resolveLocationName(location?: string): string {
+  const trimmed = typeof location === 'string' ? location.trim() : ''
+  return trimmed || 'United States'
 }
 
 function toStatus(
-  aiOver: boolean,
+  aiAnswer: boolean,
   brandCited: boolean,
   organic: boolean,
   errored: boolean
 ): KeywordStatus {
   if (errored) return 'error'
-  if (!aiOver) return 'no_aio'
+  if (!aiAnswer) return 'no_aio'
   if (brandCited) return 'cited'
   if (organic) return 'ghost'
   return 'blind_spot'
 }
 
 const CLAUDE_PROMPT = (domain: string, location: string, keywords: KeywordAIO[]) => `
-You are an expert in Google AI Overviews and how brands earn citations inside them. You are given factual per-keyword data: whether each keyword triggers an AI Overview, which domains are cited, and whether the tracked brand is cited or ranks organically. Do not invent or change these facts — interpret them. Write a memorable, slightly pointed one_liner (especially sharp when the brand ranks organically but is not cited). Identify the rival domains cited most often across the keywords. Give 3 specific, actionable recommendations to start earning citations — concrete, not generic. Return ONLY valid JSON.
+You are an expert in how AI answer engines (like Perplexity) decide which brands to cite as sources. You are given factual per-keyword data: for each buyer-intent keyword, the domains the AI answer cited and whether the tracked brand was among them. Do not invent or change these facts — interpret them. Write a memorable, slightly pointed one_liner (especially sharp when rival domains are cited but the tracked brand is not). Identify the rival domains cited most often across the keywords. Give 3 specific, actionable recommendations to start earning citations in AI answers — concrete, not generic. Return ONLY valid JSON.
 
 Tracked domain: ${domain}
-Location: ${location}
+Market: ${location}
 Facts:
 ${JSON.stringify(keywords, null, 2)}
 
@@ -148,67 +96,40 @@ Return ONLY JSON:
 }
 `
 
-async function runKeywordScan(
-  login: string,
-  password: string,
-  keyword: string,
-  locationCode: number,
-  trackedDomain: string,
-  signal: AbortSignal
-): Promise<KeywordAIO> {
-  const auth = Buffer.from(`${login}:${password}`).toString('base64')
-  const res = await fetch(DATAFORSEO_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Basic ${auth}`,
-    },
-    cache: 'no-store',
-    signal,
-    body: JSON.stringify([
-      {
-        keyword,
-        language_code: DATAFORSEO_LANGUAGE_CODE,
-        location_code: locationCode,
-        device: DATAFORSEO_DEVICE,
-        os: DATAFORSEO_OS,
-        load_async_ai_overview: DATAFORSEO_LOAD_ASYNC_AIO,
-      },
-    ]),
-  })
-
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const payload = (await res.json()) as {
-    tasks?: Array<{
-      status_code?: number
-      result?: Array<{ items?: DataforseoItem[] }>
-    }>
+// One keyword → ask Perplexity (an AI answer engine with citations) and record
+// which domains it cited and whether the tracked brand was among them.
+async function runKeywordScan(keyword: string, trackedDomain: string): Promise<KeywordAIO> {
+  const r = await askPerplexityWithCitations(keyword, trackedDomain)
+  if (!r.ok) {
+    return {
+      keyword,
+      ai_overview_present: false,
+      brand_cited: false,
+      organic_present: false,
+      status: 'error',
+      sources: [],
+    }
   }
-  const task = payload.tasks?.[0]
-  const items = task?.result?.[0]?.items ?? []
-  const aio = items.find((i) => i.type === 'ai_overview')
-  const ai_overview_present = Boolean(aio)
-  const sources = collectAioSources(aio)
-  const brand_cited = sources.some((s) => normalizeDomain(s.domain) === trackedDomain)
-  const organic_present = items.some(
-    (i) => i.type === 'organic' && normalizeDomain(i.domain ?? '') === trackedDomain
-  )
+  const sources = r.cited_domains.slice(0, MAX_SOURCES_PER_KEYWORD).map((d) => {
+    const dom = normalizeDomain(d)
+    return { domain: dom, url: `https://${dom}`, title: dom }
+  })
   return {
     keyword,
-    ai_overview_present,
-    brand_cited,
-    organic_present,
-    status: toStatus(ai_overview_present, brand_cited, organic_present, false),
+    // Perplexity returned a real AI answer for this keyword.
+    ai_overview_present: true,
+    brand_cited: r.brand_cited,
+    organic_present: false,
+    status: toStatus(true, r.brand_cited, false, false),
     sources,
   }
 }
 
 export async function POST(request: Request) {
   const anthropicKey = process.env.ANTHROPIC_API_KEY
-  const dataforseoLogin = process.env.DATAFORSEO_LOGIN
-  const dataforseoPassword = process.env.DATAFORSEO_PASSWORD
+  const perplexityKey = process.env.PERPLEXITY_API_KEY
 
-  if (!anthropicKey || !dataforseoLogin || !dataforseoPassword) {
+  if (!anthropicKey || !perplexityKey) {
     return jsonScan({ ok: false, message: 'Service not configured. Please try again later.' }, 502)
   }
 
@@ -226,24 +147,13 @@ export async function POST(request: Request) {
     return jsonScan({ ok: false, message: 'Enter a domain and at least one keyword.' }, 422)
   }
 
-  const location = locationNameToCode(
+  const locationName = resolveLocationName(
     typeof payload.location === 'string' ? payload.location : undefined
   )
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
   try {
     const results = await Promise.allSettled(
-      keywords.map((keyword) =>
-        runKeywordScan(
-          dataforseoLogin,
-          dataforseoPassword,
-          keyword,
-          location.code,
-          domain,
-          controller.signal
-        )
-      )
+      keywords.map((keyword) => runKeywordScan(keyword, domain))
     )
 
     const keywordRows: KeywordAIO[] = results.map((r, i) =>
@@ -261,9 +171,11 @@ export async function POST(request: Request) {
 
     const okCount = keywordRows.filter((r) => r.status !== 'error').length
     if (okCount === 0) {
-      clearTimeout(timer)
       return jsonScan(
-        { ok: false, message: "Couldn't pull SERP data right now. Try again in a moment." },
+        {
+          ok: false,
+          message: "Couldn't reach the AI answer engine right now. Try again in a moment.",
+        },
         422
       )
     }
@@ -289,9 +201,8 @@ export async function POST(request: Request) {
       model: 'claude-opus-4-5',
       system: STYLE_SYSTEM_PROMPT,
       max_tokens: 2000,
-      messages: [{ role: 'user', content: CLAUDE_PROMPT(domain, location.name, keywordRows) }],
+      messages: [{ role: 'user', content: CLAUDE_PROMPT(domain, locationName, keywordRows) }],
     })
-    clearTimeout(timer)
 
     const firstBlock = message.content[0]
     const rawText = firstBlock?.type === 'text' ? firstBlock.text : ''
@@ -310,7 +221,7 @@ export async function POST(request: Request) {
 
     const free: ScanFree = {
       domain,
-      location: location.name,
+      location: locationName,
       keywords_scored: okCount,
       one_liner: assessment.one_liner,
       verdict_label: assessment.verdict_label,
@@ -352,7 +263,6 @@ export async function POST(request: Request) {
     const cost = calculateCost(usageFromAnthropic(message))
     return jsonScan({ ok: true, scanId, free, cost }, 200)
   } catch {
-    clearTimeout(timer)
-    return jsonScan({ ok: false, message: 'Scan timed out. Please try again.' }, 504)
+    return jsonScan({ ok: false, message: "Couldn't complete the scan. Please try again." }, 500)
   }
 }

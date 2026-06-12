@@ -329,25 +329,11 @@
   display: flex;
   flex-direction: column;
 }
-/* .input-field rhythm + label come from the canonical mini-app-ui.css. */
-/* .input-box (glassy fill, border, focus glow, error shake) comes from the
- * canonical mini-app-ui.css. Only the app-specific inner-input typography
- * is kept here. */
-.ai-visibility-score .input-box input {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  outline: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 15px 14px 15px 18px;
-  letter-spacing: -0.01em;
-  min-width: 0;
-}
-.ai-visibility-score .input-box input::placeholder {
-  color: var(--text-faint);
-}
+/* .input-field rhythm + label, the .input-box glassy fill / focus / error, and
+ * the SANS inner-input typography (font, size, padding, placeholder, autofill)
+ * all come from the canonical mini-app-ui.css. Do NOT redeclare the inner input
+ * font/size/padding here — a per-app override stacks on the box padding and
+ * swaps the font, which is exactly what caused field-to-field drift. */
 
 .ai-visibility-score .field-error {
   font-family: var(--mono);
@@ -368,155 +354,7 @@
   height: 16px;
 }
 
-/* ── LOADING ── */
-.ai-visibility-score .progress-track {
-  height: 2px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 22px;
-}
-.ai-visibility-score .progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--cyan), var(--blue));
-  box-shadow: 0 0 14px rgba(79, 140, 255, 0.6);
-  transition: width 0.4s ease;
-}
-.ai-visibility-score .loading-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 14px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.ai-visibility-score .loading-header strong {
-  color: var(--text);
-  font-weight: 500;
-}
-
-.ai-visibility-score .stages {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.ai-visibility-score .stage {
-  position: relative;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.012);
-  border-radius: 10px;
-  padding: 16px 16px 18px;
-  transition:
-    border-color 240ms ease,
-    background 240ms ease,
-    opacity 240ms ease;
-}
-.ai-visibility-score .stage-num-row {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: var(--text-faint);
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.ai-visibility-score .stage-title {
-  font-size: 14px;
-  color: var(--text-dim);
-  font-weight: 500;
-  transition: color 240ms ease;
-}
-.ai-visibility-score .stage-status-icon {
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.3);
-  position: relative;
-  flex-shrink: 0;
-}
-.ai-visibility-score .stage-status-icon svg {
-  width: 8px;
-  height: 8px;
-  opacity: 0;
-  transition: opacity 200ms;
-}
-
-.ai-visibility-score .stage.active {
-  border-color: rgba(79, 140, 255, 0.55);
-  background: linear-gradient(180deg, rgba(79, 140, 255, 0.06), rgba(79, 140, 255, 0.01));
-  box-shadow:
-    0 0 0 1px rgba(79, 140, 255, 0.15),
-    0 0 30px -8px rgba(79, 140, 255, 0.4),
-    0 0 60px -20px rgba(79, 140, 255, 0.3) inset;
-}
-.ai-visibility-score .stage.active .stage-title {
-  color: var(--text);
-}
-.ai-visibility-score .stage.active .stage-status-icon {
-  border-color: var(--blue);
-  background: var(--blue);
-  box-shadow: 0 0 12px rgba(79, 140, 255, 0.7);
-  animation: or-spin-pulse 1.2s ease-in-out infinite;
-}
-.ai-visibility-score .stage.active .stage-status-icon::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 1px solid var(--blue);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: or-spin 1.1s linear infinite;
-}
-@keyframes avs-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes avs-spin-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 12px rgba(79, 140, 255, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 18px rgba(79, 140, 255, 1);
-  }
-}
-.ai-visibility-score .stage.done {
-  opacity: 0.55;
-}
-.ai-visibility-score .stage.done .stage-status-icon {
-  border-color: var(--success);
-  background: var(--success);
-}
-.ai-visibility-score .stage.done .stage-status-icon svg {
-  opacity: 1;
-}
-.ai-visibility-score .stage.done .stage-status-icon svg path {
-  stroke: #0b1410;
-}
-.ai-visibility-score .stage-log {
-  margin-top: 10px;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  color: var(--text-faint);
-  line-height: 1.5;
-  min-height: 14px;
-  overflow: hidden;
-  transition: color 240ms;
-}
-.ai-visibility-score .stage.active .stage-log {
-  color: var(--text-dim);
-}
-.ai-visibility-score .stage.done .stage-log {
-  color: var(--text-faint);
-}
+/* Loading state comes from the shared <LoadingStages> + canonical mini-app-ui.css. */
 
 /* ── RESULT ── */
 .ai-visibility-score .result-head {
@@ -935,9 +773,6 @@
   .ai-visibility-score .score-row {
     grid-template-columns: 1fr;
   }
-  .ai-visibility-score .stages {
-    grid-template-columns: 1fr;
-  }
   .ai-visibility-score .info-strip {
     grid-template-columns: 1fr;
   }
@@ -1079,6 +914,32 @@
   color: var(--text-muted);
 }
 
+/* Engines the score spans — surfaced so it's clear it's multi-engine, not just
+ * one provider. */
+.ai-visibility-score .avs-engines {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ai-visibility-score .avs-engines-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.ai-visibility-score .avs-engine-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong, var(--border));
+  background: rgba(79, 140, 255, 0.08);
+  color: var(--text-dim);
+}
+
 .ai-visibility-score .subscore-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1182,15 +1043,4 @@
   .ai-visibility-score .avs-number {
     font-size: 52px;
   }
-}
-
-/* Keep dark theme through browser autofill (Chrome/Edge/Safari) */
-.ai-visibility-score .input-box input:-webkit-autofill,
-.ai-visibility-score .input-box input:-webkit-autofill:hover,
-.ai-visibility-score .input-box input:-webkit-autofill:focus,
-.ai-visibility-score .input-box input:-webkit-autofill:active {
-  -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
-  caret-color: var(--text);
-  transition: background-color 9999s ease-in-out 0s;
 }
