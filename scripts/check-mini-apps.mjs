@@ -94,8 +94,7 @@ function extractSlug(source) {
 function hasHowItWorks(source) {
   // Either a direct <section className="how-it-works"> with an <h2>,
   // or use of the shared <HowItWorks> component.
-  const directSection =
-    /className=["']how-it-works["']/.test(source) && /<h2[\s>]/.test(source)
+  const directSection = /className=["']how-it-works["']/.test(source) && /<h2[\s>]/.test(source)
   const sharedComponent =
     /from\s+['"]@\/components\/mini-apps\/HowItWorks['"]/.test(source) &&
     /<HowItWorks[\s>]/.test(source)
@@ -139,9 +138,7 @@ if (allFolders.length === 0) {
 
 const changed = getChangedFolderNames()
 const folders =
-  changed === null
-    ? allFolders
-    : allFolders.filter((f) => changed.has(f.split('/').pop()))
+  changed === null ? allFolders : allFolders.filter((f) => changed.has(f.split('/').pop()))
 
 if (folders.length === 0) {
   console.log('This PR does not modify any mini-app page.tsx. Nothing to check.')
@@ -175,9 +172,7 @@ for (const folder of folders) {
 
   const slug = extractSlug(pageSource)
   if (!slug) {
-    problems.push(
-      `miniAppSlug: '<slug>' not found in the /api/leads/submit body. See ${DOC_LINK}.`
-    )
+    problems.push(`miniAppSlug: '<slug>' not found in the /api/leads/submit body. See ${DOC_LINK}.`)
   } else if (!activeSlugs.has(slug)) {
     problems.push(
       `slug "${slug}" is not registered as active in the mini_apps Supabase table.\n` +
