@@ -82,8 +82,7 @@ async function captureRaw(el: HTMLElement): Promise<{ canvas: HTMLCanvasElement;
     // cacheBust avoids stale cross-origin image data URIs between runs.
     cacheBust: true,
     // Skip any node explicitly opted out of capture.
-    filter: (node) =>
-      !(node instanceof HTMLElement && node.dataset?.exportIgnore === 'true'),
+    filter: (node) => !(node instanceof HTMLElement && node.dataset?.exportIgnore === 'true'),
   })
 
   return { canvas, ratio }
@@ -99,7 +98,11 @@ async function captureRaw(el: HTMLElement): Promise<{ canvas: HTMLCanvasElement;
  * canvas. Everything is drawn with the 2D context, so it is deterministic and
  * independent of page CSS.
  */
-function frameCanvas(content: HTMLCanvasElement, ratio: number, opts: ExportOpts): HTMLCanvasElement {
+function frameCanvas(
+  content: HTMLCanvasElement,
+  ratio: number,
+  opts: ExportOpts
+): HTMLCanvasElement {
   // The content canvas is at `ratio` device px; scale the chrome (defined in
   // CSS px) to the same density so header/footer match the captured content.
   const s = ratio > 0 ? ratio : PIXEL_RATIO
@@ -208,7 +211,7 @@ export async function capturePng(el: HTMLElement, opts: ExportOpts): Promise<voi
     link.click()
   } catch (err) {
     throw new Error(
-      `Failed to export PNG for "${opts.appName}": ${err instanceof Error ? err.message : String(err)}`,
+      `Failed to export PNG for "${opts.appName}": ${err instanceof Error ? err.message : String(err)}`
     )
   }
 }
@@ -247,7 +250,7 @@ export async function capturePdf(el: HTMLElement, opts: ExportOpts): Promise<voi
         PAGE_MARGIN_MM,
         PAGE_MARGIN_MM,
         PRINTABLE_WIDTH_MM,
-        imgHeightMm,
+        imgHeightMm
       )
     } else {
       const totalPages = Math.ceil(canvas.height / pagePxHeight)
@@ -271,7 +274,7 @@ export async function capturePdf(el: HTMLElement, opts: ExportOpts): Promise<voi
           0,
           0,
           canvas.width,
-          bandPxHeight,
+          bandPxHeight
         )
 
         if (page > 0) pdf.addPage()
@@ -282,7 +285,7 @@ export async function capturePdf(el: HTMLElement, opts: ExportOpts): Promise<voi
           PAGE_MARGIN_MM,
           PAGE_MARGIN_MM,
           PRINTABLE_WIDTH_MM,
-          bandHeightMm,
+          bandHeightMm
         )
       }
     }
@@ -290,7 +293,7 @@ export async function capturePdf(el: HTMLElement, opts: ExportOpts): Promise<voi
     pdf.save(`${opts.filename}.pdf`)
   } catch (err) {
     throw new Error(
-      `Failed to export PDF for "${opts.appName}": ${err instanceof Error ? err.message : String(err)}`,
+      `Failed to export PDF for "${opts.appName}": ${err instanceof Error ? err.message : String(err)}`
     )
   }
 }

@@ -8,10 +8,12 @@ adjusting each app's footer JSX. Do NOT re-invent styles — make the app USE th
 shared canonical classes.
 
 ## 1. Root scope
+
 - The app's outermost `<div>` (wrapping `<AuroraBackground/>`/Header/Footer)
   carries `mini-app-scope` in its className. (Most apps already do.)
 
 ## 2. Tokens — no per-app redeclaration
+
 - In `page-styles.css`, the opening `.<scope> { … }` block must NOT redeclare
   design tokens (`--bg`, `--text`, `--border`, `--text-muted`, etc.). They come
   from the canonical `.mini-app-scope` layer. Keep only real layout props
@@ -20,6 +22,7 @@ shared canonical classes.
   should be deleted too.
 
 ## 3. Buttons — pill, from shared CSS
+
 - Delete the app's own `.submit-btn` / `.<prefix>-submit-btn` rule from
   `page-styles.css` (keep only app-specific bits like `svg { width }`). The
   canonical `.submit-btn` (pill 999px, gradient, hover, disabled, focus) wins.
@@ -29,6 +32,7 @@ shared canonical classes.
 - Delete the app's own `.export-btn` rule (canonical pill export chip wins).
 
 ## 4. Inputs — glassy fill, canonical box, SANS text (STRICT)
+
 - Delete ALL per-app cosmetic input CSS so fields are byte-identical across
   apps. Specifically remove the app's own:
   - `.input-field` / `.textarea-field` (gap, margin) — canonical owns rhythm
@@ -58,6 +62,7 @@ shared canonical classes.
   email→consent gaps are equal.
 
 ## 4b. Export capture ref must wrap the WHOLE report (not just part)
+
 - The `resultRef` passed to `<ExportControls>` must wrap EVERY visible result
   section, including any gated / lazily-loaded / multi-block content (e.g.
   agentic-readiness's `<GatedBreakdown>`, share-of-voice / ai-overview-tracker
@@ -68,6 +73,7 @@ shared canonical classes.
   content is long).
 
 ## 5. Result footer — centered .result-actions, NO token line
+
 - Replace the app's result-footer block with the canonical pattern:
   ```tsx
   <div className="result-actions">
@@ -93,15 +99,17 @@ shared canonical classes.
   `.result-actions`.
 
 ## 6. Loading state — instant feedback
+
 - In `handleSubmit`, set the loading state IMMEDIATELY after client validation
   passes (`setSysState('running'); setAppState('loading'); startLoadingAnimation(…)`)
   and run the `/api/leads/submit` fetch AFTER that. On lead-save failure or
   network error, REVERT to idle (`clearTimers(); setSysState('idle');
-  setAppState('idle');`) and show the email error. This removes the dead time
+setAppState('idle');`) and show the email error. This removes the dead time
   where nothing happens while the lead saves.
   (Reference: website-roast handleSubmit.)
 
 ## 7. Hard constraints (don't break CI)
+
 - Keep inline in page.tsx: the `EMAIL_REGEX` import, the `'/api/leads/submit'`
   string, and `miniAppSlug: '<slug>'`.
 - Don't change the model route, the result component body, or any email-unlock
@@ -109,6 +117,7 @@ shared canonical classes.
 - Export ref must still wrap the same result DOM node.
 
 ## 8. Verify (per app)
+
 - `npm run typecheck` clean; `npm run lint` 0 errors (the tech-stack-finder
   `<img>` warning is pre-existing/acceptable).
 - If the app is in `e2e/mini-apps.spec.ts`, run
@@ -119,6 +128,7 @@ shared canonical classes.
   `exportState`/`token-pill`/`tokens ·`.
 
 ## Shared things already done (all apps inherit — do NOT redo per app)
+
 - html-to-image branded PNG/PDF export util + `<ExportControls>`.
 - Canonical pill `.submit-btn` / `.export-btn`, glassy `.input-box`, `.result-actions`.
 - `<HowItWorks>` refinement (solid-blue accent, readable text, 56px top gap).

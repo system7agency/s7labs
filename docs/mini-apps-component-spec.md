@@ -9,7 +9,7 @@ glassmorphism on the existing palette.
 This is the reference. It gets encoded into `src/styles/mini-app-ui.css`
 (class definitions) on top of the `--ma-*` tokens already in
 `src/styles/mini-app-tokens.css`. Per-app `page-styles.css` should then only
-hold app-*specific* result content, never re-declare these.
+hold app-_specific_ result content, never re-declare these.
 
 > Source of truth for values: brand uses `border-radius: 999px` for all
 > buttons/CTAs/chips and `10px`/`14px` for surfaces (verified in
@@ -21,19 +21,19 @@ hold app-*specific* result content, never re-declare these.
 
 ## 1. Palette (unchanged — already canonical)
 
-| token | value | use |
-|-------|-------|-----|
-| `--ma-bg` | `#060608` | page background (under aurora) |
-| `--ma-surface-1` | `#101014` | panel / card fill |
-| `--ma-surface-2` | `#16161b` | nested card / input fill |
-| `--ma-border` | `rgba(255,255,255,.07)` | hairline borders |
-| `--ma-border-strong` | `rgba(255,255,255,.14)` | input / button borders |
-| `--ma-text` | `#f2f3f5` | primary text (AA on bg) |
-| `--ma-text-dim` | `#9395a0` | body / secondary |
-| `--ma-text-muted` | `#5e6068` | labels / meta |
-| `--ma-blue` | `#4f8cff` | primary accent / CTA |
-| `--ma-cyan` | `#04e3ee` | eyebrow dot / highlights |
-| `--ma-error/-warning/-success` | `#ff5c7a / #f5a623 / #4fcf8a` | status |
+| token                          | value                         | use                            |
+| ------------------------------ | ----------------------------- | ------------------------------ |
+| `--ma-bg`                      | `#060608`                     | page background (under aurora) |
+| `--ma-surface-1`               | `#101014`                     | panel / card fill              |
+| `--ma-surface-2`               | `#16161b`                     | nested card / input fill       |
+| `--ma-border`                  | `rgba(255,255,255,.07)`       | hairline borders               |
+| `--ma-border-strong`           | `rgba(255,255,255,.14)`       | input / button borders         |
+| `--ma-text`                    | `#f2f3f5`                     | primary text (AA on bg)        |
+| `--ma-text-dim`                | `#9395a0`                     | body / secondary               |
+| `--ma-text-muted`              | `#5e6068`                     | labels / meta                  |
+| `--ma-blue`                    | `#4f8cff`                     | primary accent / CTA           |
+| `--ma-cyan`                    | `#04e3ee`                     | eyebrow dot / highlights       |
+| `--ma-error/-warning/-success` | `#ff5c7a / #f5a623 / #4fcf8a` | status                         |
 
 ## 2. Spacing scale (4px base) — use tokens, never ad-hoc px
 
@@ -42,11 +42,11 @@ Vertical rhythm tiers: **field gap 14px, group gap 24px, section gap 48px.**
 
 ## 3. Radius scale (brand: pills + soft cards)
 
-| token | value | applies to |
-|-------|-------|------------|
-| `--ma-radius-sm` | `8px` | export chips, small tags, nested cells |
-| `--ma-radius-md` | `10px` | input box, textarea box, secondary buttons |
-| `--ma-radius-lg` | `14px` | **outer panel / result cards** |
+| token              | value   | applies to                                     |
+| ------------------ | ------- | ---------------------------------------------- |
+| `--ma-radius-sm`   | `8px`   | export chips, small tags, nested cells         |
+| `--ma-radius-md`   | `10px`  | input box, textarea box, secondary buttons     |
+| `--ma-radius-lg`   | `14px`  | **outer panel / result cards**                 |
 | `--ma-radius-pill` | `999px` | **primary submit button, status pills, chips** |
 
 The single biggest unifier: **primary CTA = pill (999px)** everywhere (matches
@@ -54,14 +54,14 @@ the brand). Stop using 8px/2px rectangles for the submit button.
 
 ## 4. Typography
 
-| role | size | weight | font | notes |
-|------|------|--------|------|-------|
-| Hero h1 | `clamp(34px, 6vw, 58px)` | 600 | sans | one canonical clamp for ALL apps |
-| Section h2 | `38px` | 600 | sans | e.g. "How it works" |
-| Card title | `16px` | 600 | sans | |
-| Body | `14px` | 400 | sans | line-height 1.55 |
-| Small / meta | `13px` | 400 | sans | line-height 1.5 |
-| **Micro-label / eyebrow** | `11px` | 500 | **mono** | `text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted)` |
+| role                      | size                     | weight | font     | notes                                                                        |
+| ------------------------- | ------------------------ | ------ | -------- | ---------------------------------------------------------------------------- |
+| Hero h1                   | `clamp(34px, 6vw, 58px)` | 600    | sans     | one canonical clamp for ALL apps                                             |
+| Section h2                | `38px`                   | 600    | sans     | e.g. "How it works"                                                          |
+| Card title                | `16px`                   | 600    | sans     |                                                                              |
+| Body                      | `14px`                   | 400    | sans     | line-height 1.55                                                             |
+| Small / meta              | `13px`                   | 400    | sans     | line-height 1.5                                                              |
+| **Micro-label / eyebrow** | `11px`                   | 500    | **mono** | `text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted)` |
 
 Eyebrow chip = mono 11px uppercase with a leading **cyan dot**, pill border.
 
@@ -107,13 +107,13 @@ Eyebrow chip = mono 11px uppercase with a leading **cyan dot**, pill border.
 
 ## 8. Buttons (one hierarchy, brand-aligned)
 
-| class | shape | padding | fill | text |
-|-------|-------|---------|------|------|
-| `.submit-btn` (primary CTA) | **pill 999px** | `13px 26px` (min-height 48) | `linear-gradient(180deg,#5a96ff,#4f8cff)` | #fff, 600 |
-| `.btn-secondary` | 10px | `11px 18px` | `rgba(255,255,255,.025)` + border-strong | text |
-| `.btn-ghost` | 10px | `10px 14px` | transparent→hover tint | text-dim |
-| `.export-btn` (Copy/PNG/PDF) | **pill 999px** | `8px 14px` | `rgba(255,255,255,.025)` + border | mono 11px |
-| `.btn-small` | pill 999px | `7px 12px` | as ghost | mono 11px |
+| class                        | shape          | padding                     | fill                                      | text      |
+| ---------------------------- | -------------- | --------------------------- | ----------------------------------------- | --------- |
+| `.submit-btn` (primary CTA)  | **pill 999px** | `13px 26px` (min-height 48) | `linear-gradient(180deg,#5a96ff,#4f8cff)` | #fff, 600 |
+| `.btn-secondary`             | 10px           | `11px 18px`                 | `rgba(255,255,255,.025)` + border-strong  | text      |
+| `.btn-ghost`                 | 10px           | `10px 14px`                 | transparent→hover tint                    | text-dim  |
+| `.export-btn` (Copy/PNG/PDF) | **pill 999px** | `8px 14px`                  | `rgba(255,255,255,.025)` + border         | mono 11px |
+| `.btn-small`                 | pill 999px     | `7px 12px`                  | as ghost                                  | mono 11px |
 
 States (all buttons): hover `translateY(-1px)` + blue glow (reduced-motion: no
 transform); `:focus-visible` 2px blue ring; `:disabled`/`[aria-disabled]`
@@ -166,6 +166,7 @@ Rule: apps **must** render `<HowItWorks steps={…4…} />` — never inline the
 ---
 
 ### What changes per app when this is enforced
+
 1. Submit button: 8px/2px rectangle → **999px pill**.
 2. Input box: 4 padding variants → **single `14px 16px`, radius 10px**.
 3. Export chips: → **pill, mono 11px**.

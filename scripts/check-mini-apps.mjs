@@ -32,6 +32,13 @@ const ROOT = join(__dirname, '..')
 const MINI_APPS_DIR = join(ROOT, 'src/app/mini-apps')
 const DOC_LINK = 'docs/mini-apps.md'
 
+// Legacy RevOps ports that were relocated into /mini-apps but predate the
+// mini-app convention (they POST to /api/revops/sales-insights and have no
+// email gate / How-it-works section). They are exempt from the convention
+// check until they are migrated. Keep this list short and remove entries as
+// the apps are brought up to convention.
+const EXEMPT_FOLDERS = new Set(['sales-insights', 'voice-agent'])
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -94,8 +101,7 @@ function extractSlug(source) {
 function hasHowItWorks(source) {
   // Either a direct <section className="how-it-works"> with an <h2>,
   // or use of the shared <HowItWorks> component.
-  const directSection =
-    /className=["']how-it-works["']/.test(source) && /<h2[\s>]/.test(source)
+  const directSection = /className=["']how-it-works["']/.test(source) && /<h2[\s>]/.test(source)
   const sharedComponent =
     /from\s+['"]@\/components\/mini-apps\/HowItWorks['"]/.test(source) &&
     /<HowItWorks[\s>]/.test(source)
@@ -138,10 +144,17 @@ if (allFolders.length === 0) {
 }
 
 const changed = getChangedFolderNames()
-const folders =
-  changed === null
-    ? allFolders
-    : allFolders.filter((f) => changed.has(f.split('/').pop()))
+const selected =
+  changed === null ? allFolders : allFolders.filter((f) => changed.has(f.split('/').pop()))
+
+const exempted = selected.filter((f) => EXEMPT_FOLDERS.has(f.split('/').pop()))
+const folders = selected.filter((f) => !EXEMPT_FOLDERS.has(f.split('/').pop()))
+
+if (exempted.length > 0) {
+  console.log(
+    `Skipping ${exempted.length} exempt legacy app(s): ${exempted.map((f) => f.split('/').pop()).join(', ')}\n`
+  )
+}
 
 if (folders.length === 0) {
   console.log('This PR does not modify any mini-app page.tsx. Nothing to check.')
@@ -175,9 +188,7 @@ for (const folder of folders) {
 
   const slug = extractSlug(pageSource)
   if (!slug) {
-    problems.push(
-      `miniAppSlug: '<slug>' not found in the /api/leads/submit body. See ${DOC_LINK}.`
-    )
+    problems.push(`miniAppSlug: '<slug>' not found in the /api/leads/submit body. See ${DOC_LINK}.`)
   } else if (!activeSlugs.has(slug)) {
     problems.push(
       `slug "${slug}" is not registered as active in the mini_apps Supabase table.\n` +

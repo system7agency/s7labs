@@ -62,6 +62,65 @@ export const CATEGORIES = [
 
 export const APPS: MiniApp[] = [
   {
+    id: 'sales-insights',
+    name: 'Get Sales Insights',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm', 'operations'],
+    short_description:
+      'Enter your work email. We map your ICP, find 25 target companies, surface decision-makers, and deliver 25 verified emails — in about 15 minutes.',
+    tags: ['sales intelligence', 'icp', 'prospecting', 'outbound', 'gtm', 'ai'],
+    thumb: 'radar',
+    launch_url: '/mini-apps/sales-insights',
+    learn_more: {
+      what_it_does:
+        'Takes your work email, reads your company website to infer your ideal customer profile and competitor landscape, then assembles a sample target list — 25 best-fit accounts and 25 decision-makers with verified emails — delivered as a report in about 15 minutes.',
+      how_it_works: {
+        inputs: ['your work email'],
+        outputs: [
+          'ideal customer profile',
+          'competitor landscape',
+          '25 target companies',
+          '25 decision-makers with verified emails',
+        ],
+      },
+      who_its_for:
+        'Founders, SDRs, and GTM teams who want a fast, evidence-led sense of who to sell to — without building an ICP and prospect list from scratch.',
+      build_potential:
+        'Could refresh the target list on a schedule, push contacts straight into a sequencer or CRM, and expand from a sample to a full prospect database.',
+    },
+    interest_context: 'sales-insights',
+  },
+  {
+    id: 'voice-agent',
+    name: 'Speak to Voice Agent',
+    status: 'live',
+    category: 'AI / GTM',
+    cats: ['ai', 'gtm'],
+    short_description:
+      'Drop your work email and we brief an AI voice sales rep on your positioning, ICP, and value props — then email you a real US number you can call in minutes.',
+    tags: ['voice', 'ai agent', 'sales', 'pipeline', 'gtm', 'ai'],
+    thumb: 'intents',
+    launch_url: '/mini-apps/voice-agent',
+    learn_more: {
+      what_it_does:
+        'Reads your domain — positioning, ICP, value props, and recent activity — builds a brief an AI voice agent can use in real conversation, wires it to a live phone number, and emails you the number to call. It is a real US number that connects to an AI rep that knows your business.',
+      how_it_works: {
+        inputs: ['your work email'],
+        outputs: [
+          'a briefed AI voice sales rep',
+          'a live US phone number',
+          'a real call you can make in minutes',
+        ],
+      },
+      who_its_for:
+        'Founders and GTM teams who want to experience an AI voice rep trained on their own business — and see what an always-on, on-brand phone agent could do.',
+      build_potential:
+        'Could provision dedicated numbers per campaign, log and summarise calls, hand off to a human, and connect the agent to live pipeline data.',
+    },
+    interest_context: 'voice-agent',
+  },
+  {
     id: 'agentic-readiness',
     name: 'Agentic Readiness Checker',
     status: 'live',

@@ -104,20 +104,31 @@ the aurora canvas + cursor spotlight live in `PageScripts.tsx`.
 Header and footer come from the shared `<Header />` and `<Footer />`
 components.
 
-`/revops/sales-insights` is the **Get Sales Insights micro-app**
-(previously served at `/revops`, moved here on the
-`feat/revops-lab-landing` branch so the lab landing could take over
-`/revops`). Source-of-truth is unchanged:
-`/docs/design-reference/revops-page.html`. The port lives at
-`/src/app/revops/sales-insights/{page.tsx,page-styles.css,PageScripts.tsx}`
-and follows the same direct-HTML-port workflow. The state machine
-(CTA → email → cards → success) is implemented as React state in
-`page.tsx`; only the aurora canvas + cursor spotlight remain in
-`PageScripts.tsx`.
+The **Get Sales Insights** and **Speak to Voice Agent** micro-apps now
+live in the mini-apps marketplace (see "/mini-apps routes" below), not
+under `/revops`. The two app cards on the `/revops` hub link straight to
+`/mini-apps/sales-insights` and `/mini-apps/voice-agent`. The old
+`/revops/sales-insights` and `/revops/voice-agent` routes are kept as
+thin `redirect()` stubs (`/src/app/revops/{sales-insights,voice-agent}/page.tsx`)
+so existing links and bookmarks still resolve to the new home.
 
-`/revops/voice-agent` is referenced from the lab landing's app-card
-grid but is **not yet implemented** — the link 404s by design while
-that micro-app is being built.
+## /mini-apps routes
+
+`/mini-apps` is the **Mini Apps marketplace** — a gallery rendered from
+the single `APPS` array in
+`/src/app/mini-apps/_data/apps.ts`. Each entry's `launch_url` points at
+its route under `/mini-apps/<id>`. The shared `mini-apps/layout.tsx`
+wraps every route and adds the "All mini-apps" back-pill.
+
+`/mini-apps/sales-insights` is the **Get Sales Insights micro-app** and
+`/mini-apps/voice-agent` is the **Speak to Voice Agent micro-app**, both
+moved here from `/revops/*` on the `feat/revops-apps-to-mini-apps`
+branch. Their ports are unchanged
+(`{page.tsx,page-styles.css,PageScripts.tsx}`) and still POST to the
+shared API route `/api/revops/sales-insights` (sales uses
+`type: 'sales'`, voice uses `type: 'speak'`). Source-of-truth for both
+remains `/docs/design-reference/revops-page.html` and the voice-agent
+reference HTML.
 
 ## When uncertain
 

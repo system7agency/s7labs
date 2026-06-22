@@ -79,7 +79,7 @@ export default function RevOpsLabPage() {
             <span className="connector" />
           </div>
           <div className="apps-grid">
-            <Link href="/revops/sales-insights" className="module">
+            <Link href="/mini-apps/sales-insights" className="module">
               <span className="corner tl" />
               <span className="corner br" />
               <span className="mod-index" aria-hidden="true">
@@ -95,7 +95,7 @@ export default function RevOpsLabPage() {
               </span>
             </Link>
 
-            <Link href="/revops/voice-agent" className="module">
+            <Link href="/mini-apps/voice-agent" className="module">
               <span className="corner tl" />
               <span className="corner br" />
               <span className="mod-index" aria-hidden="true">
