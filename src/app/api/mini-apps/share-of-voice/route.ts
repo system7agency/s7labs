@@ -221,12 +221,12 @@ export async function POST(request: Request) {
   const anthropic = new Anthropic({ apiKey: anthropicKey })
   const answerTasks: Promise<AnswerCallResult>[] = []
 
-  const hasOpenAi = Boolean(process.env.OPENAI_API_KEY)
   const hasPerplexity = Boolean(process.env.PERPLEXITY_API_KEY)
 
   for (const question of questions) {
     answerTasks.push(askClaude(anthropic, question))
-    if (hasOpenAi) answerTasks.push(askChatGpt(question))
+    // ChatGPT slot is Claude-backed (no OpenAI); Anthropic is already required.
+    answerTasks.push(askChatGpt(anthropic, question))
     if (hasPerplexity) answerTasks.push(askPerplexity(question))
   }
 

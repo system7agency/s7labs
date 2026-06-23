@@ -186,7 +186,6 @@ export async function POST(request: Request) {
       is_you: true,
     }
 
-    const hasOpenAi = Boolean(process.env.OPENAI_API_KEY)
     const hasPerplexity = Boolean(process.env.PERPLEXITY_API_KEY)
     const hasDataforseo = Boolean(process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD)
 
@@ -202,16 +201,15 @@ export async function POST(request: Request) {
           return { mentioned, engine: 'Claude' }
         })
       )
-      if (hasOpenAi) {
-        presenceTasks.push(
-          askChatGpt(q).then((r) => {
-            tokensIn += r.tokens_in
-            tokensOut += r.tokens_out
-            const mentioned = r.ok && brandsMentionedInText(r.text, [tracked]).length > 0
-            return { mentioned, engine: 'ChatGPT' }
-          })
-        )
-      }
+      // ChatGPT slot is Claude-backed (no OpenAI); Anthropic is already required.
+      presenceTasks.push(
+        askChatGpt(anthropic, q).then((r) => {
+          tokensIn += r.tokens_in
+          tokensOut += r.tokens_out
+          const mentioned = r.ok && brandsMentionedInText(r.text, [tracked]).length > 0
+          return { mentioned, engine: 'ChatGPT' }
+        })
+      )
       if (hasPerplexity) {
         const ppxP = askPerplexityWithCitations(q, domain).then((r) => {
           tokensIn += r.tokens_in
@@ -312,13 +310,11 @@ export async function POST(request: Request) {
     const presenceTotal = presenceSettled.filter((r) => r.status === 'fulfilled').length
     const presenceScore = presenceTotal > 0 ? Math.round((presenceHits / presenceTotal) * 100) : 0
 
-    const enginesUsed: string[] = ['Claude']
-    if (hasOpenAi) enginesUsed.push('ChatGPT')
+    const enginesUsed: string[] = ['Claude', 'ChatGPT']
     if (hasPerplexity) enginesUsed.push('Perplexity')
-    const presenceCoverage =
-      enginesUsed.length === 1 && !hasOpenAi && !hasPerplexity
-        ? 'Claude only (no OpenAI/Perplexity key)'
-        : enginesUsed.join(' + ')
+    const presenceCoverage = hasPerplexity
+      ? enginesUsed.join(' + ')
+      : 'Claude + ChatGPT (no Perplexity key)'
 
     const citationCounted = citationSettled.filter(
       (r) => r.status === 'fulfilled' && r.value.counted
