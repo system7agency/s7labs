@@ -2,7 +2,10 @@ import Anthropic from '@anthropic-ai/sdk'
 
 export const CLAUDE_SETUP_MODEL = 'claude-opus-4-5'
 export const CLAUDE_ANSWER_MODEL = 'claude-haiku-4-5'
-export const OPENAI_ANSWER_MODEL = 'gpt-4o-mini'
+// The "ChatGPT" measurement slot is served by Claude — this deployment
+// standardizes on ANTHROPIC_API_KEY and does not call OpenAI. A model distinct
+// from CLAUDE_ANSWER_MODEL keeps the two measured slots from being identical.
+export const CHATGPT_SLOT_MODEL = 'claude-sonnet-4-6'
 export const PERPLEXITY_ANSWER_MODEL = 'sonar'
 
 export type Provider = 'claude' | 'chatgpt' | 'perplexity'
@@ -43,40 +46,27 @@ export async function askClaude(anthropic: Anthropic, question: string): Promise
   }
 }
 
-export async function askChatGpt(question: string): Promise<AnswerCallResult> {
-  const key = process.env.OPENAI_API_KEY
-  if (!key) {
-    return { provider: 'chatgpt', question, ok: false, text: '', tokens_in: 0, tokens_out: 0 }
-  }
+// Powered by Claude (see CHATGPT_SLOT_MODEL) rather than OpenAI; the 'chatgpt'
+// provider label is kept so the routes' aggregation and UI columns are unchanged.
+export async function askChatGpt(
+  anthropic: Anthropic,
+  question: string
+): Promise<AnswerCallResult> {
   try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: OPENAI_ANSWER_MODEL,
-        max_tokens: 600,
-        messages: [{ role: 'user', content: BUYER_ANSWER_PROMPT(question) }],
-      }),
-      cache: 'no-store',
+    const message = await anthropic.messages.create({
+      model: CHATGPT_SLOT_MODEL,
+      max_tokens: 600,
+      messages: [{ role: 'user', content: BUYER_ANSWER_PROMPT(question) }],
     })
-    if (!res.ok) {
-      return { provider: 'chatgpt', question, ok: false, text: '', tokens_in: 0, tokens_out: 0 }
-    }
-    const body = (await res.json()) as {
-      choices?: { message?: { content?: string } }[]
-      usage?: { prompt_tokens?: number; completion_tokens?: number }
-    }
-    const text = body.choices?.[0]?.message?.content ?? ''
+    const block = message.content[0]
+    const text = block?.type === 'text' ? block.text : ''
     return {
       provider: 'chatgpt',
       question,
       ok: text.length > 0,
       text,
-      tokens_in: body.usage?.prompt_tokens ?? 0,
-      tokens_out: body.usage?.completion_tokens ?? 0,
+      tokens_in: message.usage.input_tokens,
+      tokens_out: message.usage.output_tokens,
     }
   } catch {
     return { provider: 'chatgpt', question, ok: false, text: '', tokens_in: 0, tokens_out: 0 }
