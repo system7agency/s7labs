@@ -1,3 +1,5 @@
+import { N8N_WEBHOOKS_ENABLED } from '@/lib/integrations/n8n'
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 export type ShareOfVoiceLeadContext = {
@@ -26,6 +28,11 @@ export function isValidEmail(email: string): boolean {
 
 /** Posts to the n8n lead webhook (same pipeline as revops sales-insights). */
 export async function captureMiniAppLead(ctx: MiniAppLeadContext): Promise<boolean> {
+  // Outbound n8n webhooks are disabled deployment-wide (no emails). Return a
+  // no-op success so gated unlock flows still reveal their result — we simply
+  // skip the n8n sync (and therefore the email it would have triggered).
+  if (!N8N_WEBHOOKS_ENABLED) return true
+
   const webhookUrl =
     process.env.N8N_MINI_APPS_LEAD_WEBHOOK_URL ?? process.env.N8N_SALES_INSIGHTS_WEBHOOK_URL
   if (!webhookUrl) return false
