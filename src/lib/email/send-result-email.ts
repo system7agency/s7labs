@@ -12,6 +12,7 @@
 
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { buildUnsubscribeUrl } from '@/lib/leads/unsubscribe-link'
+import { N8N_WEBHOOKS_ENABLED } from '@/lib/integrations/n8n'
 
 const BACKOFF_MS = [1000, 3000, 9000] as const
 
@@ -48,6 +49,10 @@ function sanitize(message: string, email: string | null): string {
 }
 
 export async function sendResultEmail(submissionId: string): Promise<SendResultEmailResult> {
+  if (!N8N_WEBHOOKS_ENABLED) {
+    return { ok: false, error: 'Result emails are disabled' }
+  }
+
   const webhookUrl = process.env.N8N_EMAIL_WEBHOOK_URL
   if (!webhookUrl) {
     const error = 'N8N_EMAIL_WEBHOOK_URL is not configured'

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 
+import { N8N_WEBHOOKS_ENABLED } from '@/lib/integrations/n8n'
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
@@ -24,6 +26,15 @@ function jsonResponse(body: NormalizedResponse, status: number) {
 }
 
 export async function POST(request: Request) {
+  // All outbound n8n webhooks are disabled deployment-wide so the app sends no
+  // emails. This tool only delivers via email, so it is unavailable while off.
+  if (!N8N_WEBHOOKS_ENABLED) {
+    return jsonResponse(
+      { ok: false, state: 'error', message: 'This tool is temporarily unavailable.' },
+      503
+    )
+  }
+
   const webhookUrl = process.env.N8N_SALES_INSIGHTS_WEBHOOK_URL
   if (!webhookUrl) {
     return jsonResponse(
