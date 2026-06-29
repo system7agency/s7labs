@@ -85,16 +85,16 @@ export function buildShareOfVoicePlainText(free: ScanFree, gated: ScanGated | nu
 
 function SovScoreCard({
   score,
-  maxShare,
   totalBrands,
   yourRank,
 }: {
   score: BrandScore
-  maxShare: number
   totalBrands: number
   yourRank: number
 }) {
-  const fillPct = maxShare > 0 ? Math.max(6, (score.share_of_voice / maxShare) * 100) : 0
+  // Bar width is the absolute share-of-voice % (clamped 0–100), so 13% reads as
+  // a ~13% bar, not a full one. Non-zero shares get a small floor for visibility.
+  const fillPct = score.share_of_voice <= 0 ? 0 : Math.min(100, Math.max(4, score.share_of_voice))
   const isChaser = yourRank === 1 && score.rank === 2
   const cardClass = [
     'sov-score-card',
@@ -157,7 +157,6 @@ function ProviderCard({ provider, free }: { provider: Provider; free: ScanFree }
 }
 
 function ResultBody({ free, gated }: { free: ScanFree; gated: ScanGated | null }) {
-  const maxShare = Math.max(...free.scores.map((s) => s.share_of_voice), 1)
   const yourBrandName = free.your_brand
 
   return (
@@ -185,7 +184,6 @@ function ResultBody({ free, gated }: { free: ScanFree; gated: ScanGated | null }
             <SovScoreCard
               key={score.domain}
               score={score}
-              maxShare={maxShare}
               totalBrands={free.scores.length}
               yourRank={free.headline.your_rank}
             />

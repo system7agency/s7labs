@@ -72,7 +72,8 @@ async function captureRaw(el: HTMLElement): Promise<{ canvas: HTMLCanvasElement;
   const { toCanvas } = await import('html-to-image')
 
   // Cap the ratio so the long edge stays under the safe canvas budget.
-  const longEdge = Math.max(el.offsetWidth, el.offsetHeight) || 1
+  const width = el.offsetWidth || 1
+  const longEdge = Math.max(width, el.offsetHeight) || 1
   const raw = Math.min(PIXEL_RATIO, MAX_CANVAS_PX / longEdge)
   const ratio = raw > 0 ? raw : 1
 
@@ -81,6 +82,11 @@ async function captureRaw(el: HTMLElement): Promise<{ canvas: HTMLCanvasElement;
     backgroundColor: BRAND.frameBg,
     // cacheBust avoids stale cross-origin image data URIs between runs.
     cacheBust: true,
+    // Pin the clone to the on-screen width so text wraps exactly as in the DOM.
+    // Without this, html-to-image can lay the cloned content out wider than the
+    // output canvas and clip the right edge of long lines (cut-off card text).
+    width,
+    style: { width: `${width}px`, maxWidth: `${width}px` },
     // Skip any node explicitly opted out of capture.
     filter: (node) => !(node instanceof HTMLElement && node.dataset?.exportIgnore === 'true'),
   })
@@ -217,78 +223,41 @@ export async function capturePng(el: HTMLElement, opts: ExportOpts): Promise<voi
 }
 
 /* ---------------------------------------------------------------------------
- * PDF (multi-page A4)
+ * PDF (single continuous page)
  * ------------------------------------------------------------------------- */
 
 const A4_WIDTH_MM = 210
-const A4_HEIGHT_MM = 297
 const PAGE_MARGIN_MM = 10
 const PRINTABLE_WIDTH_MM = A4_WIDTH_MM - PAGE_MARGIN_MM * 2 // 190mm
-const PRINTABLE_HEIGHT_MM = A4_HEIGHT_MM - PAGE_MARGIN_MM * 2 // 277mm
 
 /**
- * Capture `el` to a multi-page A4 portrait PDF and trigger a download.
- * The branded canvas is scaled to the 190mm printable width; if taller than one
- * page it is sliced into page-height bands so nothing is clipped.
- * Throws a descriptive Error on failure so the caller can show a toast.
+ * Capture `el` to a single-page PDF sized to the content (A4 width × content
+ * height) and trigger a download. One continuous page means a page break can
+ * never slice through a line of text — the earlier multi-page A4 slicer cut
+ * lines straight across the page boundary. Throws a descriptive Error on failure.
  */
 export async function capturePdf(el: HTMLElement, opts: ExportOpts): Promise<void> {
   try {
     const canvas = await captureFramed(el, opts)
     const { jsPDF } = await import('jspdf')
 
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-
     const mmPerPx = PRINTABLE_WIDTH_MM / canvas.width
-    const pagePxHeight = Math.floor(PRINTABLE_HEIGHT_MM / mmPerPx)
+    const imgHeightMm = canvas.height * mmPerPx
+    const pageHeightMm = imgHeightMm + PAGE_MARGIN_MM * 2
 
-    if (canvas.height <= pagePxHeight) {
-      const imgHeightMm = canvas.height * mmPerPx
-      pdf.addImage(
-        canvas.toDataURL('image/png'),
-        'PNG',
-        PAGE_MARGIN_MM,
-        PAGE_MARGIN_MM,
-        PRINTABLE_WIDTH_MM,
-        imgHeightMm
-      )
-    } else {
-      const totalPages = Math.ceil(canvas.height / pagePxHeight)
-      for (let page = 0; page < totalPages; page += 1) {
-        const sourceY = page * pagePxHeight
-        const bandPxHeight = Math.min(pagePxHeight, canvas.height - sourceY)
-
-        const band = document.createElement('canvas')
-        band.width = canvas.width
-        band.height = bandPxHeight
-        const ctx = band.getContext('2d')
-        if (!ctx) throw new Error('Could not acquire 2D context for PDF band slicing')
-        ctx.fillStyle = BRAND.frameBg
-        ctx.fillRect(0, 0, band.width, band.height)
-        ctx.drawImage(
-          canvas,
-          0,
-          sourceY,
-          canvas.width,
-          bandPxHeight,
-          0,
-          0,
-          canvas.width,
-          bandPxHeight
-        )
-
-        if (page > 0) pdf.addPage()
-        const bandHeightMm = bandPxHeight * mmPerPx
-        pdf.addImage(
-          band.toDataURL('image/png'),
-          'PNG',
-          PAGE_MARGIN_MM,
-          PAGE_MARGIN_MM,
-          PRINTABLE_WIDTH_MM,
-          bandHeightMm
-        )
-      }
-    }
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [A4_WIDTH_MM, pageHeightMm],
+    })
+    pdf.addImage(
+      canvas.toDataURL('image/png'),
+      'PNG',
+      PAGE_MARGIN_MM,
+      PAGE_MARGIN_MM,
+      PRINTABLE_WIDTH_MM,
+      imgHeightMm
+    )
 
     pdf.save(`${opts.filename}.pdf`)
   } catch (err) {
