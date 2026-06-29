@@ -71,27 +71,53 @@ async function captureRaw(el: HTMLElement): Promise<{ canvas: HTMLCanvasElement;
 
   const { toCanvas } = await import('html-to-image')
 
-  // Cap the ratio so the long edge stays under the safe canvas budget.
-  const width = el.offsetWidth || 1
-  const longEdge = Math.max(width, el.offsetHeight) || 1
-  const raw = Math.min(PIXEL_RATIO, MAX_CANVAS_PX / longEdge)
-  const ratio = raw > 0 ? raw : 1
-
-  const canvas = await toCanvas(el, {
-    pixelRatio: ratio,
-    backgroundColor: BRAND.frameBg,
-    // cacheBust avoids stale cross-origin image data URIs between runs.
-    cacheBust: true,
-    // Pin the clone to the on-screen width so text wraps exactly as in the DOM.
-    // Without this, html-to-image can lay the cloned content out wider than the
-    // output canvas and clip the right edge of long lines (cut-off card text).
-    width,
-    style: { width: `${width}px`, maxWidth: `${width}px` },
-    // Skip any node explicitly opted out of capture.
-    filter: (node) => !(node instanceof HTMLElement && node.dataset?.exportIgnore === 'true'),
+  // Temporarily expand any vertically-scrolled / clamped container inside `el`
+  // so the capture includes its FULL content. A `max-height` + `overflow:auto`
+  // (or `hidden`) block — e.g. crm-sanity's cleaned-record preview — is
+  // otherwise clipped to its visible height in the PNG/PDF, cutting everything
+  // below the fold. Restored in `finally` regardless of outcome.
+  const restores: Array<() => void> = []
+  el.querySelectorAll<HTMLElement>('*').forEach((node) => {
+    const cs = getComputedStyle(node)
+    const scrollsY = cs.overflowY === 'auto' || cs.overflowY === 'scroll'
+    const hiddenClamp = cs.overflowY === 'hidden' && cs.maxHeight !== 'none'
+    if (scrollsY || hiddenClamp) {
+      const prevMaxHeight = node.style.maxHeight
+      const prevOverflowY = node.style.overflowY
+      node.style.maxHeight = 'none'
+      node.style.overflowY = 'visible'
+      restores.push(() => {
+        node.style.maxHeight = prevMaxHeight
+        node.style.overflowY = prevOverflowY
+      })
+    }
   })
 
-  return { canvas, ratio }
+  try {
+    // Read dimensions AFTER expanding so the ratio accounts for the full height.
+    const width = el.offsetWidth || 1
+    const longEdge = Math.max(width, el.offsetHeight) || 1
+    const raw = Math.min(PIXEL_RATIO, MAX_CANVAS_PX / longEdge)
+    const ratio = raw > 0 ? raw : 1
+
+    const canvas = await toCanvas(el, {
+      pixelRatio: ratio,
+      backgroundColor: BRAND.frameBg,
+      // cacheBust avoids stale cross-origin image data URIs between runs.
+      cacheBust: true,
+      // Pin the clone to the on-screen width so text wraps exactly as in the DOM.
+      // Without this, html-to-image can lay the cloned content out wider than the
+      // output canvas and clip the right edge of long lines (cut-off card text).
+      width,
+      style: { width: `${width}px`, maxWidth: `${width}px` },
+      // Skip any node explicitly opted out of capture.
+      filter: (node) => !(node instanceof HTMLElement && node.dataset?.exportIgnore === 'true'),
+    })
+
+    return { canvas, ratio }
+  } finally {
+    restores.forEach((restore) => restore())
+  }
 }
 
 /* ---------------------------------------------------------------------------
