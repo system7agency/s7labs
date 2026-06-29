@@ -536,9 +536,11 @@ export default function AiOverviewTrackerPage() {
                         value={keywordsText}
                         disabled={submitting}
                         onChange={(e) => {
-                          const next = e.target.value
-                          const rows = keywordsFromText(next)
-                          setKeywordsText(rows.slice(0, MAX_KEYWORDS).join('\n'))
+                          // Keep the raw text as typed so Enter/comma actually
+                          // add a new line. Parsing, de-duping, and the 5-keyword
+                          // cap happen in `parsedKeywords` and at submit time —
+                          // re-normalizing here stripped the delimiter mid-type.
+                          setKeywordsText(e.target.value)
                           if (keywordsError) setKeywordsError(null)
                         }}
                       />
