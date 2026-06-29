@@ -609,29 +609,33 @@ export default function AiOverviewTrackerPage() {
               <section className={clsx('aio-state', { active: appState === 'result' })}>
                 {free && scanId && (
                   <>
+                    {/* Both the free result AND the gated breakdown live inside
+                     * shareableRef so the PNG/PDF export captures the full report
+                     * (per-keyword detail, citation leaders, recommendations), not
+                     * just the free teaser. */}
                     <div ref={shareableRef}>
                       <AiOverviewTrackerResult bare input={leadInput} output={{ free, scanId }} />
+                      <GatedBreakdown
+                        scanId={scanId}
+                        free={free}
+                        leadInput={leadInput}
+                        submitToApi={async (_input, output) => {
+                          const submissionId = submissionIdRef.current
+                          if (!submissionId || !output) return
+                          try {
+                            await fetch('/api/leads/complete', {
+                              method: 'POST',
+                              headers: { 'content-type': 'application/json' },
+                              body: JSON.stringify({ submissionId, output }),
+                            })
+                          } catch (err) {
+                            console.error('[ai-overview-tracker] gated leads/complete', err)
+                          }
+                        }}
+                        onTokens={handleTokens}
+                        onGatedLoaded={handleGatedLoaded}
+                      />
                     </div>
-                    <GatedBreakdown
-                      scanId={scanId}
-                      free={free}
-                      leadInput={leadInput}
-                      submitToApi={async (_input, output) => {
-                        const submissionId = submissionIdRef.current
-                        if (!submissionId || !output) return
-                        try {
-                          await fetch('/api/leads/complete', {
-                            method: 'POST',
-                            headers: { 'content-type': 'application/json' },
-                            body: JSON.stringify({ submissionId, output }),
-                          })
-                        } catch (err) {
-                          console.error('[ai-overview-tracker] gated leads/complete', err)
-                        }
-                      }}
-                      onTokens={handleTokens}
-                      onGatedLoaded={handleGatedLoaded}
-                    />
                     <div className="result-actions">
                       <ExportControls
                         resultRef={shareableRef}
