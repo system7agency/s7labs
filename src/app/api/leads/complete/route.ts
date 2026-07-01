@@ -20,6 +20,10 @@ const successBodySchema = z.object({
   cost: costSchema.optional(),
   status: z.literal('completed').optional(),
   errorMessage: z.never().optional(),
+  // When false, save the output but do NOT send the result email. Gated apps
+  // (agentic-readiness, ai-overview-tracker) set this on the first/free
+  // completion so only the later full (free + gated) completion emails.
+  sendEmail: z.boolean().optional(),
 })
 
 // Failure path: explicit marker so pending rows don't sit forever when the
@@ -67,7 +71,15 @@ export async function POST(request: Request) {
   if (!existing) {
     return errorResponse('Submission not found', 400)
   }
-  if (existing.status !== 'pending' && existing.status !== 'processing') {
+  // Allow a SUCCESS completion to update an already-completed submission — the
+  // gated apps complete twice (free, then free+gated), and the second pass needs
+  // to merge in the full result. Block only failed re-completions / failure-over-success.
+  const isSuccessPath = parsed.data.status !== 'failed'
+  const canUpdate =
+    existing.status === 'pending' ||
+    existing.status === 'processing' ||
+    (existing.status === 'completed' && isSuccessPath)
+  if (!canUpdate) {
     return errorResponse('Submission already finalized', 400)
   }
 
@@ -102,10 +114,11 @@ export async function POST(request: Request) {
     return errorResponse('Something went wrong', 500)
   }
 
-  // SYS-552: fire-and-forget transactional result email on the success branch.
-  // We never await or block the response on this; the helper returns ok:false
-  // on misconfig (e.g. webhook env var missing) and we swallow it here.
-  if (update.status === 'completed') {
+  // Fire-and-forget transactional result email on the success branch, unless the
+  // caller opted out (sendEmail:false) — gated apps suppress it on the free pass
+  // so only the full free+gated completion emails. Never await / block on it.
+  const sendEmail = (parsed.data as { sendEmail?: boolean }).sendEmail
+  if (update.status === 'completed' && sendEmail !== false) {
     const submissionId = parsed.data.submissionId
     sendResultEmail(submissionId).catch((err) => {
       console.error('[leads/complete] background email send failed', {

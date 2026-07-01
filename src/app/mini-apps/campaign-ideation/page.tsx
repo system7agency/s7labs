@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
@@ -13,6 +13,8 @@ import { Textarea } from '@/components/mini-apps/ui/Textarea'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type {
   ApiResponse,
@@ -254,6 +256,15 @@ function IdeaCard({ idea, index }: { idea: CampaignIdea; index: number }) {
 }
 
 export default function CampaignIdeationPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <CampaignIdeationPageInner />
+    </Suspense>
+  )
+}
+
+function CampaignIdeationPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [product, setProduct] = useState('')
   const [audience, setAudience] = useState('')
@@ -308,6 +319,15 @@ export default function CampaignIdeationPage() {
     setAudError(null)
     setEmailError(null)
   }, [])
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as CampaignIdeationResult
+    setResult(r)
+    setResultTs(formatReportTs(new Date()))
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -434,6 +454,9 @@ export default function CampaignIdeationPage() {
             ...('cost' in data && data.cost ? { cost: data.cost } : {}),
           }),
         }).catch((err) => console.error('[campaign-ideation] leads/complete', err))
+
+        // Make the URL shareable / reload-safe (?result=<id>).
+        if (submissionId) publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -453,6 +476,7 @@ export default function CampaignIdeationPage() {
       startLoader,
       stopLoader,
       submitting,
+      publish,
     ]
   )
 
@@ -491,7 +515,13 @@ export default function CampaignIdeationPage() {
               </div>
             )}
 
-            {appState === 'idle' && (
+            {(restoring || (appState === 'idle' && hasResultParam)) && (
+              <section className="ci-loading">
+                <ResultRestoreNotice />
+              </section>
+            )}
+
+            {appState === 'idle' && !restoring && !hasResultParam && (
               <form
                 key={shakeKey}
                 className="idle-form"

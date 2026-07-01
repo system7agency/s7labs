@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 
 import './page-styles.css'
@@ -14,6 +14,8 @@ import { Input } from '@/components/mini-apps/ui/Input'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -158,6 +160,15 @@ function buildPlainText(result: IntentSignalsResult): string {
 }
 
 export default function IntentSignalsPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <IntentSignalsPageInner />
+    </Suspense>
+  )
+}
+
+function IntentSignalsPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [domain, setDomain] = useState('')
   const [domainError, setDomainError] = useState<string | null>(null)
@@ -189,6 +200,15 @@ export default function IntentSignalsPage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_MS)
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as IntentSignalsResult
+    setResult(r)
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   useEffect(() => {
     const tick = () => {
@@ -314,6 +334,8 @@ export default function IntentSignalsPage() {
             ...(data.cost ? { cost: data.cost } : {}),
           }),
         }).catch((err) => console.error('[intent-signals] leads/complete', err))
+        // Make the URL shareable / reload-safe (?result=<id>).
+        publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -332,6 +354,7 @@ export default function IntentSignalsPage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -388,7 +411,16 @@ export default function IntentSignalsPage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Scan a company for buyer intent</div>
                 <form className="idle-form" onSubmit={handleSubmit} noValidate autoComplete="off">
                   <Input

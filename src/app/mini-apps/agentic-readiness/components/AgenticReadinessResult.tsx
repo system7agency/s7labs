@@ -2,6 +2,7 @@
 
 import type { CheckStatus, Grade, ScanFree, ScanGated } from '@/lib/mini-apps/agentic-types'
 import '../page-styles.css'
+import { AgenticGatedDetail } from './AgenticGatedDetail'
 
 export type AgenticReadinessInput = { url?: string }
 export type AgenticReadinessOutput = {
@@ -132,7 +133,7 @@ function ShareableBody({ free }: { free: ScanFree }) {
 
 export function AgenticReadinessResult({ input, output, bare = false }: Props) {
   void input
-  const { free } = output
+  const { free, gated } = output
   if (!free) {
     return <p>No data available.</p>
   }
@@ -148,6 +149,9 @@ export function AgenticReadinessResult({ input, output, bare = false }: Props) {
           <div className="panel-body">
             <section className="ar-state active">
               <ShareableBody free={free} />
+              {/* On /results/<id> the saved output includes the gated detail;
+                  render the full checklist + plan, not just the free teaser. */}
+              {gated && <AgenticGatedDetail gated={gated} />}
             </section>
           </div>
         </div>

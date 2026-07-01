@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 
 import { clsx } from 'clsx'
 import './page-styles.css'
@@ -11,8 +11,10 @@ import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { Input } from '@/components/mini-apps/ui/Input'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type { ApiResponse, EmailFinderResult } from '@/app/api/mini-apps/email-finder/route'
@@ -151,18 +153,26 @@ function LookupRunner({
   input,
   submissionId,
   onReset,
+  onPublish,
+  restored = null,
 }: {
   input: LookupInput
   submissionId: string
   onReset: () => void
+  /** Called with the submissionId once a fresh lookup has completed + saved. */
+  onPublish?: (id: string) => void
+  /** When set, render this saved result directly and skip the Apollo lookup. */
+  restored?: EmailFinderResult | null
 }) {
-  const [state, setState] = useState<LookupState>('loading')
-  const [result, setResult] = useState<EmailFinderResult | null>(null)
+  const [state, setState] = useState<LookupState>(
+    restored ? (restored.email ? 'result' : 'no-result') : 'loading'
+  )
+  const [result, setResult] = useState<EmailFinderResult | null>(restored)
   const [errorMsg, setErrorMsg] = useState('')
   const [copied, setCopied] = useState(false)
-  const [resultTs, setResultTs] = useState('')
+  const [resultTs, setResultTs] = useState(restored ? fmtTs(new Date()) : '')
   const [clock, setClock] = useState('—')
-  const [sysState, setSysState] = useState('running')
+  const [sysState, setSysState] = useState(restored ? 'complete' : 'running')
 
   const {
     start: startLoader,
@@ -194,6 +204,8 @@ function LookupRunner({
   // completion). A persistent fired-once ref must NOT be used here — under
   // StrictMode it would survive the remount and skip the real run.
   useEffect(() => {
+    // On restore we already have the saved result; skip the Apollo lookup.
+    if (restored) return
     const startTime = performance.now()
     startLoader()
 
@@ -250,6 +262,7 @@ function LookupRunner({
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ submissionId, output: { result: null }, cost: zeroCost }),
           }).catch((err) => console.error('[email-finder] leads/complete', err))
+          if (submissionId) onPublish?.(submissionId)
           return
         }
 
@@ -262,6 +275,7 @@ function LookupRunner({
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ submissionId, output: data.result, cost: zeroCost }),
         }).catch((err) => console.error('[email-finder] leads/complete', err))
+        if (submissionId) onPublish?.(submissionId)
       } catch {
         if (cancelled) return
         stopLoader()
@@ -509,6 +523,14 @@ function LookupRunner({
 type IdleErrors = { name?: string; company?: string }
 
 export default function EmailFinderPage() {
+  return (
+    <Suspense fallback={null}>
+      <EmailFinderPageInner />
+    </Suspense>
+  )
+}
+
+function EmailFinderPageInner() {
   const [name, setName] = useState('')
   const [company, setCompany] = useState('')
   const [email, setEmail] = useState('')
@@ -520,6 +542,18 @@ export default function EmailFinderPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submittedInput, setSubmittedInput] = useState<LookupInput | null>(null)
   const [submissionId, setSubmissionId] = useState<string | null>(null)
+  const [restoredResult, setRestoredResult] = useState<EmailFinderResult | null>(null)
+
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    // Success output is a bare EmailFinderResult; the no-result branch saves
+    // `{ result: null }`. Normalise both to a single EmailFinderResult | null.
+    const r =
+      output && 'result' in output && !('email' in output)
+        ? (output.result as EmailFinderResult | null)
+        : (output as unknown as EmailFinderResult)
+    setRestoredResult(r ?? ({ email: null } as unknown as EmailFinderResult))
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const nameRef = useRef<HTMLInputElement | null>(null)
 
@@ -616,6 +650,7 @@ export default function EmailFinderPage() {
   const handleReset = useCallback(() => {
     setSubmittedInput(null)
     setSubmissionId(null)
+    setRestoredResult(null)
     setName('')
     setCompany('')
     setErrors({})
@@ -644,11 +679,28 @@ export default function EmailFinderPage() {
         {/* Panel */}
         <div className="panel-wrap">
           <div className="panel">
-            {submittedInput && submissionId ? (
+            {restoredResult ? (
+              <LookupRunner
+                input={{
+                  name: restoredResult.fullName ?? '',
+                  company: restoredResult.companyDomain ?? '',
+                }}
+                submissionId={submissionId ?? ''}
+                onReset={handleReset}
+                restored={restoredResult}
+              />
+            ) : restoring || hasResultParam ? (
+              <div className="panel-body">
+                <section className="ef-state active">
+                  <ResultRestoreNotice />
+                </section>
+              </div>
+            ) : submittedInput && submissionId ? (
               <LookupRunner
                 input={submittedInput}
                 submissionId={submissionId}
                 onReset={handleReset}
+                onPublish={publish}
               />
             ) : (
               <div className="panel-body">

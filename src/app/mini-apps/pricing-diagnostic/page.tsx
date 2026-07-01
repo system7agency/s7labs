@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 
 import { clsx } from 'clsx'
 import './page-styles.css'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -14,6 +15,7 @@ import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { Input } from '@/components/mini-apps/ui/Input'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type { ApiResponse, DiagnosticResult } from '@/app/api/mini-apps/pricing-diagnostic/route'
@@ -137,6 +139,14 @@ function fmtTs(d: Date): string {
 }
 
 export default function PricingDiagnosticPage() {
+  return (
+    <Suspense fallback={null}>
+      <PricingDiagnosticPageInner />
+    </Suspense>
+  )
+}
+
+function PricingDiagnosticPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [url, setUrl] = useState('')
   const [urlError, setUrlError] = useState<string | null>(null)
@@ -166,6 +176,18 @@ export default function PricingDiagnosticPage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_DURATION_MS)
+
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as DiagnosticResult
+    setResult(r)
+    if (typeof r.tokens_in === 'number' && typeof r.tokens_out === 'number') {
+      setTokens({ in: r.tokens_in, out: r.tokens_out })
+    }
+    setResultTs(fmtTs(new Date()))
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const urlInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -303,6 +325,8 @@ export default function PricingDiagnosticPage() {
             ...(data.cost ? { cost: data.cost } : {}),
           }),
         }).catch((err) => console.error('[pricing-diagnostic] leads/complete', err))
+
+        if (submissionId) publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -320,7 +344,17 @@ export default function PricingDiagnosticPage() {
       }
       setSubmitting(false)
     },
-    [url, email, marketingConsent, submitting, startLoader, stopLoader, completeLoader, resetLoader]
+    [
+      url,
+      email,
+      marketingConsent,
+      submitting,
+      startLoader,
+      stopLoader,
+      completeLoader,
+      resetLoader,
+      publish,
+    ]
   )
 
   const handleReset = useCallback(() => {
@@ -397,8 +431,19 @@ export default function PricingDiagnosticPage() {
             )}
 
             <div className="panel-body">
+              {/* RESTORE LOADING */}
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="pd-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+
               {/* IDLE */}
-              <section className={clsx('pd-state', { active: appState === 'idle' })}>
+              <section
+                className={clsx('pd-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Diagnose a pricing page</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Input

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
@@ -11,7 +11,9 @@ import { Input } from '@/components/mini-apps/ui/Input'
 import { Textarea } from '@/components/mini-apps/ui/Textarea'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { ApiResponse, Hook, HookResult } from '@/app/api/mini-apps/linkedin-hook/route'
@@ -212,6 +214,14 @@ function HookCard({ hook, isBest }: { hook: Hook; isBest: boolean }) {
 }
 
 export default function LinkedInHookPage() {
+  return (
+    <Suspense fallback={null}>
+      <LinkedInHookPageInner />
+    </Suspense>
+  )
+}
+
+function LinkedInHookPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [postText, setPostText] = useState('')
   const [postError, setPostError] = useState<string | null>(null)
@@ -242,6 +252,18 @@ export default function LinkedInHookPage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_MS)
+
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as HookResult
+    setResult(r)
+    if (typeof r.tokens_in === 'number' && typeof r.tokens_out === 'number') {
+      setTokens({ in: r.tokens_in, out: r.tokens_out })
+    }
+    setResultTs(fmtTs(new Date()))
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -373,6 +395,8 @@ export default function LinkedInHookPage() {
             ...(data.cost ? { cost: data.cost } : {}),
           }),
         }).catch((err) => console.error('[linkedin-hook] leads/complete', err))
+
+        if (submissionId) publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -399,6 +423,7 @@ export default function LinkedInHookPage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -471,8 +496,17 @@ export default function LinkedInHookPage() {
             )}
 
             <div className="panel-body">
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="lh-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
               {/* IDLE */}
-              <section className={clsx('lh-state', { active: appState === 'idle' })}>
+              <section
+                className={clsx('lh-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">LinkedIn post text</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Textarea

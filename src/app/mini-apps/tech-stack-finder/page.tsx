@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { clsx } from 'clsx'
 import './page-styles.css'
@@ -14,6 +14,8 @@ import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { Input } from '@/components/mini-apps/ui/Input'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type {
   TechStackFinderApiResponse,
@@ -235,6 +237,15 @@ function CategoryCard({ category }: { category: TechnologyCategory }) {
 }
 
 export default function TechStackFinderPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <TechStackFinderPageInner />
+    </Suspense>
+  )
+}
+
+function TechStackFinderPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [domain, setDomain] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
@@ -263,6 +274,15 @@ export default function TechStackFinderPage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_MS)
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as TechStackFinderResult
+    setResult(r)
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const domainInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -394,6 +414,8 @@ export default function TechStackFinderPage() {
             output: data.data,
           }),
         }).catch((err) => console.error('[tech-stack-finder] leads/complete', err))
+        // Make the URL shareable / reload-safe (?result=<id>).
+        publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -412,6 +434,7 @@ export default function TechStackFinderPage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -469,7 +492,16 @@ export default function TechStackFinderPage() {
             ) : null}
 
             <div className="tsf-panel-body">
-              <section className={clsx('tsf-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="tsf-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('tsf-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Enter a company domain</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Input

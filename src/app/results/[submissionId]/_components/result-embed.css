@@ -1,0 +1,33 @@
+/*
+ * Result-page embed reset.
+ *
+ * Each mini-app result component is written so its ROOT element doubles as a
+ * full-page wrapper: `background: var(--bg)` (opaque near-black) plus
+ * `min-height: 100vh`. That is correct on the mini-app page, but on the
+ * standalone /results page it paints a full black box over the page's aurora
+ * background and forces an extra viewport of empty height.
+ *
+ * Neutralise both here, generically for every app: resolve `--bg` to transparent
+ * within the embed (so the wrapper background disappears while card/panel
+ * surfaces, which use `--surface-*`, keep their dark fills) and drop the forced
+ * min-height. The result then sits on the results page's own background.
+ */
+.result-embed.mini-app-scope {
+  --bg: transparent;
+}
+
+.result-embed.mini-app-scope > * {
+  min-height: 0;
+}
+
+/*
+ * Center the report. `.agentic-readiness`'s `.panel-wrap` is a fixed 680px with
+ * no auto margins; on the mini-app page the `.shell` centers it, but on this
+ * wider results column it would sit left. Flex-center it here. Scoped to the
+ * embed so the mini-app page's full-page `.agentic-readiness` (which flex-rows
+ * its header/main/footer children) is untouched.
+ */
+.result-embed .agentic-readiness {
+  display: flex;
+  justify-content: center;
+}

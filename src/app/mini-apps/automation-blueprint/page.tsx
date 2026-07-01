@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
@@ -13,6 +13,8 @@ import { Textarea } from '@/components/mini-apps/ui/Textarea'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type { ApiResponse, BlueprintResult } from '@/app/api/mini-apps/automation-blueprint/route'
 import { BlueprintDiagram, PageScripts } from './PageScripts'
@@ -143,6 +145,15 @@ const EXAMPLES = [
 ]
 
 export default function AutomationBlueprintPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <AutomationBlueprintPageInner />
+    </Suspense>
+  )
+}
+
+function AutomationBlueprintPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [processText, setProcessText] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
@@ -196,6 +207,18 @@ export default function AutomationBlueprintPage() {
       return () => clearTimeout(t)
     }
   }, [appState])
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as BlueprintResult
+    setResult(r)
+    if (typeof r.tokens_in === 'number' && typeof r.tokens_out === 'number') {
+      setTokens({ in: r.tokens_in, out: r.tokens_out })
+    }
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -305,6 +328,9 @@ export default function AutomationBlueprintPage() {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(completeBody),
         }).catch((err) => console.error('[automation-blueprint] leads/complete', err))
+
+        // Make the URL shareable / reload-safe (?result=<id>).
+        if (submissionId) publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -331,6 +357,7 @@ export default function AutomationBlueprintPage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -428,7 +455,16 @@ export default function AutomationBlueprintPage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('ab-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="ab-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('ab-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Describe a manual process you do over and over</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Textarea

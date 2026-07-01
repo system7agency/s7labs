@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
@@ -14,6 +14,8 @@ import { Textarea } from '@/components/mini-apps/ui/Textarea'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import type { ApiResponse, SanityResult } from '@/app/api/mini-apps/crm-sanity/route'
 import {
   CrmSanityResult,
@@ -189,6 +191,15 @@ function CleanedRecordBlock({ text, format }: { text: string; format: string }) 
 }
 
 export default function CrmSanityPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <CrmSanityPageInner />
+    </Suspense>
+  )
+}
+
+function CrmSanityPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [recordText, setRecordText] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
@@ -240,6 +251,19 @@ export default function CrmSanityPage() {
       return () => clearTimeout(t)
     }
   }, [appState])
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as SanityResult
+    setResult(r)
+    if (typeof r.tokens_in === 'number' && typeof r.tokens_out === 'number') {
+      setTokens({ in: r.tokens_in, out: r.tokens_out })
+    }
+    setResultTs(fmtTs(new Date()))
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -356,6 +380,9 @@ export default function CrmSanityPage() {
             ...(data.cost ? { cost: data.cost } : {}),
           }),
         }).catch((err) => console.error('[crm-sanity] leads/complete', err))
+
+        // Make the URL shareable / reload-safe (?result=<id>).
+        if (submissionId) publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -382,6 +409,7 @@ export default function CrmSanityPage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -454,8 +482,17 @@ export default function CrmSanityPage() {
             )}
 
             <div className="panel-body">
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="cs-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
               {/* IDLE */}
-              <section className={clsx('cs-state', { active: appState === 'idle' })}>
+              <section
+                className={clsx('cs-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">One CRM record</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Textarea

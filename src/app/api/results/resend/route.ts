@@ -10,7 +10,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { sendResultEmail } from '@/lib/email/send-result-email'
-import { N8N_WEBHOOKS_ENABLED } from '@/lib/integrations/n8n'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -44,11 +43,8 @@ function checkRateLimit(
 }
 
 export async function POST(request: Request) {
-  // Result emails are disabled deployment-wide — no mini-app sends email.
-  if (!N8N_WEBHOOKS_ENABLED) {
-    return NextResponse.json({ ok: false, error: 'Result emails are disabled' }, { status: 503 })
-  }
-
+  // sendResultEmail self-gates (RESULT_EMAILS_ENABLED + RESEND_API_KEY); a
+  // disabled/misconfigured send returns ok:false below.
   let raw: unknown
   try {
     raw = await request.json()
