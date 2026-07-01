@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
 
@@ -13,7 +13,9 @@ import { Input } from '@/components/mini-apps/ui/Input'
 import { Textarea } from '@/components/mini-apps/ui/Textarea'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -162,6 +164,14 @@ function buildPlainText(result: ProfileReviewResult): string {
 }
 
 export default function LinkedInProfileReviewerPage() {
+  return (
+    <Suspense fallback={null}>
+      <LinkedInProfileReviewerPageInner />
+    </Suspense>
+  )
+}
+
+function LinkedInProfileReviewerPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [mode, setMode] = useState<InputMode>('url')
   const [url, setUrl] = useState('')
@@ -192,6 +202,14 @@ export default function LinkedInProfileReviewerPage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_MS)
+
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as ProfileReviewResult
+    setResult(r)
+    setResultTs(fmtTs(new Date()))
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const urlInputRef = useRef<HTMLInputElement | null>(null)
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -343,6 +361,8 @@ export default function LinkedInProfileReviewerPage() {
               ...(data.cost ? { cost: data.cost } : {}),
             }),
           }).catch((err) => console.error('[linkedin-profile-reviewer] leads/complete', err))
+
+          if (submissionId) publish(submissionId)
         } else {
           stopLoader()
           setErrorCode(data.code ?? null)
@@ -369,6 +389,7 @@ export default function LinkedInProfileReviewerPage() {
       resetLoader,
       submitting,
       url,
+      publish,
     ]
   )
 
@@ -408,7 +429,16 @@ export default function LinkedInProfileReviewerPage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('lpr-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="lpr-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('lpr-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="mode-toggle">
                   <button
                     type="button"

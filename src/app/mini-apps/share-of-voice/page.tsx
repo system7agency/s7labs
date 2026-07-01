@@ -1,7 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -21,6 +23,7 @@ import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 import { ShareOfVoiceResult, buildShareOfVoicePlainText } from './components/ShareOfVoiceResult'
+import { ShareOfVoiceGatedDetail } from './components/ShareOfVoiceGatedDetail'
 
 type AppState = 'idle' | 'loading' | 'result' | 'error'
 
@@ -132,6 +135,19 @@ function normalizeDomainInput(input: string): string {
 }
 
 export default function ShareOfVoicePage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <ShareOfVoicePageInner />
+    </Suspense>
+  )
+}
+
+function ShareOfVoicePageInner() {
+  // When the page is opened with ?result=<id> (from the email or a reload) we
+  // restore that saved result from the DB and render it in this page's own
+  // design, instead of running a new scan.
+  const [restored, setRestored] = useState(false)
   const [appState, setAppState] = useState<AppState>('idle')
   const [yourDomain, setYourDomain] = useState('')
   const [competitors, setCompetitors] = useState<string[]>([''])
@@ -186,6 +202,20 @@ export default function ShareOfVoicePage() {
       return () => clearTimeout(t)
     }
   }, [appState])
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const out = output as { free?: ScanFree; gated?: ScanGated | null }
+    if (!out.free) return
+    setYourDomain(out.free.your_domain ?? '')
+    setFree(out.free)
+    setGated(out.gated ?? null)
+    if (out.gated) setTokens({ in: out.gated.tokens_in, out: out.gated.tokens_out })
+    setSysState('complete')
+    setRestored(true)
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -336,6 +366,11 @@ export default function ShareOfVoicePage() {
         body: JSON.stringify(completeBody),
       }).catch((err) => console.error('[share-of-voice] leads/complete', err))
 
+      // Make the URL shareable / reload-safe without re-fetching.
+      if (submissionId) {
+        publish(submissionId)
+      }
+
       setSubmitting(false)
     },
     [
@@ -348,6 +383,7 @@ export default function ShareOfVoicePage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -426,7 +462,16 @@ export default function ShareOfVoicePage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('sov-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="sov-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('sov-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Enter your domain and up to 3 competitors</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Input
@@ -536,11 +581,24 @@ export default function ShareOfVoicePage() {
                 {free && (
                   <>
                     <div ref={shareableRef}>
-                      <ShareOfVoiceResult
-                        bare
-                        input={{ your_domain: free.your_domain }}
-                        output={{ free, gated }}
-                      />
+                      {restored ? (
+                        // Restored from the DB (?result=<id>): render the free
+                        // result, then the saved gated detail directly.
+                        <>
+                          <ShareOfVoiceResult
+                            bare
+                            input={{ your_domain: free.your_domain }}
+                            output={{ free }}
+                          />
+                          {gated && <ShareOfVoiceGatedDetail free={free} gated={gated} />}
+                        </>
+                      ) : (
+                        <ShareOfVoiceResult
+                          bare
+                          input={{ your_domain: free.your_domain }}
+                          output={{ free, gated }}
+                        />
+                      )}
                     </div>
 
                     <div className="result-actions">

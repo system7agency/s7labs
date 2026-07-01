@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
@@ -13,6 +14,7 @@ import { LoadingStages } from '@/components/mini-apps/LoadingStages'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import type { ApiResponse, RoastResult } from '@/app/api/mini-apps/website-roast/route'
 import { PageScripts } from './PageScripts'
 import { WebsiteRoastResult, buildWebsiteRoastPlainText } from './components/WebsiteRoastResult'
@@ -121,6 +123,15 @@ const STAGES = [
 const STAGE_MS = 5000
 
 export default function WebsiteRoastPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <WebsiteRoastPageInner />
+    </Suspense>
+  )
+}
+
+function WebsiteRoastPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [url, setUrl] = useState('')
   const [urlError, setUrlError] = useState<string | null>(null)
@@ -154,6 +165,18 @@ export default function WebsiteRoastPage() {
 
   const urlInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as RoastResult
+    setResult(r)
+    if (typeof r.tokens_in === 'number' && typeof r.tokens_out === 'number') {
+      setTokens({ in: r.tokens_in, out: r.tokens_out })
+    }
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   useEffect(() => {
     const tick = () => {
@@ -284,6 +307,8 @@ export default function WebsiteRoastPage() {
             ...(data.cost ? { cost: data.cost } : {}),
           }),
         }).catch((err) => console.error('[website-roast] leads/complete', err))
+        // Make the URL shareable / reload-safe (?result=<id>).
+        publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -301,7 +326,17 @@ export default function WebsiteRoastPage() {
       }
       setSubmitting(false)
     },
-    [url, email, marketingConsent, submitting, startLoader, stopLoader, completeLoader, resetLoader]
+    [
+      url,
+      email,
+      marketingConsent,
+      submitting,
+      startLoader,
+      stopLoader,
+      completeLoader,
+      resetLoader,
+      publish,
+    ]
   )
 
   const handleReset = useCallback(() => {
@@ -373,7 +408,16 @@ export default function WebsiteRoastPage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('wr-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="wr-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('wr-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Drop a URL and get roasted</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Input

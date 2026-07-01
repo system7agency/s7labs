@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
@@ -14,6 +15,7 @@ import { Textarea } from '@/components/mini-apps/ui/Textarea'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 import {
@@ -142,6 +144,14 @@ const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
 ]
 
 export default function TechStackRecommenderPage() {
+  return (
+    <Suspense fallback={null}>
+      <TechStackRecommenderPageInner />
+    </Suspense>
+  )
+}
+
+function TechStackRecommenderPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [brief, setBrief] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
@@ -171,6 +181,17 @@ export default function TechStackRecommenderPage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_MS)
+
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as StackResult
+    setResult(r)
+    if (typeof r.tokens_in === 'number' && typeof r.tokens_out === 'number') {
+      setTokens({ in: r.tokens_in, out: r.tokens_out })
+    }
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -300,6 +321,8 @@ export default function TechStackRecommenderPage() {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(completeBody),
         }).catch((err) => console.error('[tech-stack-recommender] leads/complete', err))
+
+        if (submissionId) publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -326,6 +349,7 @@ export default function TechStackRecommenderPage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -404,7 +428,17 @@ export default function TechStackRecommenderPage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('tsr-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="tsr-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+
+              <section
+                className={clsx('tsr-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Describe what you want to build</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Textarea

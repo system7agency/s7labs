@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
@@ -14,6 +15,7 @@ import { Textarea } from '@/components/mini-apps/ui/Textarea'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { PageScripts } from './PageScripts'
 import {
@@ -137,6 +139,14 @@ function fmtTs(d: Date) {
 }
 
 export default function ProposalEnginePage() {
+  return (
+    <Suspense fallback={null}>
+      <ProposalEnginePageInner />
+    </Suspense>
+  )
+}
+
+function ProposalEnginePageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [briefText, setBriefText] = useState('')
   const [tone, setTone] = useState<Tone>('formal')
@@ -169,6 +179,18 @@ export default function ProposalEnginePage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_MS)
+
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as ProposalResult
+    setResult(r)
+    if (typeof r.tokens_in === 'number' && typeof r.tokens_out === 'number') {
+      setTokens({ in: r.tokens_in, out: r.tokens_out })
+    }
+    setResultTs(fmtTs(new Date()))
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -300,6 +322,8 @@ export default function ProposalEnginePage() {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(completeBody),
         }).catch((err) => console.error('[proposal-engine] leads/complete', err))
+
+        if (submissionId) publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -327,6 +351,7 @@ export default function ProposalEnginePage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -405,7 +430,17 @@ export default function ProposalEnginePage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('pe-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="pe-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+
+              <section
+                className={clsx('pe-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Client brief</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Textarea

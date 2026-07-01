@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { AuroraBackground } from '@/components/mini-apps/AuroraBackground'
@@ -12,6 +13,7 @@ import { Input } from '@/components/mini-apps/ui/Input'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import type { ApiResponse, RadarResult } from '@/app/api/mini-apps/outbound-radar/route'
 import { PageScripts } from './PageScripts'
@@ -126,6 +128,14 @@ function fmtTs(d: Date) {
 }
 
 export default function OutboundRadarPage() {
+  return (
+    <Suspense fallback={null}>
+      <OutboundRadarPageInner />
+    </Suspense>
+  )
+}
+
+function OutboundRadarPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [company, setCompany] = useState('')
   const [domain, setDomain] = useState('')
@@ -159,6 +169,18 @@ export default function OutboundRadarPage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_MS)
+
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as RadarResult
+    setResult(r)
+    if (typeof r.tokens_in === 'number' && typeof r.tokens_out === 'number') {
+      setTokens({ in: r.tokens_in, out: r.tokens_out })
+    }
+    setResultTs(fmtTs(new Date()))
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const companyInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -298,6 +320,8 @@ export default function OutboundRadarPage() {
             ...(data.cost ? { cost: data.cost } : {}),
           }),
         }).catch((err) => console.error('[outbound-radar] leads/complete', err))
+
+        if (submissionId) publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -325,6 +349,7 @@ export default function OutboundRadarPage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -400,8 +425,19 @@ export default function OutboundRadarPage() {
             )}
 
             <div className="panel-body">
+              {/* RESTORE LOADING */}
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="or-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+
               {/* IDLE */}
-              <section className={clsx('or-state', { active: appState === 'idle' })}>
+              <section
+                className={clsx('or-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Target account</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <div className="input-grid">

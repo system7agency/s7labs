@@ -4,6 +4,7 @@ import { clsx } from 'clsx'
 
 import type { BrandScore, Provider, ScanFree, ScanGated } from '@/lib/mini-apps/sov-types'
 import '../page-styles.css'
+import { ShareOfVoiceGatedDetail } from './ShareOfVoiceGatedDetail'
 
 export type ShareOfVoiceInput = { your_domain?: string; competitors?: string[] }
 export type ShareOfVoiceOutput = {
@@ -157,8 +158,6 @@ function ProviderCard({ provider, free }: { provider: Provider; free: ScanFree }
 }
 
 function ResultBody({ free, gated }: { free: ScanFree; gated: ScanGated | null }) {
-  const yourBrandName = free.your_brand
-
   return (
     <>
       <div className="shareable-block">
@@ -205,69 +204,7 @@ function ResultBody({ free, gated }: { free: ScanFree; gated: ScanGated | null }
         </p>
       </div>
 
-      {gated && (
-        <>
-          <div className="section-header">
-            <span>{'// question breakdown'}</span>
-          </div>
-          {gated.questions.map((q) => (
-            <div key={q.question} className="question-block">
-              <div className="question-header">{q.question}</div>
-              {q.by_provider.map((row) => {
-                const hasYou = row.brands_mentioned.some(
-                  (b) => b.toLowerCase() === yourBrandName.toLowerCase()
-                )
-                const hasCompetitor = row.brands_mentioned.some(
-                  (b) => b.toLowerCase() !== yourBrandName.toLowerCase()
-                )
-                return (
-                  <div
-                    key={`${q.question}-${row.provider}`}
-                    className={clsx('mention-row', {
-                      'has-you': hasYou,
-                      'missing-you': !hasYou,
-                      'competitor-ahead': hasCompetitor && !hasYou,
-                    })}
-                  >
-                    <div className="mention-provider">{PROVIDER_LABELS[row.provider]}</div>
-                    <div className="mention-brands">
-                      {row.brands_mentioned.length > 0 ? (
-                        row.brands_mentioned.map((b) => (
-                          <span
-                            key={b}
-                            className={
-                              b.toLowerCase() === yourBrandName.toLowerCase()
-                                ? 'brand-tag is-you'
-                                : 'brand-tag'
-                            }
-                          >
-                            {b}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="brand-tag missing">You not mentioned</span>
-                      )}
-                    </div>
-                    <p className="mention-excerpt">{row.answer_excerpt}</p>
-                  </div>
-                )
-              })}
-            </div>
-          ))}
-
-          <div className="gap-block">
-            <div className="gap-eyebrow">{'// how to close the gap'}</div>
-            <ol className="gap-list">
-              {gated.recommendations.map((item, i) => (
-                <li key={i} className="gap-row">
-                  <span className="gap-number">{String(i + 1).padStart(2, '0')}</span>
-                  <span className="gap-text">{item}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </>
-      )}
+      {gated && <ShareOfVoiceGatedDetail free={free} gated={gated} />}
     </>
   )
 }

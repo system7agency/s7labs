@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { clsx } from 'clsx'
 import './page-styles.css'
@@ -12,7 +12,9 @@ import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWor
 import { InlineConsentField } from '@/components/mini-apps/InlineConsentField'
 import { Input } from '@/components/mini-apps/ui/Input'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -184,6 +186,14 @@ function FilterPills({
 // ---------- main page ----------
 
 export default function FindPeoplePage() {
+  return (
+    <Suspense fallback={null}>
+      <FindPeoplePageInner />
+    </Suspense>
+  )
+}
+
+function FindPeoplePageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [company, setCompany] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -209,6 +219,14 @@ export default function FindPeoplePage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_DURATION_MS)
+
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as FindPeopleResult
+    setResult(r)
+    setSubmittedCompany(r.companyName || r.companyDomain || '')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   // Filter + pagination state
   const [seniority, setSeniority] = useState<string>('All')
@@ -378,6 +396,8 @@ export default function FindPeoplePage() {
           cost: zeroCost,
         }),
       }).catch((err) => console.error('[find-people] leads/complete', err))
+
+      if (submissionId) publish(submissionId)
     },
     [
       company,
@@ -388,6 +408,7 @@ export default function FindPeoplePage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -439,8 +460,17 @@ export default function FindPeoplePage() {
         <div className="panel-wrap">
           <div className="panel">
             <div className="panel-body">
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="fp-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
               {/* IDLE */}
-              <section className={clsx('fp-state', { active: appState === 'idle' })}>
+              <section
+                className={clsx('fp-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Target company</div>
                 <form
                   key={shakeKey}

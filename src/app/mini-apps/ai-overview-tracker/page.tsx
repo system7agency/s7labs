@@ -1,7 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -16,6 +18,7 @@ import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWor
 import type { ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/aio-types'
 import { parseScanApiResponse } from '@/lib/mini-apps/aio-types'
 import { GatedBreakdown } from './GatedBreakdown'
+import { AioGatedDetail } from './components/AioGatedDetail'
 import {
   AiOverviewTrackerResult,
   buildAiOverviewTrackerPlainText,
@@ -222,6 +225,19 @@ function keywordsFromText(value: string): string[] {
 }
 
 export default function AiOverviewTrackerPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <AiOverviewTrackerPageInner />
+    </Suspense>
+  )
+}
+
+function AiOverviewTrackerPageInner() {
+  // When the page is opened with ?result=<id> (from the email or a reload) we
+  // restore that saved result from the DB and render it in this page's own
+  // design, instead of running a new scan.
+  const [restored, setRestored] = useState(false)
   const [appState, setAppState] = useState<AppState>('idle')
   const [domain, setDomain] = useState('')
   const [keywordsText, setKeywordsText] = useState('')
@@ -277,6 +293,22 @@ export default function AiOverviewTrackerPage() {
   const handleTokens = useCallback((t: { in: number; out: number }) => {
     setTokens(t)
   }, [])
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>, id: string) => {
+    const out = output as { free?: ScanFree; gated?: ScanGated | null; scanId?: string }
+    if (!out.free) return
+    setDomain(out.free.domain ?? '')
+    setLocation(out.free.location ?? 'United States')
+    setFree(out.free)
+    setGated(out.gated ?? null)
+    setScanId(out.scanId ?? id)
+    if (out.gated) setTokens({ in: out.gated.tokens_in, out: out.gated.tokens_out })
+    setSysState('complete')
+    setRestored(true)
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   useEffect(() => {
     const tick = () => {
@@ -408,6 +440,9 @@ export default function AiOverviewTrackerPage() {
         const completeBody: Record<string, unknown> = {
           submissionId,
           output: { free: data.free, scanId: data.scanId },
+          // Gated app: don't email on the free pass — the gated completion saves
+          // the full free+gated output and sends the one result email.
+          sendEmail: false,
         }
         if (data.cost) completeBody.cost = data.cost
         fetch('/api/leads/complete', {
@@ -509,7 +544,16 @@ export default function AiOverviewTrackerPage() {
               </div>
             )}
             <div className="panel-body">
-              <section className={clsx('aio-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="aio-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('aio-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Not a rank tracker. This checks AI citations</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Input
@@ -615,26 +659,40 @@ export default function AiOverviewTrackerPage() {
                      * just the free teaser. */}
                     <div ref={shareableRef}>
                       <AiOverviewTrackerResult bare input={leadInput} output={{ free, scanId }} />
-                      <GatedBreakdown
-                        scanId={scanId}
-                        free={free}
-                        leadInput={leadInput}
-                        submitToApi={async (_input, output) => {
-                          const submissionId = submissionIdRef.current
-                          if (!submissionId || !output) return
-                          try {
-                            await fetch('/api/leads/complete', {
-                              method: 'POST',
-                              headers: { 'content-type': 'application/json' },
-                              body: JSON.stringify({ submissionId, output }),
-                            })
-                          } catch (err) {
-                            console.error('[ai-overview-tracker] gated leads/complete', err)
-                          }
-                        }}
-                        onTokens={handleTokens}
-                        onGatedLoaded={handleGatedLoaded}
-                      />
+                      {restored ? (
+                        // Restored from the DB (?result=<id>): render the saved
+                        // gated detail directly, no unlock fetch / re-save.
+                        gated && <AioGatedDetail free={free} gated={gated} />
+                      ) : (
+                        <GatedBreakdown
+                          scanId={scanId}
+                          free={free}
+                          leadInput={leadInput}
+                          submitToApi={async (_input, output) => {
+                            const submissionId = submissionIdRef.current
+                            if (!submissionId || !output) return
+                            try {
+                              // `output` from <SubmitOnce> is already { free, gated } —
+                              // just add scanId. Saving the FULL result and sending the
+                              // one email with everything in it. (Do NOT re-wrap output.)
+                              await fetch('/api/leads/complete', {
+                                method: 'POST',
+                                headers: { 'content-type': 'application/json' },
+                                body: JSON.stringify({
+                                  submissionId,
+                                  output: { ...output, scanId },
+                                }),
+                              })
+                            } catch (err) {
+                              console.error('[ai-overview-tracker] gated leads/complete', err)
+                            }
+                            // Make the URL shareable / reload-safe without re-fetching.
+                            publish(submissionId)
+                          }}
+                          onTokens={handleTokens}
+                          onGatedLoaded={handleGatedLoaded}
+                        />
+                      )}
                     </div>
                     <div className="result-actions">
                       <ExportControls

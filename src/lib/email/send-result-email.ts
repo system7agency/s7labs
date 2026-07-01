@@ -1,20 +1,61 @@
 /**
- * SYS-552: Transactional result-email dispatcher.
+ * Transactional result-email dispatcher (Resend).
  *
- * Looks up a completed submission, builds the locked n8n webhook payload, and
- * posts it with bounded retries. Used in two places:
- *   1. Fire-and-forget from /api/leads/complete on the success branch.
+ * Looks up a completed submission and emails the rendered result to the lead via
+ * the Resend API (RESEND_API_KEY), with bounded retries. Used in two places:
+ *   1. Fire-and-forget from /api/leads/complete on the success branch (i.e. the
+ *      moment a mini-app produces and saves its result).
  *   2. Synchronously from /api/results/resend for manual re-delivery.
  *
+ * Sends directly via Resend (an email key), NOT the n8n automation webhook — so
+ * it is independent of the n8n kill-switch (which still gates lead / RevOps
+ * sync). Set RESULT_EMAILS_ENABLED=false to hard-disable without removing the key.
+ *
  * Logging policy: ALWAYS include submissionId. NEVER log the recipient email,
- * unsubscribe token, or webhook URL.
+ * unsubscribe token, or API key.
  */
 
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { buildUnsubscribeUrl } from '@/lib/leads/unsubscribe-link'
-import { N8N_WEBHOOKS_ENABLED } from '@/lib/integrations/n8n'
+import { launchPathForSlug } from '@/app/results/[submissionId]/_components/slug-map'
+import { renderResultEmail } from './render-result-html'
 
 const BACKOFF_MS = [1000, 3000, 9000] as const
+const RESEND_ENDPOINT = 'https://api.resend.com/emails'
+const DEFAULT_FROM = 'no-reply@wsdv.store'
+
+/** Hard off-switch, independent of the env key (default on). */
+const RESULT_EMAILS_ENABLED = process.env.RESULT_EMAILS_ENABLED !== 'false'
+
+/**
+ * Slugs whose mini-app page restores a saved result from `?result=<id>`. Their
+ * email links go to that page (native design). Everything else falls back to the
+ * generic /results/<id> page. (DB slug values; a few differ from folder names.)
+ * Excluded on purpose: bulk-email-finder, gtm-flywheel, roi-calculator — those
+ * pages don't persist a restorable output, so they keep the /results fallback.
+ */
+const RESULT_PARAM_SLUGS = new Set<string>([
+  'agentic-readiness',
+  'ai-overview-tracker',
+  'ai-visibility-score',
+  'automation-blueprint',
+  'campaign-ideation',
+  'crm-field-sanity-check',
+  'email-copy-optimizer',
+  'email-finder',
+  'find-people',
+  'intent-signals',
+  'job-posting-sales-brief',
+  'linkedin-post-outbound-hook',
+  'linkedin-profile-reviewer',
+  'outbound-trigger-radar',
+  'pricing-diagnostic',
+  'proposal-engine',
+  'share-of-voice',
+  'tech-stack-finder',
+  'tech-stack-recommender',
+  'website-roast',
+])
 
 export type SendResultEmailResult = { ok: true } | { ok: false; error: string }
 
@@ -27,6 +68,7 @@ type SubmissionJoined = {
   mini_app_slug: string | null
   status: string | null
   created_at: string | null
+  output: Record<string, unknown> | null
   mini_apps: MiniAppRow | MiniAppRow[] | null
   leads: LeadRow | LeadRow[] | null
 }
@@ -42,39 +84,36 @@ function sleep(ms: number): Promise<void> {
 }
 
 function sanitize(message: string, email: string | null): string {
-  // Defence in depth: even though we control these strings, scrub the email
-  // before it ever reaches a log line.
+  // Defence in depth: scrub the recipient address before it reaches a log line.
   if (!email) return message
   return message.split(email).join('<redacted>')
 }
 
 export async function sendResultEmail(submissionId: string): Promise<SendResultEmailResult> {
-  if (!N8N_WEBHOOKS_ENABLED) {
+  if (!RESULT_EMAILS_ENABLED) {
     return { ok: false, error: 'Result emails are disabled' }
   }
 
-  const webhookUrl = process.env.N8N_EMAIL_WEBHOOK_URL
-  if (!webhookUrl) {
-    const error = 'N8N_EMAIL_WEBHOOK_URL is not configured'
-    console.error('[send-result-email] env missing', { submissionId })
-    return { ok: false, error }
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    console.error('[send-result-email] RESEND_API_KEY is not configured', { submissionId })
+    return { ok: false, error: 'RESEND_API_KEY is not configured' }
   }
+  const fromAddress = process.env.RESEND_FROM_EMAIL || DEFAULT_FROM
+  const from = fromAddress.includes('<') ? fromAddress : `S7 Labs <${fromAddress}>`
 
   const supabase = getSupabaseServerClient()
 
   const { data, error: lookupErr } = await supabase
     .from('submissions')
     .select(
-      'id, email, mini_app_slug, status, created_at, mini_apps(name), leads(unsubscribe_token)'
+      'id, email, mini_app_slug, status, created_at, output, mini_apps(name), leads(unsubscribe_token)'
     )
     .eq('id', submissionId)
     .maybeSingle()
 
   if (lookupErr) {
-    console.error('[send-result-email] lookup error', {
-      submissionId,
-      err: lookupErr.message,
-    })
+    console.error('[send-result-email] lookup error', { submissionId, err: lookupErr.message })
     return { ok: false, error: 'Submission lookup failed' }
   }
 
@@ -107,27 +146,39 @@ export async function sendResultEmail(submissionId: string): Promise<SendResultE
 
   const lead = pickOne(submission.leads)
   if (!lead || !lead.unsubscribe_token) {
-    console.error('[send-result-email] lead has no unsubscribe_token', {
-      submissionId,
-    })
+    console.error('[send-result-email] lead has no unsubscribe_token', { submissionId })
     return { ok: false, error: 'Lead has no unsubscribe_token' }
   }
 
   const miniApp = pickOne(submission.mini_apps)
   const miniAppName = miniApp?.name ?? submission.mini_app_slug
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://s7labs.ai'
-  const resultUrl = `${baseUrl}/results/${submission.id}`
   const unsubscribeUrl = buildUnsubscribeUrl(lead.unsubscribe_token)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://s7labs.ai'
+  // Migrated apps render the saved result on their own page via ?result=<id>
+  // (the page's native design). Apps not yet migrated fall back to the generic
+  // /results/<id> page. Add a slug here as each app gains ?result support.
+  const resultUrl = RESULT_PARAM_SLUGS.has(submission.mini_app_slug)
+    ? `${baseUrl}${launchPathForSlug(submission.mini_app_slug)}?result=${submission.id}`
+    : `${baseUrl}/results/${submission.id}`
 
-  const payload = {
-    submissionId: submission.id,
-    email: submission.email,
-    miniAppSlug: submission.mini_app_slug,
-    miniAppName,
+  // One generic S7-themed email for every app: heading, message, a "View full
+  // result" button to the live report page, and footer. No result data inline.
+  const { html, text } = renderResultEmail({
+    appName: miniAppName,
     resultUrl,
     unsubscribeUrl,
-    createdAt: submission.created_at ?? new Date().toISOString(),
+  })
+
+  // NOTE: transactional email — always sent regardless of marketing_consent.
+  // The user requested their mini-app result.
+  const emailPayload = {
+    from,
+    to: [submission.email],
+    subject: `Your ${miniAppName} result is ready`,
+    html,
+    text,
+    headers: { 'List-Unsubscribe': `<${unsubscribeUrl}>` },
   }
 
   let lastError = 'Unknown error'
@@ -139,27 +190,28 @@ export async function sendResultEmail(submissionId: string): Promise<SendResultE
     }
 
     try {
-      // NOTE: This is a transactional email. We always send regardless of marketing_consent or unsubscribed_at status. Users get their requested mini-app result.
-      const res = await fetch(webhookUrl, {
+      const res = await fetch(RESEND_ENDPOINT, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(emailPayload),
       })
 
       if (res.ok) {
-        // eslint-disable-next-line no-console -- SYS-552 spec calls for console.log on success so the line shows up in info-level logs separately from warn/error retry noise.
-        console.log('[send-result-email] sent', {
-          submissionId,
-          attempt: attempt + 1,
-        })
+        // eslint-disable-next-line no-console -- info-level success line, kept separate from warn/error retry noise.
+        console.log('[send-result-email] sent', { submissionId, attempt: attempt + 1 })
         return { ok: true }
       }
 
-      lastError = `Webhook returned status ${res.status}`
+      const detail = await res.text().catch(() => '')
+      lastError = `Resend returned status ${res.status}`
       console.warn('[send-result-email] non-2xx response', {
         submissionId,
         attempt: attempt + 1,
         status: res.status,
+        detail: sanitize(detail.slice(0, 200), submission.email),
       })
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err)

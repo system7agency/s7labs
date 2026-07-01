@@ -1,7 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -15,6 +17,7 @@ import { EMAIL_REGEX } from '@/lib/leads/disposable'
 import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
 import type { ScanApiResponse, ScanFree, ScanGated } from '@/lib/mini-apps/agentic-types'
 import { GatedBreakdown } from './GatedBreakdown'
+import { AgenticGatedDetail } from './components/AgenticGatedDetail'
 import { PageScripts } from './PageScripts'
 import {
   AgenticReadinessResult,
@@ -137,6 +140,19 @@ function normalizeUrlInput(input: string): string | null {
 }
 
 export default function AgenticReadinessPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <AgenticReadinessPageInner />
+    </Suspense>
+  )
+}
+
+function AgenticReadinessPageInner() {
+  // When the page is opened with ?result=<id> (from the email or a reload) we
+  // restore that saved result from the DB and render it in this page's own
+  // design, instead of running a new scan.
+  const [restored, setRestored] = useState(false)
   const [appState, setAppState] = useState<AppState>('idle')
   const [url, setUrl] = useState('')
   const [urlError, setUrlError] = useState<string | null>(null)
@@ -187,6 +203,21 @@ export default function AgenticReadinessPage() {
   const handleTokens = useCallback((t: { in: number; out: number }) => {
     setTokens(t)
   }, [])
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>, id: string) => {
+    const out = output as { free?: ScanFree; gated?: ScanGated | null; scanId?: string }
+    if (!out.free) return
+    setUrl(out.free.url ?? '')
+    setFree(out.free)
+    setGated(out.gated ?? null)
+    setScanId(out.scanId ?? id)
+    if (out.gated) setTokens({ in: out.gated.tokens_in, out: out.gated.tokens_out })
+    setSysState('complete')
+    setRestored(true)
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   useEffect(() => {
     const tick = () => {
@@ -314,6 +345,9 @@ export default function AgenticReadinessPage() {
         const completeBody: Record<string, unknown> = {
           submissionId,
           output: { free: data.free, scanId: data.scanId },
+          // Gated app: don't email on the free pass — the gated completion saves
+          // the full free+gated output and sends the one result email.
+          sendEmail: false,
         }
         if (data.cost) completeBody.cost = data.cost
         fetch('/api/leads/complete', {
@@ -418,7 +452,16 @@ export default function AgenticReadinessPage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('ar-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="ar-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('ar-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Can an AI agent actually use your site?</div>
                 <form className="idle-form" noValidate onSubmit={handleSubmit} autoComplete="off">
                   <Input
@@ -506,27 +549,41 @@ export default function AgenticReadinessPage() {
                         input={{ url: free.url }}
                         output={{ scanId, free }}
                       />
-                      <GatedBreakdown
-                        scanId={scanId}
-                        email={email}
-                        free={free}
-                        leadInput={leadInput}
-                        submitToApi={async (_input, output) => {
-                          const submissionId = submissionIdRef.current
-                          if (!submissionId || !output) return
-                          try {
-                            await fetch('/api/leads/complete', {
-                              method: 'POST',
-                              headers: { 'content-type': 'application/json' },
-                              body: JSON.stringify({ submissionId, output }),
-                            })
-                          } catch (err) {
-                            console.error('[agentic-readiness] gated leads/complete', err)
-                          }
-                        }}
-                        onTokens={handleTokens}
-                        onGatedLoaded={handleGatedLoaded}
-                      />
+                      {restored ? (
+                        // Restored from the DB (?result=<id>): render the saved
+                        // gated detail directly, no unlock fetch / re-save.
+                        gated && <AgenticGatedDetail gated={gated} />
+                      ) : (
+                        <GatedBreakdown
+                          scanId={scanId}
+                          email={email}
+                          free={free}
+                          leadInput={leadInput}
+                          submitToApi={async (_input, output) => {
+                            const submissionId = submissionIdRef.current
+                            if (!submissionId || !output) return
+                            try {
+                              // Save the FULL result (free + gated). No sendEmail flag,
+                              // so the server sends the result email — a link to this
+                              // page at ?result=<id>, which re-renders from the DB.
+                              await fetch('/api/leads/complete', {
+                                method: 'POST',
+                                headers: { 'content-type': 'application/json' },
+                                body: JSON.stringify({
+                                  submissionId,
+                                  output: { ...output, scanId },
+                                }),
+                              })
+                            } catch (err) {
+                              console.error('[agentic-readiness] gated leads/complete', err)
+                            }
+                            // Make the URL shareable / reload-safe without re-fetching.
+                            publish(submissionId)
+                          }}
+                          onTokens={handleTokens}
+                          onGatedLoaded={handleGatedLoaded}
+                        />
+                      )}
                     </div>
                     <div className="result-actions">
                       <ExportControls

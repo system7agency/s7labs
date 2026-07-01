@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useMemo, useRef, useState, type FormEvent } from 'react'
 
 import { clsx } from 'clsx'
 
@@ -14,6 +14,8 @@ import { Textarea } from '@/components/mini-apps/ui/Textarea'
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import { EMAIL_REGEX } from '@/lib/leads/disposable'
 
 import type {
@@ -121,6 +123,15 @@ function buildAllVariations(result: EmailCopyOptimizerResult): string {
 }
 
 export default function EmailCopyOptimizerPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <EmailCopyOptimizerPageInner />
+    </Suspense>
+  )
+}
+
+function EmailCopyOptimizerPageInner() {
   const [appState, setAppState] = useState<AppState>('input')
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
@@ -154,6 +165,14 @@ export default function EmailCopyOptimizerPage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_MS)
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as EmailCopyOptimizerResult
+    setResult(r)
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const runReadout = useMemo(() => {
     if (appState === 'loading') return 'running'
@@ -318,6 +337,8 @@ export default function EmailCopyOptimizerPage() {
             ...(payload.cost ? { cost: payload.cost } : {}),
           }),
         }).catch((err) => console.error('[email-copy-optimizer] leads/complete', err))
+        // Make the URL shareable / reload-safe (?result=<id>).
+        publish(submissionId)
       } catch {
         stopLoader()
         setErrorMessage('Network error. Please retry in a moment.')
@@ -340,6 +361,7 @@ export default function EmailCopyOptimizerPage() {
       subject,
       submitting,
       tone,
+      publish,
     ]
   )
 
@@ -410,7 +432,16 @@ export default function EmailCopyOptimizerPage() {
             )}
 
             <div className="panel-body">
-              <section className={clsx('view', { active: appState === 'input' })}>
+              {(restoring || (appState === 'input' && hasResultParam)) && (
+                <section className="view active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('view', {
+                  active: appState === 'input' && !restoring && !hasResultParam,
+                })}
+              >
                 <form
                   key={shakeKey}
                   className="idle-form"

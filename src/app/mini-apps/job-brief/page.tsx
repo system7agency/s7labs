@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { clsx } from 'clsx'
 import './page-styles.css'
 import { Footer } from '@/components/Footer'
@@ -12,6 +12,8 @@ import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWor
 import { ExportControls } from '@/components/mini-apps/ui/ExportControls'
 import { useMiniAppLoader } from '@/components/mini-apps/useMiniAppLoader'
 import { LoadingStages } from '@/components/mini-apps/LoadingStages'
+import { useResultParam } from '@/components/mini-apps/useResultParam'
+import { ResultRestoreNotice } from '@/components/mini-apps/ResultRestoreNotice'
 import type { ApiResponse, BriefResult } from '@/app/api/mini-apps/job-brief/route'
 import { JobBriefResult, buildJobBriefPlainText } from './components/JobBriefResult'
 import { PageScripts } from './PageScripts'
@@ -126,6 +128,15 @@ function fmtTs(d: Date) {
 }
 
 export default function JobBriefPage() {
+  // useResultParam (useSearchParams) requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <JobBriefPageInner />
+    </Suspense>
+  )
+}
+
+function JobBriefPageInner() {
   const [appState, setAppState] = useState<AppState>('idle')
   const [inputMode, setInputMode] = useState<InputMode>('url')
   const [url, setUrl] = useState('')
@@ -159,6 +170,18 @@ export default function JobBriefPage() {
     stageLogs,
     waiting,
   } = useMiniAppLoader(STAGES, STAGE_MS)
+
+  // Restore a saved result from ?result=<id> (email link / reload).
+  const applyResult = useCallback((output: Record<string, unknown>) => {
+    const r = output as BriefResult
+    setResult(r)
+    if (typeof r.tokens_in === 'number' && typeof r.tokens_out === 'number') {
+      setTokens({ in: r.tokens_in, out: r.tokens_out })
+    }
+    setSysState('complete')
+    setAppState('result')
+  }, [])
+  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
 
   const urlInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -308,6 +331,8 @@ export default function JobBriefPage() {
             ...(data.cost ? { cost: data.cost } : {}),
           }),
         }).catch((err) => console.error('[job-brief] leads/complete', err))
+        // Make the URL shareable / reload-safe (?result=<id>).
+        publish(submissionId)
       } else {
         stopLoader()
         setErrorMsg(data.message)
@@ -336,6 +361,7 @@ export default function JobBriefPage() {
       stopLoader,
       completeLoader,
       resetLoader,
+      publish,
     ]
   )
 
@@ -409,7 +435,16 @@ export default function JobBriefPage() {
 
             <div className="panel-body">
               {/* IDLE */}
-              <section className={clsx('jb-state', { active: appState === 'idle' })}>
+              {(restoring || (appState === 'idle' && hasResultParam)) && (
+                <section className="jb-state active">
+                  <ResultRestoreNotice />
+                </section>
+              )}
+              <section
+                className={clsx('jb-state', {
+                  active: appState === 'idle' && !restoring && !hasResultParam,
+                })}
+              >
                 <div className="idle-label">Job posting source</div>
                 <form noValidate onSubmit={handleSubmit} autoComplete="off">
                   {/* Mode toggle */}
