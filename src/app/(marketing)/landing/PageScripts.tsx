@@ -234,44 +234,22 @@ export function PageScripts() {
     async function runHero() {
       const sub = document.getElementById('heroSub')
       if (!sub) return
-      const full = 'Introducing our innovation lab — cutting edge, forefront of tech.'
-      // Clear any prior run (StrictMode dev double-mount safety).
-      sub.textContent = ''
-      await delay(prefersReduced ? 0 : 900)
+      // Full landing intro (per the copy document). It is a paragraph, so it
+      // fades/rises in as a whole rather than typing char by char.
+      const full =
+        'Explore the systems we build across RevOps, software and AI - the automations, internal tools and AI-enabled workflows that cut manual work and help teams grow faster and move quicker, without adding headcount or complexity. Open a live app to solve a specific problem now.'
+      sub.textContent = full
+      if (prefersReduced) {
+        sub.style.opacity = '1'
+        return
+      }
+      sub.style.opacity = '0'
+      sub.style.transform = 'translateY(10px)'
+      await delay(700)
       if (cancelled) return
-      const cursor = document.createElement('span')
-      cursor.className = 'cursor'
-      const textNode = document.createTextNode('')
-      sub.appendChild(textNode)
-      sub.appendChild(cursor)
-      let i = 0
-      await new Promise<void>((resolve) => {
-        if (prefersReduced) {
-          textNode.textContent = full
-          resolve()
-          return
-        }
-        const step = () => {
-          if (cancelled) {
-            resolve()
-            return
-          }
-          if (i >= full.length) {
-            resolve()
-            return
-          }
-          textNode.textContent += full[i++]
-          const id = setTimeout(
-            () => {
-              timeouts.delete(id)
-              step()
-            },
-            TYPE_SPEED_MS + (Math.random() * 16 - 8)
-          )
-          timeouts.add(id)
-        }
-        step()
-      })
+      sub.style.transition = 'opacity 0.9s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1)'
+      sub.style.opacity = '1'
+      sub.style.transform = 'translateY(0)'
     }
 
     async function runRoutes() {

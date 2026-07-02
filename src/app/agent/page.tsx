@@ -16,9 +16,9 @@ import { ToolUniverseSection } from './_components/ToolUniverseSection'
 import { PageScripts } from './PageScripts'
 
 export const metadata = {
-  title: 'Agent Lab — S7 Labs',
+  title: 'Agent Lab - S7 Labs',
   description:
-    'System7 designs agentic systems that reason across context, use tools, follow business rules and coordinate multi-step work — with human gates, permissions and observability built in.',
+    'Agents take on the repetitive, multi-step work, so your team is free for the creativity, deep work and critical thinking only people can do.',
 }
 
 export default function AgentLabPage() {
@@ -36,14 +36,14 @@ export default function AgentLabPage() {
       <main>
         <PageEyebrow />
         <LabTitleHero
-          eyebrow="ROUTE_04 — AGENT LAB"
+          eyebrow="ROUTE_02 - AGENT LAB"
           name="Agent"
           bgWord="AGENT"
-          subtitle="System7 designs agentic systems that reason across context, use tools, follow business rules and coordinate multi-step work — with human gates, permissions and observability built in."
+          subtitle="Agents take on the repetitive, multi-step work, so your team is free for the creativity, deep work and critical thinking only people can do."
           meta={[
-            { label: 'REASONING' },
-            { label: 'TOOLS' },
+            { label: 'AGENTS' },
             { label: 'ORCHESTRATION' },
+            { label: 'AUTONOMY' },
             { label: 'GOVERNED', accent: true },
           ]}
           scrollHint="SCROLL"

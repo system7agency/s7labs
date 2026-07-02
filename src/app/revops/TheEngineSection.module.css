@@ -1,0 +1,672 @@
+/* ==========================================================================
+   TheEngineSection — "The engine": a living revenue pipeline.
+   Track draws in, a lead token flows through and lights each stage, then
+   pulses keep flowing forever. Dark, premium, self-contained styles.
+   ========================================================================== */
+
+.section {
+  /* Theme tokens (scoped) */
+  --bg: #060608;
+  --surface: #101014;
+  --surface-2: #16161b;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text: #e8ebf0;
+  --dim: #aab0bd;
+  --muted: #6b6e78;
+  --orange: #f5a623;
+  --blue: #4f8cff;
+  --purple: #c9a7ff;
+  --cyan: #04e3ee;
+
+  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --sans: system-ui, -apple-system, sans-serif;
+
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  padding: clamp(56px, 8vw, 120px) clamp(20px, 5vw, 72px);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+.section *,
+.section *::before,
+.section *::after {
+  box-sizing: border-box;
+}
+
+/* Ambient glow — cyan top-right (source) bleeding into blue bottom (sync) */
+.section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(55% 50% at 78% 12%, rgba(4, 227, 238, 0.08), transparent 70%),
+    radial-gradient(52% 55% at 86% 88%, rgba(79, 140, 255, 0.07), transparent 72%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   LEFT — copy column
+   -------------------------------------------------------------------------- */
+.copy {
+  min-width: 0;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin: 0 0 20px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.header {
+  margin: 0 0 22px;
+  font-family: var(--sans);
+  font-size: clamp(30px, 3.4vw, 46px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-wrap: balance;
+}
+
+.subhead {
+  margin: 0 0 30px;
+  max-width: 48ch;
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.62;
+  color: var(--dim);
+}
+
+/* Live-flow meta chip under the copy */
+.flowMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+}
+.flowMetaDot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px rgba(4, 227, 238, 0.8);
+}
+.play .flowMetaDot::after,
+.reduced .flowMetaDot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--cyan);
+  opacity: 0;
+}
+.play .flowMetaDot::after {
+  animation: metaPing 2.4s ease-out infinite;
+}
+@keyframes metaPing {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.6);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+.flowMetaText {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+
+/* Copy build-in (staggered) */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.play .reveal {
+  animation: revealUp 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.play .eyebrow {
+  animation: revealUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.05s;
+}
+.play .header {
+  animation-delay: 0.14s;
+}
+.play .subhead {
+  animation-delay: 0.24s;
+}
+.play .flowMeta {
+  animation-delay: 0.36s;
+}
+
+@keyframes revealUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   RIGHT — engine card
+   -------------------------------------------------------------------------- */
+.viz {
+  min-width: 0;
+}
+
+.engineCard {
+  position: relative;
+  padding: 20px 22px 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(4, 227, 238, 0.06), transparent 55%),
+    linear-gradient(180deg, var(--surface-2), var(--surface));
+  box-shadow:
+    0 40px 90px -50px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.engineHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 12px;
+}
+.engineTitle {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.engineMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px rgba(4, 227, 238, 0.8);
+}
+.play .liveDot {
+  animation: liveBlink 2s ease-in-out infinite;
+}
+@keyframes liveBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.stageWrap {
+  position: relative;
+}
+
+.engineSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ---- The track spine ---------------------------------------------------- */
+.trackBed {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.track {
+  fill: none;
+  stroke: url(#engineTrack);
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(79, 140, 255, 0.5));
+}
+.play .track {
+  animation: drawTrack 1.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.35s;
+}
+@keyframes drawTrack {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---- Start / end markers ------------------------------------------------ */
+.marker {
+  opacity: 0;
+}
+.play .marker {
+  animation: fadeIn 0.5s ease forwards;
+  animation-delay: 0.4s;
+}
+.play .markerEnd {
+  animation-delay: 1.45s;
+}
+.markerRing {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 1.5;
+  opacity: 0.7;
+}
+.markerEnd .markerRing {
+  stroke: var(--blue);
+}
+.markerCore {
+  fill: var(--cyan);
+  filter: drop-shadow(0 0 6px rgba(4, 227, 238, 0.9));
+}
+.markerEnd .markerCore {
+  fill: var(--blue);
+  filter: drop-shadow(0 0 6px rgba(79, 140, 255, 0.9));
+}
+.play .markerCore {
+  animation: markerPulse 2.6s ease-in-out infinite;
+}
+.play .markerEnd .markerCore {
+  animation-delay: 1.3s;
+}
+@keyframes markerPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.markerLabel {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+/* ---- Stage nodes (--lit-delay set per-node inline) ---------------------- */
+.nodeHalo {
+  fill: rgba(79, 140, 255, 0.14);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.4);
+}
+.nodeRing {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  transition:
+    stroke 0.4s ease,
+    filter 0.4s ease;
+}
+.nodeCore {
+  fill: var(--muted);
+  transition: fill 0.4s ease;
+}
+.nodeIndex {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  opacity: 0;
+  transition: fill 0.4s ease;
+}
+.nodeLabel {
+  fill: var(--dim);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateX(-6px);
+}
+.nodeNote {
+  fill: var(--muted);
+  font-family: var(--sans);
+  font-size: 11px;
+  opacity: 0;
+  transform: translateX(-6px);
+}
+
+/* Note slides in with the draw, before the token passes */
+.play .nodeNote {
+  animation: labelIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.95s;
+}
+@keyframes labelIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Ignition: fires once as the lead token passes (delay set per-node), then
+   the node holds a lit "active" glow that keeps a soft breathing pulse. */
+.play .nodeRing {
+  animation: ringLight 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--lit-delay);
+}
+.play .nodeCore {
+  animation: coreLight 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--lit-delay);
+}
+.play .nodeIndex {
+  animation: indexLight 0.7s ease forwards;
+  animation-delay: var(--lit-delay);
+}
+.play .nodeHalo {
+  animation: haloBurst 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--lit-delay);
+}
+/* Label fades in with the draw, then brightens when its node ignites. */
+.play .nodeLabel {
+  animation:
+    labelIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.85s forwards,
+    labelBright 0.6s ease var(--lit-delay) forwards;
+}
+
+@keyframes ringLight {
+  to {
+    stroke: var(--blue);
+    filter: drop-shadow(0 0 7px rgba(79, 140, 255, 0.75));
+  }
+}
+@keyframes coreLight {
+  0% {
+    fill: var(--muted);
+  }
+  40% {
+    fill: var(--cyan);
+  }
+  100% {
+    fill: var(--blue);
+  }
+}
+@keyframes indexLight {
+  to {
+    opacity: 1;
+    fill: var(--text);
+  }
+}
+@keyframes haloBurst {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.5;
+    transform: scale(0.92);
+  }
+}
+@keyframes labelBright {
+  to {
+    fill: var(--text);
+  }
+}
+
+/* ---- Lead token + continuous pulses ------------------------------------- */
+.lead {
+  fill: #ffffff;
+  opacity: 0;
+  offset-path: var(--track-path);
+  offset-rotate: 0deg;
+  filter: drop-shadow(0 0 6px rgba(4, 227, 238, 0.95));
+}
+.leadHalo {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 1.25;
+  opacity: 0;
+  offset-path: var(--track-path);
+  offset-rotate: 0deg;
+}
+.play .lead {
+  animation:
+    tokenFade 0.3s ease forwards,
+    runTrack 3.4s cubic-bezier(0.45, 0, 0.25, 1) forwards;
+  animation-delay: 0.98s;
+}
+.play .leadHalo {
+  animation:
+    tokenHalo 3.4s cubic-bezier(0.45, 0, 0.25, 1) forwards,
+    runTrack 3.4s cubic-bezier(0.45, 0, 0.25, 1) forwards;
+  animation-delay: 0.98s;
+}
+@keyframes tokenFade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes tokenHalo {
+  0% {
+    opacity: 0.7;
+    r: 7px;
+  }
+  85% {
+    opacity: 0.55;
+    r: 8px;
+  }
+  100% {
+    opacity: 0;
+    r: 14px;
+  }
+}
+@keyframes runTrack {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* After the initial pass, three offset pulses flow forever along the spine
+   so the engine reads as continuously running. */
+.pulse {
+  fill: var(--cyan);
+  opacity: 0;
+  offset-path: var(--track-path);
+  offset-rotate: 0deg;
+  filter: drop-shadow(0 0 5px rgba(4, 227, 238, 0.9));
+}
+.play .pulse {
+  animation: flowPulse 5.2s linear infinite;
+}
+.pulseA {
+  animation-delay: 4.2s;
+}
+.pulseB {
+  fill: var(--blue);
+  filter: drop-shadow(0 0 5px rgba(79, 140, 255, 0.9));
+  animation-delay: 5.95s;
+}
+.pulseC {
+  fill: #ffffff;
+  filter: drop-shadow(0 0 5px rgba(4, 227, 238, 0.8));
+  animation-delay: 7.7s;
+}
+@keyframes flowPulse {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---- Footer legend ------------------------------------------------------ */
+.engineFoot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  opacity: 0;
+}
+.play .engineFoot,
+.reduced .engineFoot {
+  animation: fadeIn 0.6s ease forwards;
+  animation-delay: 1.6s;
+}
+.footItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  color: var(--dim);
+}
+.footSwatch {
+  display: inline-block;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+}
+.footSwatchIn {
+  background: var(--cyan);
+  box-shadow: 0 0 10px rgba(4, 227, 238, 0.6);
+}
+.footSwatchOut {
+  background: var(--blue);
+  box-shadow: 0 0 10px rgba(79, 140, 255, 0.6);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive: stack under 820px (engine below the copy)
+   -------------------------------------------------------------------------- */
+@media (max-width: 820px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    align-items: stretch;
+  }
+  .viz {
+    order: 2;
+  }
+  .copy {
+    order: 1;
+  }
+  .nodeLabel {
+    font-size: 15px;
+  }
+  .nodeNote {
+    font-size: 12px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion: render the fully composed, lit state. No motion/looping.
+   -------------------------------------------------------------------------- */
+.reduced .eyebrow,
+.reduced .reveal,
+.reduced .flowMeta,
+.reduced .marker,
+.reduced .markerEnd,
+.reduced .engineFoot {
+  opacity: 1;
+  transform: none;
+  animation: none !important;
+}
+.reduced .track {
+  stroke-dashoffset: 0 !important;
+  animation: none !important;
+}
+.reduced .nodeLabel,
+.reduced .nodeNote,
+.reduced .nodeIndex {
+  opacity: 1;
+  transform: none;
+  animation: none !important;
+}
+.reduced .nodeLabel {
+  fill: var(--text);
+}
+.reduced .nodeIndex {
+  fill: var(--text);
+}
+.reduced .nodeRing {
+  stroke: var(--blue);
+  filter: drop-shadow(0 0 7px rgba(79, 140, 255, 0.7));
+  animation: none !important;
+}
+.reduced .nodeCore {
+  fill: var(--blue);
+  animation: none !important;
+}
+.reduced .nodeHalo {
+  opacity: 0.5;
+  transform: scale(0.92);
+  animation: none !important;
+}
+.reduced .lead,
+.reduced .leadHalo,
+.reduced .pulse {
+  opacity: 0;
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

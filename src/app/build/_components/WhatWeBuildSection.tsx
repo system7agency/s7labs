@@ -8,51 +8,54 @@ type BuildCard = {
 const CARDS: BuildCard[] = [
   {
     pill: 'BUILD_TYPE_01',
-    title: 'Client-Facing Software',
-    desc: 'We build digital products and interfaces for customers, partners and users.',
+    title: 'Internal tools',
+    desc: 'The tools your team uses daily, built into the systems you already run.',
     examples: [
-      'customer portals',
-      'self-serve tools',
-      'AI product experiences',
-      'reporting views',
-      'partner dashboards',
+      'Ops platforms',
+      'Admin consoles',
+      'Approval tools',
+      'Quoting and pricing',
+      'Reporting cockpits',
+      'Knowledge interfaces',
     ],
   },
   {
     pill: 'BUILD_TYPE_02',
-    title: 'Internal Platforms',
-    desc: 'We build bespoke systems that help teams run core operations with less friction.',
+    title: 'Automation',
+    desc: 'The automation that removes the manual work between your tools.',
     examples: [
-      'operations platforms',
-      'admin systems',
-      'approval tools',
-      'fulfilment systems',
-      'knowledge interfaces',
+      'Routing',
+      'System sync',
+      'Handoffs',
+      'Enrichment',
+      'Notifications',
+      'Scheduled actions',
     ],
   },
   {
     pill: 'BUILD_TYPE_03',
-    title: 'Business Tools',
-    desc: 'We build focused tools that replace manual processes, fragmented spreadsheets and off-the-shelf gaps.',
+    title: 'Client-facing',
+    desc: 'Products for customers and partners, when the same standard of fit matters on the outside.',
     examples: [
-      'quoting tools',
-      'calculators',
-      'review tools',
-      'data utilities',
-      'reporting cockpits',
-      'management consoles',
+      'Customer portals',
+      'Mobile apps',
+      'Partner dashboards',
+      'Self-serve tools',
+      'In-product AI',
     ],
   },
   {
     pill: 'BUILD_TYPE_04',
-    title: 'AI-Enabled Products',
-    desc: 'We embed AI into the product experience where it creates real utility.',
+    title: 'Integrates with',
+    desc: 'Everything connects to the systems you already run.',
     examples: [
-      'AI search',
-      'document analysis',
-      'structured generation',
-      'assistant interfaces',
-      'recommendation tools',
+      'CRM',
+      'Email and comms',
+      'Databases',
+      'Payments',
+      'Internal APIs',
+      'Spreadsheets',
+      'Custom MCPs',
     ],
   },
 ]
@@ -70,12 +73,13 @@ export function WhatWeBuildSection() {
       <div className="sec-head">
         <div className="left">
           <h2>
-            The software <span className="accent-text">we engineer</span>.
+            Internal tools and automation, <span className="accent-text">built to fit</span>.
           </h2>
           <p>
-            We build digital products that solve specific problems for specific teams —
-            client-facing applications, internal platforms, business tools, and AI-enabled
-            interfaces. If off-the-shelf software cannot solve it, we design and ship it.
+            Most of what we build runs inside your business - the tools your team uses daily and the
+            automation that removes the manual work between them - built into the tools you already
+            run, so everything operates as one system. We build client-facing products too, when the
+            same standard of fit matters on the outside.
           </p>
         </div>
         <div className="right">

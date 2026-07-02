@@ -8,31 +8,30 @@ export function AgentHero() {
           <div className="hero-eyebrow">
             <span className="accent-dot" />
             <span>
-              S7_AGENTS <span className="v">{'//'}</span> AGENTIC SYSTEMS
+              <span className="v">{'//'}</span> WHERE THE TIME GOES
             </span>
           </div>
 
           <h1 className="hero-title">
-            <span className="line l1" aria-label="Build agents">
-              <span className="typed" data-text="Build agents" />
+            <span className="line l1" aria-label="Your best people are doing work">
+              <span className="typed" data-text="Your best people are doing work" />
               <span className="caret" aria-hidden="true" />
             </span>
             <span className="line l2">
-              <span className="accent-text">that can actually do the work.</span>
+              <span className="accent-text">that doesn&rsquo;t need them.</span>
             </span>
           </h1>
 
           <p className="hero-sub">
-            System7 designs agentic systems that reason across context, use tools, follow business
-            rules and coordinate multi-step work. We connect agents to the systems your business
-            already runs on, with human gates, permissions and observability built in from the
-            start.
+            Skilled teams lose hours every week to repetitive, multi-step tasks - chasing
+            information, moving data between tools, checking and routing work. Agents take that work
+            off them.
           </p>
 
           <div className="cta-row">
-            <DesignAgentButton />
+            <DesignAgentButton label="Design an agent system" />
             <a className="btn ghost" href="#agent-os">
-              <span>Explore agent architecture</span>
+              <span>See what agents do</span>
             </a>
           </div>
         </div>

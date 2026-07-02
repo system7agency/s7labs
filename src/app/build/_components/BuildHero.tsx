@@ -8,22 +8,23 @@ export function BuildHero() {
           <div className="hero-eyebrow">
             <span className="accent-dot" />
             <span>
-              S7_BUILDS <span className="v">{'//'}</span> SOFTWARE DEVELOPMENT
+              S7_BUILDS <span className="v">{'//'}</span> THE OLD WAY
             </span>
           </div>
           <h1 className="hero-title">
-            <span className="line l1" aria-label="Bespoke software,">
-              <span className="typed" data-text="Bespoke software," />
+            <span className="line l1" aria-label="Most software wasn't built for your business.">
+              <span className="typed" data-text="Most software wasn't built for your business." />
               <span className="caret" aria-hidden="true" />
             </span>
             <span className="line l2">
-              <span className="accent-text">built around the way your business works.</span>
+              <span className="accent-text">It was built for everyone else&rsquo;s.</span>
             </span>
           </h1>
           <p className="hero-sub">
-            We design and build client-facing products, internal platforms and AI-enabled tools that
-            fit your business, your data and your operating model. From first idea to shipped
-            system, System7 turns requirements into software people actually use.
+            So you adapt. You pay for hundreds of features to use six, bend your process to fit the
+            tool, and patch the gaps with spreadsheets and manual handoffs. Every one of those
+            workarounds is already a system in disguise - just one you don&rsquo;t control. We build
+            the opposite - made for one business, not a market.
           </p>
           <div className="cta-row">
             <StartBuildButton />

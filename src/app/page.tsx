@@ -63,7 +63,7 @@ export default function HomePage() {
         <section className="routes-section">
           <div className="routes-header">
             <span className="routes-label">{'// Active Routes'}</span>
-            <span className="routes-count">05 / 05</span>
+            <span className="routes-count">04 / 04</span>
           </div>
 
           <div className="routes-grid">
@@ -87,7 +87,8 @@ export default function HomePage() {
                   <span className="type-cursor" />
                 </div>
                 <p className="route-tagline">
-                  AI-native pipeline, qualification, and outbound orchestration.
+                  AI-native pipeline, qualification and outbound, connected to the CRM your team
+                  already runs on.
                 </p>
                 <div className="route-meta">
                   <span className="route-tag">SALES · REVOPS · PIPELINE</span>
@@ -119,10 +120,11 @@ export default function HomePage() {
                   <span className="type-cursor" />
                 </div>
                 <p className="route-tagline">
-                  Voice and chat agents for sales, support, and intake.
+                  AI agents that do the work: research, operations, reporting and multi-step tasks,
+                  with human approval built in.
                 </p>
                 <div className="route-meta">
-                  <span className="route-tag">SOFTWARE · VOICE · CHAT</span>
+                  <span className="route-tag">AGENTS · ORCHESTRATION · GOVERNED</span>
                   <span className="route-arrow">
                     <span>ENTER</span>
                     <span className="a">→</span>
@@ -151,42 +153,11 @@ export default function HomePage() {
                   <span className="type-cursor" />
                 </div>
                 <p className="route-tagline">
-                  Custom AI systems for teams defining the future of their industry.
+                  Custom software, internal tools and AI-enabled products, built around how your
+                  business actually runs.
                 </p>
                 <div className="route-meta">
-                  <span className="route-tag">AI · SYSTEMS · CUSTOM</span>
-                  <span className="route-arrow">
-                    <span>ENTER</span>
-                    <span className="a">→</span>
-                  </span>
-                </div>
-              </div>
-            </a>
-
-            <a
-              href="/creator"
-              className="route-card tiltable"
-              data-route="creator"
-              data-label="creator_s7labs"
-            >
-              <span className="scan-line" />
-              <div className="card-glyphs" aria-hidden="true">
-                <span style={{ top: '12%', right: '18%' }}>01010110</span>
-                <span style={{ top: '72%', right: '10%' }}>→ init</span>
-                <span style={{ top: '42%', left: '10%' }}>λ</span>
-              </div>
-              <div className="route-card-inner">
-                <span className="route-index">ROUTE_04</span>
-                <div className="route-label">
-                  <span className="prompt">$</span>
-                  <span className="typed" />
-                  <span className="type-cursor" />
-                </div>
-                <p className="route-tagline">
-                  Software applications for content creators to launch to their audience.
-                </p>
-                <div className="route-meta">
-                  <span className="route-tag">SOFTWARE · DEVELOPMENT · CONTENT</span>
+                  <span className="route-tag">SOFTWARE · PRODUCTS · TOOLS</span>
                   <span className="route-arrow">
                     <span>ENTER</span>
                     <span className="a">→</span>
@@ -210,14 +181,14 @@ export default function HomePage() {
                 <span style={{ top: '42%', left: '10%' }}>▣</span>
               </div>
               <div className="route-card-inner">
-                <span className="route-index">ROUTE_05</span>
+                <span className="route-index">ROUTE_04</span>
                 <div className="route-label">
                   <span className="prompt">$</span>
                   <span className="typed" />
                   <span className="type-cursor" />
                 </div>
                 <p className="route-tagline">
-                  Small AI utilities and live experiments — a gallery of what&apos;s possible.
+                  Small, working tools you can open and test now - each one focused on a single job.
                 </p>
                 <div className="route-meta">
                   <span className="route-tag">GALLERY · DEMOS · UTILITIES</span>

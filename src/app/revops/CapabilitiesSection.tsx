@@ -44,24 +44,24 @@ const CAPABILITIES: Capability[] = [
   {
     key: 'sales',
     capVar: 'var(--c-blue)',
-    index: '01',
-    eyebrow: 'OUTBOUND → INBOUND',
+    index: '02',
+    eyebrow: 'MANUAL → AUTOMATED',
     title: 'Sales / GTM',
-    desc: 'Our systems improve GTM efficiency from outbound to inbound and throughout the sales funnel. We recommend top tools, create a unified system, and implement them for an optimized GTM tech stack.',
+    desc: 'We make your go-to-market motion more efficient end to end, from the first outbound touch through to inbound follow-up. The job is to pick the right tools, wire them into a single system, and run them as one optimised GTM stack instead of a scatter of disconnected apps.',
     meta: 'SALES · GTM',
-    backTag: '// 01 CAPABILITIES',
+    backTag: '// 02 CAPABILITIES',
     list: [
-      'Automated GTM co-pilots',
-      'TAM mapping & deep enrichment',
-      'Automated, personalized outbound',
-      'Lead qualification and normalization',
-      'Mid-funnel automation',
-      'Custom sales / GTM requests',
-      'Competitive intelligence',
-      'AI research automation',
-      'Meeting prep automation',
-      'Email deliverability optimization',
-      'Automated LinkedIn outreach',
+      'AI co-pilots that clear the repetitive work',
+      'Total addressable market mapped and deeply enriched',
+      'Account and prospect research led by AI',
+      'Personalised outbound that runs itself',
+      'Outreach across email and LinkedIn, automated',
+      'Inbox health and deliverability tuned',
+      'Inbound leads qualified and tidied up',
+      'Automation through the middle of the funnel',
+      'Meeting prep handled before every call',
+      'Competitor intelligence in real time',
+      'Sales and GTM builds made to order',
     ],
     glyph: (
       <svg
@@ -81,9 +81,9 @@ const CAPABILITIES: Capability[] = [
       </svg>
     ),
     modal: {
-      eyebrow: 'CAPABILITY · 01 / SALES & GTM',
+      eyebrow: 'CAPABILITY · 02 / SALES & GTM',
       title: 'Outbound that compounds',
-      sub: 'Connect every signal — intent, fit, behaviour — to a sequenced motion that reaches the right account at the right moment, without the manual reps in between.',
+      sub: 'Connect every signal - intent, fit, behaviour - to a sequenced motion that reaches the right account at the right moment, without the manual reps in between.',
       meta: [
         ['STATUS', 'LIVE'],
         ['SCOPE', 'OUTBOUND · ENRICHMENT · SEQUENCING'],
@@ -96,23 +96,23 @@ const CAPABILITIES: Capability[] = [
   {
     key: 'marketing',
     capVar: 'var(--c-purple)',
-    index: '02',
-    eyebrow: 'DATA → INSIGHT',
+    index: '03',
+    eyebrow: 'ACTIVITY → PIPELINE',
     title: 'Marketing / Growth',
-    desc: 'We transform your marketing data into valuable insights and streamline your growth data for automated next steps. Our approach converts your ads, webinars, conferences, and emails into impactful sales data.',
+    desc: 'We take the data your marketing already produces and turn it into something sales can act on. Activity from ads, webinars, events and email stops sitting in dashboards and starts triggering the next step on its own.',
     meta: 'MARKETING · GROWTH',
-    backTag: '// 02 CAPABILITIES',
+    backTag: '// 03 CAPABILITIES',
     list: [
-      'Inbound lead enrichment',
-      'Account scoring and assignment',
-      'Inbound-led outbound sequences',
-      'Paid ads audience building',
-      'Custom landing pages at scale',
-      'Deep ICP / account enrichment and research',
-      'Custom marketing / growth requests',
-      'Event marketing outreach automation',
-      'Social tracking & competitive monitoring',
-      'Website visitor tracking',
+      'Inbound leads enriched as they arrive',
+      'In-depth ICP and account research',
+      'Accounts scored and routed to the right owner',
+      'Outbound fired off the back of inbound activity',
+      'Audiences built for paid campaigns',
+      'Landing pages produced at scale',
+      'Website visitors identified',
+      'Social and competitor activity monitored',
+      'Event and conference follow-up, automated',
+      'Marketing and growth builds made to order',
     ],
     glyph: (
       <svg
@@ -133,9 +133,9 @@ const CAPABILITIES: Capability[] = [
       </svg>
     ),
     modal: {
-      eyebrow: 'CAPABILITY · 02 / MARKETING & GROWTH',
+      eyebrow: 'CAPABILITY · 03 / MARKETING & GROWTH',
       title: 'Demand, not noise',
-      sub: 'Programmatic content engines, attribution that survives ad-blockers, and visitor-level intelligence — wired into the same pipeline that closes revenue.',
+      sub: 'Programmatic content engines, attribution that survives ad-blockers, and visitor-level intelligence - wired into the same pipeline that closes revenue.',
       meta: [
         ['STATUS', 'LIVE'],
         ['SCOPE', 'CONTENT · ATTRIBUTION · VISITOR ID'],
@@ -148,20 +148,20 @@ const CAPABILITIES: Capability[] = [
   {
     key: 'revops',
     capVar: 'var(--c-orange)',
-    index: '03',
-    eyebrow: 'CRM → ECOSYSTEM',
+    index: '01',
+    eyebrow: 'DATA → SOURCE OF TRUTH',
     title: 'RevOps',
-    desc: 'We help businesses transform their CRMs into thriving ecosystems. In the age of AI, strong CRMs are essential for success. We ensure your data is accurate and ready for automation to improve operations.',
+    desc: 'A CRM is only as useful as the data inside it, and automation raises the stakes. We turn yours into a dependable source of truth - clean, structured and ready to automate - so every system that runs on top of it can be trusted.',
     meta: 'REVOPS · CRM',
-    backTag: '// 03 CAPABILITIES',
+    backTag: '// 01 CAPABILITIES',
     list: [
-      'CRM data cleaning',
-      'Automated CRM enrichment',
-      'Data normalization',
-      'Account, contact, and lead research',
-      'Automated campaign updates',
-      'CRM lead scoring',
-      'Custom RevOps requests',
+      'Record clean-up and duplicate removal',
+      'Fields standardised and kept consistent',
+      'Automatic enrichment as records land',
+      'Research across accounts, contacts and leads',
+      'Lead and account scoring, native to your CRM',
+      'Pipeline and campaign data updated without manual effort',
+      'RevOps builds made to order',
     ],
     glyph: (
       <svg
@@ -181,9 +181,9 @@ const CAPABILITIES: Capability[] = [
       </svg>
     ),
     modal: {
-      eyebrow: 'CAPABILITY · 03 / REVOPS',
+      eyebrow: 'CAPABILITY · 01 / REVOPS',
       title: 'The system underneath the system',
-      sub: 'CRM, dashboards, lead routing, custom requests — re-engineered as a single instrument panel that operators can actually steer.',
+      sub: 'CRM, dashboards, lead routing, custom requests - re-engineered as a single instrument panel that operators can actually steer.',
       meta: [
         ['STATUS', 'LIVE'],
         ['SCOPE', 'CRM · ROUTING · DASHBOARDS'],
@@ -194,6 +194,12 @@ const CAPABILITIES: Capability[] = [
     },
   },
 ]
+
+// Display order per the RevOps update: RevOps first, then Sales/GTM, then Marketing.
+const CAP_ORDER: Capability['key'][] = ['revops', 'sales', 'marketing']
+const ORDERED_CAPABILITIES: Capability[] = CAP_ORDER.map((k) =>
+  CAPABILITIES.find((c) => c.key === k)
+).filter((c): c is Capability => c !== undefined)
 
 function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = useState(false)
@@ -268,7 +274,7 @@ export function CapabilitiesSection() {
       </div>
 
       <div className={styles.capsGrid}>
-        {CAPABILITIES.map((cap) => (
+        {ORDERED_CAPABILITIES.map((cap) => (
           <article
             key={cap.index}
             className={styles.capCard}

@@ -59,16 +59,17 @@ export function AgentRolesSection() {
       <div className="sec-tag">
         <span className="n">03</span>
         <span className="lbl">
-          <span>{'// 03 / 06'}</span>
-          <span className="v">ROLES</span>
+          <span>{'// THE WORK'}</span>
+          <span className="v">THE WORK</span>
         </span>
       </div>
       <div className="sec-head">
         <div className="left">
-          <h2>Six roles agents play.</h2>
+          <h2>The same agent, across the whole business.</h2>
           <p>
-            Different agents do different work. These roles apply across any business function —
-            support, operations, compliance, finance, knowledge, reporting.
+            Agents are defined by the role they play, not the department they sit in - so one
+            pattern works anywhere the work repeats, from operations and finance to support and
+            knowledge work.
           </p>
         </div>
         <div className="right">

@@ -1,23 +1,23 @@
 const CAPS = [
   {
-    tag: 'integrations',
-    title: 'Integrations',
-    desc: 'We connect the software to the tools, databases and systems already used by the business.',
+    tag: 'built fast',
+    title: 'Built fast',
+    desc: 'Bespoke software is now fast to build - not the slow, expensive luxury it used to be.',
   },
   {
-    tag: 'automation',
-    title: 'Automation',
-    desc: 'We automate repetitive actions around the product, including notifications, handoffs, approvals, updates and scheduled actions. The software stays central; automation makes it faster and easier to run.',
+    tag: 'fitted exactly',
+    title: 'Fitted exactly',
+    desc: 'Shaped around where work breaks down, what is missing and what would make your team faster.',
   },
   {
-    tag: 'data handling',
-    title: 'Data Handling',
-    desc: 'We structure, clean, transform and move the data the product needs to operate.',
+    tag: 'easy to change',
+    title: 'Easy to change',
+    desc: 'When the business moves, the software moves with it - because you own how it works.',
   },
   {
-    tag: 'ai features',
-    title: 'AI Features',
-    desc: 'We embed AI where it improves the product experience, from search and summarisation to classification and generation.',
+    tag: 'yours to own',
+    title: 'Yours to own',
+    desc: 'Working tools and automation you own, turned from your knowledge into real software.',
   },
 ]
 
@@ -28,13 +28,18 @@ export function SupportingCapabilitiesSection() {
         <span className="n">05</span>
         <span className="lbl">
           <span>{"// 05 / 06"}</span>
-          <span className="v">SUPPORTING</span>
+          <span className="v">THE ADVANTAGE</span>
         </span>
       </div>
       <div className="sec-head">
         <div className="left">
-          <h2>Layers around the product.</h2>
-          <p>Software stays central. These capabilities make it work harder.</p>
+          <h2>You know your business better than any vendor ever will.</h2>
+          <p>
+            Your team can already describe where work breaks down, what is missing and what would
+            make them faster. And now that bespoke software is fast to build - not the slow,
+            expensive luxury it used to be - we can turn that knowledge into working tools and
+            automation you own.
+          </p>
         </div>
         <div className="right">
           <span>SECONDARY</span>

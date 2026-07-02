@@ -28,6 +28,11 @@ const STATUS_ORDER: Record<MiniApp['status'], number> = {
   'coming-soon': 5,
 }
 
+// Per the client's update the page leads straight into the live gallery
+// ("Open, test, explore."). The intro "Test small products" hero, the "How it works"
+// (01/03) section and the CTA (03/03) are hidden - kept in code (flip to true) to restore.
+const SHOW_HIDDEN_SECTIONS = false
+
 export function MiniAppsPageClient() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
@@ -103,8 +108,8 @@ export function MiniAppsPageClient() {
         ]}
         scrollHint="SCROLL"
       />
-      <MiniAppsHero onSuggest={() => openInterested(null, 'different')} />
-      <HowItWorksSection />
+      {SHOW_HIDDEN_SECTIONS && <MiniAppsHero onSuggest={() => openInterested(null, 'different')} />}
+      {SHOW_HIDDEN_SECTIONS && <HowItWorksSection />}
 
       <section className="sec sec-gallery" id="gallery">
         <div className="gallery-head reveal in">
@@ -179,54 +184,56 @@ export function MiniAppsPageClient() {
         )}
       </section>
 
-      <section className="sec" id="cta">
-        <div className="cta-block reveal in">
-          <span className="corner tl" />
-          <span className="corner tr" />
-          <span className="corner bl" />
-          <span className="corner br" />
+      {SHOW_HIDDEN_SECTIONS && (
+        <section className="sec" id="cta">
+          <div className="cta-block reveal in">
+            <span className="corner tl" />
+            <span className="corner tr" />
+            <span className="corner bl" />
+            <span className="corner br" />
 
-          <div className="cta-inner">
-            <div className="eye">
-              {'// 03 / 03 · '}
-              <span className="v">BUILD IT</span>
-            </div>
-            <h2>
-              Have an idea for a <span className="accent-text">mini-app?</span>
-            </h2>
-            <p className="sub">
-              If you can describe the problem, System7 can turn it into a small product people can
-              test. Start with a focused mini-app, then scale it into a fuller product, platform or
-              agent-enabled system when the value is clear.
-            </p>
-            <div className="row">
-              <button
-                type="button"
-                className="btn"
-                onClick={() => openInterested(null, 'different')}
-              >
-                <span>Suggest an app</span>
-                <span className="arr" aria-hidden="true">
-                  →
+            <div className="cta-inner">
+              <div className="eye">
+                {'// 03 / 03 · '}
+                <span className="v">BUILD IT</span>
+              </div>
+              <h2>
+                Have an idea for a <span className="accent-text">mini-app?</span>
+              </h2>
+              <p className="sub">
+                If you can describe the problem, System7 can turn it into a small product people can
+                test. Start with a focused mini-app, then scale it into a fuller product, platform
+                or agent-enabled system when the value is clear.
+              </p>
+              <div className="row">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => openInterested(null, 'different')}
+                >
+                  <span>Suggest an app</span>
+                  <span className="arr" aria-hidden="true">
+                    →
+                  </span>
+                </button>
+                <Link href="/build" className="btn ghost">
+                  <span>Start a build</span>
+                </Link>
+              </div>
+              <div className="status-row">
+                <span className="dot" />
+                <span>
+                  RESPONSE WITHIN <span className="v">24H</span>
                 </span>
-              </button>
-              <Link href="/build" className="btn ghost">
-                <span>Start a build</span>
-              </Link>
-            </div>
-            <div className="status-row">
-              <span className="dot" />
-              <span>
-                RESPONSE WITHIN <span className="v">24H</span>
-              </span>
-              <span className="sep" />
-              <span>UK ENGINEERING</span>
-              <span className="sep" />
-              <span>UK TIMEZONE</span>
+                <span className="sep" />
+                <span>UK ENGINEERING</span>
+                <span className="sep" />
+                <span>UK TIMEZONE</span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {modal.kind === 'learn' ? (
         <LearnMoreModal

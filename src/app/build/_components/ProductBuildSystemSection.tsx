@@ -1,9 +1,9 @@
 const STAGES = [
   {
     num: '01',
-    eye: '// DEFINE',
-    title: 'Define',
-    desc: 'We clarify the user, problem, requirements, constraints and desired output before the build begins.',
+    eye: '// SCOPE',
+    title: 'Scope',
+    desc: 'We scope the problem with the people who live it, so the build is shaped around how your team already works.',
   },
   {
     num: '02',
@@ -15,19 +15,19 @@ const STAGES = [
     num: '03',
     eye: '// BUILD',
     title: 'Build',
-    desc: 'We engineer the core product: the screens, backend logic, data layer, AI features and system behaviours.',
+    desc: 'We build with code and low-code where it makes sense: the screens, logic, data layer and AI features.',
   },
   {
     num: '04',
     eye: '// CONNECT',
     title: 'Connect',
-    desc: 'We integrate the product with the databases, APIs, SaaS tools and internal systems it needs to work.',
+    desc: 'We connect it to your systems - the databases, APIs, SaaS tools and internal systems it needs to work.',
   },
   {
     num: '05',
     eye: '// SHIP',
     title: 'Ship',
-    desc: 'We launch, test, refine and improve the product so it becomes part of the way the business operates.',
+    desc: 'We ship something your team actually uses, then test, refine and improve it in the real world.',
   },
 ]
 
@@ -38,15 +38,15 @@ export function ProductBuildSystemSection() {
         <span className="n">02</span>
         <span className="lbl">
           <span>{"// 02 / 06"}</span>
-          <span className="v">BUILD SYSTEM</span>
+          <span className="v">HOW IT WORKS</span>
         </span>
       </div>
       <div className="sec-head">
         <div className="left">
-          <h2>How a build moves from idea to shipped.</h2>
+          <h2>From a described problem to working software.</h2>
           <p>
-            Define → Design → Build → Connect → Ship. Every project moves through the same five
-            stages — sharp scope, working software, real launch.
+            We scope the problem with the people who live it, build with code and low-code where it
+            makes sense, connect it to your systems, and ship something your team actually uses.
           </p>
         </div>
         <div className="right">
@@ -68,7 +68,7 @@ export function ProductBuildSystemSection() {
       <p className="pipe-note">
         We don&rsquo;t just design concepts or wire together temporary tools. We build
         production-ready software systems with the interface, logic, data and integrations needed
-        to work in the real world.
+        to work in the real world - built with code and low-code where it makes sense.
       </p>
     </section>
   )
