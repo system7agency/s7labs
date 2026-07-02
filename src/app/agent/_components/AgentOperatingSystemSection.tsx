@@ -62,18 +62,18 @@ export function AgentOperatingSystemSection() {
       <div className="sec-tag">
         <span className="n">02</span>
         <span className="lbl">
-          <span>{'// 02 / 06'}</span>
-          <span className="v">AGENT OS</span>
+          <span>{'// LAYERS EACH AGENT MOVES THROUGH'}</span>
+          <span className="v">LAYERS</span>
         </span>
       </div>
       <div className="sec-head">
         <div className="left">
           <h2>
-            The operating environment for <span className="accent-text">working agents.</span>
+            The layers <span className="accent-text">each agent moves through.</span>
           </h2>
           <p>
-            Trigger → Context → Reasoning → Tools → Control → Action. Six layers that turn an AI
-            model into an agent that can actually do useful work.
+            Trigger → Context → Reasoning → Tools → Control → Action. Six layers that turn a model
+            into an agent, taking a step and passing work on inside a single designed flow.
           </p>
         </div>
         <div className="right">

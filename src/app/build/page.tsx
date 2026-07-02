@@ -36,14 +36,14 @@ export default function BuildLabPage() {
       <main>
         <PageEyebrow />
         <LabTitleHero
-          eyebrow="ROUTE_03 — BUILD LAB"
+          eyebrow="ROUTE_03 - BUILD LAB"
           name="Build"
           bgWord="BUILD"
-          subtitle="We design and build client-facing products, internal platforms and AI-enabled tools that fit your business, your data and your operating model."
+          subtitle="We build the bespoke tools, automation and software your business should own - shaped around how your team already works."
           meta={[
+            { label: 'TOOLS' },
+            { label: 'AUTOMATION' },
             { label: 'PRODUCTS' },
-            { label: 'PLATFORMS' },
-            { label: 'AI TOOLS' },
             { label: 'BESPOKE', accent: true },
           ]}
           scrollHint="SCROLL"

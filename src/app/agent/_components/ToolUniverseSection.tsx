@@ -51,7 +51,7 @@ export function ToolUniverseSection() {
           </h2>
           <p>
             Agents need to use systems, not just talk about them. We connect agents to the SaaS
-            tools, APIs, databases and custom MCPs your business runs on — with permission
+            tools, APIs, databases and custom MCPs your business runs on - with permission
             boundaries, approval gates and audit logs designed in.
           </p>
         </div>

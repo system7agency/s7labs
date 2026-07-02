@@ -1,0 +1,683 @@
+/* ==========================================================================
+   SpeedOutcomesSection — "Speed & outcomes": days -> minutes time compression.
+   Dark, premium marketing section. Self-contained styles.
+   ========================================================================== */
+
+.section {
+  /* Theme tokens (scoped) */
+  --bg: #060608;
+  --surface: #101014;
+  --surface-2: #16161b;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text: #e8ebf0;
+  --dim: #aab0bd;
+  --muted: #6b6e78;
+  --orange: #f5a623;
+  --blue: #4f8cff;
+  --purple: #c9a7ff;
+  --cyan: #04e3ee;
+
+  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --sans: system-ui, -apple-system, sans-serif;
+
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  padding: clamp(56px, 8vw, 120px) clamp(20px, 5vw, 72px);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+.section *,
+.section *::before,
+.section *::after {
+  box-sizing: border-box;
+}
+
+/* Faint ambient glow behind the whole section */
+.section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 55% at 84% 20%, rgba(79, 140, 255, 0.09), transparent 70%),
+    radial-gradient(50% 50% at 10% 84%, rgba(245, 166, 35, 0.05), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   LEFT — copy column
+   -------------------------------------------------------------------------- */
+.copy {
+  min-width: 0;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin: 0 0 20px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.header {
+  margin: 0 0 22px;
+  font-family: var(--sans);
+  font-size: clamp(30px, 3.4vw, 46px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-wrap: balance;
+}
+
+.subhead {
+  margin: 0 0 30px;
+  max-width: 46ch;
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.62;
+  color: var(--dim);
+}
+
+/* Text link with an arrow */
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--blue);
+  text-decoration: none;
+  letter-spacing: -0.005em;
+}
+.link::after {
+  content: '';
+  position: absolute;
+}
+.linkArrow {
+  display: inline-block;
+  font-size: 15px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.link:hover .linkArrow,
+.link:focus-visible .linkArrow {
+  transform: translateX(4px);
+}
+.link:hover,
+.link:focus-visible {
+  color: var(--cyan);
+}
+
+/* Copy build-in (staggered) */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.play .reveal {
+  animation: revealUp 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.play .eyebrow {
+  animation: revealUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.05s;
+}
+.play .header {
+  animation-delay: 0.14s;
+}
+.play .subhead {
+  animation-delay: 0.24s;
+}
+.play .link {
+  animation-delay: 0.34s;
+}
+
+@keyframes revealUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   RIGHT — time-compression card
+   -------------------------------------------------------------------------- */
+.viz {
+  min-width: 0;
+}
+
+.card {
+  position: relative;
+  padding: 22px 24px 20px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(79, 140, 255, 0.07), transparent 55%),
+    linear-gradient(180deg, var(--surface-2), var(--surface));
+  box-shadow:
+    0 40px 90px -50px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+/* subtle scanning sheen that sweeps once as the card wakes up */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    rgba(79, 140, 255, 0.08) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.play .card::after {
+  animation: sheen 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.5s;
+}
+@keyframes sheen {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.cardTitle {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cardMeta {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+/* -------- Big collapsing readout -------- */
+.readout {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: translateY(10px);
+}
+.play .readout {
+  animation: revealUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 0.4s;
+}
+.readoutValue {
+  font-family: var(--mono);
+  font-size: clamp(48px, 7vw, 68px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 30px rgba(79, 140, 255, 0.28);
+}
+.play .readoutValue {
+  animation: valuePulse 1.15s ease-out;
+  animation-delay: 0.75s;
+}
+@keyframes valuePulse {
+  0% {
+    text-shadow: 0 0 22px rgba(245, 166, 35, 0.35);
+  }
+  60% {
+    text-shadow: 0 0 46px rgba(79, 140, 255, 0.55);
+  }
+  100% {
+    text-shadow: 0 0 30px rgba(79, 140, 255, 0.28);
+  }
+}
+
+.readoutUnitWrap {
+  position: relative;
+  display: inline-block;
+  height: 1.1em;
+  min-width: 108px;
+}
+.readoutUnit {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+  transition:
+    opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.unitDays {
+  color: var(--orange);
+  opacity: 1;
+  transform: translateY(0);
+}
+.unitDays.unitHidden {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+.unitMinutes {
+  color: var(--blue);
+  opacity: 0;
+  transform: translateY(10px);
+  text-shadow: 0 0 16px rgba(79, 140, 255, 0.5);
+}
+.unitMinutes.unitShown {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* -------- Two parallel tracks -------- */
+.tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.track {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.play .track {
+  animation: revealUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.play .trackOld {
+  animation-delay: 0.6s;
+}
+.play .trackNew {
+  animation-delay: 0.74s;
+}
+
+.trackHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  gap: 10px;
+}
+.trackLabel {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--dim);
+}
+.trackNew .trackLabel {
+  color: var(--text);
+}
+.trackUnit {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.unitOld {
+  color: var(--orange);
+}
+.unitNew {
+  color: var(--blue);
+}
+
+.rail {
+  position: relative;
+  height: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-radius: 6px;
+}
+
+/* OLD track: crawls slowly and never really finishes — left behind. */
+.fillOld {
+  background: linear-gradient(90deg, rgba(245, 166, 35, 0.55), var(--orange));
+  box-shadow: 0 0 12px rgba(245, 166, 35, 0.4);
+}
+.play .fillOld {
+  animation: crawlOld 5.5s cubic-bezier(0.33, 0, 0.67, 1) forwards;
+  animation-delay: 0.9s;
+}
+@keyframes crawlOld {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 34%;
+  }
+}
+
+/* NEW track: fills almost instantly to completion. */
+.fillNew {
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  box-shadow: 0 0 16px rgba(79, 140, 255, 0.55);
+}
+.play .fillNew {
+  animation: fillNew 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 0.9s;
+}
+@keyframes fillNew {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Bright leading spark that races to the end of the new track. */
+.fillSpark {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95), var(--cyan) 55%, transparent 72%);
+  opacity: 0;
+  filter: drop-shadow(0 0 8px rgba(4, 227, 238, 0.9));
+}
+.play .fillSpark {
+  animation:
+    sparkFade 0.85s ease forwards,
+    sparkRun 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 0.9s;
+}
+@keyframes sparkRun {
+  0% {
+    left: 0;
+  }
+  100% {
+    left: 100%;
+  }
+}
+@keyframes sparkFade {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* -------- Background tasks completing rapidly -------- */
+.tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.task {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
+.play .task {
+  animation: taskIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.play .task:nth-child(1) {
+  animation-delay: 1.05s;
+}
+.play .task:nth-child(2) {
+  animation-delay: 1.22s;
+}
+.play .task:nth-child(3) {
+  animation-delay: 1.39s;
+}
+@keyframes taskIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.taskCheck {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(79, 140, 255, 0.12);
+  border: 1px solid rgba(79, 140, 255, 0.35);
+}
+.taskCheck svg {
+  width: 12px;
+  height: 12px;
+}
+.taskTick {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+}
+.play .task:nth-child(1) .taskTick {
+  animation: drawTick 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 1.35s;
+}
+.play .task:nth-child(2) .taskTick {
+  animation: drawTick 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 1.52s;
+}
+.play .task:nth-child(3) .taskTick {
+  animation: drawTick 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 1.69s;
+}
+@keyframes drawTick {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.taskLabel {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 0;
+}
+
+.taskTimes {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+.taskFrom {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: rgba(245, 166, 35, 0.6);
+}
+.taskArrow {
+  color: var(--muted);
+}
+.taskTo {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+/* -------- Foot note -------- */
+.footNote {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  opacity: 0;
+}
+.play .footNote {
+  animation: revealUp 0.6s ease forwards;
+  animation-delay: 1.9s;
+}
+.footDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 10px rgba(4, 227, 238, 0.7);
+}
+.play .footDot {
+  animation: dotPulse 2s ease-in-out infinite;
+  animation-delay: 2s;
+}
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 10px rgba(4, 227, 238, 0.7);
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 4px rgba(4, 227, 238, 0.3);
+  }
+}
+
+/* Screen-reader-only live description of the readout. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive: stack under 820px (animation below text)
+   -------------------------------------------------------------------------- */
+@media (max-width: 820px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    align-items: stretch;
+  }
+  .viz {
+    order: 2;
+  }
+  .copy {
+    order: 1;
+  }
+  .task {
+    grid-template-columns: auto 1fr;
+    row-gap: 4px;
+  }
+  .taskTimes {
+    grid-column: 2;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion: final state, no motion.
+   The .reduced class is applied by the component instead of .play.
+   -------------------------------------------------------------------------- */
+.reduced .eyebrow,
+.reduced .reveal,
+.reduced .readout,
+.reduced .track,
+.reduced .task,
+.reduced .footNote {
+  opacity: 1;
+  transform: none;
+  animation: none !important;
+}
+.reduced .fillOld {
+  width: 34%;
+  animation: none !important;
+}
+.reduced .fillNew {
+  width: 100%;
+  animation: none !important;
+}
+.reduced .fillSpark {
+  opacity: 0;
+  animation: none !important;
+}
+.reduced .taskTick {
+  stroke-dashoffset: 0;
+  animation: none !important;
+}
+.reduced .unitDays {
+  opacity: 0;
+}
+.reduced .unitMinutes {
+  opacity: 1;
+  transform: none;
+}
+.reduced .card::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

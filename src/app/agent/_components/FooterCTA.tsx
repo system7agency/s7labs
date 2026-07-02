@@ -13,19 +13,22 @@ export function FooterCTA() {
           <div className="cta-main">
             <div className="eye">
               {'// '}
-              <span className="v">READY</span>
+              <span className="v">START HERE</span>
             </div>
             <h2>
-              Show us the work.{' '}
-              <span className="accent-text">We&rsquo;ll design the agent system around it.</span>
+              Bring us the work.{' '}
+              <span className="accent-text">We&rsquo;ll build the system around it.</span>
             </h2>
             <p className="sub">
-              If a process needs context, judgement, tools, rules and repeated coordination, it may
-              be ready for agents. System7 can help define the agent roles, connect the tools, build
-              the orchestration layer and decide where humans stay in control.
+              If your team keeps doing repetitive, multi-step work - research, monitoring, routing,
+              reconciliation, reporting - it can probably be built. Tell us where the friction is
+              and we&rsquo;ll map the system around it.
             </p>
             <div className="row">
-              <DesignAgentButton />
+              <DesignAgentButton label="Map the system" />
+              <a className="btn ghost" href="/mini-apps">
+                <span>Browse live apps</span>
+              </a>
             </div>
           </div>
           <aside className="cta-block-side">
@@ -35,7 +38,7 @@ export function FooterCTA() {
             </div>
             <div className="tb-row">
               <span className="tb-l">ROUTE</span>
-              <span className="tb-r">_04 · AGENT</span>
+              <span className="tb-r">_02 · AGENT</span>
             </div>
             <div className="tb-row">
               <span className="tb-l">REVISION</span>
@@ -55,7 +58,7 @@ export function FooterCTA() {
         <div className="status-row">
           <span className="dot" />
           <span>
-            RESPONSE WITHIN <span className="v">24H</span>
+            RESPONSE WITHIN <span className="v">24 HOURS</span>
           </span>
           <span className="sep" />
           <span>UK ENGINEERING</span>

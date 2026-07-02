@@ -4,19 +4,22 @@ export function OrchestrationMapSection() {
       <div className="sec-tag">
         <span className="n">04</span>
         <span className="lbl">
-          <span>{'// 04 / 06'}</span>
+          <span>{'// ORCHESTRATION & CONTROL'}</span>
           <span className="v">ORCHESTRATION</span>
         </span>
       </div>
       <div className="sec-head">
         <div className="left">
           <h2>
-            One agent can help. An orchestrated system can{' '}
-            <span className="accent-text">change how work moves.</span>
+            One agent helps. A system of them{' '}
+            <span className="accent-text">changes how work moves.</span>
           </h2>
           <p>
-            Real value comes from coordination — multiple agents, tools and humans working together
-            inside a designed system.
+            An agent isn&rsquo;t a chatbot, and not another seat to manage - it works from an
+            objective. The leverage is in orchestration: agents chained together, each taking a
+            step, passing work between one another, your tools and your people inside a single
+            designed flow. And it stays under control - every step runs inside set permissions, with
+            human approval where it matters and a full audit trail behind every action.
           </p>
         </div>
         <div className="right">
@@ -212,7 +215,7 @@ export function OrchestrationMapSection() {
       </div>
 
       <div className="orch-line">
-        Agents, tools, humans — <span className="v">coordinated.</span>
+        Agents, tools, humans - <span className="v">coordinated.</span>
       </div>
     </section>
   )

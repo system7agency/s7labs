@@ -566,6 +566,15 @@ main {
   gap: 20px;
 }
 
+/* RevOps leads as a full-width feature card; Agent + Build sit side by side
+ * in the row beneath it. Live Apps (in .soon-row) is the full-width card below. */
+.routes-grid .route-card[data-route='revops'] {
+  grid-column: 1 / -1;
+}
+.routes-grid .route-card[data-route='revops'] .route-card-inner {
+  min-height: 168px;
+}
+
 .route-card {
   position: relative;
   display: block;

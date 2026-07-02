@@ -67,7 +67,7 @@ export function AgentVsChatbotSection() {
       </div>
 
       <div className="vs-foot">
-        — a working layer <span className="v">for multi-step work</span> —
+        - a working layer <span className="v">for multi-step work</span> -
       </div>
     </section>
   )

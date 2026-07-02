@@ -71,15 +71,15 @@ export function ExampleBuildsSection() {
         <span className="n">06</span>
         <span className="lbl">
           <span>{"// 06 / 06"}</span>
-          <span className="v">EXAMPLES</span>
+          <span className="v">LIVE APPS</span>
         </span>
       </div>
       <div className="sec-head">
         <div className="left">
-          <h2>The kinds of things we ship.</h2>
+          <h2>Solve a quick problem right now.</h2>
           <p>
-            Six representative builds — across customer-facing, internal, AI-enabled and admin.
-            Yours could be one of these. Or something entirely new.
+            These are deliberately small, live tools - each one solves a single problem fast. Open
+            one, test it, use it. The quickest way to feel how a bespoke build works.
           </p>
         </div>
         <div className="right">
