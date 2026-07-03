@@ -1,18 +1,18 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import styles from './StartHereSection.module.css'
+import styles from './LiveAppsSection.module.css'
 import { CtaButton } from './CtaButton'
 
 /* ==========================================================================
-   StartHereSection — closing "module" B: "Start here".
-   A centered, single-column closing statement (eyebrow, header, subhead,
-   primary + secondary CTAs, mono note) with a refined reveal and a gentle
-   drawing-line accent that traces in once on scroll.
-   Self-contained: React + module CSS only.
+   LiveAppsSection — closing "module" C: "Live apps".
+   The repeated closing frame (shared with Agent and Build): a centered
+   single-column statement (eyebrow, header, subhead, one CTA) that routes to
+   the Live Apps gallery. Same refined reveal + orbital accent as the sibling
+   closing modules. Self-contained: React + module CSS only.
    ========================================================================== */
 
-export function StartHereSection() {
+export function LiveAppsSection() {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [play, setPlay] = useState(false)
   const [reduced, setReduced] = useState(false)
@@ -65,39 +65,34 @@ export function StartHereSection() {
     <section
       ref={sectionRef}
       className={`${styles.section} ${stateClass}`}
-      aria-labelledby="start-here-heading"
+      aria-labelledby="live-apps-heading"
     >
-      {/* Decorative drawing-line accent: a gentle underscore that traces in
-          beneath the header, with a soft travelling gleam. */}
+      {/* Decorative orbital-ring accent behind the copy */}
       <div className={styles.accent} aria-hidden="true">
-        <svg className={styles.lineSvg} viewBox="0 0 480 24" fill="none">
-          <path className={styles.line} d="M8 12 C 128 12, 168 4, 240 4 C 312 4, 352 20, 472 20" />
+        <svg className={styles.orbit} viewBox="0 0 480 480" fill="none">
+          <circle className={styles.ring} cx="240" cy="240" r="150" />
+          <circle className={`${styles.ring} ${styles.ringInner}`} cx="240" cy="240" r="104" />
+          <circle className={styles.orbitDot} cx="240" cy="90" r="3.5" />
         </svg>
       </div>
 
       <div className={styles.inner}>
-        <span className={`${styles.eyebrow} ${styles.reveal}`}>{'// START HERE'}</span>
+        <span className={`${styles.eyebrow} ${styles.reveal}`}>{'// LIVE APPS'}</span>
 
-        <h2 id="start-here-heading" className={`${styles.header} ${styles.reveal}`}>
-          Bring us the workflow. We&apos;ll build the system around it.
+        <h2 id="live-apps-heading" className={`${styles.header} ${styles.reveal}`}>
+          Solve a quick problem right now.
         </h2>
 
         <p className={`${styles.subhead} ${styles.reveal}`}>
-          If your team keeps doing revenue work by hand - sourcing, research, routing, reporting -
-          it can probably be built. Tell us where the friction is and we&apos;ll map the system
-          around it.
+          These are deliberately small, live tools - each one solves a single problem fast. Open
+          one, test it, use it. The quickest way to feel how a system works.
         </p>
 
         <div className={`${styles.actions} ${styles.reveal}`}>
-          <CtaButton href="https://www.system7.ai/contact">Map the system</CtaButton>
-          <CtaButton href="/mini-apps" variant="secondary">
-            Browse live apps
+          <CtaButton href="/mini-apps" arrow>
+            Explore the live apps
           </CtaButton>
         </div>
-
-        <p className={`${styles.note} ${styles.reveal}`}>
-          Response within 24 hours · UK engineering
-        </p>
       </div>
     </section>
   )

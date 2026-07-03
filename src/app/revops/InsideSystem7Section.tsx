@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import styles from './InsideSystem7Section.module.css'
+import { CtaButton } from './CtaButton'
 
 /* ==========================================================================
    InsideSystem7Section — closing "module" A: "Inside System7".
@@ -89,9 +90,9 @@ export function InsideSystem7Section() {
         </p>
 
         <div className={`${styles.actions} ${styles.reveal}`}>
-          <a className={styles.ctaPrimary} href="https://www.system7.ai/contact">
-            Talk to System7 <span aria-hidden="true">→</span>
-          </a>
+          <CtaButton href="https://www.system7.ai/contact" arrow>
+            Talk to System7
+          </CtaButton>
         </div>
       </div>
     </section>
