@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 import './page-styles.css'
 
 import { Footer } from '@/components/Footer'
@@ -13,6 +11,7 @@ import { TheEngineSection } from './TheEngineSection'
 import { SpeedOutcomesSection } from './SpeedOutcomesSection'
 import { InsideSystem7Section } from './InsideSystem7Section'
 import { StartHereSection } from './StartHereSection'
+import { LiveAppsSection } from './LiveAppsSection'
 import { PageScripts } from './PageScripts'
 
 // Legacy RevOps sections (Govern & Unleash, Case Studies, Operational) are hidden
@@ -79,21 +78,23 @@ export default function RevOpsLabPage() {
 
         <TheShiftSection />
 
-        <section className="section">
-          <div className="section-head">
-            <span className="section-eyebrow">
-              <span className="accent-dot" />
-              {'// GOVERN AND UNLEASH AGENTS'}
-            </span>
-          </div>
-          <div className="philosophy">
-            <h2>We work bespoke. Per&nbsp;client. Per&nbsp;process.</h2>
-            <p>
-              We operate on a completely bespoke level per client - understanding your process, then
-              mapping the system, the agents, and the automations around it.
-            </p>
-          </div>
-        </section>
+        {SHOW_LEGACY && (
+          <section className="section">
+            <div className="section-head">
+              <span className="section-eyebrow">
+                <span className="accent-dot" />
+                {'// GOVERN AND UNLEASH AGENTS'}
+              </span>
+            </div>
+            <div className="philosophy">
+              <h2>We work bespoke. Per&nbsp;client. Per&nbsp;process.</h2>
+              <p>
+                We operate on a completely bespoke level per client - understanding your process,
+                then mapping the system, the agents, and the automations around it.
+              </p>
+            </div>
+          </section>
+        )}
 
         <CapabilitiesSection />
 
@@ -107,70 +108,7 @@ export default function RevOpsLabPage() {
 
         <StartHereSection />
 
-        <section className="section">
-          <div className="section-head">
-            <span className="section-eyebrow">
-              <span className="accent-dot" />
-              {'// LIVE APPS'}
-            </span>
-            <span className="section-num">
-              <span className="v">02 OF 03 LIVE</span>
-            </span>
-          </div>
-          <div className="apps-connectors" aria-hidden="true">
-            <span className="connector" />
-            <span className="connector" />
-            <span className="connector" />
-          </div>
-          <div className="apps-grid">
-            <Link href="/mini-apps/sales-insights" className="module">
-              <span className="corner tl" />
-              <span className="corner br" />
-              <span className="mod-index" aria-hidden="true">
-                01
-              </span>
-              <div>
-                <h3 className="mod-name">Get Sales Insights</h3>
-                <p className="mod-tagline">AI sales intelligence from your work email.</p>
-              </div>
-              <span className="mod-cta">
-                <span>Enter</span>
-                <span className="a">→</span>
-              </span>
-            </Link>
-
-            <Link href="/mini-apps/voice-agent" className="module">
-              <span className="corner tl" />
-              <span className="corner br" />
-              <span className="mod-index" aria-hidden="true">
-                02
-              </span>
-              <div>
-                <h3 className="mod-name">Speak to Voice Agent</h3>
-                <p className="mod-tagline">Talk to an AI voice agent trained on your pipeline.</p>
-              </div>
-              <span className="mod-cta">
-                <span>Enter</span>
-                <span className="a">→</span>
-              </span>
-            </Link>
-
-            <div className="module soon" aria-disabled="true">
-              <span className="corner tl" />
-              <span className="corner br" />
-              <span className="mod-index" aria-hidden="true">
-                03
-              </span>
-              <div>
-                <h3 className="mod-name">Coming Soon</h3>
-                <p className="mod-tagline">New mini-apps shipped weekly. Bespoke per client.</p>
-              </div>
-              <span className="mod-cta">
-                <span>Notify me</span>
-              </span>
-            </div>
-          </div>
-        </section>
+        <LiveAppsSection />
 
         {SHOW_LEGACY && (
           <section className="section">

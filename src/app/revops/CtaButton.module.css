@@ -1,0 +1,98 @@
+/* ==========================================================================
+   CtaButton — shared styles for the RevOps CTA. Single source of truth for
+   both the closing modules and the SystemisedKnowledge hero. Ported from the
+   design-system `.btn-primary`.
+   Theme tokens (--blue, --surface, --text, --border-strong, --dim, --cyan,
+   --mono) are inherited from the enclosing section, so the button adapts to
+   its context.
+   ========================================================================== */
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px 24px;
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Label + arrow ride above the sweeping fill. */
+.label,
+.arrow {
+  position: relative;
+  z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Primary — dark surface at rest, blue gradient sweeps in from the left.
+   -------------------------------------------------------------------------- */
+.primary {
+  --cta-accent-2: #4f8cff;
+  border: 1px solid color-mix(in srgb, var(--blue) 40%, var(--border-strong));
+  background: var(--surface);
+  color: var(--text);
+}
+.primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(120deg, var(--blue) 0%, var(--cta-accent-2) 100%);
+  transform: translateX(-101%);
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.primary:hover::before {
+  transform: translateX(0);
+}
+.primary:hover {
+  color: #0a0a0a;
+  border-color: var(--blue);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px -10px color-mix(in srgb, var(--blue) 60%, transparent);
+}
+.primary:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Secondary — quiet outline pill.
+   -------------------------------------------------------------------------- */
+.secondary {
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+  color: var(--dim);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.secondary:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--blue) 55%, transparent);
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(79, 140, 255, 0.08), rgba(79, 140, 255, 0));
+}
+.secondary:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .primary::before {
+    transition: none !important;
+  }
+}

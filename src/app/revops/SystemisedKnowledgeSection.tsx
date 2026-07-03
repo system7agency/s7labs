@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import styles from './SystemisedKnowledgeSection.module.css'
+import { CtaButton } from './CtaButton'
 
 /* ==========================================================================
    SystemisedKnowledgeSection - "Systemised knowledge".
@@ -263,22 +264,12 @@ export function SystemisedKnowledgeSection() {
           </p>
 
           <div className={`${styles.ctaRow} ${styles.reveal}`}>
-            <a className={`${styles.cta} ${styles.ctaPrimary}`} href="#map">
+            <CtaButton href="#map" arrow>
               Map your revenue engine
-              <svg className={styles.ctaArrow} viewBox="0 0 16 16" aria-hidden="true">
-                <path
-                  d="M2 8h10M9 4l4 4-4 4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </a>
-            <a className={`${styles.cta} ${styles.ctaSecondary}`} href="#demo">
+            </CtaButton>
+            <CtaButton href="#demo" variant="secondary">
               See a system in action
-            </a>
+            </CtaButton>
           </div>
         </div>
 

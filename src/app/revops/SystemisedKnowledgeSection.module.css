@@ -27,7 +27,7 @@
   box-sizing: border-box;
   width: 100%;
   padding: clamp(56px, 8vw, 120px) clamp(20px, 5vw, 72px);
-  background: var(--bg);
+  background: transparent;
   color: var(--text);
   font-family: var(--sans);
   overflow: hidden;
@@ -144,59 +144,7 @@
   align-items: center;
 }
 
-.cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-radius: 11px;
-  font-family: var(--sans);
-  font-size: 14.5px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    background 0.2s ease;
-}
-
-.ctaPrimary {
-  color: #ffffff;
-  background: linear-gradient(180deg, #6fa2ff, var(--blue));
-  border: 1px solid rgba(79, 140, 255, 0.6);
-  box-shadow:
-    0 12px 30px -12px rgba(79, 140, 255, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-.ctaPrimary:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 18px 40px -14px rgba(79, 140, 255, 0.85),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-.ctaArrow {
-  width: 15px;
-  height: 15px;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.ctaPrimary:hover .ctaArrow {
-  transform: translateX(3px);
-}
-
-.ctaSecondary {
-  color: var(--text);
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
-  border: 1px solid var(--border-strong);
-}
-.ctaSecondary:hover {
-  transform: translateY(-2px);
-  border-color: rgba(79, 140, 255, 0.5);
-  box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.9);
-}
+/* Button styles now live in the shared CtaButton component (CtaButton.module.css). */
 
 /* --------------------------------------------------------------------------
    RIGHT — animation stage
@@ -536,9 +484,8 @@
   .copy {
     order: 1;
   }
-  .cta {
+  .ctaRow > * {
     flex: 1 1 auto;
-    justify-content: center;
   }
 }
 
