@@ -25,9 +25,9 @@ export function SupportingCapabilitiesSection() {
   return (
     <section className="sec reveal">
       <div className="sec-tag">
-        <span className="n">05</span>
+        <span className="n">03</span>
         <span className="lbl">
-          <span>{"// 05 / 06"}</span>
+          <span>{'// THE ADVANTAGE'}</span>
           <span className="v">THE ADVANTAGE</span>
         </span>
       </div>

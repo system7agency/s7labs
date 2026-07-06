@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import styles from './InsideSystem7Section.module.css'
 import { CtaButton } from './CtaButton'
 
@@ -9,9 +9,35 @@ import { CtaButton } from './CtaButton'
    A centered, single-column closing statement (eyebrow, header, subhead,
    primary CTA) with a refined reveal and a soft orbital-ring accent that
    draws in once on scroll. Self-contained: React + module CSS only.
+
+   Shared "fixed repeated module" across RevOps, Agent and Build: the eyebrow
+   and "Talk to System7" CTA are constant; only the header + subhead vary by
+   route (defaults are the RevOps copy).
    ========================================================================== */
 
-export function InsideSystem7Section() {
+const DEFAULT_HEADER: ReactNode = (
+  <>
+    S<sup>7</sup> Labs builds the revenue system. System<sup>7</sup> runs it with you.
+  </>
+)
+const DEFAULT_SUBHEAD: ReactNode = (
+  <>
+    S<sup>7</sup> Labs is the build studio inside System<sup>7</sup>, where your revenue systems are
+    designed, built and proven. System<sup>7</sup> then embeds with your team to run and improve
+    them - or you run them yourself. You own what we build and your team operates it -
+    production-grade systems, not a black box you rent.
+  </>
+)
+
+type InsideSystem7SectionProps = {
+  header?: ReactNode
+  subhead?: ReactNode
+}
+
+export function InsideSystem7Section({
+  header = DEFAULT_HEADER,
+  subhead = DEFAULT_SUBHEAD,
+}: InsideSystem7SectionProps = {}) {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [play, setPlay] = useState(false)
   const [reduced, setReduced] = useState(false)
@@ -79,15 +105,10 @@ export function InsideSystem7Section() {
         <span className={`${styles.eyebrow} ${styles.reveal}`}>{'// INSIDE SYSTEM7'}</span>
 
         <h2 id="inside-system7-heading" className={`${styles.header} ${styles.reveal}`}>
-          S<sup>7</sup> Labs builds the revenue system. System<sup>7</sup> runs it with you.
+          {header}
         </h2>
 
-        <p className={`${styles.subhead} ${styles.reveal}`}>
-          S<sup>7</sup> Labs is the build studio inside System<sup>7</sup>, where your revenue
-          systems are designed, built and proven. System<sup>7</sup> then embeds with your team to
-          run and improve them - or you run them yourself. You own what we build and your team
-          operates it - production-grade systems, not a black box you rent.
-        </p>
+        <p className={`${styles.subhead} ${styles.reveal}`}>{subhead}</p>
 
         <div className={`${styles.actions} ${styles.reveal}`}>
           <CtaButton href="https://www.system7.ai/contact" arrow>

@@ -64,9 +64,9 @@ export function WhatWeBuildSection() {
   return (
     <section className="sec reveal" id="what-we-build">
       <div className="sec-tag">
-        <span className="n">01</span>
+        <span className="n">04</span>
         <span className="lbl">
-          <span>{"// 01 / 06"}</span>
+          <span>{'// WHAT WE BUILD'}</span>
           <span className="v">WHAT WE BUILD</span>
         </span>
       </div>

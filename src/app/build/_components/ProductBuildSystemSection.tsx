@@ -35,9 +35,9 @@ export function ProductBuildSystemSection() {
   return (
     <section className="sec reveal">
       <div className="sec-tag">
-        <span className="n">02</span>
+        <span className="n">05</span>
         <span className="lbl">
-          <span>{"// 02 / 06"}</span>
+          <span>{'// HOW IT WORKS'}</span>
           <span className="v">HOW IT WORKS</span>
         </span>
       </div>
