@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import styles from './StartHereSection.module.css'
 import { CtaButton } from './CtaButton'
 
@@ -10,9 +10,29 @@ import { CtaButton } from './CtaButton'
    primary + secondary CTAs, mono note) with a refined reveal and a gentle
    drawing-line accent that traces in once on scroll.
    Self-contained: React + module CSS only.
+
+   Shared "fixed repeated module" across RevOps, Agent and Build: the eyebrow,
+   CTAs and note are constant; only the header + subhead vary by route
+   (defaults are the RevOps copy).
    ========================================================================== */
 
-export function StartHereSection() {
+const DEFAULT_HEADER: ReactNode = <>Bring us the workflow. We&apos;ll build the system around it.</>
+const DEFAULT_SUBHEAD: ReactNode = (
+  <>
+    If your team keeps doing revenue work by hand - sourcing, research, routing, reporting - it can
+    probably be built. Tell us where the friction is and we&apos;ll map the system around it.
+  </>
+)
+
+type StartHereSectionProps = {
+  header?: ReactNode
+  subhead?: ReactNode
+}
+
+export function StartHereSection({
+  header = DEFAULT_HEADER,
+  subhead = DEFAULT_SUBHEAD,
+}: StartHereSectionProps = {}) {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [play, setPlay] = useState(false)
   const [reduced, setReduced] = useState(false)
@@ -79,14 +99,10 @@ export function StartHereSection() {
         <span className={`${styles.eyebrow} ${styles.reveal}`}>{'// START HERE'}</span>
 
         <h2 id="start-here-heading" className={`${styles.header} ${styles.reveal}`}>
-          Bring us the workflow. We&apos;ll build the system around it.
+          {header}
         </h2>
 
-        <p className={`${styles.subhead} ${styles.reveal}`}>
-          If your team keeps doing revenue work by hand - sourcing, research, routing, reporting -
-          it can probably be built. Tell us where the friction is and we&apos;ll map the system
-          around it.
-        </p>
+        <p className={`${styles.subhead} ${styles.reveal}`}>{subhead}</p>
 
         <div className={`${styles.actions} ${styles.reveal}`}>
           <CtaButton href="https://www.system7.ai/contact">Map the system</CtaButton>

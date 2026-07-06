@@ -1,8 +1,8 @@
 export function OrchestrationMapSection() {
   return (
-    <section className="sec reveal" data-sec="04">
+    <section className="sec reveal" id="agent-os" data-sec="03">
       <div className="sec-tag">
-        <span className="n">04</span>
+        <span className="n">03</span>
         <span className="lbl">
           <span>{'// ORCHESTRATION & CONTROL'}</span>
           <span className="v">ORCHESTRATION</span>

@@ -4,21 +4,19 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 import { LabTitleHero } from '@/components/LabTitleHero'
 
+import { LabClosingSections } from '../revops/LabClosingSections'
+
 import { BuildHero } from './_components/BuildHero'
-import { BuildModesSection } from './_components/BuildModesSection'
-import { ExampleBuildsSection } from './_components/ExampleBuildsSection'
-import { FooterCTA } from './_components/FooterCTA'
 import { PageEyebrow } from './_components/PageEyebrow'
 import { ProductBuildSystemSection } from './_components/ProductBuildSystemSection'
-import { SoftwareComponentsSection } from './_components/SoftwareComponentsSection'
 import { SupportingCapabilitiesSection } from './_components/SupportingCapabilitiesSection'
 import { WhatWeBuildSection } from './_components/WhatWeBuildSection'
 import { PageScripts } from './PageScripts'
 
 export const metadata = {
-  title: 'Build Lab — S7 Labs',
+  title: 'Build Lab - S7 Labs',
   description:
-    'We design and build client-facing products, internal platforms and AI-enabled tools that fit your business, your data and your operating model.',
+    'We build the bespoke tools, automation and software your business should own - shaped around how your team already works.',
 }
 
 export default function BuildLabPage() {
@@ -34,6 +32,7 @@ export default function BuildLabPage() {
       <Header />
 
       <main>
+        {/* 01 · Hero */}
         <PageEyebrow />
         <LabTitleHero
           eyebrow="ROUTE_03 - BUILD LAB"
@@ -48,14 +47,56 @@ export default function BuildLabPage() {
           ]}
           scrollHint="SCROLL"
         />
+
+        {/* 02 · The old way */}
         <BuildHero />
-        <WhatWeBuildSection />
-        <ProductBuildSystemSection />
-        <SoftwareComponentsSection />
-        <BuildModesSection />
+
+        {/* 03 · The advantage */}
         <SupportingCapabilitiesSection />
-        <ExampleBuildsSection />
-        <FooterCTA />
+
+        {/* 04 · What we build */}
+        <WhatWeBuildSection />
+
+        {/* 05 · How it works */}
+        <ProductBuildSystemSection />
+
+        {/* 06-08 · Inside System7 → Start here → Live apps (shared repeated module) */}
+        <LabClosingSections
+          inside={{
+            header: (
+              <>
+                S<sup>7</sup> Labs builds the software. System<sup>7</sup> runs it with you.
+              </>
+            ),
+            subhead: (
+              <>
+                S<sup>7</sup> Labs is the build studio inside System<sup>7</sup>, where your tools,
+                automation and software are designed, built and proven. System<sup>7</sup> then
+                embeds with your team to run and improve them - or you run them yourself. You own what
+                we build and your team operates it - production-grade software, not a black box you
+                rent.
+              </>
+            ),
+          }}
+          start={{
+            header: <>Bring us the problem. We&apos;ll build the system around it.</>,
+            subhead: (
+              <>
+                If your team keeps describing a tool they wish they had, or a manual process that
+                will not go away - quoting, approvals, routing, reporting, handoffs - it can probably
+                be built. Tell us where the friction is and we&apos;ll map the system around it.
+              </>
+            ),
+          }}
+          live={{
+            subhead: (
+              <>
+                These are deliberately small, live tools - each one solves a single problem fast.
+                Open one, test it, use it. The quickest way to feel how a bespoke build works.
+              </>
+            ),
+          }}
+        />
       </main>
 
       <Footer />

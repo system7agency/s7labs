@@ -8,7 +8,7 @@ export function BuildHero() {
           <div className="hero-eyebrow">
             <span className="accent-dot" />
             <span>
-              S7_BUILDS <span className="v">{'//'}</span> THE OLD WAY
+              <span className="v">{'//'}</span> THE OLD WAY
             </span>
           </div>
           <h1 className="hero-title">

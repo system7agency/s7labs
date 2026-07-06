@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import styles from './LiveAppsSection.module.css'
 import { CtaButton } from './CtaButton'
 
@@ -12,7 +12,18 @@ import { CtaButton } from './CtaButton'
    closing modules. Self-contained: React + module CSS only.
    ========================================================================== */
 
-export function LiveAppsSection() {
+const DEFAULT_SUBHEAD: ReactNode = (
+  <>
+    These are deliberately small, live tools - each one solves a single problem fast. Open one, test
+    it, use it. The quickest way to feel how a system works.
+  </>
+)
+
+type LiveAppsSectionProps = {
+  subhead?: ReactNode
+}
+
+export function LiveAppsSection({ subhead = DEFAULT_SUBHEAD }: LiveAppsSectionProps = {}) {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [play, setPlay] = useState(false)
   const [reduced, setReduced] = useState(false)
@@ -83,10 +94,7 @@ export function LiveAppsSection() {
           Solve a quick problem right now.
         </h2>
 
-        <p className={`${styles.subhead} ${styles.reveal}`}>
-          These are deliberately small, live tools - each one solves a single problem fast. Open
-          one, test it, use it. The quickest way to feel how a system works.
-        </p>
+        <p className={`${styles.subhead} ${styles.reveal}`}>{subhead}</p>
 
         <div className={`${styles.actions} ${styles.reveal}`}>
           <CtaButton href="/mini-apps" arrow>

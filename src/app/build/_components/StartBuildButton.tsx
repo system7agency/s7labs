@@ -1,27 +1,19 @@
-'use client'
-
-import { useState } from 'react'
-
-import { TalkToSystem7Modal } from '@/components/TalkToSystem7Modal'
-
 type StartBuildButtonProps = {
   variant?: 'solid' | 'ghost'
   label?: string
 }
 
+/* Primary CTA for the Build page ("Start a build"). Links to the System7
+   contact page, matching the other primary CTAs across the site. */
 export function StartBuildButton({ variant = 'solid', label = 'Start a build' }: StartBuildButtonProps) {
-  const [open, setOpen] = useState(false)
   const className = variant === 'ghost' ? 'btn ghost' : 'btn'
 
   return (
-    <>
-      <button type="button" className={className} onClick={() => setOpen(true)}>
-        <span>{label}</span>
-        <span className="arr" aria-hidden="true">
-          →
-        </span>
-      </button>
-      <TalkToSystem7Modal open={open} onClose={() => setOpen(false)} />
-    </>
+    <a className={className} href="https://www.system7.ai/contact">
+      <span>{label}</span>
+      <span className="arr" aria-hidden="true">
+        →
+      </span>
+    </a>
   )
 }

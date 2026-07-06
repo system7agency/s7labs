@@ -316,8 +316,9 @@ export function PageScripts() {
       xObs.observe(xsec)
     }
 
-    /* §03 roles stagger */
-    const rolesSec = document.querySelector<HTMLElement>('.agent-lab [data-sec="03"]')
+    /* "The work" roles stagger. Keyed off the .roles grid (not the section
+       number) so section reorder/renumber can't detach it. */
+    const rolesSec = document.querySelector<HTMLElement>('.agent-lab .roles')
     if (rolesSec) {
       const rObs = new IntersectionObserver(
         (entries) => {

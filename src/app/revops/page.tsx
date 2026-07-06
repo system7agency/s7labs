@@ -9,9 +9,7 @@ import { TheShiftSection } from './TheShiftSection'
 import { TheDisciplineSection } from './TheDisciplineSection'
 import { TheEngineSection } from './TheEngineSection'
 import { SpeedOutcomesSection } from './SpeedOutcomesSection'
-import { InsideSystem7Section } from './InsideSystem7Section'
-import { StartHereSection } from './StartHereSection'
-import { LiveAppsSection } from './LiveAppsSection'
+import { LabClosingSections } from './LabClosingSections'
 import { PageScripts } from './PageScripts'
 
 // Legacy RevOps sections (Govern & Unleash, Case Studies, Operational) are hidden
@@ -104,11 +102,7 @@ export default function RevOpsLabPage() {
 
         <SpeedOutcomesSection />
 
-        <InsideSystem7Section />
-
-        <StartHereSection />
-
-        <LiveAppsSection />
+        <LabClosingSections />
 
         {SHOW_LEGACY && (
           <section className="section">

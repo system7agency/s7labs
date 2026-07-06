@@ -55,9 +55,9 @@ const ROLES: Role[] = [
 
 export function AgentRolesSection() {
   return (
-    <section className="sec reveal" data-sec="03">
+    <section className="sec reveal" data-sec="04">
       <div className="sec-tag">
-        <span className="n">03</span>
+        <span className="n">04</span>
         <span className="lbl">
           <span>{'// THE WORK'}</span>
           <span className="v">THE WORK</span>
