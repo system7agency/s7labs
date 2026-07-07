@@ -1,3 +1,5 @@
+import { RoleViz, type RoleKey } from './RoleViz'
+
 type Role = {
   rk: string
   tag: string
@@ -81,17 +83,15 @@ export function AgentRolesSection() {
       </div>
 
       <div className="roles">
-        {ROLES.map((r) => (
+        {ROLES.map((r, i) => (
           <article key={r.rk} className="role">
             <div className="role-head">
               <span className="rk">{r.rk}</span>
               <span className="tag">{r.tag}</span>
             </div>
             <h4>{r.title}</h4>
-            <div className="role-spark">
-              <svg viewBox="0 0 100 24" preserveAspectRatio="none">
-                <polyline points={r.spark} fill="none" stroke="currentColor" strokeWidth="1.2" />
-              </svg>
+            <div className="role-viz">
+              <RoleViz role={r.tag.toLowerCase() as RoleKey} index={i} />
             </div>
             <div className="tags">
               {r.tags.map((t) => (

@@ -1179,6 +1179,59 @@
   color: var(--accent);
 }
 
+/* per-card animated build-type panel (in the card body, before the chips) */
+.build-lab .build-card .build-viz {
+  position: relative;
+  z-index: 1;
+  margin: 18px 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(8, 10, 16, 0.4);
+}
+
+/* example chips stagger in as the card reveals */
+.build-lab .build-card .ex {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.build-lab .build-card.in .ex {
+  animation: bl-exIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.build-lab .build-card.in .ex:nth-child(1) {
+  animation-delay: 0.3s;
+}
+.build-lab .build-card.in .ex:nth-child(2) {
+  animation-delay: 0.37s;
+}
+.build-lab .build-card.in .ex:nth-child(3) {
+  animation-delay: 0.44s;
+}
+.build-lab .build-card.in .ex:nth-child(4) {
+  animation-delay: 0.51s;
+}
+.build-lab .build-card.in .ex:nth-child(5) {
+  animation-delay: 0.58s;
+}
+.build-lab .build-card.in .ex:nth-child(6) {
+  animation-delay: 0.65s;
+}
+.build-lab .build-card.in .ex:nth-child(7) {
+  animation-delay: 0.72s;
+}
+@keyframes bl-exIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .build-lab .build-card .ex {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* PIPELINE */
 .build-lab .pipe {
   display: grid;
@@ -1441,6 +1494,7 @@
   gap: 14px;
 }
 .build-lab .supp {
+  position: relative;
   padding: 20px 22px 20px;
   background: rgba(16, 16, 20, 0.5);
   border: 1px solid var(--border);
@@ -1494,7 +1548,13 @@
   line-height: 1.6;
   color: var(--fg-dim);
   margin: 0;
-  max-width: 56ch;
+  max-width: 44ch;
+}
+.build-lab .supp .supp-icon {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
 }
 
 /* EXAMPLES */

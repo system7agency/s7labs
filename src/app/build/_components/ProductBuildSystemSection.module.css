@@ -1,0 +1,238 @@
+/* ==========================================================================
+   ProductBuildSystemSection flow — "From a described problem to working
+   software." A horizontal rail (Scope · Design · Build · Connect · Ship) with a
+   progress beam that fills and a build token that travels, lighting each node
+   as it passes. Self-contained: scoped tokens + `.play` / `.reduced` classes.
+   Sits above the existing detail cards.
+   ========================================================================== */
+
+.viz {
+  --c-blue: #4f8cff;
+  --c-blue-2: #63a0ff;
+  --c-surface: #101014;
+  --c-surface-2: #16161b;
+  --c-text: #e8ebf0;
+  --c-dim: #aab0bd;
+  --c-muted: #6b6e78;
+  --c-border: rgba(255, 255, 255, 0.09);
+  --c-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  margin: 28px 0 6px;
+  padding: clamp(22px, 3vw, 30px) clamp(20px, 3vw, 34px) clamp(26px, 3vw, 32px);
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 140% at 92% 0%, rgba(79, 140, 255, 0.07), transparent 60%),
+    linear-gradient(180deg, var(--c-surface-2), var(--c-surface));
+  box-shadow:
+    0 40px 90px -60px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ends {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 22px;
+  font-family: var(--c-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.endStart {
+  color: var(--c-dim);
+}
+.endShip {
+  color: var(--c-blue-2);
+}
+
+/* -------------------------------------------------------------------------- */
+.nodes {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+}
+/* track (dashed baseline behind the nodes) */
+.nodes::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, var(--c-border) 0 6px, transparent 6px 12px);
+  z-index: 0;
+}
+.fill {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--c-blue), var(--c-blue-2));
+  box-shadow: 0 0 12px -1px color-mix(in srgb, var(--c-blue) 80%, transparent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  z-index: 1;
+}
+.token {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 11px;
+  height: 11px;
+  margin-top: -5.5px;
+  margin-left: -5.5px;
+  border-radius: 50%;
+  background: var(--c-blue);
+  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--c-blue) 85%, transparent);
+  opacity: 0;
+  z-index: 2;
+}
+
+.node {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.nodeDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 2px solid var(--c-border);
+  transition:
+    border-color 0.4s ease,
+    background 0.4s ease,
+    box-shadow 0.4s ease;
+}
+.nodeMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+.nodeName {
+  font-family: var(--c-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-dim);
+  transition: color 0.4s ease;
+}
+.nodeNum {
+  font-family: var(--c-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--c-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Play — fill the beam, run the token, light each node as it arrives
+   -------------------------------------------------------------------------- */
+.play .fill {
+  animation: fillIn 3s cubic-bezier(0.4, 0, 0.4, 1) 0.3s forwards;
+}
+.play .token {
+  animation: tokenRun 3s cubic-bezier(0.4, 0, 0.4, 1) 0.3s infinite;
+}
+.play .node .nodeDot {
+  animation: nodeLit 0.5s ease forwards;
+}
+.play .node .nodeName {
+  animation: nameLit 0.5s ease forwards;
+}
+.play .node:nth-child(1) .nodeDot,
+.play .node:nth-child(1) .nodeName {
+  animation-delay: 0.35s;
+}
+.play .node:nth-child(2) .nodeDot,
+.play .node:nth-child(2) .nodeName {
+  animation-delay: 1s;
+}
+.play .node:nth-child(3) .nodeDot,
+.play .node:nth-child(3) .nodeName {
+  animation-delay: 1.65s;
+}
+.play .node:nth-child(4) .nodeDot,
+.play .node:nth-child(4) .nodeName {
+  animation-delay: 2.3s;
+}
+.play .node:nth-child(5) .nodeDot,
+.play .node:nth-child(5) .nodeName {
+  animation-delay: 2.95s;
+}
+
+@keyframes fillIn {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes tokenRun {
+  0% {
+    left: 8px;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 8px);
+    opacity: 0;
+  }
+}
+@keyframes nodeLit {
+  to {
+    border-color: var(--c-blue);
+    background: color-mix(in srgb, var(--c-blue) 30%, var(--c-surface));
+    box-shadow: 0 0 12px 1px color-mix(in srgb, var(--c-blue) 55%, transparent);
+  }
+}
+@keyframes nameLit {
+  to {
+    color: var(--c-text);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion — final state, no token
+   -------------------------------------------------------------------------- */
+.reduced .fill {
+  transform: scaleX(1);
+}
+.reduced .token {
+  display: none;
+}
+.reduced .nodeDot {
+  border-color: var(--c-blue);
+  background: color-mix(in srgb, var(--c-blue) 30%, var(--c-surface));
+}
+.reduced .nodeName {
+  color: var(--c-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viz * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .node .nodeNum {
+    display: none;
+  }
+  .nodeName {
+    font-size: 10px;
+  }
+}

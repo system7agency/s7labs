@@ -1,0 +1,505 @@
+/* ==========================================================================
+   RoleViz — labelled mini "artifact" per role. Shared blue language:
+   STRUCTURE #4f8cff@.3 · WRITTEN/OUTPUT #7ea8ff → #e6f0ff (+glow) · AMBER
+   #f5b544 flag. Reveal keys off `.play`; a calm loop follows; `.reduced`
+   renders the finished artifact with no motion.
+   ========================================================================== */
+
+.viz {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 8px 0 16px;
+  overflow: visible;
+}
+.viz * {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ---- text labels ---------------------------------------------------------- */
+.cap,
+.capOut,
+.capAmber,
+.taskLabel,
+.nodeLabel,
+.approved {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-weight: 500;
+}
+.cap {
+  font-size: 6px;
+  letter-spacing: 0.4px;
+  fill: #6f7d92;
+  text-transform: uppercase;
+}
+.taskLabel {
+  font-size: 6px;
+  letter-spacing: 0.15px;
+  fill: #93a6c4;
+}
+.capOut {
+  font-size: 6.5px;
+  letter-spacing: 0.7px;
+  fill: #cfe0ff;
+}
+.capAmber {
+  font-size: 5.5px;
+  letter-spacing: 0.5px;
+  fill: #f5b544;
+}
+.nodeLabel {
+  font-size: 6px;
+  letter-spacing: 0.3px;
+  fill: #6f7d92;
+  text-anchor: middle;
+  text-transform: uppercase;
+}
+.approved {
+  font-size: 6.5px;
+  letter-spacing: 1.2px;
+  fill: #cfe0ff;
+  text-anchor: middle;
+}
+.titleRule {
+  stroke: #4f8cff;
+  stroke-opacity: 0.3;
+  stroke-width: 1;
+}
+
+/* ---- shared vocabulary ---------------------------------------------------- */
+.frame,
+.srcDoc,
+.box {
+  stroke: #4f8cff;
+  stroke-opacity: 0.3;
+  stroke-width: 1;
+  fill: none;
+}
+.box {
+  stroke-opacity: 0.5;
+  fill: rgba(79, 140, 255, 0.12);
+}
+.flow,
+.flowHead,
+.feed,
+.relay,
+.axis,
+.actTick {
+  stroke: #4f8cff;
+  stroke-opacity: 0.32;
+  stroke-width: 1;
+  fill: none;
+}
+.actTick {
+  stroke-width: 2;
+}
+.docLine {
+  stroke: #6b93e6;
+  stroke-opacity: 0.55;
+  stroke-width: 1.4;
+}
+.writeLine,
+.repRow {
+  stroke: #7ea8ff;
+  stroke-opacity: 0.9;
+  stroke-width: 1.6;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+.bar {
+  fill: #4f8cff;
+  fill-opacity: 0.5;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  transform: scaleY(0);
+}
+.barHi {
+  fill: #e6f0ff;
+  fill-opacity: 1;
+  filter: drop-shadow(0 0 3px rgba(230, 240, 255, 0.8));
+}
+.amber {
+  fill: #f5b544;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.check,
+.stampCheck {
+  stroke: #e6f0ff;
+  fill: none;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+.check {
+  stroke-width: 1.6;
+  stroke-linejoin: miter;
+  filter: drop-shadow(0 0 1px rgba(230, 240, 255, 0.45));
+}
+.stampCheck {
+  stroke-width: 2;
+  stroke-linejoin: miter;
+  filter: drop-shadow(0 0 1px rgba(230, 240, 255, 0.5));
+}
+.stampGlyph,
+.checkGlyph {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-weight: 700;
+  fill: #e6f0ff;
+  text-anchor: middle;
+  dominant-baseline: central;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 1px rgba(230, 240, 255, 0.5));
+}
+.stampGlyph {
+  font-size: 24px;
+}
+.checkGlyph {
+  font-size: 10.5px;
+}
+.stampRing {
+  stroke: #63a0ff;
+  stroke-opacity: 0.85;
+  stroke-width: 1.6;
+  fill: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+.node {
+  stroke: #4f8cff;
+  stroke-opacity: 0.4;
+  stroke-width: 1.4;
+  fill: none;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.card rect {
+  fill: #0c0d12;
+  stroke: #e6f0ff;
+  stroke-width: 1;
+}
+.card line {
+  stroke: #9db8ff;
+  stroke-width: 1;
+}
+.card {
+  filter: drop-shadow(0 0 3px rgba(230, 240, 255, 0.85));
+  opacity: 0;
+  offset-path: path('M34 22 L110 22 L186 22');
+}
+.repBar {
+  fill: #4f8cff;
+  fill-opacity: 0.5;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  transform: scaleY(0);
+}
+
+/* ==========================================================================
+   Reveal
+   ========================================================================== */
+.play .frame,
+.play .srcDoc,
+.play .flow,
+.play .flowHead,
+.play .feed,
+.play .relay,
+.play .axis,
+.play .actTick,
+.play .box,
+.play .docLine,
+.play .titleRule,
+.play .node,
+.play .cap,
+.play .taskLabel,
+.play .nodeLabel,
+.play .capAmber,
+.play .capOut {
+  animation: rvFade 0.5s ease forwards;
+  opacity: 0;
+}
+.play .approved {
+  animation: rvFade 0.5s ease 1.5s forwards;
+  opacity: 0;
+}
+@keyframes rvFade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes rvDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes rvGrow {
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes rvBreathe {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---- Researcher ---- */
+.play .writeLine {
+  animation: rvDraw 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.play .w1 {
+  animation-delay: 0.55s;
+}
+.play .w2 {
+  animation-delay: 0.71s;
+}
+.play .w3 {
+  animation-delay: 0.87s;
+}
+.play.researcher .w1 {
+  animation:
+    rvDraw 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.55s forwards,
+    rvBreathe 3.2s ease-in-out 1.6s infinite;
+}
+
+/* ---- Analyst ---- */
+.play .bar {
+  animation: rvGrow 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.play .b0 {
+  animation-delay: 0.35s;
+}
+.play .b1 {
+  animation-delay: 0.44s;
+}
+.play .b2 {
+  animation-delay: 0.53s;
+}
+.play .b3 {
+  animation-delay: 0.62s;
+}
+.play .b4 {
+  animation-delay: 0.71s;
+}
+.play .b5 {
+  animation-delay: 0.8s;
+}
+.play .b6 {
+  animation-delay: 0.89s;
+}
+.play .b7 {
+  animation-delay: 0.98s;
+}
+.play.analyst .b4 {
+  animation:
+    rvGrow 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.71s forwards,
+    rvBarBreathe 3s ease-in-out 1.4s infinite;
+}
+@keyframes rvBarBreathe {
+  0%,
+  100% {
+    fill-opacity: 0.8;
+  }
+  50% {
+    fill-opacity: 1;
+  }
+}
+.play.analyst .amber {
+  animation:
+    rvFlag 0.45s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards,
+    rvBreathe 3s ease-in-out 1.7s infinite;
+}
+@keyframes rvFlag {
+  from {
+    opacity: 0;
+    transform: scale(0.2) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ---- Operator (tasks check off, top to bottom, and stay checked) ---- */
+.play .checkGlyph {
+  animation: rvStampGlyph 0.4s cubic-bezier(0.34, 1.4, 0.5, 1) forwards;
+}
+.play .c0 {
+  animation-delay: 0.9s;
+}
+.play .c1 {
+  animation-delay: 1.1s;
+}
+.play .c2 {
+  animation-delay: 1.3s;
+}
+.play .c3 {
+  animation-delay: 1.5s;
+}
+
+/* ---- Reviewer ---- */
+.play.reviewer .stampRing {
+  animation:
+    rvStamp 0.5s cubic-bezier(0.34, 1.4, 0.5, 1) 1s forwards,
+    rvRingPulse 3.4s ease-in-out 1.8s infinite;
+}
+@keyframes rvStamp {
+  from {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes rvRingPulse {
+  0%,
+  100% {
+    stroke-opacity: 0.6;
+  }
+  50% {
+    stroke-opacity: 1;
+  }
+}
+.play.reviewer .stampGlyph {
+  animation: rvStampGlyph 0.5s cubic-bezier(0.34, 1.4, 0.5, 1) 1.25s forwards;
+}
+@keyframes rvStampGlyph {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---- Coordinator (card handed agent → tool → person) ---- */
+.play .card {
+  animation: rvRelay 3.6s cubic-bezier(0.5, 0, 0.5, 1) 1s infinite;
+}
+@keyframes rvRelay {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  44% {
+    offset-distance: 50%;
+  }
+  56% {
+    offset-distance: 50%;
+  }
+  92% {
+    opacity: 1;
+    offset-distance: 100%;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+.play.coordinator .p0 {
+  animation:
+    rvFade 0.5s ease forwards,
+    rvNodeLit 3.6s ease-in-out 1s infinite;
+}
+.play.coordinator .p1 {
+  animation:
+    rvFade 0.5s ease forwards,
+    rvNodeLit 3.6s ease-in-out 1s infinite;
+  animation-delay: 0s, 2.8s;
+}
+.play.coordinator .p2 {
+  animation:
+    rvFade 0.5s ease forwards,
+    rvNodeLit 3.6s ease-in-out 1s infinite;
+  animation-delay: 0s, 4.3s;
+}
+@keyframes rvNodeLit {
+  0%,
+  10%,
+  100% {
+    stroke: #e6f0ff;
+    stroke-opacity: 1;
+  }
+  36%,
+  90% {
+    stroke: #4f8cff;
+    stroke-opacity: 0.4;
+  }
+}
+
+/* ---- Reporter ---- */
+.play .repBar {
+  animation: rvGrow 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.6s forwards;
+}
+.play .repRow {
+  animation: rvDraw 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.play .rr1 {
+  animation-delay: 0.95s;
+}
+.play .rr2 {
+  animation-delay: 1.1s;
+}
+.play .rr3 {
+  animation-delay: 1.25s;
+}
+.play.reporter .rr1 {
+  animation:
+    rvDraw 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.95s forwards,
+    rvBreathe 3.2s ease-in-out 1.8s infinite;
+}
+
+/* ==========================================================================
+   Reduced motion — finished artifact, no loops, no travelling card
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .viz * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.reduced .writeLine,
+.reduced .repRow,
+.reduced .check,
+.reduced .stampCheck {
+  stroke-dashoffset: 0;
+}
+.reduced .stampGlyph,
+.reduced .checkGlyph {
+  opacity: 1;
+}
+.reduced .bar,
+.reduced .repBar {
+  transform: scaleY(1);
+}
+.reduced .amber,
+.reduced .stampRing {
+  opacity: 1;
+}
+.reduced .stampRing {
+  transform: scale(1);
+}
+.reduced .card {
+  display: none;
+}
