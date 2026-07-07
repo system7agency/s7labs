@@ -1,0 +1,321 @@
+/* ==========================================================================
+   TheModelSection visual — "model-agnostic capability".
+   A provider rail (Claude / GPT / Gemini / Llama / Mistral) whose active model
+   cycles, streaming a token across a bus into the S7 custom AI stack, whose top
+   layer swaps to the active model. Illustrates "run whatever model leads the
+   market and swap - never locked to one provider." Self-contained: scoped
+   tokens + IntersectionObserver-driven `.play` / `.reduced` state classes.
+   ========================================================================== */
+
+.viz {
+  /* self-contained tokens (fall back cleanly even off the agent page) */
+  --c-blue: #4f8cff;
+  --c-blue-2: #63a0ff;
+  --c-surface: #101014;
+  --c-surface-2: #16161b;
+  --c-text: #e8ebf0;
+  --c-dim: #aab0bd;
+  --c-muted: #6b6e78;
+  --c-border: rgba(255, 255, 255, 0.09);
+  --c-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.7fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(14px, 2.5vw, 34px);
+  margin-top: 28px;
+  padding: clamp(20px, 3vw, 30px);
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 120% at 85% 0%, rgba(79, 140, 255, 0.08), transparent 60%),
+    linear-gradient(180deg, var(--c-surface-2), var(--c-surface));
+  box-shadow:
+    0 40px 90px -60px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.railLabel,
+.stackLabel {
+  grid-column: 1 / -1;
+  font-family: var(--c-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+.stackLabel {
+  text-align: right;
+}
+
+/* --------------------------------------------------------------------------
+   Provider rail
+   -------------------------------------------------------------------------- */
+.providers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.prov {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.015);
+  font-family: var(--c-mono);
+  font-size: 12px;
+  color: var(--c-dim);
+  opacity: 0;
+  transform: translateX(-12px);
+  transition:
+    border-color 0.35s ease,
+    background 0.35s ease,
+    color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.provDot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-muted);
+  transition:
+    background 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.provName {
+  flex: 1 1 auto;
+  color: var(--c-text);
+  letter-spacing: 0.01em;
+}
+.provTag {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+.provActive {
+  border-color: color-mix(in srgb, var(--c-blue) 55%, transparent);
+  background: color-mix(in srgb, var(--c-blue) 12%, transparent);
+  color: var(--c-text);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-blue) 25%, transparent);
+}
+.provActive .provDot {
+  background: var(--c-blue);
+  box-shadow: 0 0 10px 1px color-mix(in srgb, var(--c-blue) 90%, transparent);
+}
+.provActive .provTag {
+  color: var(--c-blue-2);
+}
+
+/* --------------------------------------------------------------------------
+   Bus (the swap connector + travelling token)
+   -------------------------------------------------------------------------- */
+.bus {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.busTrack {
+  position: relative;
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, var(--c-border) 0 6px, transparent 6px 12px);
+}
+.busToken {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: var(--c-blue);
+  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--c-blue) 85%, transparent);
+  opacity: 0;
+}
+.swap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--c-blue) 40%, var(--c-border));
+  border-radius: 999px;
+  font-family: var(--c-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-blue-2);
+  background: color-mix(in srgb, var(--c-blue) 8%, transparent);
+  white-space: nowrap;
+}
+.swapActive {
+  color: var(--c-text);
+}
+
+/* --------------------------------------------------------------------------
+   S7 stack
+   -------------------------------------------------------------------------- */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.layer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 11px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0));
+  font-family: var(--c-mono);
+  opacity: 0;
+  transform: translateY(14px);
+}
+.layerK {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-dim);
+}
+.layerMuted {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--c-muted);
+}
+.layerTop {
+  border-color: color-mix(in srgb, var(--c-blue) 45%, transparent);
+  background:
+    radial-gradient(120% 200% at 100% 0%, rgba(79, 140, 255, 0.14), transparent 60%),
+    linear-gradient(180deg, rgba(79, 140, 255, 0.06), rgba(255, 255, 255, 0));
+}
+.layerTop .layerK {
+  color: var(--c-blue-2);
+}
+.layerV {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text);
+  letter-spacing: 0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   Play (revealed) — build the stack, light the rail, run the bus
+   -------------------------------------------------------------------------- */
+.play .prov {
+  animation: provIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.play .prov:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.play .prov:nth-child(3) {
+  animation-delay: 0.14s;
+}
+.play .prov:nth-child(4) {
+  animation-delay: 0.22s;
+}
+.play .prov:nth-child(5) {
+  animation-delay: 0.3s;
+}
+.play .prov:nth-child(6) {
+  animation-delay: 0.38s;
+}
+
+.play .layer {
+  animation: layerIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.play .stack .layer:nth-child(2) {
+  animation-delay: 0.5s;
+}
+.play .stack .layer:nth-child(3) {
+  animation-delay: 0.62s;
+}
+.play .stack .layer:nth-child(4) {
+  animation-delay: 0.74s;
+}
+
+.play .busToken {
+  animation: busTravel 2.4s cubic-bezier(0.4, 0, 0.5, 1) 0.9s infinite;
+}
+
+@keyframes provIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes layerIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes busTravel {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion — final built state, no cycling, no bus token
+   -------------------------------------------------------------------------- */
+.reduced .prov,
+.reduced .layer {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+.reduced .busToken {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viz * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  .viz {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .stackLabel {
+    text-align: left;
+  }
+  .bus {
+    flex-direction: row;
+    justify-content: center;
+  }
+  .busTrack {
+    max-width: 160px;
+  }
+}

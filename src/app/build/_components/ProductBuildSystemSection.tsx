@@ -1,3 +1,9 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+
+import styles from './ProductBuildSystemSection.module.css'
+
 const STAGES = [
   {
     num: '01',
@@ -32,8 +38,42 @@ const STAGES = [
 ]
 
 export function ProductBuildSystemSection() {
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const [play, setPlay] = useState(false)
+  const [reduced, setReduced] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const id = window.requestAnimationFrame(() => setReduced(true))
+    return () => window.cancelAnimationFrame(id)
+  }, [])
+
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    if (reduced || typeof IntersectionObserver === 'undefined') {
+      const id = window.requestAnimationFrame(() => setPlay(true))
+      return () => window.cancelAnimationFrame(id)
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        if (entry && entry.isIntersecting) {
+          setPlay(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.2 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [reduced])
+
+  const flowState = reduced ? styles.reduced : play ? styles.play : ''
+
   return (
-    <section className="sec reveal">
+    <section ref={sectionRef} className="sec reveal">
       <div className="sec-tag">
         <span className="n">05</span>
         <span className="lbl">
@@ -52,6 +92,27 @@ export function ProductBuildSystemSection() {
         <div className="right">
           <span className="pd" />
           <span>5 STAGES</span>
+        </div>
+      </div>
+
+      {/* Animated build flow: described problem → working software */}
+      <div className={`${styles.viz} ${flowState}`} aria-hidden="true">
+        <div className={styles.ends}>
+          <span className={styles.endStart}>Described problem</span>
+          <span className={styles.endShip}>Working software →</span>
+        </div>
+        <div className={styles.nodes}>
+          <div className={styles.fill} />
+          <span className={styles.token} />
+          {STAGES.map((s) => (
+            <div key={s.num} className={styles.node}>
+              <span className={styles.nodeDot} />
+              <div className={styles.nodeMeta}>
+                <span className={styles.nodeName}>{s.title}</span>
+                <span className={styles.nodeNum}>{s.num}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

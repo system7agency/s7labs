@@ -1,22 +1,35 @@
-const CAPS = [
+import { AdvantageIcon, type AdvantageIconType } from './AdvantageIcon'
+
+type Cap = {
+  tag: string
+  title: string
+  desc: string
+  type: AdvantageIconType
+}
+
+const CAPS: Cap[] = [
   {
     tag: 'built fast',
     title: 'Built fast',
+    type: 'fast',
     desc: 'Bespoke software is now fast to build - not the slow, expensive luxury it used to be.',
   },
   {
     tag: 'fitted exactly',
     title: 'Fitted exactly',
+    type: 'fit',
     desc: 'Shaped around where work breaks down, what is missing and what would make your team faster.',
   },
   {
     tag: 'easy to change',
     title: 'Easy to change',
+    type: 'change',
     desc: 'When the business moves, the software moves with it - because you own how it works.',
   },
   {
     tag: 'yours to own',
     title: 'Yours to own',
+    type: 'own',
     desc: 'Working tools and automation you own, turned from your knowledge into real software.',
   },
 ]
@@ -49,6 +62,9 @@ export function SupportingCapabilitiesSection() {
       <div className="support">
         {CAPS.map((c) => (
           <div key={c.tag} className="supp" data-supp>
+            <div className="supp-icon" aria-hidden="true">
+              <AdvantageIcon type={c.type} />
+            </div>
             <div className="tag">{c.tag}</div>
             <h4>{c.title}</h4>
             <p className="desc">{c.desc}</p>

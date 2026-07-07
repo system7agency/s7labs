@@ -1,7 +1,10 @@
+import { BuildIcon, type BuildIconType } from './BuildIcon'
+
 type BuildCard = {
   pill: string
   title: string
   desc: string
+  type: BuildIconType
   examples: string[]
 }
 
@@ -9,6 +12,7 @@ const CARDS: BuildCard[] = [
   {
     pill: 'BUILD_TYPE_01',
     title: 'Internal tools',
+    type: 'tools',
     desc: 'The tools your team uses daily, built into the systems you already run.',
     examples: [
       'Ops platforms',
@@ -22,6 +26,7 @@ const CARDS: BuildCard[] = [
   {
     pill: 'BUILD_TYPE_02',
     title: 'Automation',
+    type: 'automation',
     desc: 'The automation that removes the manual work between your tools.',
     examples: [
       'Routing',
@@ -35,6 +40,7 @@ const CARDS: BuildCard[] = [
   {
     pill: 'BUILD_TYPE_03',
     title: 'Client-facing',
+    type: 'client',
     desc: 'Products for customers and partners, when the same standard of fit matters on the outside.',
     examples: [
       'Customer portals',
@@ -47,6 +53,7 @@ const CARDS: BuildCard[] = [
   {
     pill: 'BUILD_TYPE_04',
     title: 'Integrates with',
+    type: 'integrate',
     desc: 'Everything connects to the systems you already run.',
     examples: [
       'CRM',
@@ -95,6 +102,9 @@ export function WhatWeBuildSection() {
             <div className="pill">{c.pill}</div>
             <h3>{c.title}</h3>
             <p className="desc">{c.desc}</p>
+            <div className="build-viz" aria-hidden="true">
+              <BuildIcon type={c.type} />
+            </div>
             <div className="examples">
               {c.examples.map((ex) => (
                 <span key={ex} className="ex">

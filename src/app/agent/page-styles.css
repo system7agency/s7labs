@@ -1286,21 +1286,7 @@
   color: var(--fg);
   margin: 0 0 14px;
 }
-.agent-lab .role-spark {
-  height: 24px;
-  margin: 0 0 12px;
-  color: color-mix(in srgb, var(--accent) 70%, var(--fg-deep));
-  opacity: 0.8;
-}
-.agent-lab .role-spark svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.agent-lab .role:hover .role-spark {
-  color: var(--accent);
-  opacity: 1;
-}
+/* Role card visual is now the bespoke RoleViz component (RoleViz.tsx / RoleViz.module.css). */
 .agent-lab .role .tags {
   display: flex;
   flex-wrap: wrap;
@@ -1314,13 +1300,47 @@
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border);
+  opacity: 0;
+  transform: translateY(6px);
   transition:
     color 0.25s,
     border-color 0.25s,
     background 0.25s;
 }
+.agent-lab .role.in .tags .x {
+  animation: roleTagIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.agent-lab .role.in .tags .x:nth-child(1) {
+  animation-delay: 0.5s;
+}
+.agent-lab .role.in .tags .x:nth-child(2) {
+  animation-delay: 0.58s;
+}
+.agent-lab .role.in .tags .x:nth-child(3) {
+  animation-delay: 0.66s;
+}
+.agent-lab .role.in .tags .x:nth-child(4) {
+  animation-delay: 0.74s;
+}
+.agent-lab .role.in .tags .x:nth-child(5) {
+  animation-delay: 0.82s;
+}
+@keyframes roleTagIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .agent-lab .role:hover .x {
   color: var(--fg);
+}
+
+/* Reduced motion: tags visible without the intro stagger. */
+@media (prefers-reduced-motion: reduce) {
+  .agent-lab .role .tags .x {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* §04 gantt */
@@ -1417,12 +1437,18 @@
 
 .agent-lab .grow {
   display: grid;
-  grid-template-columns: 170px 1fr 90px;
+  /* first column holds "agent.orchestrator · coordinator" (~209px) - keep it
+     wide enough that the row label never overflows into the track/bars. */
+  grid-template-columns: 234px 1fr 90px;
   align-items: center;
   gap: 12px;
   height: 28px;
   font-family: var(--mono);
   font-size: 10.5px;
+}
+.agent-lab .gn {
+  min-width: 0;
+  white-space: nowrap;
 }
 .agent-lab .grow-primary {
   height: 36px;
@@ -1487,6 +1513,8 @@
   bottom: 1px;
   left: var(--s);
   width: var(--w);
+  /* never let the coloured bar clip its own label - grow to fit the text */
+  min-width: max-content;
   border-radius: 2px;
   background: linear-gradient(
     90deg,
@@ -1511,9 +1539,6 @@
   color: #0a0a0a;
   font-weight: 500;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
 }
 .agent-lab .gb.gb-strong {
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
