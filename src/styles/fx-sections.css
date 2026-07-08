@@ -1,0 +1,170 @@
+/*
+ * Shared "fresh section" vocabulary for the lab pages (established on /build).
+ * Typography-led sections: mono eyebrow + number, statement headline, mono
+ * subhead, hairlines instead of panels. Uses each page's scoped tokens with
+ * fallbacks for pages that define a smaller token set (e.g. .revops-lab).
+ *
+ * fx-*  section shell + type
+ * fxc-* chip row / trait cells
+ */
+
+.fx-sec {
+  position: relative;
+  padding: 140px 0 120px;
+}
+.fx-sec + .fx-sec {
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.07));
+}
+
+.fx-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 40px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--fg-dim, #55555b);
+}
+.fx-eyebrow .lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.fx-eyebrow .lead .slashes {
+  color: var(--accent);
+}
+.fx-eyebrow .num {
+  color: var(--fg-deep, #2a2a2e);
+  letter-spacing: 0.18em;
+}
+
+.fx-h2 {
+  margin: 0;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(34px, 4.4vw, 56px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: var(--fg, #ededed);
+  text-wrap: balance;
+}
+.fx-h2 .accent-text {
+  color: var(--accent);
+}
+
+.fx-sub {
+  margin: 22px 0 0;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.75;
+  color: #aeb1ba;
+  max-width: 66ch;
+}
+
+.fx-head {
+  max-width: 920px;
+}
+
+/* pivot line ("We build the opposite…" pattern) */
+.fx-turn {
+  margin: 52px 0 0;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(21px, 2.4vw, 30px);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--fg, #ededed);
+  max-width: 30ch;
+  text-wrap: balance;
+}
+.fx-turn .accent-text {
+  color: var(--accent);
+}
+
+.fx-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 40px;
+}
+
+/* ---------- chips / trait cells ---------- */
+
+.fxc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 44px;
+  max-width: 780px;
+}
+.fxc-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 16px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.07));
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a7aab3;
+}
+
+.fxc-cells {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 40px;
+}
+.fxc-cell {
+  padding: 26px 0 30px;
+  border-top: 1px solid var(--border-strong, rgba(255, 255, 255, 0.14));
+  transition: border-color 0.3s ease;
+}
+.fxc-cell:hover {
+  border-top-color: var(--accent);
+}
+.fxc-cell .idx {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.fxc-cell .lbl {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 19px;
+  letter-spacing: -0.015em;
+  color: var(--fg, #ededed);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 980px) {
+  .fx-sec {
+    padding: 100px 0 84px;
+  }
+}
+
+@media (max-width: 560px) {
+  .fxc-cells {
+    grid-template-columns: 1fr;
+  }
+  .fx-ctas > * {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .so-arc {
+    transition: none;
+  }
+  .so-drift,
+  .so-carrier {
+    animation: none;
+  }
+}

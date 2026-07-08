@@ -1,283 +1,104 @@
+'use client'
+
+import { useRef } from 'react'
+
+import { MotionRoot, VIEWPORT, fadeUp, m, useInView } from '@/components/Motion'
 import { ScrollLink } from '@/components/ScrollLink'
 
 import { DesignAgentButton } from './DesignAgentButton'
 
+/* The six repetitive tasks from the copy doc, weighted by how much of the
+   week each tends to eat. The widths are relative visual weight, not
+   published figures. */
+const DRAINS: { label: string; w: number }[] = [
+  { label: 'Chasing information', w: 0.94 },
+  { label: 'Copying between tools', w: 0.8 },
+  { label: 'Manual checks', w: 0.67 },
+  { label: 'Routing and triage', w: 0.55 },
+  { label: 'Status chasing', w: 0.45 },
+  { label: 'Repetitive reporting', w: 0.37 },
+]
+
+/* 02 · Where the time goes — the felt problem, carrying the page's CTAs.
+   The right side charts where the week actually goes: bars fill on scroll
+   and hold, so the section shows the weight it's describing. */
 export function AgentHero() {
+  const chartRef = useRef<HTMLDivElement | null>(null)
+  const inView = useInView(chartRef, { once: true, amount: 0.4 })
+
   return (
-    <section className="hero">
-      <div className="hero-grid">
-        <div className="hero-copy">
-          <div className="hero-eyebrow">
-            <span className="accent-dot" />
-            <span>
-              <span className="v">{'//'}</span> WHERE THE TIME GOES
-            </span>
-          </div>
-
-          <h1 className="hero-title">
-            <span className="line l1" aria-label="Your best people are doing work">
-              <span className="typed" data-text="Your best people are doing work" />
-              <span className="caret" aria-hidden="true" />
-            </span>
-            <span className="line l2">
-              <span className="accent-text">that doesn&rsquo;t need them.</span>
-            </span>
-          </h1>
-
-          <p className="hero-sub">
-            Skilled teams lose hours every week to repetitive, multi-step tasks - chasing
-            information, moving data between tools, checking and routing work. Agents take that work
-            off them.
-          </p>
-
-          <div className="cta-row">
-            <DesignAgentButton label="Design an agent system" />
-            <ScrollLink className="btn ghost" href="#agent-os">
-              <span>See what agents do</span>
-            </ScrollLink>
-          </div>
+    <MotionRoot>
+      <section className="fx-sec" aria-label="Where the time goes">
+        <div className="fx-eyebrow">
+          <span className="lead">
+            <span className="slashes">{'//'}</span> WHERE THE TIME GOES
+          </span>
+          <span className="num">02</span>
         </div>
 
-        <div className="hud" id="hud" aria-hidden="true">
-          <div className="hud-floats">
-            <span className="hf hf-1">
-              <i />
-              agents.online
-            </span>
-            <span className="hf hf-2">
-              <i />
-              tools.connected
-            </span>
-            <span className="hf hf-3">
-              <i className="amb" />
-              human.gates.active
-            </span>
-            <span className="hf hf-4">
-              <i />
-              mcp.enabled
-            </span>
-            <span className="hf hf-5">
-              <i />
-              audit.log
-            </span>
-            <span className="hf hf-6">
-              <i className="amb" />
-              action.pending
-            </span>
+        <div className="ag-split">
+          <div>
+            <m.h2
+              className="fx-h2"
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={VIEWPORT}
+            >
+              Your best people are doing work that{' '}
+              <span className="accent-text">doesn&rsquo;t need them.</span>
+            </m.h2>
+            <m.p
+              className="fx-sub"
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={VIEWPORT}
+            >
+              Skilled teams lose hours every week to repetitive, multi-step tasks - chasing
+              information, moving data between tools, checking and routing work.
+            </m.p>
+
+            <m.p
+              className="fx-turn"
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={VIEWPORT}
+            >
+              Agents take <span className="accent-text">that work</span> off them.
+            </m.p>
+
+            <m.div
+              className="fx-ctas"
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={VIEWPORT}
+            >
+              <DesignAgentButton />
+              <ScrollLink className="btn ghost" href="#the-work">
+                <span>See what agents do</span>
+              </ScrollLink>
+            </m.div>
           </div>
 
-          <div className="hud-frame">
-            <div className="hud-head">
-              <div className="hud-title">
-                <span className="livedot" />
-                <span>AGENT.TELEMETRY</span>
-                <span className="sep">·</span>
-                <span className="v">LIVE</span>
-              </div>
-              <div className="hud-clock">
-                <span className="lbl">T</span>
-                <span className="time" id="hudClock">
-                  04:37:18
-                </span>
-                <span className="zone">UTC</span>
-              </div>
-            </div>
-
-            <div className="hud-axis">
-              <span>T+0</span>
-              <span>T+30</span>
-              <span>T+60</span>
-              <span>T+90</span>
-              <span>T+120</span>
-              <span>T+150</span>
-            </div>
-
-            <div className="lanes">
-              <div className="lane">
-                <div className="lane-name">
-                  <span className="d" />
-                  agent.research
-                </div>
-                <div className="lane-track">
-                  <div
-                    className="bar"
-                    style={{ ['--start' as string]: '2%', ['--w' as string]: '14%' }}
-                  />
-                  <div
-                    className="bar"
-                    style={{ ['--start' as string]: '18%', ['--w' as string]: '8%' }}
-                  />
-                </div>
-                <div className="lane-status">done</div>
-              </div>
-
-              <div className="lane">
-                <div className="lane-name">
-                  <span className="d" />
-                  agent.review
-                </div>
-                <div className="lane-track">
-                  <div
-                    className="bar"
-                    style={{ ['--start' as string]: '20%', ['--w' as string]: '10%' }}
-                  />
-                </div>
-                <div className="lane-status">done</div>
-              </div>
-
-              <div className="lane lane-primary">
-                <div className="lane-name">
-                  <span className="d" />
-                  agent.orchestrator
-                </div>
-                <div className="lane-track">
-                  <div
-                    className="bar b-strong"
-                    style={{ ['--start' as string]: '6%', ['--w' as string]: '78%' }}
-                  />
-                  <div className="bar-tick" style={{ ['--at' as string]: '14%' }} />
-                  <div className="bar-tick" style={{ ['--at' as string]: '32%' }} />
-                  <div className="bar-tick" style={{ ['--at' as string]: '50%' }} />
-                  <div className="bar-tick" style={{ ['--at' as string]: '68%' }} />
-                  <div className="bar-cursor" style={{ ['--at' as string]: '62%' }} />
-                </div>
-                <div className="lane-status v">routing</div>
-              </div>
-
-              <div className="lane">
-                <div className="lane-name">
-                  <span className="d" />
-                  agent.operator
-                </div>
-                <div className="lane-track">
-                  <div
-                    className="bar"
-                    style={{ ['--start' as string]: '36%', ['--w' as string]: '14%' }}
-                  />
-                  <div
-                    className="bar"
-                    style={{ ['--start' as string]: '52%', ['--w' as string]: '6%' }}
-                  />
-                </div>
-                <div className="lane-status">done</div>
-              </div>
-
-              <div className="lane">
-                <div className="lane-name">
-                  <span className="d" />
-                  agent.report
-                </div>
-                <div className="lane-track">
-                  <div
-                    className="bar"
-                    style={{ ['--start' as string]: '58%', ['--w' as string]: '18%' }}
-                  />
-                </div>
-                <div className="lane-status v">drafting</div>
-              </div>
-
-              <div className="lane lane-gate">
-                <div className="lane-name">
-                  <span className="d amb" />
-                  human.gate
-                </div>
-                <div className="lane-track">
-                  <div className="gate-diamond" style={{ ['--at' as string]: '48%' }} />
-                  <div
-                    className="gate-diamond gate-resolved"
-                    style={{ ['--at' as string]: '72%' }}
-                  />
-                </div>
-                <div className="lane-status amb">await</div>
-              </div>
-
-              <div className="lane lane-tool">
-                <div className="lane-name">
-                  <span className="d" />
-                  tool.crm
-                </div>
-                <div className="lane-track">
-                  <div
-                    className="bar b-pulse"
-                    style={{ ['--start' as string]: '14%', ['--w' as string]: '3%' }}
-                  />
-                  <div
-                    className="bar b-pulse"
-                    style={{ ['--start' as string]: '38%', ['--w' as string]: '3%' }}
-                  />
-                  <div
-                    className="bar b-pulse"
-                    style={{ ['--start' as string]: '54%', ['--w' as string]: '3%' }}
-                  />
-                </div>
-                <div className="lane-status dim">read</div>
-              </div>
-
-              <div className="lane lane-tool">
-                <div className="lane-name">
-                  <span className="d" />
-                  tool.docs
-                </div>
-                <div className="lane-track">
-                  <div
-                    className="bar b-pulse"
-                    style={{ ['--start' as string]: '10%', ['--w' as string]: '3%' }}
-                  />
-                  <div
-                    className="bar b-pulse"
-                    style={{ ['--start' as string]: '26%', ['--w' as string]: '3%' }}
-                  />
-                  <div
-                    className="bar b-pulse"
-                    style={{ ['--start' as string]: '64%', ['--w' as string]: '3%' }}
-                  />
-                </div>
-                <div className="lane-status dim">read</div>
-              </div>
-
-              <div className="lane lane-tool">
-                <div className="lane-name">
-                  <span className="d" />
-                  tool.api
-                </div>
-                <div className="lane-track">
-                  <div
-                    className="bar b-pulse"
-                    style={{ ['--start' as string]: '42%', ['--w' as string]: '3%' }}
-                  />
-                  <div
-                    className="bar b-pulse"
-                    style={{ ['--start' as string]: '50%', ['--w' as string]: '3%' }}
-                  />
-                  <div
-                    className="bar b-pulse"
-                    style={{ ['--start' as string]: '74%', ['--w' as string]: '3%' }}
-                  />
-                </div>
-                <div className="lane-status dim">write</div>
-              </div>
-            </div>
-
-            <div className="hud-foot">
-              <div className="hud-status">
-                <span className="v">▸</span>
-                <span className="cycler" id="hudCycler">
-                  reading.context
+          <div ref={chartRef} className={inView ? 'ag-chart play' : 'ag-chart'} aria-hidden="true">
+            <span className="ag-chart-axis">The week, today</span>
+            {DRAINS.map((d, i) => (
+              <div key={d.label} className="ag-bar">
+                <span className="ag-bar-lbl">{d.label}</span>
+                <span
+                  className="ag-bar-track"
+                  style={{ '--w': d.w, '--d': `${0.15 + i * 0.11}s` } as React.CSSProperties}
+                >
+                  <span className="ag-bar-fill" />
                 </span>
               </div>
-              <div className="hud-pills">
-                <span className="pill">CRM</span>
-                <span className="pill">DOCS</span>
-                <span className="pill">DB</span>
-                <span className="pill">API</span>
-                <span className="pill pill-mcp">MCP</span>
-                <span className="pill">SLACK</span>
-                <span className="pill">BRAVE</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </MotionRoot>
   )
 }

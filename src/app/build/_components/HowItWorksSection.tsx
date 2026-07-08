@@ -4,11 +4,12 @@ import { useRef } from 'react'
 
 import { MotionRoot, VIEWPORT, fadeUp, m, useInView } from './Motion'
 
+/* Captions are verbatim fragments of the section subhead. */
 const STEPS = [
-  { idx: '01', name: 'Scope', cap: 'With the people who live the problem.' },
-  { idx: '02', name: 'Build', cap: 'Code, and low-code where it makes sense.' },
-  { idx: '03', name: 'Connect', cap: 'Wired into the systems you already run.' },
-  { idx: '04', name: 'Ship', cap: 'Something your team actually uses.' },
+  { idx: '01', name: 'Scope', cap: 'with the people who live it' },
+  { idx: '02', name: 'Build', cap: 'code and low-code where it makes sense' },
+  { idx: '03', name: 'Connect', cap: 'connect it to your systems' },
+  { idx: '04', name: 'Ship', cap: 'something your team actually uses' },
 ]
 
 /* 05 · How it works — a described problem becomes working software.

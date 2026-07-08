@@ -1,0 +1,434 @@
+/*
+ * Agent Lab — fresh sections. Shares only the fx-* shell; every body here is
+ * Agent-specific (ag-*): time-drain meters (02), the layer chain + control
+ * rail (03), the hub-and-spoke role map (04), the swappable model stack (05).
+ */
+
+/* ---------- 02 · Where the time goes: time-drain bar chart ---------- */
+
+.agent-lab .ag-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 80px;
+  align-items: center;
+}
+
+.agent-lab .ag-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding-left: 26px;
+  border-left: 1px solid var(--border-strong);
+}
+.agent-lab .ag-chart-axis {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  margin-bottom: 2px;
+}
+.agent-lab .ag-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.agent-lab .ag-bar-lbl {
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: -0.005em;
+  color: #c8ccd4;
+}
+.agent-lab .ag-bar-track {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+.agent-lab .ag-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: calc(var(--w, 0.6) * 100%);
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 55%, transparent),
+    var(--accent)
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 35%, transparent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+/* bars fill on scroll and hold — the section shows the weight it describes */
+.agent-lab .ag-chart.play .ag-bar-fill {
+  animation: agFill 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+@keyframes agFill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+/* a light sheen sweeps each bar once as it lands */
+.agent-lab .ag-bar-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 80%
+  );
+  transform: translateX(-100%);
+  opacity: 0;
+}
+.agent-lab .ag-chart.play .ag-bar-track::after {
+  animation: agSheen 0.9s ease forwards;
+  animation-delay: calc(var(--d, 0s) + 0.4s);
+}
+@keyframes agSheen {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* ---------- 03 · Orchestration: layer chain + control rail ---------- */
+
+.agent-lab .ag-chain {
+  margin-top: 72px;
+}
+.agent-lab .ag-chain-label,
+.agent-lab .ag-rail-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 18px;
+}
+.agent-lab .ag-chain-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.agent-lab .ag-link {
+  flex: 1 1 0;
+  height: 1px;
+  min-width: 14px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.agent-lab .ag-chain.play .ag-link {
+  transform: scaleX(1);
+  transition: transform 0.45s cubic-bezier(0.3, 0, 0.2, 1);
+}
+.agent-lab .ag-node {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(8px);
+}
+.agent-lab .ag-chain.play .ag-node {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(2) {
+  transition-delay: 0.12s;
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(3) {
+  transition-delay: 0.24s;
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(4) {
+  transition-delay: 0.36s;
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(5) {
+  transition-delay: 0.48s;
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(6) {
+  transition-delay: 0.6s;
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(7) {
+  transition-delay: 0.72s;
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(8) {
+  transition-delay: 0.84s;
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(9) {
+  transition-delay: 0.96s;
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(10) {
+  transition-delay: 1.08s;
+}
+.agent-lab .ag-chain.play .ag-chain-row > *:nth-child(11) {
+  transition-delay: 1.2s;
+}
+
+.agent-lab .ag-rail {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-strong);
+}
+.agent-lab .ag-rail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---------- 04 · The work: hub-and-spoke role map ---------- */
+
+.agent-lab .ag-hub {
+  position: relative;
+  width: min(600px, 100%);
+  aspect-ratio: 1 / 1;
+  margin: 56px auto 0;
+}
+.agent-lab .ag-hub-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.agent-lab .ag-spoke {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.agent-lab .ag-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.agent-lab .ag-core .pulse {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-glow);
+  animation: agCore 2.6s infinite;
+}
+.agent-lab .ag-core .t {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  color: var(--fg-muted);
+}
+@keyframes agCore {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+  70% {
+    box-shadow: 0 0 0 16px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.agent-lab .ag-role {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  padding: 10px 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg);
+  white-space: nowrap;
+  transition: border-color 0.25s ease;
+}
+.agent-lab .ag-role:hover {
+  border-color: var(--accent);
+}
+/* work flowing outward from the core to each role (SVG circles) */
+.agent-lab .ag-packet {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 5px var(--accent-glow));
+}
+
+.agent-lab .ag-output {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 18px;
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-strong);
+  font-family: var(--mono);
+}
+.agent-lab .ag-output .k {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-right: 10px;
+}
+.agent-lab .ag-output .item {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #a7aab3;
+}
+.agent-lab .ag-output .dt {
+  color: var(--fg-deep);
+}
+
+/* ---------- 05 · The model: swappable stack ---------- */
+
+.agent-lab .ag-model {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 80px;
+  align-items: start;
+}
+.agent-lab .ag-model .fx-sub {
+  margin-top: 6px;
+}
+.agent-lab .ag-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 36px;
+  max-width: 420px;
+}
+.agent-lab .ag-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 18px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+.agent-lab .ag-slot .tag {
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+.agent-lab .ag-layer {
+  padding: 15px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a7aab3;
+}
+.agent-lab .ag-stack-cap {
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+
+/* ---------- shared chips (control rail) ---------- */
+
+.agent-lab .ag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a7aab3;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 980px) {
+  .agent-lab .ag-split {
+    grid-template-columns: 1fr;
+    gap: 56px;
+  }
+  .agent-lab .ag-chain-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .agent-lab .ag-link {
+    display: none;
+  }
+  .agent-lab .ag-node {
+    opacity: 1;
+    transform: none;
+  }
+  .agent-lab .ag-hub {
+    width: min(420px, 100%);
+  }
+  .agent-lab .ag-role {
+    padding: 8px 14px;
+    font-size: 10px;
+  }
+  .agent-lab .ag-model {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .agent-lab .ag-chart {
+    padding-left: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-lab .ag-link,
+  .agent-lab .ag-node {
+    transition: none;
+  }
+  .agent-lab .ag-chart.play .ag-bar-fill {
+    animation: none;
+    transform: scaleX(1);
+  }
+  .agent-lab .ag-chart.play .ag-bar-track::after {
+    animation: none;
+    opacity: 0;
+  }
+  .agent-lab .ag-core .pulse {
+    animation: none;
+  }
+  .agent-lab .ag-packet {
+    display: none;
+  }
+}

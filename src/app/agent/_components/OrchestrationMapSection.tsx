@@ -1,222 +1,93 @@
+'use client'
+
+import { Fragment, useRef } from 'react'
+
+import { MotionRoot, VIEWPORT, fadeUp, m, staggerParent, useInView } from '@/components/Motion'
+
+const LAYERS = ['Trigger', 'Context', 'Reasoning', 'Tools', 'Control', 'Action']
+
+const CONTROLS = [
+  'Permissions',
+  'Human gates',
+  'Confidence thresholds',
+  'Audit logs',
+  'Escalation paths',
+]
+
+/* 03 · Orchestration & control — the chained layers, and what keeps them safe. */
 export function OrchestrationMapSection() {
+  const chainRef = useRef<HTMLDivElement | null>(null)
+  const inView = useInView(chainRef, { once: true, amount: 0.4 })
+
   return (
-    <section className="sec reveal" id="agent-os" data-sec="03">
-      <div className="sec-tag">
-        <span className="n">03</span>
-        <span className="lbl">
-          <span>{'// ORCHESTRATION & CONTROL'}</span>
-          <span className="v">ORCHESTRATION</span>
-        </span>
-      </div>
-      <div className="sec-head">
-        <div className="left">
-          <h2>
-            One agent helps. A system of them{' '}
-            <span className="accent-text">changes how work moves.</span>
-          </h2>
-          <p>
+    <MotionRoot>
+      <section className="fx-sec" aria-label="Orchestration and control">
+        <div className="fx-eyebrow">
+          <span className="lead">
+            <span className="slashes">{'//'}</span> ORCHESTRATION &amp; CONTROL
+          </span>
+          <span className="num">03</span>
+        </div>
+
+        <div className="fx-head">
+          <m.h2
+            className="fx-h2"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={VIEWPORT}
+          >
+            One agent helps. <span className="accent-text">A system of them</span> changes how work
+            moves.
+          </m.h2>
+          <m.p
+            className="fx-sub"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={VIEWPORT}
+          >
             An agent isn&rsquo;t a chatbot, and not another seat to manage - it works from an
             objective. The leverage is in orchestration: agents chained together, each taking a
             step, passing work between one another, your tools and your people inside a single
             designed flow. And it stays under control - every step runs inside set permissions, with
             human approval where it matters and a full audit trail behind every action.
-          </p>
+          </m.p>
         </div>
-        <div className="right">
-          <span className="pd" />
-          <span>
-            TIMELINE · <span className="v">SHARED CLOCK</span>
-          </span>
-        </div>
-      </div>
 
-      <div className="gantt">
-        <div className="gantt-head">
-          <div className="gh-title">
-            <span className="livedot" />
-            ORCHESTRATION.TIMELINE
-          </div>
-          <div className="gh-axis">
-            <span>T+0:00</span>
-            <span>0:30</span>
-            <span>1:00</span>
-            <span>1:30</span>
-            <span>2:00</span>
-            <span>2:30</span>
-            <span>3:00</span>
-            <span>3:30</span>
-            <span>4:00</span>
-            <span>4:30</span>
-            <span>5:00</span>
+        <div ref={chainRef} className={inView ? 'ag-chain play' : 'ag-chain'}>
+          <span className="ag-chain-label">The layers each agent moves through</span>
+          <div className="ag-chain-row" role="list" aria-label="Agent layers">
+            {LAYERS.map((layer, i) => (
+              <Fragment key={layer}>
+                {i > 0 && <span className="ag-link" aria-hidden="true" />}
+                <span className="ag-node" role="listitem">
+                  {layer}
+                </span>
+              </Fragment>
+            ))}
           </div>
         </div>
 
-        <div className="gantt-body">
-          <div className="grp-label">AGENTS</div>
-
-          <div className="grow">
-            <div className="gn">
-              <span className="d" />
-              agent.research <span className="dim">· researcher</span>
-            </div>
-            <div className="gt">
-              <div className="gb" style={{ ['--s' as string]: '2%', ['--w' as string]: '12%' }}>
-                <span>context.read</span>
-              </div>
-              <div className="gb" style={{ ['--s' as string]: '15%', ['--w' as string]: '6%' }}>
-                <span>summarise</span>
-              </div>
-            </div>
-            <div className="gs">done</div>
+        <m.div
+          className="ag-rail"
+          variants={staggerParent(0.07)}
+          initial="hidden"
+          whileInView="show"
+          viewport={VIEWPORT}
+        >
+          <m.span className="ag-rail-label" variants={fadeUp}>
+            Stays under control
+          </m.span>
+          <div className="ag-rail-chips" role="list" aria-label="Controls">
+            {CONTROLS.map((c) => (
+              <m.span key={c} className="ag-chip" role="listitem" variants={fadeUp}>
+                {c}
+              </m.span>
+            ))}
           </div>
-
-          <div className="grow">
-            <div className="gn">
-              <span className="d" />
-              agent.review <span className="dim">· reviewer</span>
-            </div>
-            <div className="gt">
-              <div className="gb" style={{ ['--s' as string]: '20%', ['--w' as string]: '8%' }}>
-                <span>qa.check</span>
-              </div>
-            </div>
-            <div className="gs">done</div>
-          </div>
-
-          <div className="grow-primary grow">
-            <div className="gn">
-              <span className="d" />
-              agent.orchestrator <span className="dim">· coordinator</span>
-            </div>
-            <div className="gt">
-              <div
-                className="gb gb-strong"
-                style={{ ['--s' as string]: '6%', ['--w' as string]: '84%' }}
-              >
-                <span>route → context → tools → review → action → handoff</span>
-                <div className="gb-cursor" style={{ ['--at' as string]: '62%' }} />
-              </div>
-            </div>
-            <div className="gs v">routing</div>
-          </div>
-
-          <div className="grow">
-            <div className="gn">
-              <span className="d" />
-              agent.operator <span className="dim">· operator</span>
-            </div>
-            <div className="gt">
-              <div className="gb" style={{ ['--s' as string]: '30%', ['--w' as string]: '10%' }}>
-                <span>tool.call</span>
-              </div>
-              <div className="gb" style={{ ['--s' as string]: '42%', ['--w' as string]: '8%' }}>
-                <span>record.update</span>
-              </div>
-            </div>
-            <div className="gs">done</div>
-          </div>
-
-          <div className="grow">
-            <div className="gn">
-              <span className="d" />
-              agent.report <span className="dim">· reporter</span>
-            </div>
-            <div className="gt">
-              <div className="gb" style={{ ['--s' as string]: '62%', ['--w' as string]: '22%' }}>
-                <span>draft.brief</span>
-              </div>
-            </div>
-            <div className="gs v">drafting</div>
-          </div>
-
-          <div className="grp-label amb">HUMAN GATE</div>
-
-          <div className="grow-gate grow">
-            <div className="gn">
-              <span className="d amb" />
-              human.gate <span className="dim">· approval</span>
-            </div>
-            <div className="gt">
-              <div className="gd" style={{ ['--at' as string]: '24%' }}>
-                <span>approve&nbsp;send</span>
-              </div>
-              <div className="gd gd-resolved" style={{ ['--at' as string]: '54%' }}>
-                <span>approve&nbsp;publish</span>
-              </div>
-              <div className="gd" style={{ ['--at' as string]: '88%' }}>
-                <span>approve&nbsp;close</span>
-              </div>
-            </div>
-            <div className="gs amb">await · 2 open</div>
-          </div>
-
-          <div className="grp-label">TOOLS &amp; SYSTEMS</div>
-
-          <div className="grow-tool grow">
-            <div className="gn">
-              <span className="d" />
-              tool.crm
-            </div>
-            <div className="gt">
-              <div className="gp" style={{ ['--at' as string]: '18%' }} />
-              <div className="gp" style={{ ['--at' as string]: '36%' }} />
-              <div className="gp" style={{ ['--at' as string]: '48%' }} />
-            </div>
-            <div className="gs dim">3 reads</div>
-          </div>
-
-          <div className="grow-tool grow">
-            <div className="gn">
-              <span className="d" />
-              tool.docs
-            </div>
-            <div className="gt">
-              <div className="gp" style={{ ['--at' as string]: '10%' }} />
-              <div className="gp" style={{ ['--at' as string]: '14%' }} />
-              <div className="gp" style={{ ['--at' as string]: '68%' }} />
-            </div>
-            <div className="gs dim">3 reads</div>
-          </div>
-
-          <div className="grow-tool grow">
-            <div className="gn">
-              <span className="d" />
-              tool.database
-            </div>
-            <div className="gt">
-              <div className="gp" style={{ ['--at' as string]: '32%' }} />
-              <div className="gp" style={{ ['--at' as string]: '46%' }} />
-            </div>
-            <div className="gs dim">2 writes</div>
-          </div>
-
-          <div className="grow-tool grow">
-            <div className="gn">
-              <span className="d" />
-              mcp.custom
-            </div>
-            <div className="gt">
-              <div className="gp" style={{ ['--at' as string]: '40%' }} />
-              <div className="gp" style={{ ['--at' as string]: '58%' }} />
-            </div>
-            <div className="gs dim">2 calls</div>
-          </div>
-        </div>
-
-        <div className="gantt-foot">
-          <span className="lf-label">AUDIT.LOG ▸</span>
-          <div className="gf-stream" id="gfStream">
-            <span className="gl">
-              [12:04:18]&nbsp;<span className="ag">agent.research</span> → tool.brave_search ·{' '}
-              <span className="v">query.dispatched</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="orch-line">
-        Agents, tools, humans - <span className="v">coordinated.</span>
-      </div>
-    </section>
+        </m.div>
+      </section>
+    </MotionRoot>
   )
 }

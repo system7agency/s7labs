@@ -1,108 +1,150 @@
-import { RoleViz, type RoleKey } from './RoleViz'
+'use client'
 
-type Role = {
-  rk: string
-  tag: string
-  title: string
-  spark: string
-  tags: string[]
-}
+import { useRef } from 'react'
 
-const ROLES: Role[] = [
-  {
-    rk: '01',
-    tag: 'RESEARCHER',
-    title: 'Gathers, compares and structures information from approved sources.',
-    spark: '0,18 12,14 24,16 36,10 48,12 60,6 72,8 84,4 100,2',
-    tags: ['briefs', 'market scans', 'company profiles', 'source-backed notes'],
-  },
-  {
-    rk: '02',
-    tag: 'ANALYST',
-    title:
-      'Reads data, documents or activity and identifies patterns, exceptions or recommendations.',
-    spark: '0,12 10,8 20,14 30,6 40,16 50,8 60,10 70,4 80,12 90,6 100,8',
-    tags: ['summaries', 'scorecards', 'exception lists', 'risk flags'],
-  },
-  {
-    rk: '03',
-    tag: 'OPERATOR',
-    title: 'Executes repeatable system work using connected tools and defined permissions.',
-    spark:
-      '0,16 12,16 12,8 24,8 24,14 36,14 36,6 48,6 48,12 60,12 60,4 72,4 72,10 84,10 84,8 100,8',
-    tags: ['record updates', 'task creation', 'routing', 'scheduled actions'],
-  },
-  {
-    rk: '04',
-    tag: 'REVIEWER',
-    title: 'Checks work against rules, criteria or standards before it moves forward.',
-    spark: '0,12 14,12 14,4 28,4 28,12 42,12 56,12 70,12 70,18 84,18 84,12 100,12',
-    tags: ['QA checks', 'compliance flags', 'missing-field reports', 'approval requests'],
-  },
-  {
-    rk: '05',
-    tag: 'COORDINATOR',
-    title: 'Moves work between agents, tools and people across a multi-step process.',
-    spark: '0,12 12,8 24,12 36,6 48,12 60,4 72,12 84,8 100,12',
-    tags: ['handoffs', 'escalations', 'next steps', 'status updates'],
-  },
-  {
-    rk: '06',
-    tag: 'REPORTER',
-    title: 'Turns activity, system changes and outcomes into visibility.',
-    spark: '0,20 14,18 28,14 42,12 56,8 70,6 84,4 100,2',
-    tags: ['daily briefs', 'audit logs', 'management summaries', 'reporting snapshots'],
-  },
+import { MotionRoot, VIEWPORT, fadeUp, m, useInView } from '@/components/Motion'
+
+const ROLES = ['Researcher', 'Analyst', 'Operator', 'Reviewer', 'Coordinator', 'Reporter']
+
+const OUTPUT = [
+  'QA checks',
+  'missing-field reports',
+  'handoffs',
+  'escalations',
+  'daily briefs',
+  'audit logs',
 ]
 
+/* Hub geometry: six roles evenly around the core. */
+const S = 600
+const R = 232
+const POSITIONS = ROLES.map((_, i) => {
+  const a = ((-90 + i * 60) * Math.PI) / 180
+  return { x: Math.cos(a) * R, y: Math.sin(a) * R }
+})
+
+/* 04 · The work — one agent pattern at the centre, sending work out to the
+   roles it plays across the business (the client's "central agent sending
+   data to different agents" sketch). Anchor target for "See what agents do". */
 export function AgentRolesSection() {
+  const hubRef = useRef<HTMLDivElement | null>(null)
+  const inView = useInView(hubRef, { once: true, amount: 0.35 })
+
   return (
-    <section className="sec reveal" data-sec="04">
-      <div className="sec-tag">
-        <span className="n">04</span>
-        <span className="lbl">
-          <span>{'// THE WORK'}</span>
-          <span className="v">THE WORK</span>
-        </span>
-      </div>
-      <div className="sec-head">
-        <div className="left">
-          <h2>The same agent, across the whole business.</h2>
-          <p>
+    <MotionRoot>
+      <section className="fx-sec" id="the-work" aria-label="The work">
+        <div className="fx-eyebrow">
+          <span className="lead">
+            <span className="slashes">{'//'}</span> THE WORK
+          </span>
+          <span className="num">04</span>
+        </div>
+
+        <div className="fx-head">
+          <m.h2
+            className="fx-h2"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={VIEWPORT}
+          >
+            The same agent, <span className="accent-text">across the whole business.</span>
+          </m.h2>
+          <m.p
+            className="fx-sub"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="show"
+            viewport={VIEWPORT}
+          >
             Agents are defined by the role they play, not the department they sit in - so one
             pattern works anywhere the work repeats, from operations and finance to support and
             knowledge work.
-          </p>
+          </m.p>
         </div>
-        <div className="right">
-          <span className="pd" />
-          <span>
-            06 ROLES · <span className="v">CROSS-FUNCTION</span>
-          </span>
-        </div>
-      </div>
 
-      <div className="roles">
-        {ROLES.map((r, i) => (
-          <article key={r.rk} className="role">
-            <div className="role-head">
-              <span className="rk">{r.rk}</span>
-              <span className="tag">{r.tag}</span>
-            </div>
-            <h4>{r.title}</h4>
-            <div className="role-viz">
-              <RoleViz role={r.tag.toLowerCase() as RoleKey} index={i} />
-            </div>
-            <div className="tags">
-              {r.tags.map((t) => (
-                <span key={t} className="x">
-                  {t}
-                </span>
+        <div ref={hubRef} className={inView ? 'ag-hub play' : 'ag-hub'}>
+          <svg className="ag-hub-svg" viewBox={`${-S / 2} ${-S / 2} ${S} ${S}`} aria-hidden="true">
+            {POSITIONS.map((p, i) => (
+              <m.line
+                key={`sp-${i}`}
+                x1={0}
+                y1={0}
+                x2={p.x}
+                y2={p.y}
+                className="ag-spoke"
+                pathLength={1}
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={inView ? { pathLength: 1, opacity: 1 } : {}}
+                transition={{ duration: 0.55, delay: 0.15 + i * 0.1, ease: [0.3, 0, 0.2, 1] }}
+              />
+            ))}
+            {/* work packets flowing from the core out along each spoke */}
+            {inView &&
+              POSITIONS.map((p, i) => (
+                <m.circle
+                  key={`pk-${i}`}
+                  r={3.2}
+                  className="ag-packet"
+                  initial={{ cx: 0, cy: 0, opacity: 0 }}
+                  animate={{
+                    cx: [0, p.x],
+                    cy: [0, p.y],
+                    opacity: [0, 0.95, 0],
+                  }}
+                  transition={{
+                    duration: 1.6,
+                    times: [0, 0.35, 1],
+                    delay: 1.1 + i * 0.55,
+                    repeat: Infinity,
+                    repeatDelay: 2.2,
+                    ease: 'easeInOut',
+                  }}
+                />
               ))}
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
+          </svg>
+
+          <div className="ag-core">
+            <span className="pulse" aria-hidden="true" />
+            <span className="t">AGENT</span>
+          </div>
+
+          {ROLES.map((role, i) => {
+            const p = POSITIONS[i]!
+            return (
+              <m.span
+                key={role}
+                className="ag-role"
+                style={{
+                  left: `calc(50% + ${((p.x / S) * 100).toFixed(2)}%)`,
+                  top: `calc(50% + ${((p.y / S) * 100).toFixed(2)}%)`,
+                }}
+                initial={{ opacity: 0 }}
+                animate={inView ? { opacity: 1 } : {}}
+                transition={{ duration: 0.5, delay: 0.35 + i * 0.1 }}
+              >
+                {role}
+              </m.span>
+            )
+          })}
+        </div>
+
+        <m.div
+          className="ag-output"
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={VIEWPORT}
+        >
+          <span className="k">Typical output</span>
+          {OUTPUT.map((item, i) => (
+            <span key={item} className="item">
+              {item}
+              {i < OUTPUT.length - 1 && <span className="dt"> ·</span>}
+            </span>
+          ))}
+        </m.div>
+      </section>
+    </MotionRoot>
   )
 }

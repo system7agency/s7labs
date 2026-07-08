@@ -1,4 +1,6 @@
 import './page-styles.css'
+import '@/styles/fx-sections.css'
+import './fresh-sections.css'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
