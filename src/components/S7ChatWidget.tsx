@@ -5,8 +5,13 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react'
 
 import styles from './S7ChatWidget.module.css'
 
-/** Dispatch this window event to open the chat widget from anywhere (e.g. the header CTA). */
+/**
+ * Dispatch this window event to open the chat widget from anywhere (e.g. the header CTA).
+ * Pass `detail: { mode: 'voice' }` to open straight into the voice pane.
+ */
 export const OPEN_CHAT_WIDGET_EVENT = 's7:open-chat-widget'
+
+export type OpenChatWidgetDetail = { mode?: 'chat' | 'voice' }
 
 type Role = 'user' | 'ai'
 type Mode = 'chat' | 'voice'
@@ -49,6 +54,8 @@ export function S7ChatWidget() {
 
   const [open, setOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  // Incremented each time an opener asks for voice; the panel switches on change.
+  const [voiceRequest, setVoiceRequest] = useState(0)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -60,7 +67,11 @@ export function S7ChatWidget() {
   }, [])
 
   useEffect(() => {
-    const openWidget = () => setOpen(true)
+    const openWidget = (e: Event) => {
+      const detail = (e as CustomEvent<OpenChatWidgetDetail>).detail
+      if (detail?.mode === 'voice') setVoiceRequest((n) => n + 1)
+      setOpen(true)
+    }
     window.addEventListener(OPEN_CHAT_WIDGET_EVENT, openWidget)
     return () => window.removeEventListener(OPEN_CHAT_WIDGET_EVENT, openWidget)
   }, [])
@@ -120,6 +131,7 @@ export function S7ChatWidget() {
       <S7ChatPanel
         agentId={agentId}
         isMobile={isMobile}
+        voiceRequest={voiceRequest}
         onClose={() => setOpen(false)}
         onMinimize={() => setOpen(false)}
       />
@@ -145,15 +157,18 @@ type CallFormStatus = 'idle' | 'loading' | 'success'
 function S7ChatPanel({
   agentId,
   isMobile,
+  voiceRequest,
   onClose,
   onMinimize,
 }: {
   agentId: string
   isMobile: boolean
+  voiceRequest: number
   onClose: () => void
   onMinimize: () => void
 }) {
-  const [mode, setMode] = useState<Mode>('chat')
+  // Voice-first: the panel always opens on the voice pane; chat is one tap away.
+  const [mode, setMode] = useState<Mode>('voice')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isWaiting, setIsWaiting] = useState(false)
@@ -193,6 +208,14 @@ function S7ChatPanel({
 
   const voiceStatus = conversation.status
   const isCallActive = voiceStatus === 'connecting' || voiceStatus === 'connected'
+
+  // A voice-opener (header phone CTA) fired while the panel is already mounted —
+  // adjust state during render rather than in an effect.
+  const [seenVoiceRequest, setSeenVoiceRequest] = useState(voiceRequest)
+  if (voiceRequest !== seenVoiceRequest) {
+    setSeenVoiceRequest(voiceRequest)
+    if (voiceRequest > 0) setMode('voice')
+  }
 
   const pushMessage = useCallback((role: Role, text: string) => {
     setMessages((prev) => [

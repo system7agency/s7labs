@@ -1,4 +1,9 @@
+'use client'
+
 import type { ReactNode } from 'react'
+
+import { handleAnchorClick } from '@/lib/smooth-scroll'
+
 import styles from './CtaButton.module.css'
 
 /* ==========================================================================
@@ -28,7 +33,11 @@ export function CtaButton({
   className,
 }: CtaButtonProps) {
   return (
-    <a href={href} className={[styles.btn, styles[variant], className].filter(Boolean).join(' ')}>
+    <a
+      href={href}
+      onClick={handleAnchorClick}
+      className={[styles.btn, styles[variant], className].filter(Boolean).join(' ')}
+    >
       <span className={styles.label}>{children}</span>
       {arrow ? (
         <span className={styles.arrow} aria-hidden="true">

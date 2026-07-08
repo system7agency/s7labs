@@ -11,7 +11,7 @@ export function BackToMiniAppsPill() {
     return null
   }
   return (
-    <Link href="/mini-apps" className={styles.pill} aria-label="Back to all mini-apps">
+    <Link href="/mini-apps" className={styles.pill} aria-label="Back to all live apps">
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -24,7 +24,7 @@ export function BackToMiniAppsPill() {
         <path d="M19 12H5" />
         <path d="M12 19l-7-7 7-7" />
       </svg>
-      <span>All mini-apps</span>
+      <span>All live apps</span>
     </Link>
   )
 }

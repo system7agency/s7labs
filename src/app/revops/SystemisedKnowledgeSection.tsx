@@ -264,10 +264,11 @@ export function SystemisedKnowledgeSection() {
           </p>
 
           <div className={`${styles.ctaRow} ${styles.reveal}`}>
-            <CtaButton href="#map" arrow>
+            <CtaButton href="https://www.system7.ai/contact" arrow>
               Map your revenue engine
             </CtaButton>
-            <CtaButton href="#demo" variant="secondary">
+            {/* Per the copy doc, this scrolls to the Capabilities section. */}
+            <CtaButton href="#capabilities" variant="secondary">
               See a system in action
             </CtaButton>
           </div>

@@ -38,7 +38,7 @@ export function InterestedModal({ app, initialIntent = 'use', onClose }: Interes
     }
   }, [onClose])
 
-  const title = app ? `Interested in ${app.name}?` : 'Suggest a mini-app.'
+  const title = app ? `Interested in ${app.name}?` : 'Suggest a live app.'
   const lead = app
     ? "Tell us a little about how you'd want to use it."
     : "Tell us about the idea. We'll come back to you within 24 hours."
@@ -91,7 +91,7 @@ export function InterestedModal({ app, initialIntent = 'use', onClose }: Interes
             <div className="is-title">Interest registered.</div>
             <div className="is-sub">We&rsquo;ll come back to you within 24 hours.</div>
             <button type="button" className="ca-btn ca-ghost" onClick={onClose}>
-              <span>Keep browsing mini-apps</span>
+              <span>Keep browsing live apps</span>
             </button>
           </div>
         ) : (

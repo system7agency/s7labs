@@ -14,12 +14,12 @@ export function ExpiredState({ runAgainHref, miniAppName }: Props) {
         <span className={styles.monoLabel}>{'// RESULT · EXPIRED'}</span>
         <h1 className={styles.heading}>This result has expired.</h1>
         <p className={styles.body}>
-          Results are kept for 30 days. This one is past that window. The good news is the mini-app
-          is still live and a fresh run takes seconds.
+          Results are kept for 30 days. This one is past that window. The good news is the app is
+          still live and a fresh run takes seconds.
         </p>
         {runAgainHref && (
           <Link href={runAgainHref} className={styles.primaryButton}>
-            Run {miniAppName ?? 'mini-app'} again
+            Run {miniAppName ?? 'the app'} again
           </Link>
         )}
       </section>

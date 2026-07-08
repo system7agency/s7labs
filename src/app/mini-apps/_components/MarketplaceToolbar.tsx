@@ -4,13 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 
 import { CATEGORIES } from '../_data/apps'
 
-export type SortKey = 'featured' | 'newest' | 'most-used' | 'quickest'
+export type SortKey = 'featured' | 'newest'
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'featured', label: 'Featured' },
-  { value: 'newest', label: 'Newest' },
-  { value: 'most-used', label: 'Most Used' },
-  { value: 'quickest', label: 'Quickest to Try' },
+  { value: 'newest', label: 'Newest first' },
 ]
 
 type MarketplaceToolbarProps = {
@@ -82,8 +80,8 @@ export function MarketplaceToolbar({
         <input
           ref={inputRef}
           type="text"
-          placeholder="search mini-apps..."
-          aria-label="Search mini-apps"
+          placeholder="search live apps..."
+          aria-label="Search live apps"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
         />

@@ -36,7 +36,6 @@ type Capability = {
     sub: string
     meta: [string, string][]
     primary: string
-    secondary: string
   }
 }
 
@@ -89,8 +88,7 @@ const CAPABILITIES: Capability[] = [
         ['SCOPE', 'OUTBOUND · ENRICHMENT · SEQUENCING'],
         ['ENGINE', 'S7 / GTM-CORE'],
       ],
-      primary: '#sales-demo',
-      secondary: '#sales-brief',
+      primary: '/mini-apps',
     },
   },
   {
@@ -141,8 +139,7 @@ const CAPABILITIES: Capability[] = [
         ['SCOPE', 'CONTENT · ATTRIBUTION · VISITOR ID'],
         ['ENGINE', 'S7 / DEMAND-CORE'],
       ],
-      primary: '#marketing-demo',
-      secondary: '#marketing-brief',
+      primary: '/mini-apps',
     },
   },
   {
@@ -189,8 +186,7 @@ const CAPABILITIES: Capability[] = [
         ['SCOPE', 'CRM · ROUTING · DASHBOARDS'],
         ['ENGINE', 'S7 / OPS-CORE'],
       ],
-      primary: '#revops-demo',
-      secondary: '#revops-brief',
+      primary: '/mini-apps',
     },
   },
 ]
@@ -262,7 +258,7 @@ export function CapabilitiesSection() {
   }
 
   return (
-    <section className="section" aria-label="Capabilities">
+    <section className="section" id="capabilities" aria-label="Capabilities">
       <div className="section-head">
         <span className="section-eyebrow">
           <span className="accent-dot" />
@@ -421,18 +417,14 @@ export function CapabilitiesSection() {
                   ))}
                 </div>
                 <div className={styles.modalActions}>
+                  {/* Per the copy doc each capability has a single "VIEW LIVE →"
+                      action that opens a live version - the live apps gallery. */}
                   <a
                     ref={primaryBtnRef}
                     className={`${styles.modalBtn} ${styles.modalBtnPrimary}`}
                     href={active.modal.primary}
                   >
-                    Open Live Demo <span aria-hidden="true">→</span>
-                  </a>
-                  <a
-                    className={`${styles.modalBtn} ${styles.modalBtnSecondary}`}
-                    href={active.modal.secondary}
-                  >
-                    Read the brief
+                    View live <span aria-hidden="true">→</span>
                   </a>
                 </div>
               </>

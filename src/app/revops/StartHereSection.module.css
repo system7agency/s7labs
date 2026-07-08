@@ -38,19 +38,6 @@
   box-sizing: border-box;
 }
 
-/* Faint ambient aurora glow behind the whole module */
-.section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(50% 58% at 50% 6%, rgba(245, 166, 35, 0.06), transparent 68%),
-    radial-gradient(44% 50% at 16% 90%, rgba(79, 140, 255, 0.05), transparent 72%),
-    radial-gradient(40% 46% at 86% 88%, rgba(4, 227, 238, 0.04), transparent 72%);
-  pointer-events: none;
-  z-index: 0;
-}
-
 /* --------------------------------------------------------------------------
    Drawing-line accent (sits under the header)
    -------------------------------------------------------------------------- */

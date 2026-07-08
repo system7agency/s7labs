@@ -1,8 +1,6 @@
-// `draft` is an internal QA-tracking status used during the design-system
-// migration: the app is fully usable and launches normally, but the card shows
-// a DRAFT badge so we can see at a glance which apps have not yet been reviewed
-// and flipped to `live`. It has no effect on whether the app works.
-export type AppStatus = 'live' | 'beta' | 'new' | 'prototype' | 'coming-soon' | 'draft'
+// Visitor-facing status. Only two values by design: an app is either LIVE
+// (launchable now) or COMING SOON (announced, not yet launchable).
+export type AppStatus = 'live' | 'coming-soon'
 
 export type AppThumb =
   | 'score'
@@ -247,7 +245,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'roi-calculator',
     name: 'ROI Calculator',
-    status: 'draft',
+    status: 'live',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -545,7 +543,7 @@ export const APPS: MiniApp[] = [
   {
     id: 'bulk-email-finder',
     name: 'Bulk Email Finder',
-    status: 'draft',
+    status: 'live',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'operations'],
     short_description:
@@ -643,7 +641,7 @@ export const APPS: MiniApp[] = [
     id: 'gtm-flywheel',
     author: 'YA',
     name: 'GTM Flywheel',
-    status: 'draft',
+    status: 'live',
     category: 'AI / GTM',
     cats: ['ai', 'gtm', 'software'],
     short_description:

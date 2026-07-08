@@ -17,7 +17,7 @@ export function PendingState({ miniAppName }: Props) {
         <p className={styles.body}>
           {miniAppName ? `Your ${miniAppName} result` : 'Your result'} is still being generated.
           Refresh this page in a minute or two. If it keeps showing this, the run may have stalled
-          and you can safely try the mini-app again.
+          and you can safely try the live app again.
         </p>
       </section>
     </ResultLayout>

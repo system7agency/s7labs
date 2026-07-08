@@ -1,4 +1,5 @@
 import './page-styles.css'
+import './fresh-sections.css'
 
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -6,10 +7,10 @@ import { LabTitleHero } from '@/components/LabTitleHero'
 
 import { LabClosingSections } from '../revops/LabClosingSections'
 
-import { BuildHero } from './_components/BuildHero'
+import { HowItWorksSection } from './_components/HowItWorksSection'
 import { PageEyebrow } from './_components/PageEyebrow'
-import { ProductBuildSystemSection } from './_components/ProductBuildSystemSection'
-import { SupportingCapabilitiesSection } from './_components/SupportingCapabilitiesSection'
+import { TheAdvantageSection } from './_components/TheAdvantageSection'
+import { TheOldWaySection } from './_components/TheOldWaySection'
 import { WhatWeBuildSection } from './_components/WhatWeBuildSection'
 import { PageScripts } from './PageScripts'
 
@@ -49,16 +50,16 @@ export default function BuildLabPage() {
         />
 
         {/* 02 · The old way */}
-        <BuildHero />
+        <TheOldWaySection />
 
         {/* 03 · The advantage */}
-        <SupportingCapabilitiesSection />
+        <TheAdvantageSection />
 
         {/* 04 · What we build */}
         <WhatWeBuildSection />
 
         {/* 05 · How it works */}
-        <ProductBuildSystemSection />
+        <HowItWorksSection />
 
         {/* 06-08 · Inside System7 → Start here → Live apps (shared repeated module) */}
         <LabClosingSections

@@ -1,3 +1,5 @@
+import { ScrollLink } from '@/components/ScrollLink'
+
 import { DesignAgentButton } from './DesignAgentButton'
 
 export function AgentHero() {
@@ -30,9 +32,9 @@ export function AgentHero() {
 
           <div className="cta-row">
             <DesignAgentButton label="Design an agent system" />
-            <a className="btn ghost" href="#agent-os">
+            <ScrollLink className="btn ghost" href="#agent-os">
               <span>See what agents do</span>
-            </a>
+            </ScrollLink>
           </div>
         </div>
 

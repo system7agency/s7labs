@@ -38,19 +38,6 @@
   box-sizing: border-box;
 }
 
-/* Faint ambient aurora glow behind the whole module */
-.section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(52% 60% at 50% 8%, rgba(79, 140, 255, 0.08), transparent 68%),
-    radial-gradient(46% 52% at 82% 92%, rgba(201, 167, 255, 0.05), transparent 70%),
-    radial-gradient(40% 46% at 14% 84%, rgba(4, 227, 238, 0.04), transparent 72%);
-  pointer-events: none;
-  z-index: 0;
-}
-
 /* --------------------------------------------------------------------------
    Orbital-ring accent
    -------------------------------------------------------------------------- */
@@ -213,6 +200,60 @@
 /* Button styles now live in the shared CtaButton component (CtaButton.module.css). */
 
 /* --------------------------------------------------------------------------
+   Live-apps strip — two counter-scrolling rows of real app names.
+   Full-bleed across the section, faded at the edges.
+   -------------------------------------------------------------------------- */
+.appsStrip {
+  margin: 48px calc(-1 * clamp(20px, 5vw, 72px)) 52px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+}
+
+.marqueeRow {
+  overflow: hidden;
+}
+.marqueeInner {
+  display: flex;
+  width: max-content;
+  animation: marqueeX 56s linear infinite;
+}
+.marqueeReverse {
+  animation-direction: reverse;
+}
+.marqueeRow:hover .marqueeInner {
+  animation-play-state: paused;
+}
+.marqueeGroup {
+  display: flex;
+  gap: 10px;
+  padding-right: 10px;
+}
+.appPill {
+  white-space: nowrap;
+  padding: 9px 18px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 45%, transparent);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  color: #a2a6b0;
+}
+
+@keyframes marqueeX {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* --------------------------------------------------------------------------
    Reveal (staggered) — copy builds in on scroll
    -------------------------------------------------------------------------- */
 .reveal {
@@ -231,8 +272,11 @@
 .play .subhead {
   animation-delay: 0.28s;
 }
+.play .appsStrip {
+  animation-delay: 0.4s;
+}
 .play .actions {
-  animation-delay: 0.42s;
+  animation-delay: 0.52s;
 }
 
 @keyframes revealUp {

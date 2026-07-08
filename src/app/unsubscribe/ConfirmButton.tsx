@@ -54,7 +54,7 @@ export function ConfirmButton({ token }: Props) {
         {submitting ? 'Unsubscribing…' : 'Confirm unsubscribe'}
       </button>
       <span className={styles.fineprint}>
-        {'// THIS WILL NOT AFFECT TRANSACTIONAL EMAILS LIKE MINI-APP RESULTS'}
+        {'// THIS WILL NOT AFFECT TRANSACTIONAL EMAILS LIKE LIVE APP RESULTS'}
       </span>
       {errorMsg ? <div className={styles.errorText}>{errorMsg}</div> : null}
     </div>

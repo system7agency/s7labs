@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+
+import { APPS } from '@/app/mini-apps/_data/apps'
+
 import styles from './LiveAppsSection.module.css'
 import { CtaButton } from './CtaButton'
 
@@ -21,6 +24,31 @@ const DEFAULT_SUBHEAD: ReactNode = (
 
 type LiveAppsSectionProps = {
   subhead?: ReactNode
+}
+
+// The live app names, split into two rows for the counter-scrolling strip.
+// Reads straight from the gallery data so it never drifts from the real list.
+const LIVE_NAMES = APPS.filter((a) => a.status === 'live').map((a) => a.name)
+const ROW_A = LIVE_NAMES.filter((_, i) => i % 2 === 0)
+const ROW_B = LIVE_NAMES.filter((_, i) => i % 2 === 1)
+
+function MarqueeRow({ names, reverse }: { names: string[]; reverse?: boolean }) {
+  return (
+    <div className={styles.marqueeRow}>
+      <div className={`${styles.marqueeInner} ${reverse ? styles.marqueeReverse : ''}`}>
+        {/* content twice for a seamless loop */}
+        {[0, 1].map((pass) => (
+          <div key={pass} className={styles.marqueeGroup} aria-hidden={pass === 1 || undefined}>
+            {names.map((n) => (
+              <span key={`${pass}-${n}`} className={styles.appPill}>
+                {n}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export function LiveAppsSection({ subhead = DEFAULT_SUBHEAD }: LiveAppsSectionProps = {}) {
@@ -78,15 +106,6 @@ export function LiveAppsSection({ subhead = DEFAULT_SUBHEAD }: LiveAppsSectionPr
       className={`${styles.section} ${stateClass}`}
       aria-labelledby="live-apps-heading"
     >
-      {/* Decorative orbital-ring accent behind the copy */}
-      <div className={styles.accent} aria-hidden="true">
-        <svg className={styles.orbit} viewBox="0 0 480 480" fill="none">
-          <circle className={styles.ring} cx="240" cy="240" r="150" />
-          <circle className={`${styles.ring} ${styles.ringInner}`} cx="240" cy="240" r="104" />
-          <circle className={styles.orbitDot} cx="240" cy="90" r="3.5" />
-        </svg>
-      </div>
-
       <div className={styles.inner}>
         <span className={`${styles.eyebrow} ${styles.reveal}`}>{'// LIVE APPS'}</span>
 
@@ -95,7 +114,15 @@ export function LiveAppsSection({ subhead = DEFAULT_SUBHEAD }: LiveAppsSectionPr
         </h2>
 
         <p className={`${styles.subhead} ${styles.reveal}`}>{subhead}</p>
+      </div>
 
+      {/* Counter-scrolling strip of the real live apps — a taste of the gallery */}
+      <div className={`${styles.appsStrip} ${styles.reveal}`} aria-hidden="true">
+        <MarqueeRow names={ROW_A} />
+        <MarqueeRow names={ROW_B} reverse />
+      </div>
+
+      <div className={styles.inner}>
         <div className={`${styles.actions} ${styles.reveal}`}>
           <CtaButton href="/mini-apps" arrow>
             Explore the live apps

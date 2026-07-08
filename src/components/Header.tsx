@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 
 import { OPEN_CHAT_WIDGET_EVENT } from './S7ChatWidget'
 import './Header.css'
@@ -13,8 +14,18 @@ type HeaderProps = {
 
 const SCROLL_THRESHOLD = 80
 
+const NAV_ROUTES = [
+  { index: '01', label: 'RevOps', handle: 'revops_s7labs', href: '/revops' },
+  { index: '02', label: 'Agent', handle: 'agent_s7labs', href: '/agent' },
+  { index: '03', label: 'Build', handle: 'build_s7labs', href: '/build' },
+  { index: '04', label: 'Live Apps', handle: 'miniApps_s7labs', href: '/mini-apps' },
+]
+
 export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
   const [hidden, setHidden] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const navRef = useRef<HTMLDivElement | null>(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     let ticking = false
@@ -41,8 +52,32 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Close the nav when clicking outside it or pressing Escape.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
+
+  const closeMenu = () => setMenuOpen(false)
+
+  const headerHidden = hidden && !menuOpen
+
   return (
-    <header className={hidden ? 'header-hidden' : undefined} inert={hidden || undefined}>
+    <header
+      className={headerHidden ? 'header-hidden' : undefined}
+      inert={headerHidden || undefined}
+    >
       <div className="header-left">
         <a
           className="back-link"
@@ -86,7 +121,11 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
           type="button"
           className="phone-pill"
           aria-label="Call System 7 — voice agent"
-          onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CHAT_WIDGET_EVENT))}
+          onClick={() =>
+            window.dispatchEvent(
+              new CustomEvent(OPEN_CHAT_WIDGET_EVENT, { detail: { mode: 'voice' } })
+            )
+          }
         >
           <span className="live-dot" />
           <svg
@@ -103,6 +142,72 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
             Talk to system<sup className="wordmark-superscript">7</sup>
           </span>
         </button>
+        <div className="header-nav" ref={navRef}>
+          <button
+            type="button"
+            className={menuOpen ? 'nav-burger is-open' : 'nav-burger'}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            aria-controls="header-nav-panel"
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </button>
+
+          <nav
+            id="header-nav-panel"
+            className={menuOpen ? 'nav-panel is-open' : 'nav-panel'}
+            aria-label="Site navigation"
+            inert={!menuOpen || undefined}
+          >
+            <div className="nav-panel-eyebrow">
+              <span className="accent">{'// SELECT ROUTE'}</span>
+              <span className="count">{`0${NAV_ROUTES.length} ROUTES`}</span>
+            </div>
+            <ul className="nav-list">
+              {NAV_ROUTES.map((route) => {
+                const active = pathname === route.href || pathname?.startsWith(`${route.href}/`)
+                return (
+                  <li key={route.href}>
+                    <Link
+                      href={route.href}
+                      className={active ? 'nav-item is-active' : 'nav-item'}
+                      aria-current={active ? 'page' : undefined}
+                      onClick={closeMenu}
+                    >
+                      <span className="nav-index">{`ROUTE_${route.index}`}</span>
+                      <span className="nav-label">{route.label}</span>
+                      <span className="nav-handle">{`$ ${route.handle}`}</span>
+                      <span className="nav-arrow" aria-hidden="true">
+                        →
+                      </span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+            <div className="nav-panel-foot">
+              <Link href="/" className="nav-foot-link" onClick={closeMenu}>
+                <span className="nav-index">HOME</span>
+                <span className="nav-label">
+                  S<sup className="wordmark-superscript">7</sup> Labs
+                </span>
+              </Link>
+              <a
+                href="https://www.system7.ai/"
+                className="nav-foot-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="nav-index">PARENT</span>
+                <span className="nav-label">
+                  system<sup className="wordmark-superscript">7</sup>.ai ↗
+                </span>
+              </a>
+            </div>
+          </nav>
+        </div>
       </div>
     </header>
   )

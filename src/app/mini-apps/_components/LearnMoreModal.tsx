@@ -14,20 +14,12 @@ type LearnMoreModalProps = {
 
 const CHIP_CLASS: Record<MiniApp['status'], string> = {
   live: '',
-  beta: 'beta',
-  new: 'new',
-  prototype: 'prototype',
   'coming-soon': 'soon',
-  draft: 'draft',
 }
 
 const CHIP_LABEL: Record<MiniApp['status'], string> = {
   live: 'LIVE',
-  beta: 'BETA',
-  new: 'NEW',
-  prototype: 'PROTOTYPE',
   'coming-soon': 'COMING SOON',
-  draft: 'DRAFT',
 }
 
 export function LearnMoreModal({ app, onClose, onInterested, onLaunch }: LearnMoreModalProps) {
@@ -47,12 +39,7 @@ export function LearnMoreModal({ app, onClose, onInterested, onLaunch }: LearnMo
     }
   }, [onClose])
 
-  const launchable =
-    (app.status === 'live' ||
-      app.status === 'beta' ||
-      app.status === 'new' ||
-      app.status === 'draft') &&
-    !!app.launch_url
+  const launchable = app.status === 'live' && !!app.launch_url
 
   return (
     <div

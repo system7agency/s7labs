@@ -21,12 +21,13 @@ type ModalState =
 
 const STATUS_ORDER: Record<MiniApp['status'], number> = {
   live: 0,
-  new: 1,
-  beta: 2,
-  draft: 3,
-  prototype: 4,
-  'coming-soon': 5,
+  'coming-soon': 1,
 }
+
+// Stable per-app number: position in the curated APPS array (oldest first).
+// Shown as APP_XX on the card and used by the "Newest" sort, so an app keeps
+// its number regardless of filtering or sorting.
+const APP_NUMBER = new Map<string, number>(APPS.map((a, i) => [a.id, i]))
 
 // Per the client's update the page leads straight into the live gallery
 // ("Open, test, explore."). The intro "Test small products" hero, the "How it works"
@@ -36,7 +37,7 @@ const SHOW_HIDDEN_SECTIONS = false
 export function MiniAppsPageClient() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
-  const [size, setSize] = useState(3)
+  const [size, setSize] = useState(4)
   const [sort, setSort] = useState<SortKey>('featured')
   const [modal, setModal] = useState<ModalState>({ kind: 'none' })
 
@@ -49,32 +50,18 @@ export function MiniAppsPageClient() {
       return haystack.includes(q)
     })
     if (sort === 'featured') {
+      // Curated order (the APPS array), live apps ahead of coming-soon.
       list = [...list].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
     } else if (sort === 'newest') {
-      list = [...list].sort((a, b) => {
-        const av = a.status === 'new' ? 0 : a.status === 'beta' ? 1 : 2
-        const bv = b.status === 'new' ? 0 : b.status === 'beta' ? 1 : 2
-        return av - bv
-      })
-    } else if (sort === 'most-used') {
-      list = [...list].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
-    } else if (sort === 'quickest') {
-      list = [...list].sort((a, b) => {
-        const av = a.launch_url ? 0 : 1
-        const bv = b.launch_url ? 0 : 1
-        return av - bv
-      })
+      list = [...list].sort((a, b) => (APP_NUMBER.get(b.id) ?? 0) - (APP_NUMBER.get(a.id) ?? 0))
     }
     return list
   }, [query, category, sort])
 
   const counts = useMemo(() => {
-    const c = { live: 0, beta: 0, new: 0, prototype: 0, soon: 0 }
+    const c = { live: 0, soon: 0 }
     for (const a of APPS) {
       if (a.status === 'live') c.live++
-      else if (a.status === 'beta') c.beta++
-      else if (a.status === 'new') c.new++
-      else if (a.status === 'prototype') c.prototype++
       else c.soon++
     }
     return c
@@ -96,14 +83,13 @@ export function MiniAppsPageClient() {
     <>
       <PageEyebrow />
       <LabTitleHero
-        eyebrow="ROUTE_05 · MINI APPS"
-        name="Mini Apps"
-        bgWord="MINI APPS"
+        eyebrow="ROUTE_04 · LIVE APPS"
+        name="Live Apps"
+        bgWord="LIVE APPS"
         subtitle="A marketplace of compact products you can open, test and learn from. Each one a focused tool that shows how useful software can solve a specific problem."
         meta={[
           { label: 'LIVE' },
-          { label: 'BETA' },
-          { label: 'PROTOTYPES' },
+          { label: 'SINGLE-JOB TOOLS' },
           { label: 'OPEN TO TEST', accent: true },
         ]}
         scrollHint="SCROLL"
@@ -138,18 +124,12 @@ export function MiniAppsPageClient() {
           <span>
             <span className="v">{counts.live} live</span>
           </span>
-          <span className="dt">·</span>
-          <span>
-            <span className="amb">{counts.beta} beta</span>
-          </span>
-          <span className="dt">·</span>
-          <span>
-            <span className="vv">{counts.new} new</span>
-          </span>
-          <span className="dt">·</span>
-          <span>{counts.prototype} prototype</span>
-          <span className="dt">·</span>
-          <span className="dim">{counts.soon} coming soon</span>
+          {counts.soon > 0 && (
+            <>
+              <span className="dt">·</span>
+              <span className="dim">{counts.soon} coming soon</span>
+            </>
+          )}
         </div>
 
         {filtered.length === 0 ? (
@@ -170,11 +150,11 @@ export function MiniAppsPageClient() {
           </div>
         ) : (
           <div className={gridClass}>
-            {filtered.map((app, idx) => (
+            {filtered.map((app) => (
               <MiniAppCard
                 key={app.id}
                 app={app}
-                index={idx}
+                index={APP_NUMBER.get(app.id) ?? 0}
                 onInterested={(a) => openInterested(a)}
                 onLearnMore={(a) => setModal({ kind: 'learn', app: a })}
                 onLaunch={handleLaunch}
@@ -198,11 +178,11 @@ export function MiniAppsPageClient() {
                 <span className="v">BUILD IT</span>
               </div>
               <h2>
-                Have an idea for a <span className="accent-text">mini-app?</span>
+                Have an idea for a <span className="accent-text">live app?</span>
               </h2>
               <p className="sub">
                 If you can describe the problem, System7 can turn it into a small product people can
-                test. Start with a focused mini-app, then scale it into a fuller product, platform
+                test. Start with a focused live app, then scale it into a fuller product, platform
                 or agent-enabled system when the value is clear.
               </p>
               <div className="row">

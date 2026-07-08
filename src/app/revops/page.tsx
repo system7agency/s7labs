@@ -473,26 +473,28 @@ export default function RevOpsLabPage() {
           </section>
         )}
 
-        <section className="section">
-          <div className="section-head">
-            <span className="section-eyebrow">
-              <span className="accent-dot" />
-              {'// OPERATIONAL'}
-            </span>
-          </div>
-          <div className="closer">
-            <div className="accent-dot-row" aria-hidden="true">
-              <span />
-              <span />
-              <span />
+        {SHOW_LEGACY && (
+          <section className="section">
+            <div className="section-head">
+              <span className="section-eyebrow">
+                <span className="accent-dot" />
+                {'// OPERATIONAL'}
+              </span>
             </div>
-            <h2>
-              Your company always in&nbsp;<span className="accent-text">sync</span>, handled and
-              automated.
-            </h2>
-            <div className="subline">SYSTEM7 · REVOPS LAB · LIVE</div>
-          </div>
-        </section>
+            <div className="closer">
+              <div className="accent-dot-row" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+              <h2>
+                Your company always in&nbsp;<span className="accent-text">sync</span>, handled and
+                automated.
+              </h2>
+              <div className="subline">SYSTEM7 · REVOPS LAB · LIVE</div>
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />

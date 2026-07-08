@@ -31,15 +31,6 @@ export function PageScripts() {
       rafIds.add(id)
       return id
     }
-    function later(cb: () => void, ms: number) {
-      const id = setTimeout(() => {
-        timers.delete(id)
-        if (!cancelled) cb()
-      }, ms)
-      timers.add(id)
-      return id
-    }
-
     /* Aurora canvas */
     const canvas = document.getElementById('aurora') as HTMLCanvasElement | null
     const ctx = canvas?.getContext('2d') ?? null
@@ -125,47 +116,6 @@ export function PageScripts() {
       raf(spotLoop)
     }
 
-    /* Typewriter (hero line 1) */
-    const l1 = document.querySelector<HTMLElement>('.build-lab .hero-title .line.l1')
-    const l2 = document.querySelector<HTMLElement>('.build-lab .hero-title .line.l2')
-    const typed = l1?.querySelector<HTMLElement>('.typed') ?? null
-    const text = typed?.dataset.text ?? ''
-    if (l1 && l2 && typed) {
-      if (prefersReduced) {
-        typed.textContent = text
-        l1.classList.add('done')
-        l2.classList.add('show')
-      } else {
-        let i = 0
-        const tick = () => {
-          if (cancelled) return
-          typed.textContent = text.slice(0, i)
-          i++
-          if (i <= text.length) {
-            later(tick, 32 + Math.random() * 12)
-          } else {
-            later(() => {
-              l1.classList.add('done')
-              l2.classList.add('show')
-            }, 240)
-          }
-        }
-        later(tick, 700)
-      }
-    }
-
-    /* Status strip cycler */
-    const steps = document.querySelectorAll<HTMLElement>('.build-lab #statusStrip .step')
-    if (steps.length && !prefersReduced) {
-      let s = 0
-      const id = setInterval(() => {
-        steps.forEach((el) => el.classList.remove('on'))
-        s = (s + 1) % steps.length
-        steps[s]?.classList.add('on')
-      }, 2200)
-      intervals.add(id)
-    }
-
     /* Reveal on scroll */
     const revealIO = new IntersectionObserver(
       (entries) => {
@@ -180,47 +130,6 @@ export function PageScripts() {
     )
     observers.push(revealIO)
     document.querySelectorAll('.build-lab .reveal').forEach((el) => revealIO.observe(el))
-
-    /* Staggered sub-item reveals */
-    const staggerWatch = (rootSel: string, itemSel: string, gap: number) => {
-      const sio = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((e) => {
-            if (e.isIntersecting) {
-              e.target.querySelectorAll(itemSel).forEach((it, idx) => {
-                later(() => it.classList.add('in'), idx * gap)
-              })
-              sio.unobserve(e.target)
-            }
-          })
-        },
-        { threshold: 0.2 }
-      )
-      observers.push(sio)
-      document.querySelectorAll(`.build-lab ${rootSel}`).forEach((r) => sio.observe(r))
-    }
-    staggerWatch('.build-grid', '[data-build]', 150)
-    staggerWatch('.anatomy', '[data-acomp]', 80)
-    staggerWatch('.modes', '[data-mode]', 110)
-    staggerWatch('.support', '[data-supp]', 100)
-    staggerWatch('.examples-grid', '[data-example]', 140)
-
-    /* Pipeline sequential illumination */
-    const pipeIO = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            const stages = e.target.querySelectorAll('[data-stage]')
-            stages.forEach((s, idx) => later(() => s.classList.add('lit'), 200 + idx * 220))
-            pipeIO.unobserve(e.target)
-          }
-        })
-      },
-      { threshold: 0.3 }
-    )
-    observers.push(pipeIO)
-    const pipe = document.getElementById('pipe')
-    if (pipe) pipeIO.observe(pipe)
 
     return () => {
       cancelled = true

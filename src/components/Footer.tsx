@@ -17,8 +17,6 @@ export function Footer() {
         </a>
       </div>
       <div className="foot-right">
-        <span>v0.2.0</span>
-        <span style={{ color: 'var(--fg-dim)' }}>·</span>
         <span>© 2026</span>
       </div>
     </footer>

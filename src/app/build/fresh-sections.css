@@ -1,0 +1,542 @@
+/*
+ * Build Lab — fresh sections (02 The old way · 03 The advantage ·
+ * 04 What we build · 05 How it works).
+ *
+ * Typography-led, minimal. One idea per section, hairlines instead of
+ * panels, motion only where it explains something. Consumes the scoped
+ * tokens defined at the top of page-styles.css.
+ */
+
+/* ---------- shared section shape ---------- */
+
+.build-lab .fx-sec {
+  position: relative;
+  padding: 140px 0 120px;
+}
+.build-lab .fx-sec + .fx-sec {
+  border-top: 1px solid var(--border);
+}
+
+.build-lab .fx-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 40px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+.build-lab .fx-eyebrow .lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.build-lab .fx-eyebrow .lead .slashes {
+  color: var(--accent);
+}
+.build-lab .fx-eyebrow .num {
+  color: var(--fg-deep);
+  letter-spacing: 0.18em;
+}
+
+.build-lab .fx-h2 {
+  margin: 0;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(34px, 4.4vw, 56px);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  text-wrap: balance;
+}
+.build-lab .fx-h2 .accent-text {
+  color: var(--accent);
+}
+
+.build-lab .fx-sub {
+  margin: 22px 0 0;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.75;
+  color: #aeb1ba;
+  max-width: 66ch;
+}
+
+/* ---------- 02 · The old way ---------- */
+
+.build-lab .ow-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 72px;
+  align-items: center;
+}
+
+.build-lab .ow-head {
+  max-width: 920px;
+}
+
+/* companion graphic: the hero's orbit ring, coming in from the side */
+.build-lab .ow-side {
+  position: relative;
+  min-height: 480px;
+}
+.build-lab .ow-orbit {
+  position: absolute;
+  top: 50%;
+  /* bleed off the right edge, like the client sketched */
+  right: clamp(-340px, -22vw, -180px);
+  width: min(720px, 58vw);
+  aspect-ratio: 1 / 1;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.build-lab .ow-orbit-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* very slow drift of the ring texture */
+.build-lab .ow-orbit-drift {
+  transform-origin: center;
+  animation: owOrbitDrift 240s linear infinite;
+}
+
+/* the accent dot's orbit */
+.build-lab .ow-orbit-carrier {
+  transform-origin: center;
+  animation: owOrbitDrift 70s linear infinite;
+}
+.build-lab .ow-orbit-dot {
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+/* accent arc draws in when the section arrives */
+.build-lab .ow-orbit-arc {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  transition:
+    stroke-dashoffset 1.4s cubic-bezier(0.3, 0, 0.2, 1) 0.3s,
+    opacity 0.5s ease 0.3s;
+}
+.build-lab .ow-orbit.on .ow-orbit-arc {
+  stroke-dashoffset: 0;
+  opacity: 0.9;
+}
+
+@keyframes owOrbitDrift {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.build-lab .ow-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 44px;
+  max-width: 780px;
+}
+.build-lab .ow-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a7aab3;
+}
+
+.build-lab .ow-turn {
+  margin: 52px 0 0;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(21px, 2.4vw, 30px);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  max-width: 30ch;
+  text-wrap: balance;
+}
+.build-lab .ow-turn .accent-text {
+  color: var(--accent);
+}
+
+.build-lab .ow-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 40px;
+}
+
+/* ---------- 03 · The advantage ---------- */
+
+.build-lab .adv-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 72px;
+  align-items: start;
+}
+
+.build-lab .adv-traits {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 40px;
+}
+.build-lab .adv-cell {
+  padding: 26px 0 30px;
+  border-top: 1px solid var(--border-strong);
+  transition: border-color 0.3s ease;
+}
+.build-lab .adv-cell:hover {
+  border-top-color: var(--accent);
+}
+.build-lab .adv-cell .idx {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.build-lab .adv-cell .lbl {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 19px;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+}
+
+/* ---------- 04 · What we build ---------- */
+
+.build-lab .wwb-head {
+  max-width: 860px;
+}
+
+.build-lab .wwb-cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 56px;
+  margin-top: 64px;
+}
+.build-lab .wwb-col-label {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 16px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.build-lab .wwb-col-label::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  align-self: center;
+  flex: none;
+}
+.build-lab .wwb-col-label .soft {
+  color: var(--fg-muted);
+  letter-spacing: 0.18em;
+}
+.build-lab .wwb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.build-lab .wwb-item {
+  padding: 13px 0;
+  border-top: 1px solid var(--border);
+  font-family: var(--sans);
+  font-size: 15px;
+  color: var(--fg);
+  letter-spacing: -0.005em;
+}
+.build-lab .wwb-item span {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.build-lab .wwb-item:hover span {
+  transform: translateX(6px);
+}
+
+.build-lab .wwb-integrates {
+  margin-top: 80px;
+}
+.build-lab .wwb-integrates .k {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 18px;
+}
+.build-lab .wwb-int-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+.build-lab .wwb-int-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 22px 10px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  text-align: center;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.build-lab .wwb-int-tile:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: var(--surface);
+  transform: translateY(-2px);
+}
+.build-lab .wwb-int-tile svg {
+  width: 21px;
+  height: 21px;
+  stroke: #aeb1ba;
+  transition: stroke 0.25s ease;
+}
+.build-lab .wwb-int-tile:hover svg {
+  stroke: var(--accent);
+}
+.build-lab .wwb-int-tile .t {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  color: #a7aab3;
+  line-height: 1.4;
+}
+
+/* ---------- 05 · How it works ---------- */
+
+.build-lab .hiw-head {
+  max-width: 860px;
+}
+
+.build-lab .hiw-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  margin-top: 84px;
+  padding-top: 34px;
+}
+/* the drawn line the four steps sit on */
+.build-lab .hiw-track::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-strong);
+}
+.build-lab .hiw-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.build-lab .hiw-track.play .hiw-fill {
+  transform: scaleX(1);
+  transition: transform 1.6s cubic-bezier(0.3, 0, 0.2, 1) 0.2s;
+}
+
+.build-lab .hiw-step {
+  position: relative;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.build-lab .hiw-track.play .hiw-step {
+  opacity: 1;
+  transform: none;
+}
+.build-lab .hiw-track.play .hiw-step:nth-child(2) {
+  transition-delay: 0.15s;
+}
+.build-lab .hiw-track.play .hiw-step:nth-child(3) {
+  transition-delay: 0.5s;
+}
+.build-lab .hiw-track.play .hiw-step:nth-child(4) {
+  transition-delay: 0.85s;
+}
+.build-lab .hiw-track.play .hiw-step:nth-child(5) {
+  transition-delay: 1.2s;
+}
+
+.build-lab .hiw-step .node {
+  position: absolute;
+  top: -34px;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  transform: translateY(-4px);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.build-lab .hiw-track.play .hiw-step .node {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow);
+}
+.build-lab .hiw-track.play .hiw-step:nth-child(3) .node {
+  transition-delay: 0.5s;
+}
+.build-lab .hiw-track.play .hiw-step:nth-child(4) .node {
+  transition-delay: 0.85s;
+}
+.build-lab .hiw-track.play .hiw-step:nth-child(5) .node {
+  transition-delay: 1.2s;
+}
+
+.build-lab .hiw-step .idx {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--fg-dim);
+  margin-bottom: 12px;
+}
+.build-lab .hiw-step .name {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.build-lab .hiw-step .cap {
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: var(--fg-muted);
+  max-width: 24ch;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 980px) {
+  .build-lab .fx-sec {
+    padding: 100px 0 84px;
+  }
+  .build-lab .ow-layout {
+    grid-template-columns: 1fr;
+    gap: 56px;
+  }
+  /* the side orbit is ambience — drop it on small screens */
+  .build-lab .ow-side {
+    display: none;
+  }
+  .build-lab .wwb-int-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .build-lab .adv-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .build-lab .wwb-cols {
+    grid-template-columns: 1fr;
+    gap: 44px;
+    margin-top: 48px;
+  }
+  .build-lab .hiw-track {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    margin-top: 56px;
+    padding-top: 0;
+    padding-left: 34px;
+  }
+  /* vertical line on mobile */
+  .build-lab .hiw-track::before {
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    right: auto;
+    width: 1px;
+    height: auto;
+  }
+  .build-lab .hiw-fill {
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: 1px;
+    height: auto;
+    transform: scaleY(0);
+    transform-origin: top center;
+  }
+  .build-lab .hiw-track.play .hiw-fill {
+    transform: scaleY(1);
+  }
+  .build-lab .hiw-step .node {
+    top: 4px;
+    left: -34px;
+    transform: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .build-lab .adv-traits {
+    grid-template-columns: 1fr;
+  }
+  .build-lab .ow-ctas .btn {
+    width: 100%;
+  }
+  .build-lab .wwb-int-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---------- reduced motion ---------- */
+
+/* m-components honour reduced motion via MotionConfig; the CSS-driven
+   pieces still need the guard. */
+@media (prefers-reduced-motion: reduce) {
+  .build-lab .wwb-item span,
+  .build-lab .hiw-step,
+  .build-lab .hiw-step .node,
+  .build-lab .hiw-fill,
+  .build-lab .hiw-track.play .hiw-fill,
+  .build-lab .ow-orbit-arc {
+    transition: none;
+  }
+  .build-lab .ow-orbit-drift,
+  .build-lab .ow-orbit-carrier {
+    animation: none;
+  }
+}

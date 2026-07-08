@@ -15,7 +15,7 @@ export const runtime = 'nodejs'
 
 export const metadata = {
   title: 'Result · S7 Labs',
-  description: 'Your mini-app result.',
+  description: 'Your live app result.',
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

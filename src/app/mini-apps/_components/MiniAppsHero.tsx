@@ -1,5 +1,6 @@
 'use client'
 
+import { ScrollLink } from '@/components/ScrollLink'
 import { useEffect, useState } from 'react'
 
 const CYCLE = ['app.loaded', 'preview.ready', 'demo.live', 'try.now']
@@ -53,12 +54,12 @@ export function MiniAppsHero({ onSuggest }: MiniAppsHeroProps) {
           </p>
 
           <div className="cta-row">
-            <a href="#gallery" className="btn">
-              <span>Explore mini-apps</span>
+            <ScrollLink href="#gallery" className="btn">
+              <span>Explore live apps</span>
               <span className="arr" aria-hidden="true">
                 →
               </span>
-            </a>
+            </ScrollLink>
             <button type="button" className="btn ghost" onClick={onSuggest}>
               <span>Suggest an app</span>
             </button>

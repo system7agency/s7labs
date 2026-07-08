@@ -12,20 +12,12 @@ type MiniAppCardProps = {
 
 const CHIP_LABEL: Record<MiniApp['status'], string> = {
   live: 'LIVE',
-  beta: 'BETA',
-  new: 'NEW',
-  prototype: 'PROTOTYPE',
   'coming-soon': 'SOON',
-  draft: 'DRAFT',
 }
 
 const CHIP_CLASS: Record<MiniApp['status'], string> = {
   live: 'live',
-  beta: 'beta',
-  new: 'new',
-  prototype: 'prototype',
   'coming-soon': 'soon',
-  draft: 'draft',
 }
 
 const GLYPHS = ['◇', '◉', '⌁', '∆', '∑', 'Σ', '◎', '⊙', '◈']
@@ -37,12 +29,7 @@ function pickGlyph(seed: string): string {
 }
 
 export function MiniAppCard({ app, index, onInterested, onLearnMore, onLaunch }: MiniAppCardProps) {
-  const launchable =
-    (app.status === 'live' ||
-      app.status === 'beta' ||
-      app.status === 'new' ||
-      app.status === 'draft') &&
-    !!app.launch_url
+  const launchable = app.status === 'live' && !!app.launch_url
   const arrowLabel = launchable ? 'ENTER' : app.status === 'coming-soon' ? 'NOTIFY' : 'LEARN'
 
   const handlePrimary = () => {
