@@ -1,10 +1,13 @@
 /*
  * Agent Lab — fresh sections. Shares only the fx-* shell; every body here is
- * Agent-specific (ag-*): time-drain meters (02), the layer chain + control
+ * Agent-specific (ag-*): the repetition loop (02), the layer chain + control
  * rail (03), the hub-and-spoke role map (04), the swappable model stack (05).
  */
 
-/* ---------- 02 · Where the time goes: time-drain bar chart ---------- */
+/* ---------- 02 · Where the time goes: the repetition loop ----------
+   The six repetitive tasks connected into one continuous cycle, with a
+   pulse that keeps circling. No figures, no scale - just the loop the
+   work runs through. --travel (set inline) is the node-to-node distance. */
 
 .agent-lab .ag-split {
   display: grid;
@@ -13,94 +16,162 @@
   align-items: center;
 }
 
-.agent-lab .ag-chart {
-  display: flex;
-  flex-direction: column;
-  gap: 26px;
-  padding-left: 26px;
-  border-left: 1px solid var(--border-strong);
-}
-.agent-lab .ag-chart-axis {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--fg-dim);
-  margin-bottom: 2px;
-}
-.agent-lab .ag-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-}
-.agent-lab .ag-bar-lbl {
-  font-family: var(--sans);
-  font-size: 14px;
-  letter-spacing: -0.005em;
-  color: #c8ccd4;
-}
-.agent-lab .ag-bar-track {
+.agent-lab .ag-loop {
   position: relative;
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  overflow: hidden;
+  padding-left: 56px;
 }
-.agent-lab .ag-bar-fill {
+.agent-lab .ag-loop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.agent-lab .ag-loop-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateX(8px);
+}
+.agent-lab .ag-loop.play .ag-loop-row {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(2) {
+  transition-delay: 0.1s;
+}
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(3) {
+  transition-delay: 0.2s;
+}
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(4) {
+  transition-delay: 0.3s;
+}
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(5) {
+  transition-delay: 0.4s;
+}
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(6) {
+  transition-delay: 0.5s;
+}
+.agent-lab .ag-loop-lbl {
+  font-family: var(--sans);
+  font-size: 15.5px;
+  letter-spacing: -0.005em;
+  color: #d0d3da;
+}
+.agent-lab .ag-loop-node {
   position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: calc(var(--w, 0.6) * 100%);
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 55%, transparent),
-    var(--accent)
-  );
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 35%, transparent);
-  transform: scaleX(0);
-  transform-origin: left center;
+  left: 24px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  z-index: 2;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
-/* bars fill on scroll and hold — the section shows the weight it describes */
-.agent-lab .ag-chart.play .ag-bar-fill {
-  animation: agFill 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
-  animation-delay: var(--d, 0s);
+.agent-lab .ag-loop.play .ag-loop-node {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
 }
-@keyframes agFill {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(2) .ag-loop-node {
+  transition-delay: 0.1s;
 }
-/* a light sheen sweeps each bar once as it lands */
-.agent-lab .ag-bar-track::after {
-  content: '';
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(3) .ag-loop-node {
+  transition-delay: 0.2s;
+}
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(4) .ag-loop-node {
+  transition-delay: 0.3s;
+}
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(5) .ag-loop-node {
+  transition-delay: 0.4s;
+}
+.agent-lab .ag-loop.play .ag-loop-row:nth-child(6) .ag-loop-node {
+  transition-delay: 0.5s;
+}
+
+/* the spine the nodes sit on (first node centre → last node centre) */
+.agent-lab .ag-loop-rail,
+.agent-lab .ag-loop-fill {
   position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.16) 50%,
-    transparent 80%
-  );
-  transform: translateX(-100%);
+  left: 24px;
+  top: 30px;
+  width: 1px;
+  height: var(--travel, 300px);
+}
+.agent-lab .ag-loop-rail {
+  background: var(--border-strong);
+}
+.agent-lab .ag-loop-fill {
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  transform: scaleY(0);
+  transform-origin: top center;
+}
+.agent-lab .ag-loop.play .ag-loop-fill {
+  transform: scaleY(1);
+  transition: transform 0.9s cubic-bezier(0.3, 0, 0.2, 1) 0.15s;
+}
+
+/* the return path — closes the spine into a loop on the left */
+.agent-lab .ag-loop-return {
+  position: absolute;
+  left: 10px;
+  top: 30px;
+  width: 14px;
+  height: var(--travel, 300px);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
   opacity: 0;
 }
-.agent-lab .ag-chart.play .ag-bar-track::after {
-  animation: agSheen 0.9s ease forwards;
-  animation-delay: calc(var(--d, 0s) + 0.4s);
+.agent-lab .ag-loop.play .ag-loop-return {
+  opacity: 1;
+  transition: opacity 0.6s ease 0.9s;
 }
-@keyframes agSheen {
+
+/* the pulse that keeps circling the loop */
+.agent-lab .ag-loop-comet {
+  position: absolute;
+  left: 24px;
+  top: 30px;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px 2px var(--accent-glow);
+  opacity: 0;
+  z-index: 3;
+}
+.agent-lab .ag-loop.play .ag-loop-comet {
+  animation: agComet 5s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  animation-delay: 1.1s;
+}
+@keyframes agComet {
   0% {
-    transform: translateX(-100%);
-    opacity: 0.8;
+    transform: translateY(0);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(var(--travel, 300px));
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(var(--travel, 300px));
+    opacity: 0;
   }
   100% {
-    transform: translateX(100%);
+    transform: translateY(0);
     opacity: 0;
   }
 }
@@ -407,23 +478,28 @@
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  .agent-lab .ag-chart {
-    padding-left: 20px;
+  .agent-lab .ag-loop {
+    padding-left: 34px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .agent-lab .ag-link,
-  .agent-lab .ag-node {
+  .agent-lab .ag-node,
+  .agent-lab .ag-loop-row,
+  .agent-lab .ag-loop-node,
+  .agent-lab .ag-loop-fill,
+  .agent-lab .ag-loop.play .ag-loop-fill,
+  .agent-lab .ag-loop-return {
     transition: none;
   }
-  .agent-lab .ag-chart.play .ag-bar-fill {
-    animation: none;
-    transform: scaleX(1);
+  .agent-lab .ag-loop-row {
+    opacity: 1;
+    transform: none;
   }
-  .agent-lab .ag-chart.play .ag-bar-track::after {
+  .agent-lab .ag-loop.play .ag-loop-comet {
     animation: none;
-    opacity: 0;
+    display: none;
   }
   .agent-lab .ag-core .pulse {
     animation: none;

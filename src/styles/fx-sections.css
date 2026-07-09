@@ -10,7 +10,7 @@
 
 .fx-sec {
   position: relative;
-  padding: 140px 0 120px;
+  padding: 104px 0 88px;
 }
 .fx-sec + .fx-sec {
   border-top: 1px solid var(--border, rgba(255, 255, 255, 0.07));
@@ -146,7 +146,7 @@
 
 @media (max-width: 980px) {
   .fx-sec {
-    padding: 100px 0 84px;
+    padding: 76px 0 60px;
   }
 }
 

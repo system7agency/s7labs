@@ -11,7 +11,7 @@
 
 .build-lab .fx-sec {
   position: relative;
-  padding: 140px 0 120px;
+  padding: 104px 0 88px;
 }
 .build-lab .fx-sec + .fx-sec {
   border-top: 1px solid var(--border);
@@ -138,27 +138,6 @@
   }
 }
 
-.build-lab .ow-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 44px;
-  max-width: 780px;
-}
-.build-lab .ow-chip {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  padding: 9px 16px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #a7aab3;
-}
-
 .build-lab .ow-turn {
   margin: 52px 0 0;
   font-family: var(--sans);
@@ -187,7 +166,7 @@
   display: grid;
   grid-template-columns: 1.05fr 1fr;
   gap: 72px;
-  align-items: start;
+  align-items: center;
 }
 
 .build-lab .adv-traits {
@@ -453,7 +432,7 @@
 
 @media (max-width: 980px) {
   .build-lab .fx-sec {
-    padding: 100px 0 84px;
+    padding: 76px 0 60px;
   }
   .build-lab .ow-layout {
     grid-template-columns: 1fr;

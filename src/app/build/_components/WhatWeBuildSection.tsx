@@ -144,10 +144,9 @@ export function WhatWeBuildSection() {
           Internal tools and automation, <span className="accent-text">built to fit.</span>
         </m.h2>
         <m.p className="fx-sub" variants={fadeUp} initial="hidden" whileInView="show" viewport={VIEWPORT}>
-          Most of what we build runs inside your business - the tools your team uses daily and the
-          automation that removes the manual work between them - built into the tools you already
-          run, so everything operates as one system. We build client-facing products too, when the
-          same standard of fit matters on the outside.
+          Most of what we build runs inside your business - built into the tools you already run, so
+          everything operates as one system. We build client-facing products too, when the same
+          standard of fit matters on the outside.
         </m.p>
       </div>
 

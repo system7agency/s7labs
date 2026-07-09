@@ -7,24 +7,25 @@ import { ScrollLink } from '@/components/ScrollLink'
 
 import { DesignAgentButton } from './DesignAgentButton'
 
-/* The six repetitive tasks from the copy doc, weighted by how much of the
-   week each tends to eat. The widths are relative visual weight, not
-   published figures. */
-const DRAINS: { label: string; w: number }[] = [
-  { label: 'Chasing information', w: 0.94 },
-  { label: 'Copying between tools', w: 0.8 },
-  { label: 'Manual checks', w: 0.67 },
-  { label: 'Routing and triage', w: 0.55 },
-  { label: 'Status chasing', w: 0.45 },
-  { label: 'Repetitive reporting', w: 0.37 },
+/* The six repetitive tasks from the copy doc. Shown as a connected cycle -
+   no figures, no scale, just the loop the work keeps running through. */
+const TASKS = [
+  'Chasing information',
+  'Copying between tools',
+  'Manual checks',
+  'Routing and triage',
+  'Status chasing',
+  'Repetitive reporting',
 ]
 
+const ROW_H = 60
+
 /* 02 · Where the time goes — the felt problem, carrying the page's CTAs.
-   The right side charts where the week actually goes: bars fill on scroll
-   and hold, so the section shows the weight it's describing. */
+   The right side draws the repetitive tasks as one continuous loop, with a
+   pulse that keeps circling: the work that never finishes. */
 export function AgentHero() {
-  const chartRef = useRef<HTMLDivElement | null>(null)
-  const inView = useInView(chartRef, { once: true, amount: 0.4 })
+  const loopRef = useRef<HTMLDivElement | null>(null)
+  const inView = useInView(loopRef, { once: true, amount: 0.4 })
 
   return (
     <MotionRoot>
@@ -83,19 +84,23 @@ export function AgentHero() {
             </m.div>
           </div>
 
-          <div ref={chartRef} className={inView ? 'ag-chart play' : 'ag-chart'} aria-hidden="true">
-            <span className="ag-chart-axis">The week, today</span>
-            {DRAINS.map((d, i) => (
-              <div key={d.label} className="ag-bar">
-                <span className="ag-bar-lbl">{d.label}</span>
-                <span
-                  className="ag-bar-track"
-                  style={{ '--w': d.w, '--d': `${0.15 + i * 0.11}s` } as React.CSSProperties}
-                >
-                  <span className="ag-bar-fill" />
-                </span>
-              </div>
-            ))}
+          <div
+            ref={loopRef}
+            className={inView ? 'ag-loop play' : 'ag-loop'}
+            style={{ '--travel': `${(TASKS.length - 1) * ROW_H}px` } as React.CSSProperties}
+          >
+            <span className="ag-loop-rail" aria-hidden="true" />
+            <span className="ag-loop-fill" aria-hidden="true" />
+            <span className="ag-loop-return" aria-hidden="true" />
+            <span className="ag-loop-comet" aria-hidden="true" />
+            <ul className="ag-loop-list" role="list" aria-label="The repetitive work">
+              {TASKS.map((t) => (
+                <li key={t} className="ag-loop-row" style={{ height: `${ROW_H}px` }}>
+                  <span className="ag-loop-node" aria-hidden="true" />
+                  <span className="ag-loop-lbl">{t}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
