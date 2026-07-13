@@ -26,9 +26,9 @@ export function TheOldWaySection() {
             <span className="accent-text">It was built for everyone else&rsquo;s.</span>
           </m.h2>
           <m.p className="fx-sub" variants={fadeUp} initial="hidden" whileInView="show" viewport={VIEWPORT}>
-            So you adapt. You pay for hundreds of features to use six, bend your process to fit the
-            tool, and patch the gaps with spreadsheets and manual handoffs. Every one of those
-            workarounds is already a system in disguise - just one you don&rsquo;t control.
+            So you adapt - paying for a hundred features to use six, bending your process to fit the
+            tool, patching the gaps with spreadsheets and manual handoffs. Every workaround is a
+            system in disguise - one you don&rsquo;t control.
           </m.p>
         </div>
 

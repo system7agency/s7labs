@@ -18,7 +18,9 @@
 
 .agent-lab .ag-loop {
   position: relative;
-  padding-left: 56px;
+  /* rail + nodes live in the first 24px; padding must stay 0 so the
+     row-relative nodes line up with the .ag-loop-relative rail. */
+  padding-left: 0;
 }
 .agent-lab .ag-loop-list {
   list-style: none;
@@ -55,6 +57,7 @@
   transition-delay: 0.5s;
 }
 .agent-lab .ag-loop-lbl {
+  padding-left: 46px;
   font-family: var(--sans);
   font-size: 15.5px;
   letter-spacing: -0.005em;
@@ -273,13 +276,24 @@
   gap: 10px;
 }
 
-/* ---------- 04 · The work: hub-and-spoke role map ---------- */
+/* ---------- 04 · The work: hub-and-spoke role map (text left, hub right) ---------- */
+
+.agent-lab .ag-work-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 72px;
+  align-items: center;
+  margin-top: 8px;
+}
+.agent-lab .ag-work-copy {
+  max-width: 40ch;
+}
 
 .agent-lab .ag-hub {
   position: relative;
-  width: min(600px, 100%);
+  width: min(460px, 100%);
   aspect-ratio: 1 / 1;
-  margin: 56px auto 0;
+  margin: 0 auto;
 }
 .agent-lab .ag-hub-svg {
   position: absolute;
@@ -351,32 +365,6 @@
 .agent-lab .ag-packet {
   fill: var(--accent);
   filter: drop-shadow(0 0 5px var(--accent-glow));
-}
-
-.agent-lab .ag-output {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 10px 18px;
-  margin-top: 64px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border-strong);
-  font-family: var(--mono);
-}
-.agent-lab .ag-output .k {
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-  margin-right: 10px;
-}
-.agent-lab .ag-output .item {
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: #a7aab3;
-}
-.agent-lab .ag-output .dt {
-  color: var(--fg-deep);
 }
 
 /* ---------- 05 · The model: swappable stack ---------- */
@@ -467,8 +455,16 @@
     opacity: 1;
     transform: none;
   }
+  .agent-lab .ag-work-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .agent-lab .ag-work-copy {
+    max-width: none;
+  }
   .agent-lab .ag-hub {
     width: min(420px, 100%);
+    margin-top: 8px;
   }
   .agent-lab .ag-role {
     padding: 8px 14px;
@@ -479,7 +475,7 @@
     gap: 24px;
   }
   .agent-lab .ag-loop {
-    padding-left: 34px;
+    padding-left: 0;
   }
 }
 

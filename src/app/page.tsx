@@ -4,7 +4,6 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 
 import { PageScripts } from './(marketing)/landing/PageScripts'
-import { RouteIndex } from './(marketing)/landing/RouteIndex'
 import { RouteIndexB } from './(marketing)/landing/RouteIndexB'
 
 export default function HomePage() {
@@ -68,16 +67,6 @@ export default function HomePage() {
             <span className="routes-count">04 / 04</span>
           </div>
 
-          {/* TEMP: two variants rendered for client comparison — remove the
-              losing one (and these labels) once a direction is picked. */}
-          <span className="ridx-option-label">
-            <span className="v">Option A</span> · Editorial index
-          </span>
-          <RouteIndex />
-
-          <span className="ridx-option-label">
-            <span className="v">Option B</span> · Display index
-          </span>
           <RouteIndexB />
         </section>
       </main>

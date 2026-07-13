@@ -28,9 +28,9 @@ export function TheAdvantageSection() {
               ever will.
             </m.h2>
             <m.p className="fx-sub" variants={fadeUp} initial="hidden" whileInView="show" viewport={VIEWPORT}>
-              You can already describe where work breaks down, what is missing and what would make
-              your business faster. And now that bespoke software is fast to build - we can turn
-              that knowledge into working tools and automations you own.
+              You can already describe where work breaks down and what would make it faster. Bespoke
+              software is now fast to build - so we turn that knowledge into tools and automations
+              you own.
             </m.p>
           </div>
 

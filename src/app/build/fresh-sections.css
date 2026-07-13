@@ -256,58 +256,155 @@
 }
 
 .build-lab .wwb-integrates {
-  margin-top: 80px;
+  margin-top: 96px;
+  text-align: center;
 }
-.build-lab .wwb-integrates .k {
-  display: block;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-  margin-bottom: 18px;
+.build-lab .wwb-int-title {
+  margin: 0 auto;
+  max-width: 22ch;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(24px, 2.8vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-wrap: balance;
 }
-.build-lab .wwb-int-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
+.build-lab .wwb-int-title .accent-text {
+  color: var(--accent);
 }
-.build-lab .wwb-int-tile {
+
+/* the orb: core + orbiting system nodes */
+.build-lab .wwb-orb {
+  position: relative;
+  width: min(500px, 100%);
+  aspect-ratio: 1 / 1;
+  margin: 40px auto 0;
+}
+.build-lab .wwb-orb-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.build-lab .wwb-orb-ring {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 2 8;
+  transform-origin: center;
+  opacity: 0;
+}
+.build-lab .wwb-orb.play .wwb-orb-ring {
+  opacity: 1;
+  transition: opacity 0.8s ease 0.2s;
+  animation: wwbOrbSpin 90s linear infinite;
+}
+@keyframes wwbOrbSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.build-lab .wwb-orb-link {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.build-lab .wwb-orb-packet {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 5px var(--accent-glow));
+}
+
+.build-lab .wwb-orb-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 12px;
-  padding: 22px 10px 18px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  z-index: 2;
+}
+.build-lab .wwb-orb-core .pulse {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-glow);
+  animation: wwbOrbPulse 2.6s infinite;
+}
+@keyframes wwbOrbPulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+  70% {
+    box-shadow: 0 0 0 18px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.build-lab .wwb-orb-core .t {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.26em;
+  line-height: 1.5;
   text-align: center;
+  color: var(--fg-muted);
+}
+
+.build-lab .wwb-orb-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 15px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+  z-index: 1;
   transition:
     border-color 0.25s ease,
-    background 0.25s ease,
-    transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+    background 0.25s ease;
 }
-.build-lab .wwb-int-tile:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-  background: var(--surface);
-  transform: translateY(-2px);
+.build-lab .wwb-orb-node:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
 }
-.build-lab .wwb-int-tile svg {
-  width: 21px;
-  height: 21px;
+.build-lab .wwb-orb-node svg {
+  width: 16px;
+  height: 16px;
   stroke: #aeb1ba;
+  flex: none;
   transition: stroke 0.25s ease;
 }
-.build-lab .wwb-int-tile:hover svg {
+.build-lab .wwb-orb-node:hover svg {
   stroke: var(--accent);
 }
-.build-lab .wwb-int-tile .t {
+.build-lab .wwb-orb-node .t {
   font-family: var(--mono);
   font-size: 10.5px;
-  letter-spacing: 0.05em;
-  color: #a7aab3;
-  line-height: 1.4;
+  letter-spacing: 0.06em;
+  color: #c2c5cd;
+}
+
+.build-lab .wwb-int-cap {
+  margin: 36px auto 0;
+  max-width: 52ch;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  color: var(--fg-muted);
+}
+.build-lab .wwb-int-cap .accent-text {
+  color: var(--accent);
 }
 
 /* ---------- 05 · How it works ---------- */
@@ -442,8 +539,15 @@
   .build-lab .ow-side {
     display: none;
   }
-  .build-lab .wwb-int-grid {
-    grid-template-columns: repeat(4, 1fr);
+  .build-lab .wwb-orb {
+    width: min(400px, 100%);
+  }
+  .build-lab .wwb-orb-node {
+    padding: 7px 11px;
+    gap: 7px;
+  }
+  .build-lab .wwb-orb-node .t {
+    font-size: 9.5px;
   }
   .build-lab .adv-grid {
     grid-template-columns: 1fr;
@@ -496,8 +600,15 @@
   .build-lab .ow-ctas .btn {
     width: 100%;
   }
-  .build-lab .wwb-int-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .build-lab .wwb-orb {
+    width: min(320px, 100%);
+  }
+  .build-lab .wwb-orb-node {
+    padding: 6px 9px;
+  }
+  .build-lab .wwb-orb-node svg {
+    width: 13px;
+    height: 13px;
   }
 }
 
@@ -515,7 +626,12 @@
     transition: none;
   }
   .build-lab .ow-orbit-drift,
-  .build-lab .ow-orbit-carrier {
+  .build-lab .ow-orbit-carrier,
+  .build-lab .wwb-orb.play .wwb-orb-ring,
+  .build-lab .wwb-orb-core .pulse {
     animation: none;
+  }
+  .build-lab .wwb-orb-ring {
+    opacity: 1;
   }
 }

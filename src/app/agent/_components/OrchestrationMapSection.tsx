@@ -47,11 +47,10 @@ export function OrchestrationMapSection() {
             whileInView="show"
             viewport={VIEWPORT}
           >
-            An agent isn&rsquo;t a chatbot, and not another seat to manage - it works from an
-            objective. The leverage is in orchestration: agents chained together, each taking a
-            step, passing work between one another, your tools and your people inside a single
-            designed flow. And it stays under control - every step runs inside set permissions, with
-            human approval where it matters and a full audit trail behind every action.
+            Work moves end to end without the manual relay - that&rsquo;s orchestration. Agents
+            chained into one flow, each taking a step and passing to the next, your tools and people
+            included. Every step stays inside set permissions, with human approval where it matters
+            and a full audit trail.
           </m.p>
         </div>
 

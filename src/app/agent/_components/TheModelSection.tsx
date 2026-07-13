@@ -26,7 +26,7 @@ export function TheModelSection() {
             viewport={VIEWPORT}
           >
             You don&rsquo;t subscribe to agents. You build a{' '}
-            <span className="accent-text">model-agnostic capability.</span>
+            <span className="accent-text">workforce you own.</span>
           </m.h2>
 
           <div>
@@ -37,11 +37,10 @@ export function TheModelSection() {
               whileInView="show"
               viewport={VIEWPORT}
             >
-              Most agent tools hand you a platform and leave you to configure it. We work the other
-              way - S<sup>7</sup> Labs designs, connects and scales a custom AI stack around your
-              systems, your rules and your data, then grows it as the agents earn trust. The stack
-              is model-agnostic, so we run whatever model leads the market and swap as that changes
-              - you are never locked to one provider.
+              Most tools hand you a platform to configure. We build the opposite - S<sup>7</sup>{' '}
+              Labs designs a custom AI stack around your systems, your rules and your data, then
+              grows it as the agents earn trust. Whatever model leads the market, we run it and swap
+              as that changes - you&rsquo;re never locked in.
             </m.p>
 
             <m.div
@@ -54,7 +53,7 @@ export function TheModelSection() {
             >
               <m.div className="ag-slot" variants={fadeUp}>
                 <span>The model</span>
-                <span className="tag">Model-agnostic</span>
+                <span className="tag">Swappable</span>
               </m.div>
               {LAYERS.map((layer) => (
                 <m.div key={layer} className="ag-layer" variants={fadeUp}>
