@@ -1,5 +1,6 @@
 'use client'
 
+import { openContactModal } from '@/components/ContactModal'
 import { MotionRoot, VIEWPORT, fadeUp, m } from '@/components/Motion'
 
 import { CtaButton } from './CtaButton'
@@ -58,7 +59,7 @@ export function SystemisedKnowledgeSection() {
             whileInView="show"
             viewport={VIEWPORT}
           >
-            <CtaButton href="https://www.system7.ai/contact" arrow>
+            <CtaButton onClick={() => openContactModal('revops-map-engine')} arrow>
               Map your revenue engine
             </CtaButton>
             {/* Per the copy doc, this scrolls to the Capabilities section. */}

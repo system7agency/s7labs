@@ -12,7 +12,13 @@ import type { Variants } from 'motion/react'
 import type { ReactNode } from 'react'
 
 export { m }
-export { useInView, useReducedMotion } from 'motion/react'
+export {
+  useInView,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from 'motion/react'
 
 export const EASE = [0.2, 0.7, 0.2, 1] as const
 

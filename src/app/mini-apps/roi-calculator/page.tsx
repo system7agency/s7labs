@@ -1,5 +1,6 @@
 'use client'
 
+import { openContactModal } from '@/components/ContactModal'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { clsx } from 'clsx'
@@ -491,14 +492,13 @@ export default function RoiCalculatorPage() {
             >
               {copyState === 'copied' ? 'Copied' : 'Copy results'}
             </button>
-            <a
+            <button
+              type="button"
               className="primary"
-              href="https://www.system7.ai/contact"
-              target="_blank"
-              rel="noreferrer"
+              onClick={() => openContactModal('roi-calculator')}
             >
               Book a call
-            </a>
+            </button>
           </div>
         </section>
 

@@ -144,7 +144,44 @@
   color: var(--fg, #ededed);
 }
 
-/* ---------- 05 · The discipline: corner-bracket tickets ---------- */
+/* ---------- 05 · The discipline: corner-bracket tickets + cut-off orb ---------- */
+
+.revops-lab .rv-disc .fx-head,
+.revops-lab .rv-disc .rv-tickets {
+  position: relative;
+  z-index: 1;
+}
+.revops-lab .rv-orb {
+  position: absolute;
+  top: 20px;
+  right: clamp(-430px, -27vw, -250px);
+  width: min(680px, 52vw);
+  aspect-ratio: 1 / 1;
+  pointer-events: none;
+  z-index: 0;
+}
+.revops-lab .rv-orb-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.revops-lab .rv-orb-drift {
+  transform-origin: center;
+  animation: rvOrbDrift 220s linear infinite;
+}
+.revops-lab .rv-orb-arc {
+  filter: drop-shadow(0 0 6px var(--accent-glow, rgba(79, 140, 255, 0.35)));
+  opacity: 0.85;
+}
+@keyframes rvOrbDrift {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .revops-lab .rv-tickets {
   display: grid;
@@ -200,255 +237,280 @@
   line-height: 1.35;
 }
 
-/* ---------- 06 · The engine: vertical pipeline spine ---------- */
+/* ---------- 06 · The engine: pinned heading + travelling timeline ---------- */
 
-.revops-lab .rv-spine-wrap {
-  margin-top: 72px;
+/* Desktop pin: a tall wrapper gives the scroll distance; the sticky child is a
+   fixed 100vh frame split left (heading, holds still) / right (timeline window,
+   whose strip travels upward as you scroll). */
+.revops-lab .rv-eng-sec:has(.rv-engpin) {
+  padding-top: 0;
+  padding-bottom: 0;
 }
-.revops-lab .rv-spine-end {
+.revops-lab .rv-engpin {
+  height: 240vh;
+}
+.revops-lab .rv-engpin-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 92px 0 56px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1fr);
+  gap: clamp(48px, 6vw, 100px);
+  align-items: center;
+}
+
+.revops-lab .rv-eng-head .fx-eyebrow {
+  margin-bottom: 30px;
+}
+.revops-lab .rv-eng-head .fx-h2 {
+  margin: 0;
+}
+.revops-lab .rv-eng-head .fx-sub {
+  margin-top: 22px;
+  max-width: 44ch;
+}
+
+/* The window: a fixed-height viewport that softly fades its top and bottom, so
+   stages ease in and out rather than hard-clipping against the frame edges. */
+.revops-lab .rv-eng-window {
+  position: relative;
+  height: clamp(400px, 62vh, 560px);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
+}
+.revops-lab .rv-eng-strip {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+.revops-lab .rv-eng-end {
   display: block;
-  text-align: center;
   font-family: var(--mono);
   font-size: 10px;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.28em;
   color: var(--fg-dim, #55555b);
-  padding: 14px 0;
+  padding-left: 34px;
+  margin: 0 0 6px;
 }
-.revops-lab .rv-spine-end.synced {
+.revops-lab .rv-eng-end.synced {
   color: var(--accent);
-}
-.revops-lab .rv-spine {
-  position: relative;
-}
-.revops-lab .rv-spine::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  background: var(--border-strong, rgba(255, 255, 255, 0.14));
-}
-.revops-lab .rv-spine-fill {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 1px;
-  height: 100%;
-  background: linear-gradient(180deg, var(--accent), var(--cyan, #04e3ee));
-  transform: scaleY(0);
-  transform-origin: top center;
-}
-.revops-lab .rv-spine.play .rv-spine-fill {
-  transform: scaleY(1);
-  transition: transform 2.6s cubic-bezier(0.3, 0, 0.2, 1) 0.2s;
+  margin: 6px 0 0;
 }
 
-.revops-lab .rv-stage {
+.revops-lab .rv-eng-track {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 96px;
-  padding: 24px 0;
-  opacity: 0;
-  transform: translateY(10px);
-  transition:
-    opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
-    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  padding-left: 34px;
 }
-.revops-lab .rv-spine.play .rv-stage {
-  opacity: 1;
-  transform: none;
-}
-.revops-lab .rv-stage .node {
+.revops-lab .rv-eng-line {
   position: absolute;
-  top: 32px;
-  left: 50%;
-  width: 8px;
-  height: 8px;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--accent) 12%,
+    var(--cyan, #04e3ee) 88%,
+    transparent 100%
+  );
+  opacity: 0.6;
+}
+
+.revops-lab .rv-eng-stage {
+  position: relative;
+  padding: clamp(15px, 2.2vh, 26px) 0;
+}
+.revops-lab .rv-eng-node {
+  position: absolute;
+  left: -34px;
+  top: calc(clamp(15px, 2.2vh, 26px) + 5px);
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  transform: translateX(-50%);
-  background: var(--bg, #060608);
-  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.14));
-  transition:
-    background 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
-}
-.revops-lab .rv-spine.play .rv-stage .node {
   background: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 0 12px var(--accent-glow, rgba(79, 140, 255, 0.35));
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent),
+    0 0 12px var(--accent-glow, rgba(79, 140, 255, 0.45));
 }
-.revops-lab .rv-stage .body {
-  grid-column: 2;
-}
-.revops-lab .rv-stage:nth-child(odd) .body {
-  grid-column: 1;
-  text-align: right;
-}
-.revops-lab .rv-stage .idx {
+.revops-lab .rv-eng-idx {
   display: block;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.2em;
-  color: var(--fg-dim, #55555b);
+  color: var(--accent);
   margin-bottom: 8px;
 }
-.revops-lab .rv-stage .name {
+.revops-lab .rv-eng-name {
   font-family: var(--sans);
   font-weight: 500;
-  font-size: 19px;
+  font-size: clamp(17px, 1.8vw, 21px);
   letter-spacing: -0.015em;
   color: var(--fg, #ededed);
 }
-.revops-lab .rv-stage .cap {
-  margin: 8px 0 0;
+.revops-lab .rv-eng-cap {
+  margin: 7px 0 0;
   font-family: var(--mono);
-  font-size: 11.5px;
-  line-height: 1.65;
+  font-size: 12px;
+  line-height: 1.6;
   color: #9ba0aa;
-}
-.revops-lab .rv-stage:nth-child(odd) .cap {
-  margin-left: auto;
-}
-.revops-lab .rv-stage .cap {
-  max-width: 34ch;
+  max-width: 42ch;
 }
 
-/* stage delays keyed to the 2.6s spine draw */
-.revops-lab .rv-spine.play .rv-stage:nth-child(2),
-.revops-lab .rv-spine.play .rv-stage:nth-child(2) .node {
-  transition-delay: 0.15s;
+/* Flowing fallback (mobile / reduced-motion): heading then full timeline in
+   normal flow — no window, no mask, no travel. */
+.revops-lab .rv-eng-flow .rv-eng-head {
+  margin-bottom: 52px;
 }
-.revops-lab .rv-spine.play .rv-stage:nth-child(3),
-.revops-lab .rv-spine.play .rv-stage:nth-child(3) .node {
-  transition-delay: 0.6s;
-}
-.revops-lab .rv-spine.play .rv-stage:nth-child(4),
-.revops-lab .rv-spine.play .rv-stage:nth-child(4) .node {
-  transition-delay: 1.05s;
-}
-.revops-lab .rv-spine.play .rv-stage:nth-child(5),
-.revops-lab .rv-spine.play .rv-stage:nth-child(5) .node {
-  transition-delay: 1.5s;
-}
-.revops-lab .rv-spine.play .rv-stage:nth-child(6),
-.revops-lab .rv-spine.play .rv-stage:nth-child(6) .node {
-  transition-delay: 1.95s;
-}
-.revops-lab .rv-spine.play .rv-stage:nth-child(7),
-.revops-lab .rv-spine.play .rv-stage:nth-child(7) .node {
-  transition-delay: 2.4s;
+.revops-lab .rv-eng-strip.flow {
+  max-width: 620px;
 }
 
-/* ---------- 07 · Speed: time-compression rows ---------- */
+/* ---------- 07 · Speed: task list + time dial ---------- */
 
-.revops-lab .rv-speed {
-  margin-top: 56px;
-  max-width: 980px;
-}
-.revops-lab .rv-speed-row {
+.revops-lab .rv-speed-grid {
   display: grid;
-  grid-template-columns: 170px minmax(0, 1fr) auto;
-  gap: 28px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 80px;
   align-items: center;
-  padding: 24px 0;
+}
+.revops-lab .rv-speed-tasks {
+  margin-top: 44px;
+  max-width: 520px;
+}
+.revops-lab .rv-speed-task {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: baseline;
+  padding: 17px 0;
   border-top: 1px solid var(--border, rgba(255, 255, 255, 0.07));
 }
-.revops-lab .rv-speed-row .task {
+.revops-lab .rv-speed-task .idx {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+.revops-lab .rv-speed-task .name {
   font-family: var(--sans);
   font-weight: 500;
   font-size: 17px;
-  color: var(--fg, #ededed);
   letter-spacing: -0.01em;
+  color: var(--fg, #ededed);
 }
-.revops-lab .rv-speed-row .track {
+.revops-lab .rv-speed-task .shift {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-dim, #55555b);
+}
+.revops-lab .rv-speed-task .shift .arr {
+  color: var(--accent);
+}
+.revops-lab .rv-speed-task .shift .v {
+  color: #c8ccd4;
+}
+
+.revops-lab .rv-gauge {
   position: relative;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--border, rgba(255, 255, 255, 0.07));
+  width: min(400px, 100%);
+  margin: 0 auto;
+}
+.revops-lab .rv-gauge-svg {
+  display: block;
+  width: 100%;
+  height: auto;
   overflow: visible;
 }
-.revops-lab .rv-speed-row .was-fill {
-  position: absolute;
-  inset: 0;
-  border-radius: 2px;
-  background: #4a4e58;
-  transform: scaleX(0);
-  transform-origin: left center;
+.revops-lab .rv-gauge-track {
+  fill: none;
+  stroke: #2f333c;
+  stroke-width: 2;
+  stroke-linecap: round;
 }
-.revops-lab .rv-speed-row .now-fill {
-  position: absolute;
-  top: -1px;
-  left: 0;
-  height: 4px;
-  width: 6%;
-  border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow, rgba(79, 140, 255, 0.35));
-  transform: scaleX(0);
-  transform-origin: left center;
+.revops-lab .rv-gauge-tick {
+  stroke: var(--border-strong, rgba(255, 255, 255, 0.16));
+  stroke-width: 1.5;
+  stroke-linecap: round;
 }
-/* fill up to "days" (dim), then collapse to "minutes" (accent) */
-.revops-lab .rv-speed.play .was-fill {
-  animation: rvCompress 2.4s cubic-bezier(0.3, 0, 0.2, 1) forwards;
-  animation-delay: var(--d, 0s);
+.revops-lab .rv-gauge-fill {
+  fill: none;
+  stroke: url(#rv-gauge-grad);
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 9px var(--accent-glow, rgba(79, 140, 255, 0.5)));
 }
-.revops-lab .rv-speed.play .now-fill {
-  animation: rvNow 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
-  animation-delay: calc(var(--d, 0s) + 1.7s);
+.revops-lab .rv-gauge-dot {
+  fill: var(--cyan, #04e3ee);
+  filter: drop-shadow(0 0 8px var(--cyan, #04e3ee));
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rvGaugePulse 2.4s ease-in-out infinite;
 }
-@keyframes rvCompress {
-  0% {
-    transform: scaleX(0);
-    opacity: 1;
-  }
-  45% {
-    transform: scaleX(1);
-    opacity: 1;
-  }
-  62% {
-    transform: scaleX(1);
-    opacity: 1;
-  }
+@keyframes rvGaugePulse {
+  0%,
   100% {
-    transform: scaleX(0.06);
-    opacity: 0;
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
-@keyframes rvNow {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-.revops-lab .rv-speed-row .figures {
+/* center readout sits in the open gauge; nudged toward the arc centre */
+.revops-lab .rv-gauge-center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 47%;
+  transform: translateY(-50%);
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
 }
-.revops-lab .rv-speed-row .was {
+.revops-lab .rv-gauge-center .was {
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   color: var(--fg-dim, #55555b);
-  text-transform: uppercase;
 }
-.revops-lab .rv-speed-row .figures .arr {
+.revops-lab .rv-gauge-center .arr {
   color: var(--accent);
-  font-size: 12px;
+  font-size: 14px;
+  line-height: 1;
 }
-.revops-lab .rv-speed-row .now {
+.revops-lab .rv-gauge-center .now {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+  color: var(--fg, #ededed);
+}
+/* the two end labels under the gauge */
+.revops-lab .rv-gauge-end {
+  position: absolute;
+  bottom: 6%;
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.22em;
 }
+.revops-lab .rv-gauge-end.days {
+  left: 8%;
+  color: var(--fg-dim, #55555b);
+}
+.revops-lab .rv-gauge-end.mins {
+  right: 6%;
+  color: var(--accent);
+}
+
 .revops-lab .rv-speed-link {
   display: inline-flex;
   align-items: center;
@@ -473,6 +535,16 @@
   .revops-lab .rv-ghost {
     display: none;
   }
+  .revops-lab .rv-orb {
+    display: none;
+  }
+  .revops-lab .rv-speed-grid {
+    grid-template-columns: 1fr;
+    gap: 56px;
+  }
+  .revops-lab .rv-gauge {
+    width: min(340px, 100%);
+  }
   .revops-lab .rv-shift-grid {
     grid-template-columns: 1fr;
     gap: 56px;
@@ -483,31 +555,9 @@
   .revops-lab .rv-tickets {
     grid-template-columns: 1fr 1fr;
   }
-  /* spine hugs the left edge, stages all on the right */
-  .revops-lab .rv-spine::before,
-  .revops-lab .rv-spine-fill {
-    left: 3px;
-  }
-  .revops-lab .rv-spine-end {
-    text-align: left;
-    padding-left: 24px;
-  }
-  .revops-lab .rv-stage {
-    grid-template-columns: 1fr;
-    padding-left: 32px;
-  }
-  .revops-lab .rv-stage .body,
-  .revops-lab .rv-stage:nth-child(odd) .body {
-    grid-column: 1;
-    text-align: left;
-  }
-  .revops-lab .rv-stage:nth-child(odd) .cap {
-    margin-left: 0;
-  }
-  .revops-lab .rv-stage .node {
-    left: 3.5px;
-    transform: none;
-    margin-left: -3.5px;
+  /* engine stacks: heading above, full timeline below */
+  .revops-lab .rv-eng-flow .rv-eng-head {
+    margin-bottom: 48px;
   }
 }
 
@@ -526,11 +576,11 @@
     font-size: 13px;
     color: var(--fg-dim, #55555b);
   }
-  .revops-lab .rv-speed-row {
-    grid-template-columns: 1fr auto;
+  .revops-lab .rv-speed-task {
+    gap: 14px;
   }
-  .revops-lab .rv-speed-row .track {
-    display: none;
+  .revops-lab .rv-speed-task .name {
+    font-size: 15px;
   }
 }
 
@@ -541,18 +591,22 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .revops-lab .rv-stage,
-  .revops-lab .rv-stage .node,
-  .revops-lab .rv-spine-fill,
-  .revops-lab .rv-spine.play .rv-spine-fill {
+  .revops-lab .rv-eng-stage,
+  .revops-lab .rv-eng-stage .node {
     transition: none;
+    opacity: 1;
+    transform: none;
   }
-  .revops-lab .rv-speed.play .was-fill {
-    animation: none;
-    opacity: 0;
+  .revops-lab .rv-eng-stage .node {
+    background: var(--accent);
+    border-color: var(--accent);
   }
-  .revops-lab .rv-speed.play .now-fill {
+  .revops-lab .rv-eng-track.play .rv-eng-fill {
+    transition: none;
+    transform: scaleY(1);
+  }
+  .revops-lab .rv-orb-drift,
+  .revops-lab .rv-gauge-dot {
     animation: none;
-    transform: scaleX(1);
   }
 }

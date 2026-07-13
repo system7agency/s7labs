@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { openContactModal } from '@/components/ContactModal'
 import styles from './InsideSystem7Section.module.css'
 import { CtaButton } from './CtaButton'
 
@@ -111,7 +112,7 @@ export function InsideSystem7Section({
         <p className={`${styles.subhead} ${styles.reveal}`}>{subhead}</p>
 
         <div className={`${styles.actions} ${styles.reveal}`}>
-          <CtaButton href="https://www.system7.ai/contact" arrow>
+          <CtaButton onClick={() => openContactModal('inside-system7')} arrow>
             Talk to System7
           </CtaButton>
         </div>

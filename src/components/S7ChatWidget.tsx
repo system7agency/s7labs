@@ -54,8 +54,17 @@ export function S7ChatWidget() {
 
   const [open, setOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  // Incremented each time an opener asks for voice; the panel switches on change.
-  const [voiceRequest, setVoiceRequest] = useState(0)
+  // Which pane the opener asked for: the header "Talk to System7" pill opens
+  // voice, the floating "ASK S7" bubble opens chat. The nonce lets a repeat
+  // request switch the pane while the panel is already open.
+  const [requestedMode, setRequestedMode] = useState<Mode>('chat')
+  const [requestNonce, setRequestNonce] = useState(0)
+
+  const openAs = (mode: Mode) => {
+    setRequestedMode(mode)
+    setRequestNonce((n) => n + 1)
+    setOpen(true)
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -69,7 +78,8 @@ export function S7ChatWidget() {
   useEffect(() => {
     const openWidget = (e: Event) => {
       const detail = (e as CustomEvent<OpenChatWidgetDetail>).detail
-      if (detail?.mode === 'voice') setVoiceRequest((n) => n + 1)
+      setRequestedMode(detail?.mode === 'voice' ? 'voice' : 'chat')
+      setRequestNonce((n) => n + 1)
       setOpen(true)
     }
     window.addEventListener(OPEN_CHAT_WIDGET_EVENT, openWidget)
@@ -112,7 +122,7 @@ export function S7ChatWidget() {
         <button
           type="button"
           className={styles.bubble}
-          onClick={() => setOpen(true)}
+          onClick={() => openAs('chat')}
           aria-label="Open S7 chat"
         >
           <span className={styles.orb} aria-hidden />
@@ -131,7 +141,8 @@ export function S7ChatWidget() {
       <S7ChatPanel
         agentId={agentId}
         isMobile={isMobile}
-        voiceRequest={voiceRequest}
+        requestedMode={requestedMode}
+        requestNonce={requestNonce}
         onClose={() => setOpen(false)}
         onMinimize={() => setOpen(false)}
       />
@@ -157,18 +168,21 @@ type CallFormStatus = 'idle' | 'loading' | 'success'
 function S7ChatPanel({
   agentId,
   isMobile,
-  voiceRequest,
+  requestedMode,
+  requestNonce,
   onClose,
   onMinimize,
 }: {
   agentId: string
   isMobile: boolean
-  voiceRequest: number
+  requestedMode: Mode
+  requestNonce: number
   onClose: () => void
   onMinimize: () => void
 }) {
-  // Voice-first: the panel always opens on the voice pane; chat is one tap away.
-  const [mode, setMode] = useState<Mode>('voice')
+  // Open on whichever pane the opener asked for (header pill → voice,
+  // floating bubble → chat); the other pane stays one tap away.
+  const [mode, setMode] = useState<Mode>(requestedMode)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isWaiting, setIsWaiting] = useState(false)
@@ -209,12 +223,13 @@ function S7ChatPanel({
   const voiceStatus = conversation.status
   const isCallActive = voiceStatus === 'connecting' || voiceStatus === 'connected'
 
-  // A voice-opener (header phone CTA) fired while the panel is already mounted —
-  // adjust state during render rather than in an effect.
-  const [seenVoiceRequest, setSeenVoiceRequest] = useState(voiceRequest)
-  if (voiceRequest !== seenVoiceRequest) {
-    setSeenVoiceRequest(voiceRequest)
-    if (voiceRequest > 0) setMode('voice')
+  // An opener fired while the panel is already mounted (e.g. header pill
+  // clicked while the chat pane is open) — adjust state during render rather
+  // than in an effect. Never yank an active call back to chat.
+  const [seenNonce, setSeenNonce] = useState(requestNonce)
+  if (requestNonce !== seenNonce) {
+    setSeenNonce(requestNonce)
+    if (!(requestedMode === 'chat' && isCallActive)) setMode(requestedMode)
   }
 
   const pushMessage = useCallback((role: Role, text: string) => {

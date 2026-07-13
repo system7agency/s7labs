@@ -17,7 +17,9 @@ import styles from './CtaButton.module.css'
    ========================================================================== */
 
 type CtaButtonProps = {
-  href: string
+  /** Link target. Ignored when `onClick` is provided (renders a <button>). */
+  href?: string
+  onClick?: () => void
   children: ReactNode
   variant?: 'primary' | 'secondary'
   /** Show the trailing arrow (design's `arr` span). */
@@ -27,23 +29,34 @@ type CtaButtonProps = {
 
 export function CtaButton({
   href,
+  onClick,
   children,
   variant = 'primary',
   arrow = false,
   className,
 }: CtaButtonProps) {
-  return (
-    <a
-      href={href}
-      onClick={handleAnchorClick}
-      className={[styles.btn, styles[variant], className].filter(Boolean).join(' ')}
-    >
+  const cls = [styles.btn, styles[variant], className].filter(Boolean).join(' ')
+  const inner = (
+    <>
       <span className={styles.label}>{children}</span>
       {arrow ? (
         <span className={styles.arrow} aria-hidden="true">
           →
         </span>
       ) : null}
+    </>
+  )
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={cls}>
+        {inner}
+      </button>
+    )
+  }
+  return (
+    <a href={href} onClick={handleAnchorClick} className={cls}>
+      {inner}
     </a>
   )
 }

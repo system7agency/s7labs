@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono, Fraunces } from 'next/font/google'
 
+import { ContactModal } from '@/components/ContactModal'
 import { S7ChatWidget } from '@/components/S7ChatWidget'
 
 import './globals.css'
@@ -46,6 +47,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         {children}
         <S7ChatWidget />
+        <ContactModal />
       </body>
     </html>
   )

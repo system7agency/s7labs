@@ -11,8 +11,6 @@ import { useEffect } from 'react'
  * tweaks.aurora (always true), tweaks.tilt (always true).
  */
 
-const TYPE_SPEED_MS = 38
-
 type RGB = { r: number; g: number; b: number }
 type Blob = {
   x: number
@@ -134,39 +132,6 @@ export function PageScripts() {
       raf(spotLoop)
     }
 
-    // -------- 3D tilt on cards --------
-    const tiltCards = document.querySelectorAll<HTMLElement>('.tiltable')
-    tiltCards.forEach((card) => {
-      let cardRaf = 0
-      card.addEventListener(
-        'pointermove',
-        (e) => {
-          if (prefersReduced) return
-          const ev = e as PointerEvent
-          const rect = card.getBoundingClientRect()
-          const x = (ev.clientX - rect.left) / rect.width
-          const y = (ev.clientY - rect.top) / rect.height
-          const rx = (y - 0.5) * -10
-          const ry = (x - 0.5) * 14
-          cancelAnimationFrame(cardRaf)
-          cardRaf = requestAnimationFrame(() => {
-            card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`
-            card.style.setProperty('--cx', x * 100 + '%')
-            card.style.setProperty('--cy', y * 100 + '%')
-          })
-        },
-        { signal: ac.signal }
-      )
-      card.addEventListener(
-        'pointerleave',
-        () => {
-          cancelAnimationFrame(cardRaf)
-          card.style.transform = ''
-        },
-        { signal: ac.signal }
-      )
-    })
-
     // -------- 3D tilt on hero title --------
     const titleWrap = document.getElementById('titleWrap')
     if (titleWrap && !prefersReduced) {
@@ -183,61 +148,14 @@ export function PageScripts() {
       raf(titleLoop)
     }
 
-    // -------- Typewriter --------
-    function typewriteAppendText(el: Element, text: string): Promise<void> {
-      return new Promise((resolve) => {
-        if (prefersReduced) {
-          el.appendChild(document.createTextNode(text))
-          resolve()
-          return
-        }
-        const node = document.createTextNode('')
-        el.appendChild(node)
-        let i = 0
-        const step = () => {
-          if (cancelled || i >= text.length) {
-            resolve()
-            return
-          }
-          node.data += text[i++]
-          const id = setTimeout(
-            () => {
-              timeouts.delete(id)
-              step()
-            },
-            TYPE_SPEED_MS + (Math.random() * 20 - 10)
-          )
-          timeouts.add(id)
-        }
-        step()
-      })
-    }
-
-    async function typewriteRouteLabel(el: Element, label: string) {
-      el.textContent = ''
-      const idx = label.indexOf('7')
-      if (idx < 0) {
-        await typewriteAppendText(el, label)
-        return
-      }
-      await typewriteAppendText(el, label.slice(0, idx))
-      if (cancelled) return
-      const sup = document.createElement('sup')
-      sup.className = 'route-card-superscript'
-      sup.textContent = '7'
-      el.appendChild(sup)
-      if (!prefersReduced) await delay(TYPE_SPEED_MS)
-      if (cancelled) return
-      await typewriteAppendText(el, label.slice(idx + 1))
-    }
-
     async function runHero() {
       const sub = document.getElementById('heroSub')
       if (!sub) return
-      // Full landing intro (per the copy document). It is a paragraph, so it
-      // fades/rises in as a whole rather than typing char by char.
+      // Landing intro (client trimmed the "Open a live app" closing sentence,
+      // 09/07 review). It is a paragraph, so it fades/rises in as a whole
+      // rather than typing char by char.
       const full =
-        'Explore the systems we build across RevOps, software and AI - the automations, internal tools and AI-enabled workflows that cut manual work and help teams grow faster and move quicker, without adding headcount or complexity. Open a live app to solve a specific problem now.'
+        'Explore the systems we build across RevOps, software and AI - the automations, internal tools and AI-enabled workflows that cut manual work and help teams grow faster and move quicker, without adding headcount or complexity.'
       sub.textContent = full
       if (prefersReduced) {
         sub.style.opacity = '1'
@@ -252,48 +170,8 @@ export function PageScripts() {
       sub.style.transform = 'translateY(0)'
     }
 
-    async function runRoutes() {
-      const cards = document.querySelectorAll<HTMLElement>('.route-card:not(.soon)')
-      await Promise.all(
-        Array.from(cards).map(
-          (card, idx) =>
-            new Promise<void>((resolve) => {
-              const id = setTimeout(async () => {
-                timeouts.delete(id)
-                const typedEl = card.querySelector('.typed')
-                const cursorEl = card.querySelector('.type-cursor')
-                if (!typedEl || !cursorEl) {
-                  resolve()
-                  return
-                }
-                await typewriteRouteLabel(typedEl, card.dataset.label ?? '')
-                cursorEl.classList.add('done')
-                resolve()
-              }, idx * 300)
-              timeouts.add(id)
-            })
-        )
-      )
-    }
-
-    function revealSoon() {
-      const soon = document.querySelector<HTMLElement>('.route-card.soon')
-      if (!soon) return
-      soon.style.opacity = '0'
-      const id = setTimeout(() => {
-        timeouts.delete(id)
-        soon.style.transition = 'opacity 1.2s ease'
-        soon.style.opacity = '0.42'
-      }, 100)
-      timeouts.add(id)
-    }
-
     async function run() {
-      revealSoon()
       await runHero()
-      await delay(200)
-      if (cancelled) return
-      await runRoutes()
     }
 
     if (document.fonts && document.fonts.ready) {

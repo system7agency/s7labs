@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { openContactModal } from '@/components/ContactModal'
 import styles from './StartHereSection.module.css'
 import { CtaButton } from './CtaButton'
 
@@ -105,7 +106,7 @@ export function StartHereSection({
         <p className={`${styles.subhead} ${styles.reveal}`}>{subhead}</p>
 
         <div className={`${styles.actions} ${styles.reveal}`}>
-          <CtaButton href="https://www.system7.ai/contact">Map the system</CtaButton>
+          <CtaButton onClick={() => openContactModal('start-here')}>Map the system</CtaButton>
           <CtaButton href="/mini-apps" variant="secondary">
             Browse live apps
           </CtaButton>

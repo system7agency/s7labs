@@ -4,6 +4,8 @@ import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
 
 import { PageScripts } from './(marketing)/landing/PageScripts'
+import { RouteIndex } from './(marketing)/landing/RouteIndex'
+import { RouteIndexB } from './(marketing)/landing/RouteIndexB'
 
 export default function HomePage() {
   return (
@@ -66,140 +68,17 @@ export default function HomePage() {
             <span className="routes-count">04 / 04</span>
           </div>
 
-          <div className="routes-grid">
-            <a
-              href="/revops"
-              className="route-card tiltable"
-              data-route="revops"
-              data-label="revops_s7labs"
-            >
-              <span className="scan-line" />
-              <div className="card-glyphs" aria-hidden="true">
-                <span style={{ top: '12%', right: '18%' }}>{'// pipeline'}</span>
-                <span style={{ top: '72%', right: '12%' }}>Σ revenue</span>
-                <span style={{ top: '42%', left: '10%' }}>⌁</span>
-              </div>
-              <div className="route-card-inner">
-                <span className="route-index">ROUTE_01</span>
-                <div className="route-label">
-                  <span className="prompt">$</span>
-                  <span className="typed" />
-                  <span className="type-cursor" />
-                </div>
-                <p className="route-tagline">
-                  AI-native pipeline, qualification and outbound, connected to the CRM your team
-                  already runs on.
-                </p>
-                <div className="route-meta">
-                  <span className="route-tag">SALES · REVOPS · PIPELINE</span>
-                  <span className="route-arrow">
-                    <span>ENTER</span>
-                    <span className="a">→</span>
-                  </span>
-                </div>
-              </div>
-            </a>
+          {/* TEMP: two variants rendered for client comparison — remove the
+              losing one (and these labels) once a direction is picked. */}
+          <span className="ridx-option-label">
+            <span className="v">Option A</span> · Editorial index
+          </span>
+          <RouteIndex />
 
-            <a
-              href="/agent"
-              className="route-card tiltable"
-              data-route="agent"
-              data-label="agent_s7labs"
-            >
-              <span className="scan-line" />
-              <div className="card-glyphs" aria-hidden="true">
-                <span style={{ top: '12%', right: '18%' }}>{'// agent'}</span>
-                <span style={{ top: '72%', right: '10%' }}>→ talk</span>
-                <span style={{ top: '42%', left: '10%' }}>◉</span>
-              </div>
-              <div className="route-card-inner">
-                <span className="route-index">ROUTE_02</span>
-                <div className="route-label">
-                  <span className="prompt">$</span>
-                  <span className="typed" />
-                  <span className="type-cursor" />
-                </div>
-                <p className="route-tagline">
-                  AI agents that do the work: research, operations, reporting and multi-step tasks,
-                  with human approval built in.
-                </p>
-                <div className="route-meta">
-                  <span className="route-tag">AGENTS · ORCHESTRATION · GOVERNED</span>
-                  <span className="route-arrow">
-                    <span>ENTER</span>
-                    <span className="a">→</span>
-                  </span>
-                </div>
-              </div>
-            </a>
-
-            <a
-              href="/build"
-              className="route-card tiltable"
-              data-route="build"
-              data-label="build_s7labs"
-            >
-              <span className="scan-line" />
-              <div className="card-glyphs" aria-hidden="true">
-                <span style={{ top: '12%', right: '18%' }}>{'// systems'}</span>
-                <span style={{ top: '72%', right: '12%' }}>∆ build</span>
-                <span style={{ top: '42%', left: '10%' }}>◇</span>
-              </div>
-              <div className="route-card-inner">
-                <span className="route-index">ROUTE_03</span>
-                <div className="route-label">
-                  <span className="prompt">$</span>
-                  <span className="typed" />
-                  <span className="type-cursor" />
-                </div>
-                <p className="route-tagline">
-                  Custom software, internal tools and AI-enabled products, built around how your
-                  business actually runs.
-                </p>
-                <div className="route-meta">
-                  <span className="route-tag">SOFTWARE · PRODUCTS · TOOLS</span>
-                  <span className="route-arrow">
-                    <span>ENTER</span>
-                    <span className="a">→</span>
-                  </span>
-                </div>
-              </div>
-            </a>
-          </div>
-
-          <div className="soon-row">
-            <a
-              href="/mini-apps"
-              className="route-card tiltable"
-              data-route="mini-apps"
-              data-label="miniApps_s7labs"
-            >
-              <span className="scan-line" />
-              <div className="card-glyphs" aria-hidden="true">
-                <span style={{ top: '12%', right: '18%' }}>{'// gallery'}</span>
-                <span style={{ top: '72%', right: '10%' }}>★ demo</span>
-                <span style={{ top: '42%', left: '10%' }}>▣</span>
-              </div>
-              <div className="route-card-inner">
-                <span className="route-index">ROUTE_04</span>
-                <div className="route-label">
-                  <span className="prompt">$</span>
-                  <span className="typed" />
-                  <span className="type-cursor" />
-                </div>
-                <p className="route-tagline">
-                  Small, working tools you can open and test now - each one focused on a single job.
-                </p>
-                <div className="route-meta">
-                  <span className="route-tag">GALLERY · DEMOS · UTILITIES</span>
-                  <span className="route-arrow">
-                    <span>ENTER</span>
-                    <span className="a">→</span>
-                  </span>
-                </div>
-              </div>
-            </a>
-          </div>
+          <span className="ridx-option-label">
+            <span className="v">Option B</span> · Display index
+          </span>
+          <RouteIndexB />
         </section>
       </main>
 

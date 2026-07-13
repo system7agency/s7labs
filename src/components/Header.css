@@ -45,10 +45,9 @@ header.header-hidden {
 .back-link {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   color: var(--fg-muted);
   text-decoration: none;
-  font-family: var(--mono);
   transition: color 200ms ease-out;
 }
 
@@ -56,27 +55,42 @@ header.header-hidden {
   color: var(--fg);
 }
 
-.back-link-arrow {
-  display: inline-block;
-  font-size: 14px;
-  line-height: 1;
-  transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
-}
-
-.back-link:hover .back-link-arrow {
-  transform: translateX(-4px);
-}
-
-.back-link-logo {
+/* the back arrow, contained in a quiet circular chip */
+.back-chip {
   display: inline-flex;
-  align-items: baseline;
-  font-family: var(--font-sans);
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1;
-  color: inherit;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  color: var(--fg-muted);
+  transition:
+    border-color 220ms ease-out,
+    background 220ms ease-out,
+    color 220ms ease-out,
+    transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.back-chip svg {
+  width: 13px;
+  height: 13px;
+}
+.back-link:hover .back-chip {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--fg);
+  transform: translateX(-3px);
+}
+
+/* the official System7 wordmark SVG */
+.back-logo {
+  display: block;
+  color: var(--fg);
+  opacity: 0.88;
+  transition: opacity 200ms ease-out;
+}
+.back-link:hover .back-logo {
+  opacity: 1;
 }
 
 .wordmark-superscript {
@@ -91,48 +105,36 @@ header.header-hidden {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .back-link-arrow {
+  .back-chip {
     transition: none;
   }
-  .back-link:hover .back-link-arrow {
+  .back-link:hover .back-chip {
     transform: none;
   }
 }
 
-.wordmark .wordmark-s7 {
-  display: inline-flex;
-  align-items: baseline;
-  letter-spacing: 0;
-}
-.wordmark .wordmark-s7-sup {
-  font-size: 0.75em;
-  vertical-align: baseline;
-  position: relative;
-  top: -0.4em;
-  margin-left: 0.12em;
-  font-weight: inherit;
-  letter-spacing: 0;
-  line-height: 1;
-}
-.wordmark .wordmark-labs {
-  letter-spacing: 0.28em;
-}
-
 .wordmark {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.28em;
   color: var(--fg);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  position: relative;
+  gap: 10px;
   text-decoration: none;
-  transition: color 200ms ease-out;
 }
-.wordmark:hover {
-  color: var(--fg);
+.wordmark-lockup {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.wordmark-lockup .wordmark-s7-sup {
+  font-size: 0.72em;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.42em;
+  margin: 0 0.06em 0 0.1em;
+  font-weight: inherit;
+  line-height: 1;
 }
 .wordmark .dot {
   width: 4px;
@@ -145,33 +147,6 @@ header.header-hidden {
 }
 .wordmark:hover .dot {
   box-shadow: 0 0 14px var(--accent);
-}
-.wordmark-arrow {
-  position: absolute;
-  right: 100%;
-  margin-right: 6px;
-  top: 50%;
-  font-size: 14px;
-  line-height: 1;
-  opacity: 0;
-  transform: translate(8px, -50%);
-  transition:
-    opacity 240ms cubic-bezier(0.4, 0, 0.2, 1),
-    transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform, opacity;
-  pointer-events: none;
-}
-.wordmark:hover .wordmark-arrow {
-  opacity: 1;
-  transform: translate(0, -50%);
-}
-@media (prefers-reduced-motion: reduce) {
-  .wordmark-arrow {
-    transition: none;
-  }
-  .wordmark:hover .wordmark-arrow {
-    transform: translate(0, -50%);
-  }
 }
 
 .li-btn {
@@ -489,10 +464,15 @@ header.header-hidden {
 
 .nav-panel-foot {
   display: flex;
+  flex-direction: column;
   gap: 2px;
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
+}
+.nav-foot-row {
+  display: flex;
+  gap: 2px;
 }
 .nav-foot-link {
   flex: 1;
@@ -500,9 +480,20 @@ header.header-hidden {
   flex-direction: column;
   gap: 3px;
   padding: 8px 10px;
+  border: none;
   border-radius: 8px;
+  background: none;
+  font: inherit;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
   transition: background 0.18s;
+}
+.nav-foot-contact {
+  border: 1px solid var(--border);
+}
+.nav-foot-contact:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 }
 .nav-foot-link:hover {
   background: var(--surface);
@@ -555,7 +546,7 @@ header.header-hidden {
     min-width: 64px;
     gap: 8px;
   }
-  .back-link-logo {
+  .back-logo {
     display: none;
   }
   .back-link {
@@ -563,9 +554,9 @@ header.header-hidden {
     min-height: 36px;
     justify-content: flex-start;
   }
-  .back-link-arrow {
-    font-size: 18px;
-    padding: 6px;
+  .back-chip {
+    width: 36px;
+    height: 36px;
   }
   .li-btn {
     height: 36px;

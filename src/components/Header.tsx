@@ -4,7 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
+import { openContactModal } from './ContactModal'
 import { OPEN_CHAT_WIDGET_EVENT } from './S7ChatWidget'
+import { System7Logo } from './System7Logo'
 import './Header.css'
 
 type HeaderProps = {
@@ -52,20 +54,26 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Close the nav when clicking outside it or pressing Escape.
+  // Close the nav when clicking outside it, pressing Escape, or scrolling.
   useEffect(() => {
     if (!menuOpen) return
+    const startY = window.scrollY
     const onDown = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) setMenuOpen(false)
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setMenuOpen(false)
     }
+    const onScroll = () => {
+      if (Math.abs(window.scrollY - startY) > 24) setMenuOpen(false)
+    }
     document.addEventListener('mousedown', onDown)
     document.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       document.removeEventListener('mousedown', onDown)
       document.removeEventListener('keydown', onKey)
+      window.removeEventListener('scroll', onScroll)
     }
   }, [menuOpen])
 
@@ -86,23 +94,27 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
           rel="noopener noreferrer"
           aria-label="Back to System7"
         >
-          <span className="back-link-arrow" aria-hidden="true">
-            ←
+          <span className="back-chip" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
           </span>
-          <span className="back-link-logo">
-            system<sup className="wordmark-superscript">7</sup>
-          </span>
+          <System7Logo className="back-logo" height={15} />
         </a>
       </div>
       <Link href="/" className="wordmark" aria-label="S7 Labs home">
-        <span className="wordmark-arrow" aria-hidden="true">
-          ←
-        </span>
         <span className="dot" />
-        <span className="wordmark-s7">
-          S<sup className="wordmark-s7-sup">7</sup>
+        <span className="wordmark-lockup">
+          S<sup className="wordmark-s7-sup">7</sup> Labs
         </span>
-        <span className="wordmark-labs">LABS</span>
       </Link>
       <div className="header-right">
         <a
@@ -188,23 +200,40 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
               })}
             </ul>
             <div className="nav-panel-foot">
-              <Link href="/" className="nav-foot-link" onClick={closeMenu}>
-                <span className="nav-index">HOME</span>
-                <span className="nav-label">
-                  S<sup className="wordmark-superscript">7</sup> Labs
-                </span>
-              </Link>
-              <a
-                href="https://www.system7.ai/"
-                className="nav-foot-link"
-                target="_blank"
-                rel="noopener noreferrer"
+              <div className="nav-foot-row">
+                {/* Plain anchor so clicking HOME always does a full load, even
+                    when already on the home page (client: "Home should refresh").
+                    A <Link> would be a no-op on the current route. */}
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a href="/" className="nav-foot-link" onClick={closeMenu}>
+                  <span className="nav-index">HOME</span>
+                  <span className="nav-label">
+                    S<sup className="wordmark-superscript">7</sup> Labs
+                  </span>
+                </a>
+                <a
+                  href="https://www.system7.ai/"
+                  className="nav-foot-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="nav-index">PARENT</span>
+                  <span className="nav-label">
+                    system<sup className="wordmark-superscript">7</sup>.ai ↗
+                  </span>
+                </a>
+              </div>
+              <button
+                type="button"
+                className="nav-foot-link nav-foot-contact"
+                onClick={() => {
+                  closeMenu()
+                  openContactModal('header-menu')
+                }}
               >
-                <span className="nav-index">PARENT</span>
-                <span className="nav-label">
-                  system<sup className="wordmark-superscript">7</sup>.ai ↗
-                </span>
-              </a>
+                <span className="nav-index">CONTACT</span>
+                <span className="nav-label">Get in touch →</span>
+              </button>
             </div>
           </nav>
         </div>

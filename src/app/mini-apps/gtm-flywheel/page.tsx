@@ -1,5 +1,6 @@
 'use client'
 
+import { openContactModal } from '@/components/ContactModal'
 import { useCallback, useMemo, useRef, useState, type DragEvent } from 'react'
 import { clsx } from 'clsx'
 
@@ -703,9 +704,9 @@ export default function GtmFlywheelPage() {
         <button type="button" onClick={loadTemplate}>
           Load template
         </button>
-        <a href="https://www.system7.ai/contact" target="_blank" rel="noreferrer">
+        <button type="button" onClick={() => openContactModal('gtm-flywheel')}>
           Book a call
-        </a>
+        </button>
       </div>
 
       <button

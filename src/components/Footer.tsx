@@ -1,5 +1,7 @@
 import './Footer.css'
 
+import { System7Logo } from './System7Logo'
+
 export function Footer() {
   return (
     <footer>
@@ -11,9 +13,7 @@ export function Footer() {
           rel="noopener noreferrer"
           aria-label="System7"
         >
-          <span className="foot-logo-wordmark">
-            system<sup className="wordmark-superscript">7</sup>
-          </span>
+          <System7Logo height={14} />
         </a>
       </div>
       <div className="foot-right">
