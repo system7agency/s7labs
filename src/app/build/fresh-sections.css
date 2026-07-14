@@ -204,59 +204,203 @@
   max-width: 860px;
 }
 
-.build-lab .wwb-cols {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 56px;
-  margin-top: 64px;
+/* the work as a connected knowledge-graph of soft circular nodes */
+.build-lab .wwb-graph {
+  position: relative;
+  width: 100%;
+  max-width: 1120px;
+  margin: 60px auto 0;
 }
-.build-lab .wwb-col-label {
+.build-lab .wwb-graph-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* faint grid backdrop */
+.build-lab .wwb-graph-grid-line {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 1;
+}
+.build-lab .wwb-graph-hublink {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 55%, transparent);
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+.build-lab .wwb-graph-link {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 32%, var(--border-strong));
+  stroke-width: 1.25;
+  opacity: 0.9;
+}
+.build-lab .wwb-graph-cluster {
+  display: contents;
+}
+
+/* shared circular node */
+.build-lab .wwb-node {
+  position: absolute;
+  /* Centre on the (left,top) anchor via the `translate` property, NOT
+     `transform` — Motion animates `transform: scale()` on entrance, which
+     would otherwise clobber a transform-based translate and leave every node
+     offset by half its size (breaking the line endpoints). */
+  translate: -50% -50%;
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  padding-bottom: 16px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  text-align: center;
+  backdrop-filter: blur(5px);
+}
+.build-lab .wwb-node-tag {
   font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.22em;
+  font-size: clamp(7px, 0.72vw, 9px);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  line-height: 1;
+}
+.build-lab .wwb-node-name {
+  font-family: var(--sans);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  /* keep multi-word labels clear of the circle's curved edge */
+  max-width: 82%;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* hub circles: larger, accent ring + glow */
+.build-lab .wwb-hub {
+  z-index: 3;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border-strong));
+  background: radial-gradient(
+    circle at 50% 38%,
+    color-mix(in srgb, var(--accent) 16%, transparent),
+    color-mix(in srgb, var(--surface) 90%, transparent) 70%
+  );
+  box-shadow:
+    0 0 22px -2px var(--accent-glow),
+    inset 0 0 20px -8px var(--accent-glow);
+}
+.build-lab .wwb-hub .wwb-node-tag {
+  color: var(--accent);
+}
+.build-lab .wwb-hub .wwb-node-name {
+  font-size: clamp(11px, 1.15vw, 15px);
+  color: #fff;
+}
+/* the two primary hubs glow brighter and pulse gently */
+.build-lab .wwb-hub.is-primary {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  animation: wwbPulse 5.6s ease-in-out infinite;
+}
+/* offset the two primary hubs' pulses so they don't breathe in unison */
+.build-lab .wwb-graph-cluster:nth-of-type(2) .wwb-hub.is-primary {
+  animation-delay: -2.8s;
+}
+
+/* leaf circles: smaller, dim + translucent */
+.build-lab .wwb-leaf {
+  z-index: 2;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+.build-lab .wwb-leaf .wwb-node-tag {
+  color: var(--fg-dim);
+}
+.build-lab .wwb-leaf .wwb-node-name {
+  font-size: clamp(9.5px, 1vw, 12.5px);
   color: var(--fg-muted);
 }
-.build-lab .wwb-col-label::before {
-  content: '';
-  width: 5px;
-  height: 5px;
+.build-lab .wwb-leaf:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+}
+.build-lab .wwb-leaf:hover .wwb-node-name {
+  color: var(--fg);
+}
+
+@keyframes wwbPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 22px -2px var(--accent-glow),
+      inset 0 0 20px -8px var(--accent-glow);
+  }
+  50% {
+    box-shadow:
+      0 0 34px 0 var(--accent-glow),
+      inset 0 0 22px -6px var(--accent-glow);
+  }
+}
+
+/* stacked fallback (shown on narrow screens instead of the graph) */
+.build-lab .wwb-stack {
+  display: none;
+  margin-top: 48px;
+  gap: 40px;
+}
+.build-lab .wwb-stack-group {
+  display: block;
+}
+.build-lab .wwb-stack-hub {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 16px;
+  padding: 9px 15px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border-strong));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: 0 0 22px var(--accent-glow);
+}
+.build-lab .wwb-stack-hub-dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--accent);
-  align-self: center;
+  box-shadow: 0 0 10px var(--accent-glow);
   flex: none;
 }
-.build-lab .wwb-col-label .soft {
-  color: var(--fg-muted);
-  letter-spacing: 0.18em;
+.build-lab .wwb-stack-hub-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg);
 }
-.build-lab .wwb-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.build-lab .wwb-stack-leaves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
 }
-.build-lab .wwb-item {
-  padding: 13px 0;
-  border-top: 1px solid var(--border);
+.build-lab .wwb-stack-leaf {
+  padding: 7px 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
   font-family: var(--sans);
-  font-size: 15px;
+  font-size: 13px;
   color: var(--fg);
   letter-spacing: -0.005em;
 }
-.build-lab .wwb-item span {
-  display: inline-block;
-  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.build-lab .wwb-item:hover span {
-  transform: translateX(6px);
-}
 
 .build-lab .wwb-integrates {
-  margin-top: 96px;
+  margin-top: 140px;
   text-align: center;
 }
 .build-lab .wwb-int-title {
@@ -274,137 +418,68 @@
   color: var(--accent);
 }
 
-/* the orb: core + orbiting system nodes */
-.build-lab .wwb-orb {
-  position: relative;
-  width: min(500px, 100%);
-  aspect-ratio: 1 / 1;
-  margin: 40px auto 0;
-}
-.build-lab .wwb-orb-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-.build-lab .wwb-orb-ring {
-  fill: none;
-  stroke: var(--border-strong);
-  stroke-width: 1;
-  stroke-dasharray: 2 8;
-  transform-origin: center;
-  opacity: 0;
-}
-.build-lab .wwb-orb.play .wwb-orb-ring {
-  opacity: 1;
-  transition: opacity 0.8s ease 0.2s;
-  animation: wwbOrbSpin 90s linear infinite;
-}
-@keyframes wwbOrbSpin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-.build-lab .wwb-orb-link {
-  stroke: var(--border-strong);
-  stroke-width: 1;
-}
-.build-lab .wwb-orb-packet {
-  fill: var(--accent);
-  filter: drop-shadow(0 0 5px var(--accent-glow));
-}
-
-.build-lab .wwb-orb-core {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+/* the systems a build connects to — a simple row of labelled blocks */
+.build-lab .wwb-blocks {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  z-index: 2;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 14px;
+  margin: 44px auto 0;
+  max-width: 1080px;
 }
-.build-lab .wwb-orb-core .pulse {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 0 var(--accent-glow);
-  animation: wwbOrbPulse 2.6s infinite;
-}
-@keyframes wwbOrbPulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--accent-glow);
-  }
-  70% {
-    box-shadow: 0 0 0 18px transparent;
-  }
-  100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-.build-lab .wwb-orb-core .t {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.26em;
-  line-height: 1.5;
-  text-align: center;
-  color: var(--fg-muted);
-}
-
-.build-lab .wwb-orb-node {
-  position: absolute;
-  transform: translate(-50%, -50%);
+.build-lab .wwb-block {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 9px 15px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  gap: 11px;
+  padding: 14px 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
   backdrop-filter: blur(6px);
   white-space: nowrap;
-  z-index: 1;
   transition:
     border-color 0.25s ease,
     background 0.25s ease;
 }
-.build-lab .wwb-orb-node:hover {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+.build-lab .wwb-block:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border-strong));
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
 }
-.build-lab .wwb-orb-node svg {
-  width: 16px;
-  height: 16px;
-  stroke: #aeb1ba;
-  flex: none;
-  transition: stroke 0.25s ease;
+/* light connector reading the blocks as linked */
+.build-lab .wwb-block-join {
+  position: absolute;
+  left: -15px;
+  top: 50%;
+  width: 15px;
+  height: 1px;
+  background: var(--border-strong);
 }
-.build-lab .wwb-orb-node:hover svg {
+.build-lab .wwb-block-icon svg {
+  width: 18px;
+  height: 18px;
   stroke: var(--accent);
+  flex: none;
 }
-.build-lab .wwb-orb-node .t {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  color: #c2c5cd;
+.build-lab .wwb-block-label {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: var(--fg);
 }
-
-.build-lab .wwb-int-cap {
-  margin: 36px auto 0;
-  max-width: 52ch;
-  font-family: var(--mono);
-  font-size: 12.5px;
-  line-height: 1.7;
-  letter-spacing: 0.02em;
+.build-lab .wwb-block.soft {
+  border-style: dashed;
+  border-color: var(--border);
+  background: transparent;
+}
+.build-lab .wwb-block.soft .wwb-block-icon svg {
+  stroke: var(--fg-muted);
+}
+.build-lab .wwb-block.soft .wwb-block-label {
+  font-weight: 400;
   color: var(--fg-muted);
-}
-.build-lab .wwb-int-cap .accent-text {
-  color: var(--accent);
 }
 
 /* ---------- 05 · How it works ---------- */
@@ -539,24 +614,23 @@
   .build-lab .ow-side {
     display: none;
   }
-  .build-lab .wwb-orb {
-    width: min(400px, 100%);
+  /* swap the graph for the stacked, grouped fallback on narrow screens */
+  .build-lab .wwb-graph {
+    display: none;
   }
-  .build-lab .wwb-orb-node {
-    padding: 7px 11px;
-    gap: 7px;
+  .build-lab .wwb-stack {
+    display: flex;
+    flex-direction: column;
   }
-  .build-lab .wwb-orb-node .t {
-    font-size: 9.5px;
+  /* below this width the blocks wrap onto multiple rows, so the between-block
+     connector lines would float at row starts — drop them and let the blocks
+     stand on their own. */
+  .build-lab .wwb-block-join {
+    display: none;
   }
   .build-lab .adv-grid {
     grid-template-columns: 1fr;
     gap: 48px;
-  }
-  .build-lab .wwb-cols {
-    grid-template-columns: 1fr;
-    gap: 44px;
-    margin-top: 48px;
   }
   .build-lab .hiw-track {
     grid-template-columns: 1fr;
@@ -600,15 +674,12 @@
   .build-lab .ow-ctas .btn {
     width: 100%;
   }
-  .build-lab .wwb-orb {
-    width: min(320px, 100%);
+  .build-lab .wwb-block {
+    padding: 12px 16px;
+    gap: 9px;
   }
-  .build-lab .wwb-orb-node {
-    padding: 6px 9px;
-  }
-  .build-lab .wwb-orb-node svg {
-    width: 13px;
-    height: 13px;
+  .build-lab .wwb-block-label {
+    font-size: 14px;
   }
 }
 
@@ -617,7 +688,8 @@
 /* m-components honour reduced motion via MotionConfig; the CSS-driven
    pieces still need the guard. */
 @media (prefers-reduced-motion: reduce) {
-  .build-lab .wwb-item span,
+  .build-lab .wwb-leaf,
+  .build-lab .wwb-block,
   .build-lab .hiw-step,
   .build-lab .hiw-step .node,
   .build-lab .hiw-fill,
@@ -627,11 +699,7 @@
   }
   .build-lab .ow-orbit-drift,
   .build-lab .ow-orbit-carrier,
-  .build-lab .wwb-orb.play .wwb-orb-ring,
-  .build-lab .wwb-orb-core .pulse {
+  .build-lab .wwb-hub.is-primary {
     animation: none;
-  }
-  .build-lab .wwb-orb-ring {
-    opacity: 1;
   }
 }

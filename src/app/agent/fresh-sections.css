@@ -4,10 +4,11 @@
  * rail (03), the hub-and-spoke role map (04), the swappable model stack (05).
  */
 
-/* ---------- 02 · Where the time goes: the repetition loop ----------
-   The six repetitive tasks connected into one continuous cycle, with a
-   pulse that keeps circling. No figures, no scale - just the loop the
-   work runs through. --travel (set inline) is the node-to-node distance. */
+/* ---------- 02 · Where the time goes: the repetition orbit ----------
+   The six repetitive tasks seated around one ring, with a pulse that keeps
+   circling it forever (the work that never finishes) while, one at a time,
+   a task is lifted inward to the agent core and taken off them. No figures,
+   no scale - just the loop the work runs through. */
 
 .agent-lab .ag-split {
   display: grid;
@@ -16,167 +17,131 @@
   align-items: center;
 }
 
-.agent-lab .ag-loop {
+.agent-lab .ag-orbit {
   position: relative;
-  /* rail + nodes live in the first 24px; padding must stay 0 so the
-     row-relative nodes line up with the .ag-loop-relative rail. */
-  padding-left: 0;
+  width: min(440px, 100%);
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
 }
-.agent-lab .ag-loop-list {
+.agent-lab .ag-orbit-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* the ring the work runs around */
+.agent-lab .ag-orbit-ring {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+/* the travelling pulse — a short accent arc that circles the ring forever.
+   ag-orbit-track is a dim full ring under it; the comet is a dashed arc
+   whose dashoffset animates a full circumference. */
+.agent-lab .ag-orbit-track {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 14%, transparent);
+  stroke-width: 1.5;
+}
+.agent-lab .ag-orbit-comet {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  /* pathLength=1, so a 0.18 dash is ~18% of the circumference */
+  stroke-dasharray: 0.16 0.84;
+  filter: drop-shadow(0 0 5px var(--accent-glow));
+  opacity: 0;
+}
+.agent-lab .ag-orbit.play .ag-orbit-comet {
+  opacity: 1;
+  animation: agOrbitComet 6s linear infinite;
+  animation-delay: 1.1s;
+}
+@keyframes agOrbitComet {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* faint tether from each on-ring task point inward to the core */
+.agent-lab .ag-orbit-tether {
+  stroke: color-mix(in srgb, var(--border-strong) 55%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+}
+
+/* work being lifted off the ring, inward to the core */
+.agent-lab .ag-orbit-lift {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 5px var(--accent-glow));
+}
+
+/* the still point at the centre — where lifted work lands. Just a soft glow:
+   no pulsing ring, no label, so it anchors the ring without popping. */
+.agent-lab .ag-orbit-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.agent-lab .ag-orbit-core .dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  /* layered glow gives the centre a soft halo without a hard ring outline */
+  box-shadow:
+    0 0 10px 2px var(--accent-glow),
+    0 0 34px 10px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+/* the six task labels, seated just outside the ring */
+.agent-lab .ag-orbit-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.agent-lab .ag-loop-row {
-  position: relative;
+.agent-lab .ag-orbit-item {
+  position: absolute;
   display: flex;
   align-items: center;
-  opacity: 0;
-  transform: translateX(8px);
+  gap: 10px;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
 }
-.agent-lab .ag-loop.play .ag-loop-row {
-  opacity: 1;
-  transform: none;
-  transition:
-    opacity 0.5s cubic-bezier(0.2, 0.7, 0.2, 1),
-    transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+.agent-lab .ag-orbit-item.is-left {
+  flex-direction: row-reverse;
+  transform: translate(-100%, -50%);
 }
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(2) {
-  transition-delay: 0.1s;
+.agent-lab .ag-orbit-item.is-right {
+  transform: translate(0, -50%);
 }
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(3) {
-  transition-delay: 0.2s;
+.agent-lab .ag-orbit-node {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
 }
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(4) {
-  transition-delay: 0.3s;
-}
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(5) {
-  transition-delay: 0.4s;
-}
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(6) {
-  transition-delay: 0.5s;
-}
-.agent-lab .ag-loop-lbl {
-  padding-left: 46px;
+.agent-lab .ag-orbit-lbl {
   font-family: var(--sans);
-  font-size: 15.5px;
+  font-size: 14.5px;
   letter-spacing: -0.005em;
   color: #d0d3da;
 }
-.agent-lab .ag-loop-node {
-  position: absolute;
-  left: 24px;
-  top: 50%;
-  width: 9px;
-  height: 9px;
-  margin: -4.5px 0 0 -4.5px;
-  border-radius: 50%;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  z-index: 2;
-  transition:
-    background 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
-}
-.agent-lab .ag-loop.play .ag-loop-node {
-  background: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow);
-}
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(2) .ag-loop-node {
-  transition-delay: 0.1s;
-}
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(3) .ag-loop-node {
-  transition-delay: 0.2s;
-}
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(4) .ag-loop-node {
-  transition-delay: 0.3s;
-}
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(5) .ag-loop-node {
-  transition-delay: 0.4s;
-}
-.agent-lab .ag-loop.play .ag-loop-row:nth-child(6) .ag-loop-node {
-  transition-delay: 0.5s;
-}
-
-/* the spine the nodes sit on (first node centre → last node centre) */
-.agent-lab .ag-loop-rail,
-.agent-lab .ag-loop-fill {
-  position: absolute;
-  left: 24px;
-  top: 30px;
-  width: 1px;
-  height: var(--travel, 300px);
-}
-.agent-lab .ag-loop-rail {
-  background: var(--border-strong);
-}
-.agent-lab .ag-loop-fill {
-  background: linear-gradient(180deg, var(--accent), var(--accent-2));
-  transform: scaleY(0);
-  transform-origin: top center;
-}
-.agent-lab .ag-loop.play .ag-loop-fill {
-  transform: scaleY(1);
-  transition: transform 0.9s cubic-bezier(0.3, 0, 0.2, 1) 0.15s;
-}
-
-/* the return path — closes the spine into a loop on the left */
-.agent-lab .ag-loop-return {
-  position: absolute;
-  left: 10px;
-  top: 30px;
-  width: 14px;
-  height: var(--travel, 300px);
-  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
-  border-right: none;
-  border-radius: 10px 0 0 10px;
-  opacity: 0;
-}
-.agent-lab .ag-loop.play .ag-loop-return {
-  opacity: 1;
-  transition: opacity 0.6s ease 0.9s;
-}
-
-/* the pulse that keeps circling the loop */
-.agent-lab .ag-loop-comet {
-  position: absolute;
-  left: 24px;
-  top: 30px;
-  width: 7px;
-  height: 7px;
-  margin: -3.5px 0 0 -3.5px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 12px 2px var(--accent-glow);
-  opacity: 0;
-  z-index: 3;
-}
-.agent-lab .ag-loop.play .ag-loop-comet {
-  animation: agComet 5s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  animation-delay: 1.1s;
-}
-@keyframes agComet {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  6% {
-    opacity: 1;
-  }
-  70% {
-    transform: translateY(var(--travel, 300px));
-    opacity: 1;
-  }
-  80% {
-    transform: translateY(var(--travel, 300px));
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 0;
-  }
+.agent-lab .ag-orbit-item.is-left .ag-orbit-lbl {
+  text-align: right;
 }
 
 /* ---------- 03 · Orchestration: layer chain + control rail ---------- */
@@ -474,27 +439,26 @@
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  .agent-lab .ag-loop {
-    padding-left: 0;
+  .agent-lab .ag-orbit {
+    width: min(400px, 100%);
+  }
+  .agent-lab .ag-orbit-lbl {
+    font-size: 12.5px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .agent-lab .ag-link,
-  .agent-lab .ag-node,
-  .agent-lab .ag-loop-row,
-  .agent-lab .ag-loop-node,
-  .agent-lab .ag-loop-fill,
-  .agent-lab .ag-loop.play .ag-loop-fill,
-  .agent-lab .ag-loop-return {
+  .agent-lab .ag-node {
     transition: none;
   }
-  .agent-lab .ag-loop-row {
-    opacity: 1;
-    transform: none;
-  }
-  .agent-lab .ag-loop.play .ag-loop-comet {
+  .agent-lab .ag-orbit.play .ag-orbit-comet {
     animation: none;
+    opacity: 1;
+    /* hold a single static arc rather than a moving pulse */
+    stroke-dashoffset: 0.25;
+  }
+  .agent-lab .ag-orbit-lift {
     display: none;
   }
   .agent-lab .ag-core .pulse {

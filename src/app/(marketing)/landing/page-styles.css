@@ -211,7 +211,9 @@ main {
   transform: translate(-50%, -50%);
   font-family: var(--sans);
   font-weight: 600;
-  font-size: clamp(140px, 22vw, 360px);
+  /* Scaled down alongside the foreground wordmark to keep the same
+     ratio as the lab pages' background word (clamp(110px, 18vw, 280px)). */
+  font-size: clamp(118px, 18vw, 298px);
   letter-spacing: -0.06em;
   line-height: 0.85;
   color: transparent;
@@ -251,7 +253,11 @@ main {
 .word {
   font-family: var(--sans);
   font-weight: 500;
-  font-size: clamp(84px, 16vw, 220px);
+  /* Sized to match the lab-page headings (RevOps/Agent/Build use
+     clamp(64px, 11vw, 152px) via LabTitleHero), nudged ~10px larger
+     so the homepage wordmark reads as the primary heading without
+     towering over the inner pages. */
+  font-size: clamp(72px, 12vw, 162px);
   letter-spacing: -0.055em;
   line-height: 0.9;
   color: var(--fg);

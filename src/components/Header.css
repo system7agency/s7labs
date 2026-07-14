@@ -232,7 +232,8 @@ header.header-hidden {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px 6px 8px;
+  /* tight right padding while collapsed; grows on hover with the label */
+  padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
@@ -246,9 +247,29 @@ header.header-hidden {
     border-color 0.2s,
     background 0.2s,
     transform 0.15s,
-    box-shadow 0.2s;
+    box-shadow 0.2s,
+    padding 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
   position: relative;
   overflow: hidden;
+}
+/* Collapsed by default: just the live dot + phone icon. The label reveals on
+   hover, mirroring the LinkedIn button (.li-btn / .li-label). */
+.phone-pill .label {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-left: -4px;
+  transition:
+    max-width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.25s ease 0.1s,
+    margin 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.phone-pill:hover .label,
+.phone-pill:focus-visible .label {
+  max-width: 160px;
+  opacity: 1;
+  margin-left: 2px;
 }
 .phone-pill::before {
   content: '';
@@ -266,9 +287,11 @@ header.header-hidden {
 .phone-pill:hover::before {
   transform: translateX(100%);
 }
-.phone-pill:hover {
+.phone-pill:hover,
+.phone-pill:focus-visible {
   border-color: var(--accent);
   box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 20%, transparent);
+  padding-right: 12px;
 }
 .phone-pill:active {
   transform: scale(0.98);

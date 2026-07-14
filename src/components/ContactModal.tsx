@@ -62,12 +62,28 @@ export function ContactModal() {
       if (e.key === 'Escape') close()
     }
     document.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+
+    // Lock background scroll while the modal is open. Setting overflow on
+    // <body> alone isn't enough — the page can scroll on <html>, and iOS
+    // Safari ignores body overflow — so lock both elements. We also pad for
+    // the vanished scrollbar so the layout behind the backdrop doesn't shift.
+    const { body, documentElement: html } = document
+    const scrollbarW = window.innerWidth - html.clientWidth
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      bodyOverflow: body.style.overflow,
+      bodyPadRight: body.style.paddingRight,
+    }
+    html.style.overflow = 'hidden'
+    body.style.overflow = 'hidden'
+    if (scrollbarW > 0) body.style.paddingRight = `${scrollbarW}px`
+
     const t = window.setTimeout(() => firstFieldRef.current?.focus(), 120)
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
+      html.style.overflow = prev.htmlOverflow
+      body.style.overflow = prev.bodyOverflow
+      body.style.paddingRight = prev.bodyPadRight
       window.clearTimeout(t)
     }
   }, [open, close])
