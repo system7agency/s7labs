@@ -69,7 +69,7 @@ export const APPS: MiniApp[] = [
       'Enter your work email. We map your ICP, find 25 target companies, surface decision-makers, and deliver 25 verified emails — in about 15 minutes.',
     tags: ['sales intelligence', 'icp', 'prospecting', 'outbound', 'gtm', 'ai'],
     thumb: 'radar',
-    launch_url: '/mini-apps/sales-insights',
+    launch_url: '/live-apps/sales-insights',
     learn_more: {
       what_it_does:
         'Takes your work email, reads your company website to infer your ideal customer profile and competitor landscape, then assembles a sample target list — 25 best-fit accounts and 25 decision-makers with verified emails — delivered as a report in about 15 minutes.',
@@ -99,7 +99,7 @@ export const APPS: MiniApp[] = [
       'Drop your work email and we brief an AI voice sales rep on your positioning, ICP, and value props — then email you a real US number you can call in minutes.',
     tags: ['voice', 'ai agent', 'sales', 'pipeline', 'gtm', 'ai'],
     thumb: 'intents',
-    launch_url: '/mini-apps/voice-agent',
+    launch_url: '/live-apps/voice-agent',
     learn_more: {
       what_it_does:
         'Reads your domain — positioning, ICP, value props, and recent activity — builds a brief an AI voice agent can use in real conversation, wires it to a live phone number, and emails you the number to call. It is a real US number that connects to an AI rep that knows your business.',
@@ -128,7 +128,7 @@ export const APPS: MiniApp[] = [
       'Check whether an AI agent can actually read and act on your site. Free result shows your biggest blockers and a readiness score; the full 6-point checklist and ranked fix plan unlock by email.',
     tags: ['ai agents', 'structured data', 'seo', 'readiness', 'gtm', 'ai'],
     thumb: 'agentic',
-    launch_url: '/mini-apps/agentic-readiness',
+    launch_url: '/live-apps/agentic-readiness',
     learn_more: {
       what_it_does:
         'Scrapes a website and assesses how ready it is for AI agents and LLM crawlers to read it and act on it — across structured data, content clarity, crawl access, render dependency, action readiness, and identity signals. It shows a readiness score and the biggest blockers free, and unlocks the full checklist, the specific fix for each issue, and a ranked action plan by email.',
@@ -160,7 +160,7 @@ export const APPS: MiniApp[] = [
       'Not a rank tracker. Checks which keywords trigger a Google AI Overview, who gets cited, and whether your brand shows up — free snapshot, full per-keyword breakdown by email.',
     tags: ['ai overview', 'seo', 'citations', 'gtm', 'aio', 'ai'],
     thumb: 'aio',
-    launch_url: '/mini-apps/ai-overview-tracker',
+    launch_url: '/live-apps/ai-overview-tracker',
     learn_more: {
       what_it_does:
         'Runs your keywords through Google search, detects which ones trigger an AI Overview, and checks who gets cited in the AI answer — including whether your brand is there. It shows your AI Overview trigger rate, citation rate, and blind spots free, then unlocks the full per-keyword citation breakdown by email.',
@@ -192,7 +192,7 @@ export const APPS: MiniApp[] = [
       'One 0-100 score for how visible your brand is to AI — built from presence in AI answers, citations, entity clarity, and drift. See your score and the four sub-scores, then unlock what is dragging it down.',
     tags: ['ai visibility', 'aeo', 'citations', 'entity', 'gtm', 'ai'],
     thumb: 'avs',
-    launch_url: '/mini-apps/ai-visibility-score',
+    launch_url: '/live-apps/ai-visibility-score',
     learn_more: {
       what_it_does:
         'Calculates a single AI Visibility Score (0-100) for a domain from four parts — presence in AI answers, citations as a source, entity clarity, and drift — and shows the score and sub-scores, then unlocks a short read of what is pulling the score down.',
@@ -222,7 +222,7 @@ export const APPS: MiniApp[] = [
       'Paste a cold email and get three optimized rewrites — each with a different angle, annotated changes, and a quality diagnosis.',
     tags: ['email', 'copywriting', 'outbound', 'cold email', 'ai'],
     thumb: 'emailopt',
-    launch_url: '/mini-apps/email-copy-optimizer',
+    launch_url: '/live-apps/email-copy-optimizer',
     learn_more: {
       what_it_does:
         'Reads your cold email subject and body, scores weak points, and rewrites it into three distinct variations (e.g. direct, curiosity-led, value-first) with annotated explanations of what changed and why.',
@@ -252,7 +252,7 @@ export const APPS: MiniApp[] = [
       'Model outbound campaign inputs and see expected pipeline, closed revenue, ROI multiple, and cost per meeting — live as you move the sliders.',
     tags: ['roi', 'outbound', 'pipeline', 'calculator', 'gtm'],
     thumb: 'roi',
-    launch_url: '/mini-apps/roi-calculator',
+    launch_url: '/live-apps/roi-calculator',
     learn_more: {
       what_it_does:
         'Takes leads contacted, reply rate, meeting conversion, close rate, average deal size, and campaign cost — then calculates pipeline value, expected revenue, ROI, and cost efficiency metrics with a visual funnel breakdown.',
@@ -291,7 +291,7 @@ export const APPS: MiniApp[] = [
       'Enter a company domain and get its technology stack grouped by category — analytics, CMS, hosting, CRM, ads, and more.',
     tags: ['tech stack', 'enrichment', 'competitive intel', 'gtm', 'ai'],
     thumb: 'techfind',
-    launch_url: '/mini-apps/tech-stack-finder',
+    launch_url: '/live-apps/tech-stack-finder',
     learn_more: {
       what_it_does:
         'Fingerprints a company website and returns detected technologies organized into standard categories with logos — useful for competitive research and outbound personalization.',
@@ -317,7 +317,7 @@ export const APPS: MiniApp[] = [
       'Enter your domain and up to 3 competitors. We run the same buying-intent questions across Claude, ChatGPT, and Perplexity and show how often each brand appears in the answers — one headline number free, the full breakdown by email.',
     tags: ['ai search', 'share of voice', 'seo', 'gtm', 'competitors', 'ai'],
     thumb: 'sov',
-    launch_url: '/mini-apps/share-of-voice',
+    launch_url: '/live-apps/share-of-voice',
     learn_more: {
       what_it_does:
         "Measures how visible a brand is inside AI answers. It generates real buying-intent questions for the brand's category, asks them across Claude, ChatGPT, and Perplexity, and counts how often each brand shows up — giving a share-of-voice score for the brand and its competitors, with the exact questions and answers unlocked by email.",
@@ -349,7 +349,7 @@ export const APPS: MiniApp[] = [
       'Describe a project in plain English and get a recommended tech stack — frontend, backend, database, hosting, auth, payments, and key services — with reasoning, cost estimates, and a complexity rating, all on a clean shareable card.',
     tags: ['tech stack', 'architecture', 'software', 'planning', 'ai'],
     thumb: 'stack',
-    launch_url: '/mini-apps/tech-stack-recommender',
+    launch_url: '/live-apps/tech-stack-recommender',
     learn_more: {
       what_it_does:
         'Takes a plain-English description of a product idea and returns a recommended tech stack across frontend, backend, database, hosting, auth, and payments, plus the key third-party services it needs — each with reasoning, small-scale cost estimates, a complexity rating, and a build-time estimate, laid out as a clean architecture card.',
@@ -382,7 +382,7 @@ export const APPS: MiniApp[] = [
       'Describe a manual process in plain English and get a visual automation blueprint — the steps, the right tool (Make, n8n, Zapier), time saved per week, a difficulty rating, and a starter config.',
     tags: ['automation', 'make', 'n8n', 'zapier', 'workflow', 'ai'],
     thumb: 'blueprint',
-    launch_url: '/mini-apps/automation-blueprint',
+    launch_url: '/live-apps/automation-blueprint',
     learn_more: {
       what_it_does:
         'Turns a plain-English description of a repetitive manual process into a concrete automation blueprint: a rendered flowchart of the steps, which tool to use and why, realistic time saved per week and per year, a difficulty rating, and a starter Make or n8n config to build from.',
@@ -415,7 +415,7 @@ export const APPS: MiniApp[] = [
       'Drop a URL. Get a brutally honest roast of the site — copy, CTAs, SEO, mobile UX, and real Lighthouse scores — with 3 priority fixes.',
     tags: ['website', 'roast', 'audit', 'seo', 'ux', 'ai'],
     thumb: 'roast',
-    launch_url: '/mini-apps/website-roast',
+    launch_url: '/live-apps/website-roast',
     learn_more: {
       what_it_does:
         'Scrapes any website, runs it through Google PageSpeed for real Lighthouse scores, and feeds everything to Claude for a brutally honest breakdown across 6 categories: copy quality, CTA clarity, SEO basics, mobile UX, performance, and trust signals.',
@@ -447,7 +447,7 @@ export const APPS: MiniApp[] = [
       'Paste one CRM record. Get a data quality score, issue flags by severity, exact fixes, and duplicate risk in seconds.',
     tags: ['crm', 'data quality', 'hygiene', 'salesforce', 'hubspot', 'ai'],
     thumb: 'sanity',
-    launch_url: '/mini-apps/crm-sanity',
+    launch_url: '/live-apps/crm-sanity',
     learn_more: {
       what_it_does:
         'Reads one pasted CRM record (a contact, account, lead, or deal) and returns a 0–100 quality score, a list of issues ranked by severity (critical / warning / suggestion), an exact fix for each issue, clean field list, and a duplicate risk assessment. One record at a time, not bulk.',
@@ -473,7 +473,7 @@ export const APPS: MiniApp[] = [
       'Drop a job posting URL or paste the text. Get a sales brief with pain points, tech stack, budget signals, and a ready-to-use pitch.',
     tags: ['sales', 'jobs', 'brief', 'signals', 'ai'],
     thumb: 'brief',
-    launch_url: '/mini-apps/job-brief',
+    launch_url: '/live-apps/job-brief',
     learn_more: {
       what_it_does:
         'Scrapes or reads a job posting, then uses AI to extract the tech stack, infer pain points, identify budget signals, and write a specific sales angle — plus the ideal first contact to reach out to.',
@@ -499,7 +499,7 @@ export const APPS: MiniApp[] = [
       'Paste a LinkedIn post. Get three personalised outbound hooks — each with a different angle, tone, and channel.',
     tags: ['outbound', 'linkedin', 'hooks', 'copywriting', 'ai'],
     thumb: 'hook',
-    launch_url: '/mini-apps/linkedin-hook',
+    launch_url: '/live-apps/linkedin-hook',
     learn_more: {
       what_it_does:
         'Reads a LinkedIn post, extracts the outbound trigger (opinion, achievement, pain, or news), profiles the ideal buyer persona, and writes three ready-to-send hooks with distinct angles across LinkedIn DM, email, and cold call.',
@@ -525,7 +525,7 @@ export const APPS: MiniApp[] = [
       'Enter a name and company. Get back a verified work email with a confidence score and the metadata to back it up.',
     tags: ['email', 'finder', 'apollo', 'outbound', 'ai'],
     thumb: 'hook',
-    launch_url: '/mini-apps/email-finder',
+    launch_url: '/live-apps/email-finder',
     learn_more: {
       what_it_does:
         'Matches a person against Apollo’s 200M+ contact database using their name and company (domain or LinkedIn URL). Returns the verified business email, confidence score, title, and LinkedIn URL — ready to drop into a sequencer.',
@@ -550,7 +550,7 @@ export const APPS: MiniApp[] = [
       'Upload a CSV of names and companies — get back a downloadable list with verified work emails appended (free: 50 rows per run).',
     tags: ['email', 'bulk', 'csv', 'apollo', 'outbound', 'ai'],
     thumb: 'bulkemail',
-    launch_url: '/mini-apps/bulk-email-finder',
+    launch_url: '/live-apps/bulk-email-finder',
     learn_more: {
       what_it_does:
         'Parses a CSV of prospects, maps name and company columns, enriches each row with a verified business email and verification status, then lets you download the enriched file.',
@@ -581,7 +581,7 @@ export const APPS: MiniApp[] = [
       'Enter a company. Get a live roster of employees with their roles, departments, and LinkedIn URLs.',
     tags: ['people', 'finder', 'apollo', 'outbound', 'abm', 'ai'],
     thumb: 'sov',
-    launch_url: '/mini-apps/find-people',
+    launch_url: '/live-apps/find-people',
     learn_more: {
       what_it_does:
         'Pulls an employee roster for any company from a 200M+ contact graph and lets you filter by seniority and department. Designed for buying-committee mapping, ABM list building, and outbound targeting — without paying for a full Apollo seat.',
@@ -612,7 +612,7 @@ export const APPS: MiniApp[] = [
       'Describe your product, audience, and goal. Get seven specific GTM campaign ideas with hooks, channels, formats, and first steps.',
     tags: ['campaign', 'gtm', 'strategy', 'copy', 'ai'],
     thumb: 'campaign',
-    launch_url: '/mini-apps/campaign-ideation',
+    launch_url: '/live-apps/campaign-ideation',
     learn_more: {
       what_it_does:
         'Turns a product brief into seven channel-specific campaign ideas — each with a memorable name, hook, channels, format, first step, expected outcome, and effort level — plus a positioning summary reflecting what it understood.',
@@ -648,7 +648,7 @@ export const APPS: MiniApp[] = [
       'Drag GTM motions onto a canvas, connect them into a compounding loop, and share your flywheel as a link or PNG — free to build, email to export.',
     tags: ['gtm', 'strategy', 'flywheel', 'canvas', 'visual'],
     thumb: 'flywheel',
-    launch_url: '/mini-apps/gtm-flywheel',
+    launch_url: '/live-apps/gtm-flywheel',
     learn_more: {
       what_it_does:
         'An interactive canvas for mapping how inbound, outbound, content, partnerships, and other motions feed each other over time. Build from a template or scratch, connect nodes with directional edges, and export a shareable link or PNG.',
@@ -674,7 +674,7 @@ export const APPS: MiniApp[] = [
       'Enter a company domain. Get ranked buying intent signals — hiring, funding, leadership, tech — with sources and a ready outreach angle.',
     tags: ['intent', 'signals', 'outbound', 'hiring', 'gtm', 'ai'],
     thumb: 'intents',
-    launch_url: '/mini-apps/intent-signals',
+    launch_url: '/live-apps/intent-signals',
     learn_more: {
       what_it_does:
         'Scans public sources for hiring spikes, news events, and tech adoption signals, then ranks them into an intent score with a suggested outreach opener — assembled from public data, not enterprise intent vendors.',
@@ -705,7 +705,7 @@ export const APPS: MiniApp[] = [
       'Paste a LinkedIn profile URL or copy-paste your profile text. Get a scored review with rewrite-ready tips for headline, About, experience, and more.',
     tags: ['linkedin', 'profile', 'personal brand', 'gtm', 'ai'],
     thumb: 'liprofile',
-    launch_url: '/mini-apps/linkedin-profile-reviewer',
+    launch_url: '/live-apps/linkedin-profile-reviewer',
     learn_more: {
       what_it_does:
         'Reviews a LinkedIn profile from a URL scrape or pasted text, scores each section (headline, About, experience, skills, recommendations, photo & banner), and returns five ranked actions with specific rewrite-ready suggestions.',
@@ -736,7 +736,7 @@ export const APPS: MiniApp[] = [
       'Enter a company domain. Get a scored brief of buy signals, the best outreach angle, and who to contact first.',
     tags: ['outbound', 'signals', 'sales', 'intent', 'ai'],
     thumb: 'radar',
-    launch_url: '/mini-apps/outbound-radar',
+    launch_url: '/live-apps/outbound-radar',
     learn_more: {
       what_it_does:
         'Scrapes a company homepage, about page, and careers page in parallel, then uses AI to detect buying signals — hiring patterns, expansion moves, tech changes — and scores overall intent. Returns a concrete outreach angle and best-fit persona.',
@@ -762,7 +762,7 @@ export const APPS: MiniApp[] = [
       'Drop any SaaS pricing page URL. Get a brutal teardown and three concrete improvements.',
     tags: ['pricing', 'saas', 'conversion', 'audit', 'ai'],
     thumb: 'score',
-    launch_url: '/mini-apps/pricing-diagnostic',
+    launch_url: '/live-apps/pricing-diagnostic',
     learn_more: {
       what_it_does:
         'Scrapes any pricing page and runs it through a structured AI rubric — scoring friction, clarity, plan legibility, and buyer targeting. Returns three concrete improvements ranked by conversion impact.',
@@ -787,7 +787,7 @@ export const APPS: MiniApp[] = [
       'Paste a client brief or RFP. Get a full tailored proposal — scope, phases, stack, timeline, and a why-us section — in seconds.',
     tags: ['proposal', 'sales', 'ai', 'drafting', 'rfp'],
     thumb: 'proposal',
-    launch_url: '/mini-apps/proposal-engine',
+    launch_url: '/live-apps/proposal-engine',
     learn_more: {
       what_it_does:
         'Reads a client brief, RFP, or job description and generates a structured project proposal with scope summary, suggested phases, tech stack recommendation, rough timeline, and a tailored why-us section seeded with S7 capabilities.',

@@ -277,7 +277,17 @@
   .lab-title-hero .lth-scroll-hint {
     animation: none !important;
     opacity: 1 !important;
+  }
+  /* Only the absolutely-positioned layers need the centring transform. */
+  .lab-title-hero .lth-rings,
+  .lab-title-hero .lth-bg-word {
     transform: translate(-50%, -50%) !important;
+  }
+  .lab-title-hero .lth-bg-word {
+    letter-spacing: -0.06em;
+  }
+  .lab-title-hero .lth-scroll-hint {
+    transform: translateX(-50%) !important;
   }
   .lab-title-hero .lth-title,
   .lab-title-hero .lth-subtitle,

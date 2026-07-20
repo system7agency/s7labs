@@ -16,7 +16,7 @@ type Blob = {
 
 /**
  * Animated aurora + dotted background + grain + cursor-tracked spotlight,
- * matching the /mini-apps and /revops pages. Drop it inside a mini-app page
+ * matching the /live-apps and /revops pages. Drop it inside a mini-app page
  * (anywhere in the JSX tree) and the rest is handled.
  */
 export function AuroraBackground() {

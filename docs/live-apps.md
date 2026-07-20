@@ -3,13 +3,13 @@
 How to add a new mini-app to s7labs.ai so it captures leads, ships analytics,
 and survives the CI check.
 
-The reference port is [`src/app/mini-apps/pricing-diagnostic/`](../src/app/mini-apps/pricing-diagnostic/).
+The reference port is [`src/app/live-apps/pricing-diagnostic/`](../src/app/live-apps/pricing-diagnostic/).
 Copy its structure when in doubt.
 
 ## Folder layout
 
 ```
-src/app/mini-apps/<your-slug>/
+src/app/live-apps/<your-slug>/
   page.tsx           # entry, default export
   page-styles.css    # co-located styles (imported by page.tsx)
   PageScripts.tsx    # client-only effects (cursor spotlight, observers, …)
@@ -20,7 +20,7 @@ them is strongly recommended for grep-ability.
 
 ## Required (the CI check enforces these)
 
-A pull request that touches `src/app/mini-apps/**` runs
+A pull request that touches `src/app/live-apps/**` runs
 [`scripts/check-mini-apps.mjs`](../scripts/check-mini-apps.mjs). In CI the
 script scopes itself to **only the mini-apps whose `page.tsx` was changed in
 the PR** — unrelated stragglers don't block your PR. Run it locally without
@@ -39,12 +39,12 @@ free-provider email and bails at the gate. The pattern:
   `/api/leads/submit` with `{ email, miniAppSlug, input }`. The server
   rejects disposable + free-provider emails before any model token is
   spent. Bail and surface the error on the email field if it fails.
-- Only on success, fire the actual `/api/mini-apps/<slug>` model call.
+- Only on success, fire the actual `/api/live-apps/<slug>` model call.
 - On model success, fire-and-forget POST to `/api/leads/complete` with
   `{ submissionId, output, cost? }` to mark the submission complete.
 
-Reference: [`pricing-diagnostic/page.tsx`](../src/app/mini-apps/pricing-diagnostic/page.tsx)
-is the gold standard. [`crm-sanity/page.tsx`](../src/app/mini-apps/crm-sanity/page.tsx)
+Reference: [`pricing-diagnostic/page.tsx`](../src/app/live-apps/pricing-diagnostic/page.tsx)
+is the gold standard. [`crm-sanity/page.tsx`](../src/app/live-apps/crm-sanity/page.tsx)
 is the closest reference for textarea-input apps.
 
 Sketch of `handleSubmit`:
@@ -77,7 +77,7 @@ if (!res.ok || !json.ok || !json.submissionId) {
 submissionId = json.submissionId
 
 // 3. Now fire the model
-const modelRes = await fetch('/api/mini-apps/your-slug', { ... })
+const modelRes = await fetch('/api/live-apps/your-slug', { ... })
 
 // 4. After model success, mark the submission complete (fire-and-forget)
 fetch('/api/leads/complete', {
@@ -127,7 +127,7 @@ what the tool does and what visitors get back. Easiest path is the shared
 component:
 
 ```tsx
-import { HowItWorks, type HowItWorksStep } from '@/components/mini-apps/HowItWorks'
+import { HowItWorks, type HowItWorksStep } from '@/components/live-apps/HowItWorks'
 
 const STEPS: HowItWorksStep[] = [
   { title: '...', description: '...', icon: <svg>...</svg> },
@@ -148,7 +148,7 @@ behaviour. The CSS uses each mini-app's existing palette variables
 
 If you need a non-standard layout, the CI check also accepts a direct
 `<section className="how-it-works">` block with an `<h2>` — see
-[`pricing-diagnostic/page.tsx`](../src/app/mini-apps/pricing-diagnostic/page.tsx)
+[`pricing-diagnostic/page.tsx`](../src/app/live-apps/pricing-diagnostic/page.tsx)
 for the reference pattern.
 
 ## Running the check locally
@@ -177,7 +177,7 @@ read-only RLS policy for the `anon` role.
 
 Two registries today:
 
-- **`src/app/mini-apps/_data/apps.ts`** — controls what cards render on
+- **`src/app/live-apps/_data/apps.ts`** — controls what cards render on
   `/mini-apps`. Hardcoded in code.
 - **`mini_apps` Supabase table** — controls what slugs `/api/leads/submit`
   accepts, and is the canonical analytics grouping key.

@@ -105,23 +105,38 @@ Header and footer come from the shared `<Header />` and `<Footer />`
 components.
 
 The **Get Sales Insights** and **Speak to Voice Agent** micro-apps now
-live in the mini-apps marketplace (see "/mini-apps routes" below), not
+live in the Live Apps marketplace (see "/live-apps routes" below), not
 under `/revops`. The two app cards on the `/revops` hub link straight to
-`/mini-apps/sales-insights` and `/mini-apps/voice-agent`. The old
+`/live-apps/sales-insights` and `/live-apps/voice-agent`. The old
 `/revops/sales-insights` and `/revops/voice-agent` routes are kept as
 thin `redirect()` stubs (`/src/app/revops/{sales-insights,voice-agent}/page.tsx`)
 so existing links and bookmarks still resolve to the new home.
 
-## /mini-apps routes
+## /live-apps routes
 
-`/mini-apps` is the **Mini Apps marketplace** — a gallery rendered from
+`/live-apps` is the **Live Apps marketplace** — a gallery rendered from
 the single `APPS` array in
-`/src/app/mini-apps/_data/apps.ts`. Each entry's `launch_url` points at
-its route under `/mini-apps/<id>`. The shared `mini-apps/layout.tsx`
-wraps every route and adds the "All mini-apps" back-pill.
+`/src/app/live-apps/_data/apps.ts`. Each entry's `launch_url` points at
+its route under `/live-apps/<id>`. The shared `live-apps/layout.tsx`
+wraps every route and adds the "All live-apps" back-pill.
 
-`/mini-apps/sales-insights` is the **Get Sales Insights micro-app** and
-`/mini-apps/voice-agent` is the **Speak to Voice Agent micro-app**, both
+This route was renamed from `/mini-apps` to `/live-apps`. Three things
+were deliberately **not** renamed and must stay as they are:
+
+- The API namespace is still `/api/mini-apps/<slug>`.
+- The Supabase `mini_apps` table and the `submissions.mini_app_slug` /
+  `leads.first_source` columns keep their existing slug values, so all
+  historical lead attribution stays intact. `slug-map.ts` maps DB slugs
+  to `/live-apps/*` paths and is the single source of truth.
+- Shared code directories (`src/components/mini-apps/`,
+  `src/lib/mini-apps/`, `src/styles/mini-app-*.css`).
+
+The permanent `/mini-apps/*` → `/live-apps/*` redirects in
+`next.config.ts` must never be removed: result emails already delivered
+contain absolute `/mini-apps/<slug>` links that cannot be edited.
+
+`/live-apps/sales-insights` is the **Get Sales Insights micro-app** and
+`/live-apps/voice-agent` is the **Speak to Voice Agent micro-app**, both
 moved here from `/revops/*` on the `feat/revops-apps-to-mini-apps`
 branch. Their ports are unchanged
 (`{page.tsx,page-styles.css,PageScripts.tsx}`) and still POST to the

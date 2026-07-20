@@ -16,6 +16,15 @@ const nextConfig: NextConfig = {
     },
   },
   outputFileTracingRoot: projectRoot,
+  // The Live Apps marketplace moved from /mini-apps to /live-apps. Result
+  // emails already sent contain absolute /mini-apps/<slug> links that can
+  // never be edited, so these redirects must stay permanently.
+  async redirects() {
+    return [
+      { source: '/mini-apps', destination: '/live-apps', permanent: true },
+      { source: '/mini-apps/:slug*', destination: '/live-apps/:slug*', permanent: true },
+    ]
+  },
   webpack(config) {
     config.resolve ??= {}
     config.resolve.alias = {

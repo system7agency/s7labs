@@ -38,8 +38,8 @@ const ROUTES = [
   {
     index: '04',
     name: 'Live Apps',
-    handle: 'miniApps_s7labs',
-    href: '/mini-apps',
+    handle: 'liveapps_s7labs',
+    href: '/live-apps',
     desc: 'Small, working tools you can open and test now - each one focused on a single job.',
     tags: 'GALLERY · DEMOS · UTILITIES',
   },

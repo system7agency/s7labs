@@ -20,7 +20,7 @@ const NAV_ROUTES = [
   { index: '01', label: 'RevOps', handle: 'revops_s7labs', href: '/revops' },
   { index: '02', label: 'Agent', handle: 'agent_s7labs', href: '/agent' },
   { index: '03', label: 'Build', handle: 'build_s7labs', href: '/build' },
-  { index: '04', label: 'Live Apps', handle: 'miniApps_s7labs', href: '/mini-apps' },
+  { index: '04', label: 'Live Apps', handle: 'liveapps_s7labs', href: '/live-apps' },
 ]
 
 export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
@@ -111,7 +111,6 @@ export function Header({ backHref = 'https://www.system7.ai/' }: HeaderProps) {
         </a>
       </div>
       <Link href="/" className="wordmark" aria-label="S7 Labs home">
-        <span className="dot" />
         <span className="wordmark-lockup">
           S<sup className="wordmark-s7-sup">7</sup> Labs
         </span>

@@ -7,7 +7,7 @@
  * COMPONENT CLASSES — the buttons, inputs, panels, score cards, issue
  * lists, and error states that the 23 dark-themed mini-apps share.
  *
- * Import it ONCE, in `src/app/mini-apps/layout.tsx` (right after the token
+ * Import it ONCE, in `src/app/live-apps/layout.tsx` (right after the token
  * file). It is intentionally NOT scoped: classes are written as plain
  * selectors (`.submit-btn`, `.input-box`, ...) so existing per-app markup
  * picks them up without edits.

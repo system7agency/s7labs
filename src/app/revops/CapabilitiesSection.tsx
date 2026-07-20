@@ -88,7 +88,7 @@ const CAPABILITIES: Capability[] = [
         ['SCOPE', 'OUTBOUND · ENRICHMENT · SEQUENCING'],
         ['ENGINE', 'S7 / GTM-CORE'],
       ],
-      primary: '/mini-apps',
+      primary: '/live-apps',
     },
   },
   {
@@ -139,7 +139,7 @@ const CAPABILITIES: Capability[] = [
         ['SCOPE', 'CONTENT · ATTRIBUTION · VISITOR ID'],
         ['ENGINE', 'S7 / DEMAND-CORE'],
       ],
-      primary: '/mini-apps',
+      primary: '/live-apps',
     },
   },
   {
@@ -186,7 +186,7 @@ const CAPABILITIES: Capability[] = [
         ['SCOPE', 'CRM · ROUTING · DASHBOARDS'],
         ['ENGINE', 'S7 / OPS-CORE'],
       ],
-      primary: '/mini-apps',
+      primary: '/live-apps',
     },
   },
 ]

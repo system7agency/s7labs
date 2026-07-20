@@ -121,6 +121,14 @@ function diam(r: number) {
   return `${(((r * 2) / GRAPH_W) * 100).toFixed(3)}%`
 }
 
+/* Labels sit inside fixed-diameter circles and must never break mid-word.
+   A label is only as wide as its longest unbreakable word, so expose that
+   length to CSS and let the stylesheet shrink just the long ones to fit. */
+function longestWordStyle(label: string): React.CSSProperties {
+  const longest = label.split(/[\s-]+/).reduce((max, w) => Math.max(max, w.length), 0)
+  return { '--wwb-longest-word': longest } as React.CSSProperties
+}
+
 type LeafNode = { key: string; label: string; tag: string; pos: Pt; delay: number }
 type HubNode = { key: string; label: string; tag: string; pos: Pt; leaves: LeafNode[] }
 
@@ -232,7 +240,9 @@ function KnowledgeGraph() {
             <span className="wwb-node-tag" aria-hidden="true">
               {hub.tag}
             </span>
-            <span className="wwb-node-name">{hub.label}</span>
+            <span className="wwb-node-name" style={longestWordStyle(hub.label)}>
+              {hub.label}
+            </span>
           </m.div>
 
           {hub.leaves.map((leaf) => (
@@ -253,7 +263,9 @@ function KnowledgeGraph() {
               <span className="wwb-node-tag" aria-hidden="true">
                 {leaf.tag}
               </span>
-              <span className="wwb-node-name">{leaf.label}</span>
+              <span className="wwb-node-name" style={longestWordStyle(leaf.label)}>
+                {leaf.label}
+              </span>
             </m.div>
           ))}
         </div>

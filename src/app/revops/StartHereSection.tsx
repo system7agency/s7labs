@@ -107,7 +107,7 @@ export function StartHereSection({
 
         <div className={`${styles.actions} ${styles.reveal}`}>
           <CtaButton onClick={() => openContactModal('start-here')}>Map the system</CtaButton>
-          <CtaButton href="/mini-apps" variant="secondary">
+          <CtaButton href="/live-apps" variant="secondary">
             Browse live apps
           </CtaButton>
         </div>

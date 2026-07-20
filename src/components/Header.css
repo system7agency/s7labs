@@ -136,19 +136,6 @@ header.header-hidden {
   font-weight: inherit;
   line-height: 1;
 }
-.wordmark .dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow);
-  animation: pulse 2.2s infinite;
-  transition: box-shadow 200ms ease-out;
-}
-.wordmark:hover .dot {
-  box-shadow: 0 0 14px var(--accent);
-}
-
 .li-btn {
   --li-blue: #0a66c2;
   position: relative;

@@ -7,11 +7,11 @@ import styles from './BackToMiniAppsPill.module.css'
 
 export function BackToMiniAppsPill() {
   const pathname = usePathname()
-  if (!pathname || pathname === '/mini-apps' || pathname === '/mini-apps/') {
+  if (!pathname || pathname === '/live-apps' || pathname === '/live-apps/') {
     return null
   }
   return (
-    <Link href="/mini-apps" className={styles.pill} aria-label="Back to all live apps">
+    <Link href="/live-apps" className={styles.pill} aria-label="Back to all live apps">
       <svg
         viewBox="0 0 24 24"
         fill="none"

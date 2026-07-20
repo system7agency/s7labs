@@ -4,9 +4,9 @@
  * check-mini-apps.mjs
  *
  * Enforces the s7labs.ai mini-app convention. Run on every PR that touches
- * `src/app/mini-apps/**`. See `docs/mini-apps.md`.
+ * `src/app/live-apps/**`. See `docs/live-apps.md`.
  *
- * For each mini-app page (src/app/mini-apps/<folder>/page.tsx) we check:
+ * For each mini-app page (src/app/live-apps/<folder>/page.tsx) we check:
  *   1. The page uses the inline email gate pattern — imports EMAIL_REGEX
  *      from @/lib/leads/disposable AND POSTs to /api/leads/submit with a
  *      `miniAppSlug: '<slug>'` field in the body.
@@ -29,10 +29,10 @@ import { execSync } from 'node:child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
-const MINI_APPS_DIR = join(ROOT, 'src/app/mini-apps')
-const DOC_LINK = 'docs/mini-apps.md'
+const MINI_APPS_DIR = join(ROOT, 'src/app/live-apps')
+const DOC_LINK = 'docs/live-apps.md'
 
-// Legacy RevOps ports that were relocated into /mini-apps but predate the
+// Legacy RevOps ports that were relocated into /live-apps but predate the
 // mini-app convention (they POST to /api/revops/sales-insights and have no
 // email gate / How-it-works section). They are exempt from the convention
 // check until they are migrated. Keep this list short and remove entries as
@@ -78,7 +78,7 @@ function getChangedFolderNames() {
     })
     const folders = new Set()
     for (const line of out.split('\n')) {
-      const m = line.match(/^src\/app\/mini-apps\/([^/]+)\/page\.tsx$/)
+      const m = line.match(/^src\/app\/live-apps\/([^/]+)\/page\.tsx$/)
       if (m) folders.add(m[1])
     }
     return folders
@@ -103,7 +103,7 @@ function hasHowItWorks(source) {
   // or use of the shared <HowItWorks> component.
   const directSection = /className=["']how-it-works["']/.test(source) && /<h2[\s>]/.test(source)
   const sharedComponent =
-    /from\s+['"]@\/components\/mini-apps\/HowItWorks['"]/.test(source) &&
+    /from\s+['"]@\/components\/live-apps\/HowItWorks['"]/.test(source) &&
     /<HowItWorks[\s>]/.test(source)
   return directSection || sharedComponent
 }

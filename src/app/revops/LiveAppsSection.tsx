@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
-import { APPS } from '@/app/mini-apps/_data/apps'
+import { APPS } from '@/app/live-apps/_data/apps'
 
 import styles from './LiveAppsSection.module.css'
 import { CtaButton } from './CtaButton'
@@ -124,7 +124,7 @@ export function LiveAppsSection({ subhead = DEFAULT_SUBHEAD }: LiveAppsSectionPr
 
       <div className={styles.inner}>
         <div className={`${styles.actions} ${styles.reveal}`}>
-          <CtaButton href="/mini-apps" arrow>
+          <CtaButton href="/live-apps" arrow>
             Explore the live apps
           </CtaButton>
         </div>

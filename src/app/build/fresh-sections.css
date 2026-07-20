@@ -274,8 +274,12 @@
   color: var(--fg);
   /* keep multi-word labels clear of the circle's curved edge */
   max-width: 82%;
-  overflow-wrap: break-word;
-  hyphens: auto;
+  /* Break between words only. `break-word` used to split single long words
+     mid-glyph ("Enrichme / nt", "Notificati / ons"); long words now stay
+     whole and are shrunk to fit by the per-node sizing below. */
+  overflow-wrap: normal;
+  word-break: keep-all;
+  text-wrap: balance;
 }
 
 /* hub circles: larger, accent ring + glow */
@@ -295,7 +299,9 @@
   color: var(--accent);
 }
 .build-lab .wwb-hub .wwb-node-name {
-  font-size: clamp(11px, 1.15vw, 15px);
+  /* hub circles are larger, so ~11 characters fit before shrinking */
+  --wwb-fit: clamp(0.72, calc(11 / max(var(--wwb-longest-word, 11), 11)), 1);
+  font-size: calc(clamp(11px, 1.15vw, 15px) * var(--wwb-fit));
   color: #fff;
 }
 /* the two primary hubs glow brighter and pulse gently */
@@ -321,7 +327,11 @@
   color: var(--fg-dim);
 }
 .build-lab .wwb-leaf .wwb-node-name {
-  font-size: clamp(9.5px, 1vw, 12.5px);
+  /* Roughly 9 characters fit across the leaf circle at full size. Longer
+     unbreakable words (Notifications, Enrichment, dashboards) scale down by
+     the ratio needed to fit, floored so they stay legible. */
+  --wwb-fit: clamp(0.72, calc(8.5 / max(var(--wwb-longest-word, 8.5), 8.5)), 1);
+  font-size: calc(clamp(9.5px, 1vw, 12.5px) * var(--wwb-fit));
   color: var(--fg-muted);
 }
 .build-lab .wwb-leaf:hover {

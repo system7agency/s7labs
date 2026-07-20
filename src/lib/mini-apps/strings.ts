@@ -4,7 +4,7 @@
  * These strings were duplicated verbatim across all 23 apps' `handleSubmit`
  * (validation + lead-save + model-call error paths). They are collected here
  * so the wording stays identical everywhere and can be changed in one place.
- * The canonical wording is documented in `docs/mini-apps-guide.md` (the
+ * The canonical wording is documented in `docs/live-apps-guide.md` (the
  * `handleSubmit` section).
  *
  * IMPORTANT — do NOT move these CI-enforced literals into this file:

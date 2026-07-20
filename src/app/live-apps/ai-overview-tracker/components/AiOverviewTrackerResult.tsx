@@ -17,7 +17,7 @@ export type AiOverviewTrackerInput = {
  *
  * Note: no historical completed submissions exist for this slug yet
  * (DataForSEO isn't provisioned), so this shape is built from the route's
- * type definitions in `src/lib/mini-apps/aio-types.ts`.
+ * type definitions in `src/lib/live-apps/aio-types.ts`.
  */
 export type AiOverviewTrackerOutput = {
   free?: ScanFree

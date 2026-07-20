@@ -17,7 +17,7 @@ export function UnknownMiniAppState({ slug }: Props) {
           The mini-app <span className={styles.subdued}>({slug})</span> isn&apos;t one we know how
           to display here. It may have been renamed or retired.
         </p>
-        <Link href="/mini-apps" className={styles.primaryButton}>
+        <Link href="/live-apps" className={styles.primaryButton}>
           Browse mini-apps
         </Link>
       </section>
