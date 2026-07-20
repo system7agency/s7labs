@@ -24,8 +24,8 @@ export function TheAdvantageSection() {
         <div className="adv-grid">
           <div>
             <m.h2 className="fx-h2" variants={fadeUp} initial="hidden" whileInView="show" viewport={VIEWPORT}>
-              You know your business better than <span className="accent-text">any vendor</span>{' '}
-              ever will.
+              You know your business better than{' '}
+              <span className="accent-text">any vendor ever will.</span>
             </m.h2>
             <m.p className="fx-sub" variants={fadeUp} initial="hidden" whileInView="show" viewport={VIEWPORT}>
               You can already describe where work breaks down and what would make it faster. Bespoke
