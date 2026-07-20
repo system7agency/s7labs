@@ -114,6 +114,7 @@ export function emailShell(opts: {
             <p style="margin:0;font-family:${C.mono};font-size:10px;letter-spacing:0.04em;line-height:1.7;color:#8a8f99;">SENT BY S7 LABS &middot; <a href="https://s7labs.ai" style="color:#6f7682;text-decoration:none;">s7labs.ai</a> &middot; <a href="${escapeHtml(
               unsubscribeUrl
             )}" style="color:#6f7682;text-decoration:none;">Unsubscribe</a></p>
+            <p style="margin:6px 0 0;font-family:${C.mono};font-size:10px;letter-spacing:0.04em;line-height:1.7;color:#6f7682;"><a href="https://nicolasailab.com" style="color:#6f7682;text-decoration:none;">nicolasailab.com</a> &middot; <a href="https://nicolasbaxter.com" style="color:#6f7682;text-decoration:none;">nicolasbaxter.com</a></p>
           </td></tr>
         </table>
       </td></tr>
