@@ -37,8 +37,8 @@ export function OrchestrationMapSection() {
             whileInView="show"
             viewport={VIEWPORT}
           >
-            One agent helps. <span className="accent-text">A system of them</span> changes how work
-            moves.
+            One agent helps.{' '}
+            <span className="accent-text">A system of them changes how work moves.</span>
           </m.h2>
           <m.p
             className="fx-sub"

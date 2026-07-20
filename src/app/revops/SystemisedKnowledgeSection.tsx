@@ -38,8 +38,8 @@ export function SystemisedKnowledgeSection() {
             whileInView="show"
             viewport={VIEWPORT}
           >
-            Your market knowledge is the advantage. <span className="accent-text">Systems</span> are
-            how it scales.
+            Your market knowledge is the advantage.{' '}
+            <span className="accent-text">Systems are how it scales.</span>
           </m.h2>
           <m.p
             className="fx-sub"

@@ -52,9 +52,6 @@
   color: var(--fg);
   text-wrap: balance;
 }
-.build-lab .fx-h2 .accent-text {
-  color: var(--accent);
-}
 
 .build-lab .fx-sub {
   margin: 22px 0 0;
@@ -148,9 +145,6 @@
   color: var(--fg);
   max-width: 30ch;
   text-wrap: balance;
-}
-.build-lab .ow-turn .accent-text {
-  color: var(--accent);
 }
 
 .build-lab .ow-ctas {
@@ -423,9 +417,6 @@
   letter-spacing: -0.02em;
   color: var(--fg);
   text-wrap: balance;
-}
-.build-lab .wwb-int-title .accent-text {
-  color: var(--accent);
 }
 
 /* the systems a build connects to — a simple row of labelled blocks */

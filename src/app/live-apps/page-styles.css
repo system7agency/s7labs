@@ -3906,3 +3906,52 @@
     display: none;
   }
 }
+
+/* The shine sweeps across the WHOLE heading, not just the highlighted span.
+   The gradient is painted on the heading (so its width sets the travel
+   distance) and clipped to the text; the span then re-clips the same
+   inherited paint. Without this, a span wrapping one word gets its own
+   gradient and the sweep reads as a fast narrow flicker, while a span
+   wrapping a long clause reads as a slow shimmer. */
+.mini-apps-lab .fx-h2:has(.accent-text),
+.mini-apps-lab .fx-head:has(.accent-text),
+.mini-apps-lab .hiw-head:has(.accent-text),
+.mini-apps-lab .hero-title:has(.accent-text),
+.gh-title:has(.accent-text) {
+  background: linear-gradient(
+    115deg,
+    var(--fg) 0%,
+    var(--fg) 28%,
+    color-mix(in srgb, var(--accent) 90%, var(--fg)) 42%,
+    color-mix(in srgb, var(--accent) 90%, var(--fg)) 58%,
+    var(--fg) 72%,
+    var(--fg) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: var(--fg);
+  color: var(--fg);
+  animation: ma-head-shine 6s ease-in-out infinite;
+}
+.mini-apps-lab .fx-h2:has(.accent-text) .accent-text,
+.mini-apps-lab .fx-head:has(.accent-text) .accent-text,
+.mini-apps-lab .hiw-head:has(.accent-text) .accent-text,
+.mini-apps-lab .hero-title:has(.accent-text) .accent-text,
+.gh-title:has(.accent-text) .accent-text {
+  background: none;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: none;
+}
+
+@keyframes ma-head-shine {
+  0%,
+  100% {
+    background-position: 100% 0;
+  }
+  50% {
+    background-position: 0 0;
+  }
+}

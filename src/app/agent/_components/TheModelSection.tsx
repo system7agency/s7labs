@@ -25,8 +25,8 @@ export function TheModelSection() {
             whileInView="show"
             viewport={VIEWPORT}
           >
-            You don&rsquo;t subscribe to agents. You build a{' '}
-            <span className="accent-text">workforce you own.</span>
+            You don&rsquo;t subscribe to agents.{' '}
+            <span className="accent-text">You build a workforce you own.</span>
           </m.h2>
 
           <div>

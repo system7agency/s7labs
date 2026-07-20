@@ -33,8 +33,8 @@ export function TheShiftSection() {
             whileInView="show"
             viewport={VIEWPORT}
           >
-            The old way to grow was to hire. The new way is to{' '}
-            <span className="accent-text">engineer.</span>
+            The old way to grow was to hire.{' '}
+            <span className="accent-text">The new way is to engineer.</span>
           </m.h2>
           <m.p
             className="fx-sub"

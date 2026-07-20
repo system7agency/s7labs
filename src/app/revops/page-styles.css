@@ -180,6 +180,60 @@ body {
   color: var(--accent);
 }
 
+/* The shine sweeps across the WHOLE heading, not just the highlighted span.
+   The gradient is painted on the heading (so its width sets the travel
+   distance) and clipped to the text; the span then just re-clips the same
+   inherited paint. Without this, a span wrapping one word gets its own
+   300%-wide gradient and the sweep reads as a fast narrow flicker, while a
+   span wrapping a long clause reads as a slow shimmer - the inconsistency
+   between "Systems" and "built to fit." on the lab pages. */
+.fx-h2:has(.accent-text),
+.fx-head:has(.accent-text),
+.hiw-head:has(.accent-text),
+.hero-title:has(.accent-text),
+.gh-title:has(.accent-text) {
+  background: linear-gradient(
+    115deg,
+    var(--fg) 0%,
+    var(--fg) 28%,
+    color-mix(in srgb, var(--accent) 90%, var(--fg)) 42%,
+    color-mix(in srgb, var(--accent) 90%, var(--fg)) 58%,
+    var(--fg) 72%,
+    var(--fg) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 6s ease-in-out infinite;
+}
+/* Inside such a heading the span is only a colour mask: the non-accent text
+   stays solid --fg and the accent span lets the heading's gradient show. */
+.fx-h2:has(.accent-text),
+.fx-head:has(.accent-text),
+.hiw-head:has(.accent-text),
+.hero-title:has(.accent-text),
+.gh-title:has(.accent-text) {
+  -webkit-text-fill-color: var(--fg);
+  color: var(--fg);
+}
+/* The accent span is transparent so the heading's travelling gradient shows
+   through it. A standing tint here is not possible: an opaque text-fill on
+   the span would paint over the heading's gradient and stop the sweep from
+   crossing the accent word. The accent instead lives in the gradient stops
+   below, which are biased blue over the span's share of the heading. */
+.fx-h2:has(.accent-text) .accent-text,
+.fx-head:has(.accent-text) .accent-text,
+.hiw-head:has(.accent-text) .accent-text,
+.hero-title:has(.accent-text) .accent-text,
+.gh-title:has(.accent-text) .accent-text {
+  background: none;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: none;
+}
+
+/* Fallback for any accent-text NOT inside one of the headings above. */
 .accent-text {
   background: linear-gradient(
     115deg,
