@@ -3674,6 +3674,12 @@
   .mini-apps-lab .page-eyebrow .right {
     display: none;
   }
+  /* `+ interested` is a 10px borderless button, so its hit area was only as
+     tall as the text (~14px) — too small to tap reliably. Pad it vertically
+     on touch layouts without changing how it looks. */
+  .mini-apps-lab .mx-mini {
+    padding: 9px 0;
+  }
   .mini-apps-lab .sec {
     padding: 48px 0 36px;
   }

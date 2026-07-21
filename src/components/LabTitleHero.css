@@ -269,6 +269,16 @@
      phone viewport once letter-spacing is applied — the word then overflows
      its containing block and reads as shifted to one side. Scale it to the
      viewport instead so it always fits and stays optically centred. */
+  /* The meta row (AGENTS - ORCHESTRATION - AUTONOMY - GOVERNED) is a nowrap
+     flex row wider than a phone, so the first and last items were clipped at
+     the screen edges. Let it wrap and centre instead. */
+  .lab-title-hero .lth-meta {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 12px;
+    max-width: 100%;
+    padding: 0 16px;
+  }
   .lab-title-hero .lth-bg-word {
     font-size: min(22vw, 110px);
     /* .lth-title-wrap is narrower than the viewport (page gutters), so a word

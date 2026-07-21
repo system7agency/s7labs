@@ -1946,6 +1946,12 @@
   .build-lab main {
     padding: 64px 16px 0;
   }
+  /* Match /agent and /live-apps: the trailing "// software development" half
+     does not fit beside the route label on a phone and wrapped the strip onto
+     two cramped lines, so it is dropped like on the other lab pages. */
+  .build-lab .page-eyebrow .right {
+    display: none;
+  }
   .build-lab .sec {
     padding: 72px 0 50px;
   }
