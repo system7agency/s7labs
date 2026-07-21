@@ -265,6 +265,20 @@
   .lab-title-hero .lth-scroll-hint {
     display: none;
   }
+  /* The desktop clamp floors the ghost word at 110px, which is wider than a
+     phone viewport once letter-spacing is applied — the word then overflows
+     its containing block and reads as shifted to one side. Scale it to the
+     viewport instead so it always fits and stays optically centred. */
+  .lab-title-hero .lth-bg-word {
+    font-size: min(22vw, 110px);
+    /* .lth-title-wrap is narrower than the viewport (page gutters), so a word
+       sized to the viewport would sit off-centre inside it. Span the full
+       viewport width and centre the text within that instead. */
+    left: 50%;
+    width: 100vw;
+    max-width: 100vw;
+    text-align: center;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
