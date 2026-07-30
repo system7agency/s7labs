@@ -76,7 +76,7 @@ function CategoryCard({ cat }: { cat: RoastCategory }) {
       <div className="category-card-header">
         <span className="category-name">{cat.name}</span>
         <span className={`score-badge ${scoreBadgeClass(cat.score)}`}>
-          {cat.score}/10 · {cat.grade}
+          {cat.score}/10 ({cat.grade})
         </span>
       </div>
       <p className="category-roast">{cat.roast}</p>
@@ -100,10 +100,18 @@ function LighthouseMini({ label, value }: { label: string; value: number | null 
 }
 
 function ResultBody({ output }: { output: WebsiteRoastOutput }) {
+  const lh = output.lighthouse
+  const lhUnavailable =
+    lh.performance === null &&
+    lh.seo === null &&
+    lh.accessibility === null &&
+    lh.best_practices === null
   return (
     <>
       <div className="one-liner-block">
-        <p className="one-liner-text">&ldquo;{output.one_liner}&rdquo;</p>
+        {output.one_liner ? (
+          <p className="one-liner-text">&ldquo;{output.one_liner}&rdquo;</p>
+        ) : null}
         <div className="one-liner-meta">
           <span className="site-name">{output.site_name}</span>
           <span className="url-pill">{output.url}</span>
@@ -121,12 +129,20 @@ function ResultBody({ output }: { output: WebsiteRoastOutput }) {
         </div>
         <div className="score-card lighthouse-card">
           <div className="sc-label">Lighthouse (mobile)</div>
-          <div className="lighthouse-grid">
-            <LighthouseMini label="Performance" value={output.lighthouse.performance} />
-            <LighthouseMini label="SEO" value={output.lighthouse.seo} />
-            <LighthouseMini label="Accessibility" value={output.lighthouse.accessibility} />
-            <LighthouseMini label="Best Practices" value={output.lighthouse.best_practices} />
-          </div>
+          {lhUnavailable ? (
+            <p className="lh-unavailable">
+              Lighthouse scores are unavailable for this site - the Google PageSpeed audit timed out
+              or couldn&rsquo;t complete (common on large, heavy pages). The rest of the report
+              isn&rsquo;t affected.
+            </p>
+          ) : (
+            <div className="lighthouse-grid">
+              <LighthouseMini label="Performance" value={output.lighthouse.performance} />
+              <LighthouseMini label="SEO" value={output.lighthouse.seo} />
+              <LighthouseMini label="Accessibility" value={output.lighthouse.accessibility} />
+              <LighthouseMini label="Best Practices" value={output.lighthouse.best_practices} />
+            </div>
+          )}
         </div>
       </div>
 

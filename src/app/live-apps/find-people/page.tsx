@@ -226,7 +226,7 @@ function FindPeoplePageInner() {
     setSubmittedCompany(r.companyName || r.companyDomain || '')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   // Filter + pagination state
   const [seniority, setSeniority] = useState<string>('All')
@@ -413,6 +413,7 @@ function FindPeoplePageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setCompany('')
@@ -424,7 +425,7 @@ function FindPeoplePageInner() {
     setSeniority('All')
     setDepartment('All')
     setVisibleCount(PAGE_INCREMENT)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   // Filtered people derived from result + filter state.
   const filteredPeople = useMemo<Person[]>(() => {

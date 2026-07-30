@@ -24,6 +24,14 @@ async function ensureMermaid() {
       secondaryColor: '#101014',
       tertiaryColor: '#060608',
       fontFamily: 'ui-monospace, monospace',
+      fontSize: '23px',
+    },
+    flowchart: {
+      // Tighter horizontal gaps make the whole flow narrower, so when it's
+      // scaled to fit the panel the boxes and text land a bit larger — without
+      // overflowing or getting cut.
+      rankSpacing: 18,
+      padding: 6,
     },
   })
   mermaidReady = true

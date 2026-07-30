@@ -215,7 +215,7 @@ function ShareOfVoicePageInner() {
     setRestored(true)
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -388,6 +388,7 @@ function ShareOfVoicePageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setFree(null)
@@ -397,7 +398,7 @@ function ShareOfVoicePageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   return (
     <div className="share-of-voice mini-app-scope">

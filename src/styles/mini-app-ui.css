@@ -197,9 +197,9 @@
 
 /* Export controls — the Copy / PNG / PDF row buttons. */
 .export-btn {
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.025);
-  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text-dim);
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.1em;
@@ -244,6 +244,39 @@
 .export-btn svg {
   width: 13px;
   height: 13px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Themed scrollbars. Scrollable areas (JSON starter-config blocks, the CRM
+ * "cleaned record" textarea, long result panels) previously fell back to the
+ * default OS scrollbar, which reads as a bright light-grey bar against the
+ * dark UI. Scope to .mini-app-scope so every live-app's scroll surfaces match
+ * the design language. (Firefox uses scrollbar-width/-color; WebKit/Chromium
+ * use the ::-webkit-scrollbar pseudo-elements.)
+ * ------------------------------------------------------------------------- */
+.mini-app-scope * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+.mini-app-scope *::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.mini-app-scope *::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mini-app-scope *::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.mini-app-scope *::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+  background-clip: padding-box;
+}
+.mini-app-scope *::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /*

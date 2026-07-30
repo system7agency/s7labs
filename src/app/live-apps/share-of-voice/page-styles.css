@@ -19,6 +19,12 @@
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  /* The stock --text-faint (#3a3b42) is too dark to read against the dark
+   * panels — it made the sub-text (RANK x OF y / LEADER, "your share",
+   * readouts, captions) effectively invisible. Lift it page-wide to a readable
+   * secondary grey. Every --text-faint use on this page is a text colour, so
+   * scoping the token here is safe. */
+  --text-faint: #83858f;
 }
 
 .share-of-voice * {
@@ -834,6 +840,8 @@
   color: var(--text);
 }
 .share-of-voice .type-pill {
+  display: inline-block;
+  vertical-align: middle;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.1em;
@@ -1242,7 +1250,7 @@
 }
 .share-of-voice .gap-row {
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
   gap: 14px;
 }
 .share-of-voice .gap-number {
@@ -1250,14 +1258,13 @@
   font-size: 22px;
   font-weight: 500;
   color: var(--blue);
-  line-height: 1;
+  line-height: 1.55;
   flex-shrink: 0;
 }
 .share-of-voice .gap-text {
   font-size: 14px;
   color: var(--text-dim);
   line-height: 1.55;
-  padding-top: 4px;
 }
 
 @media (max-width: 720px) {

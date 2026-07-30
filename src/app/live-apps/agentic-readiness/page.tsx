@@ -217,7 +217,7 @@ function AgenticReadinessPageInner() {
     setRestored(true)
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   useEffect(() => {
     const tick = () => {
@@ -376,6 +376,7 @@ function AgenticReadinessPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setFree(null)
@@ -386,7 +387,7 @@ function AgenticReadinessPageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   const loadingHost = url
     ? (normalizeUrlInput(url)

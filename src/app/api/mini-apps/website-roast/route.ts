@@ -168,7 +168,11 @@ async function fetchPageSpeed(
     if (apiKey) params.set('key', apiKey)
     const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params.toString()}`
     const res = await fetch(apiUrl, { signal })
-    if (!res.ok) return nullScores
+    if (!res.ok) {
+      // Log so a failed audit isn't silent (429 rate-limit, 400/500, etc.).
+      console.error(`[website-roast] PageSpeed responded ${res.status} for ${url}`)
+      return nullScores
+    }
     const data = (await res.json()) as unknown
     return {
       performance: extractLighthouseScore(data, 'performance'),
@@ -176,7 +180,11 @@ async function fetchPageSpeed(
       accessibility: extractLighthouseScore(data, 'accessibility'),
       best_practices: extractLighthouseScore(data, 'best-practices'),
     }
-  } catch {
+  } catch (err) {
+    // AbortError => the 55s server timeout fired (heavy site); anything else is
+    // a network/parse failure. Either way, log it instead of failing silently.
+    const reason = err instanceof Error && err.name === 'AbortError' ? 'timed out' : String(err)
+    console.error(`[website-roast] PageSpeed failed for ${url}: ${reason}`)
     return nullScores
   }
 }

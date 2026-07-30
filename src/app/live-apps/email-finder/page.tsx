@@ -553,7 +553,7 @@ function EmailFinderPageInner() {
         : (output as unknown as EmailFinderResult)
     setRestoredResult(r ?? ({ email: null } as unknown as EmailFinderResult))
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const nameRef = useRef<HTMLInputElement | null>(null)
 
@@ -648,6 +648,7 @@ function EmailFinderPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     setSubmittedInput(null)
     setSubmissionId(null)
     setRestoredResult(null)
@@ -655,7 +656,7 @@ function EmailFinderPageInner() {
     setCompany('')
     setErrors({})
     setEmailError(null)
-  }, [])
+  }, [clear])
 
   return (
     <div className="email-finder mini-app-scope">
@@ -689,19 +690,23 @@ function EmailFinderPageInner() {
                 onReset={handleReset}
                 restored={restoredResult}
               />
-            ) : restoring || hasResultParam ? (
-              <div className="panel-body">
-                <section className="ef-state active">
-                  <ResultRestoreNotice />
-                </section>
-              </div>
             ) : submittedInput && submissionId ? (
+              // A fresh lookup publishes ?result=<id> when it completes, which
+              // flips hasResultParam true. This branch must sit ABOVE the
+              // restore-notice branch below, otherwise the just-produced result
+              // is immediately replaced by "Loading your saved result" and hangs.
               <LookupRunner
                 input={submittedInput}
                 submissionId={submissionId}
                 onReset={handleReset}
                 onPublish={publish}
               />
+            ) : restoring || hasResultParam ? (
+              <div className="panel-body">
+                <section className="ef-state active">
+                  <ResultRestoreNotice />
+                </section>
+              </div>
             ) : (
               <div className="panel-body">
                 <section className="ef-state active">

@@ -190,7 +190,7 @@ function ProposalEnginePageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -356,6 +356,7 @@ function ProposalEnginePageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -365,7 +366,7 @@ function ProposalEnginePageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   return (
     <div className="proposal-engine mini-app-scope">

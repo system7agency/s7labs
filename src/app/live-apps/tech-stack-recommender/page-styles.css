@@ -15,6 +15,11 @@
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  /* Stock --text-faint (#3a3b42) is too dark to read against the dark cards —
+   * it left the layer labels (FRONTEND / BACKEND / …) and other sub-text nearly
+   * invisible. Lift it page-wide to a readable secondary grey. All --text-faint
+   * uses on this page are text colours, so scoping the token here is safe. */
+  --text-faint: #83858f;
 }
 
 .tech-stack-recommender * {
@@ -566,7 +571,7 @@
 .tech-stack-recommender .layer-alts {
   font-family: var(--mono);
   font-size: 10.5px;
-  color: var(--text-faint);
+  color: var(--text-dim);
   margin: 0;
 }
 

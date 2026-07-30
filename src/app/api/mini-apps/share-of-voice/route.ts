@@ -149,8 +149,12 @@ function computeScores(
   })
 
   scores.sort((a, b) => b.share_of_voice - a.share_of_voice)
+  // Standard competition ranking ("1224"): brands with the same share_of_voice
+  // share the same rank, so three brands tied at 0% are all rank 2 rather than
+  // being handed arbitrary ranks 2, 3, 4.
   scores.forEach((s, i) => {
-    s.rank = i + 1
+    const prev = scores[i - 1]
+    s.rank = prev && prev.share_of_voice === s.share_of_voice ? prev.rank : i + 1
   })
 
   const answerRows = new Map<string, Map<Provider, AnswerCallResult>>()

@@ -208,7 +208,7 @@ function IntentSignalsPageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   useEffect(() => {
     const tick = () => {
@@ -359,6 +359,7 @@ function IntentSignalsPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -366,7 +367,7 @@ function IntentSignalsPageInner() {
     setDomainError(null)
     setSubmitting(false)
     setSysState('idle')
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   const targetLabel = useMemo(() => normalizeHostInput(domain) || 'target', [domain])
 

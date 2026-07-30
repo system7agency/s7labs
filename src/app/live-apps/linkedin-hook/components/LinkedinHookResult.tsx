@@ -111,7 +111,12 @@ function ResultBody({
   return (
     <>
       <div className="result-head">
-        <span className="title">Hooks ready: {output.post_author}</span>
+        <span className="title">
+          Hooks ready
+          {output.post_author && output.post_author.trim().toLowerCase() !== 'unknown'
+            ? `: ${output.post_author}`
+            : ''}
+        </span>
         <span className="ts-label">{tsLabel}</span>
       </div>
 

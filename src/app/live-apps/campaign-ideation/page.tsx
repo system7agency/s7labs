@@ -327,7 +327,7 @@ function CampaignIdeationPageInner() {
     setResultTs(formatReportTs(new Date()))
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -481,13 +481,14 @@ function CampaignIdeationPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setSubmitting(false)
     setErrorMsg('')
     setResult(null)
     setEmailError(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   return (
     <div className="campaign-ideation mini-app-scope">

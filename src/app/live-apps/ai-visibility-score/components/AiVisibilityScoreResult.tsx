@@ -1,7 +1,14 @@
 'use client'
 
 import type { AVSResult } from '@/app/api/mini-apps/ai-visibility-score/route'
+import { AVS_SUB_SCORE_LABELS, type AVSSubScoreKey } from '@/lib/mini-apps/avs-weights'
 import '../page-styles.css'
+
+/** Map a raw sub-score key (e.g. "entity_clarity") to its human label
+ *  ("Entity Clarity"), falling back to the raw value if it's unrecognised. */
+function subScoreLabel(key: string): string {
+  return AVS_SUB_SCORE_LABELS[key as AVSSubScoreKey] ?? key
+}
 
 export type AiVisibilityScoreInput = { domain?: string }
 export type AiVisibilityScoreOutput = AVSResult
@@ -99,11 +106,11 @@ function ResultBody({ result }: { result: AVSResult }) {
       <div className="short-read-block">
         <div className="section-header">{"// what's dragging your score down"}</div>
         <p className="biggest-drag">
-          <span>{result.biggest_drag.sub_score}</span>: {result.biggest_drag.why}
+          <span>{subScoreLabel(result.biggest_drag.sub_score)}</span>: {result.biggest_drag.why}
         </p>
         {result.short_read.map((item) => (
           <div key={item.sub_score} className="short-read-item">
-            <h4>{item.sub_score}</h4>
+            <h4>{subScoreLabel(item.sub_score)}</h4>
             <p>{item.diagnosis}</p>
           </div>
         ))}

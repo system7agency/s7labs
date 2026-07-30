@@ -503,6 +503,45 @@
 .ai-overview-tracker .section-header .count {
   color: var(--text-faint);
 }
+/* Match the "// how to start getting cited" eyebrow to the "// who keeps
+ * getting cited" section header above it, so both render as the same uppercase
+ * mono eyebrow (previously .plan-eyebrow had no styling → raw lowercase). */
+.ai-overview-tracker .plan-eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+/* Domain + verdict row in the free result. This block had no styling, so the
+ * verdict pill ("Invisible") rendered flush against the domain text
+ * ("mammoth-ai.comInvisible"). Give it a flex gap and make the verdict a real
+ * pill. */
+.ai-overview-tracker .one-liner-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0 24px;
+}
+.ai-overview-tracker .project-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.ai-overview-tracker .type-pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  white-space: nowrap;
+}
 
 /* Signals */
 .ai-overview-tracker .signals {
@@ -1018,10 +1057,34 @@
   color: var(--text-muted);
 }
 
+/* "How to start getting cited" numbered list. These had no layout CSS, so the
+ * number and paragraph didn't sit in an aligned row. Grid them: number column +
+ * text column, with the number baseline-aligned to the first line of the body. */
+.ai-overview-tracker .plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.ai-overview-tracker .plan-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 16px;
+  align-items: baseline;
+}
 .ai-overview-tracker .reco-number {
   font-family: var(--mono);
   font-size: 20px;
+  line-height: 1.55;
   color: var(--blue);
+}
+.ai-overview-tracker .plan-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-dim);
 }
 
 .ai-overview-tracker .gated-loading {

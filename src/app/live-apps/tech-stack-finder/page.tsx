@@ -148,7 +148,6 @@ function buildPlainText(result: TechStackFinderResult): string {
     '',
     `Categories: ${result.categories.length}`,
     `Technologies detected: ${result.totalTechnologies}`,
-    `Provider: ${result.provider}${result.cached ? ' (cached)' : ''}`,
     '',
     '// CATEGORY BREAKDOWN',
   ]
@@ -282,7 +281,7 @@ function TechStackFinderPageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const domainInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -439,6 +438,7 @@ function TechStackFinderPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -447,7 +447,7 @@ function TechStackFinderPageInner() {
     setEmailError(null)
     setSubmitting(false)
     setSysState('idle')
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   const loadingHost = trimDomain(domain) || 'target-domain'
 
@@ -595,10 +595,7 @@ function TechStackFinderPageInner() {
                         ))}
                       </div>
 
-                      <div className="tsf-provider-line">
-                        provider: {result.provider}
-                        {result.cached ? ' · cached 24h' : ''}
-                      </div>
+                      {result.cached ? <div className="tsf-provider-line">cached · 24h</div> : null}
                     </div>
 
                     <div className="result-actions">
