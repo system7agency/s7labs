@@ -191,7 +191,7 @@ function TechStackRecommenderPageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -354,6 +354,7 @@ function TechStackRecommenderPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -363,7 +364,7 @@ function TechStackRecommenderPageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   return (
     <div className="tech-stack-recommender mini-app-scope">

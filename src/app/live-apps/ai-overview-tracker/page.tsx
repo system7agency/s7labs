@@ -308,7 +308,7 @@ function AiOverviewTrackerPageInner() {
     setRestored(true)
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   useEffect(() => {
     const tick = () => {
@@ -482,6 +482,7 @@ function AiOverviewTrackerPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setFree(null)
@@ -492,7 +493,7 @@ function AiOverviewTrackerPageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   return (
     <div className="ai-overview-tracker mini-app-scope">

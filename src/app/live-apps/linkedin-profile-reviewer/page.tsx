@@ -209,7 +209,7 @@ function LinkedInProfileReviewerPageInner() {
     setResultTs(fmtTs(new Date()))
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const urlInputRef = useRef<HTMLInputElement | null>(null)
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -239,6 +239,7 @@ function LinkedInProfileReviewerPageInner() {
   }, [appState, mode])
 
   const resetToInput = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setInputError(null)
@@ -247,7 +248,7 @@ function LinkedInProfileReviewerPageInner() {
     setSubmitting(false)
     setResult(null)
     setEmailError(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {

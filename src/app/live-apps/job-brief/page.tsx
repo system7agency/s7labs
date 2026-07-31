@@ -181,7 +181,7 @@ function JobBriefPageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const urlInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -366,6 +366,7 @@ function JobBriefPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -375,7 +376,7 @@ function JobBriefPageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   return (
     <div className="job-brief mini-app-scope">

@@ -145,6 +145,7 @@ function ResultBody({
 }) {
   const criticalCount = output.issues.filter((i) => i.severity === 'critical').length
   const warningCount = output.issues.filter((i) => i.severity === 'warning').length
+  const suggestionCount = output.issues.filter((i) => i.severity === 'suggestion').length
   return (
     <>
       <div className="result-head">
@@ -171,7 +172,7 @@ function ResultBody({
             <span className="sc-big">{output.issues.length}</span>
           </div>
           <div className="sc-delta">
-            {criticalCount} critical · {warningCount} warnings
+            {criticalCount} critical · {warningCount} warning · {suggestionCount} suggestion
           </div>
         </div>
         <div

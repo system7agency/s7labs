@@ -100,10 +100,13 @@ function extractSlug(source) {
 
 function hasHowItWorks(source) {
   // Either a direct <section className="how-it-works"> with an <h2>,
-  // or use of the shared <HowItWorks> component.
+  // or use of the shared <HowItWorks> component. The shared component lives at
+  // @/components/mini-apps/HowItWorks — the mini-apps shared dirs were
+  // deliberately NOT renamed when /mini-apps became /live-apps (see CLAUDE.md),
+  // so accept both the current mini-apps path and a future live-apps path.
   const directSection = /className=["']how-it-works["']/.test(source) && /<h2[\s>]/.test(source)
   const sharedComponent =
-    /from\s+['"]@\/components\/live-apps\/HowItWorks['"]/.test(source) &&
+    /from\s+['"]@\/components\/(?:mini|live)-apps\/HowItWorks['"]/.test(source) &&
     /<HowItWorks[\s>]/.test(source)
   return directSection || sharedComponent
 }

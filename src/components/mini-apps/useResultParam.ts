@@ -29,6 +29,13 @@ type ResultParam = {
   hasResultParam: boolean
   /** Put ?result=<id> in the URL after a fresh run (no re-fetch). */
   publish: (id: string) => void
+  /**
+   * Remove ?result=<id> from the URL and forget the published id. Call this
+   * from a page's reset ("run another") handler — otherwise the stale param
+   * keeps `hasResultParam` true and the page stays stuck on the restore
+   * placeholder instead of returning to the empty form.
+   */
+  clear: () => void
 }
 
 export function useResultParam(
@@ -75,5 +82,16 @@ export function useResultParam(
     [router]
   )
 
-  return { restoring, hasResultParam, publish }
+  // Strip ?result from the URL so a reset returns the page to its empty form.
+  // Reads the live URL (not the captured searchParams) and preserves any other
+  // params (utm, etc.).
+  const clear = useCallback(() => {
+    publishedRef.current = null
+    setRestoring(false)
+    const url = new URL(window.location.href)
+    url.searchParams.delete('result')
+    router.replace(url.pathname + url.search, { scroll: false })
+  }, [router])
+
+  return { restoring, hasResultParam, publish, clear }
 }

@@ -157,7 +157,7 @@ function ResultBody({
           <div className="sc-value">
             <span className="sc-big">{output.monthly_cost_estimate}</span>
           </div>
-          <div className="sc-delta">Build: {output.build_estimate}</div>
+          <div className="sc-delta">At MVP scale</div>
         </div>
         <div className="score-card glance-card">
           <div className="sc-label">At a glance</div>

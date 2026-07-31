@@ -172,7 +172,7 @@ function EmailCopyOptimizerPageInner() {
     setResult(r)
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const runReadout = useMemo(() => {
     if (appState === 'loading') return 'running'
@@ -366,13 +366,14 @@ function EmailCopyOptimizerPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('input')
     setSubmitting(false)
     setResult(null)
     setErrorMessage('')
     setCopiedVariation(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   const handleCopyVariation = useCallback(
     async (index: number) => {

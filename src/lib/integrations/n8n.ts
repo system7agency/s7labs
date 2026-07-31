@@ -6,14 +6,16 @@
  *                                        with a fallback to the sales-insights webhook)
  *
  * All of these cause n8n to send an email downstream, so this single flag is
- * what guarantees the app triggers NO emails. Hard-off (not env-driven).
+ * what gates whether the app triggers ANY of them.
  *
  * IMPORTANT: the emails themselves are sent by n8n (system7ai.app.n8n.cloud),
  * not by this app. This flag only stops THIS app from calling n8n. If n8n has
  * its own schedules or other inbound triggers, those must be paused in n8n —
  * and/or the N8N_*_WEBHOOK_URL env vars cleared — for a full guarantee.
  *
- * Typed `boolean` (not the literal `false`) so guarded code paths are not
- * flagged as unreachable. Flip to `true` to re-enable webhook calls.
+ * Env-driven: set N8N_WEBHOOKS_ENABLED=true in the environment (.env.local for
+ * local dev, and the Vercel env for production) to re-enable webhook calls.
+ * Unset or any other value => OFF, so production stays safe unless explicitly
+ * turned on.
  */
-export const N8N_WEBHOOKS_ENABLED: boolean = false
+export const N8N_WEBHOOKS_ENABLED: boolean = process.env.N8N_WEBHOOKS_ENABLED === 'true'

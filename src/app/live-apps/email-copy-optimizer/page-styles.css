@@ -13,7 +13,10 @@
 .eco-page .shell {
   width: min(980px, 100%);
   margin: 0 auto;
-  padding: 52px 20px 84px;
+  /* Top padding clears the fixed 64px site header (this page is top-aligned,
+     not vertically centered like the other mini-apps) so the eyebrow badge
+     isn't clipped underneath it. */
+  padding: 96px 20px 84px;
 }
 
 .eco-page .hero {
@@ -23,11 +26,13 @@
 
 .eco-page .eyebrow {
   display: inline-flex;
-  padding: 6px 12px;
+  align-items: center;
+  padding: 7px 12px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
   font-size: 11px;
+  line-height: 1.35;
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }

@@ -596,6 +596,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 8px;
   flex-wrap: wrap;
@@ -606,6 +607,7 @@
   font-weight: 500;
   color: var(--text);
   letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 .crm-sanity .issue-value {
   font-family: var(--mono);
@@ -615,6 +617,7 @@
   border: 1px solid var(--border-strong);
   padding: 2px 8px;
   border-radius: 4px;
+  min-width: 0;
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -180,7 +180,7 @@ function OutboundRadarPageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const companyInputRef = useRef<HTMLInputElement | null>(null)
   const resultPanelRef = useRef<HTMLDivElement | null>(null)
@@ -354,6 +354,7 @@ function OutboundRadarPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -364,7 +365,7 @@ function OutboundRadarPageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   const loadingTarget = domain ? domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '') : 'target'
 

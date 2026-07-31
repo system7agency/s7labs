@@ -206,7 +206,7 @@ function AiVisibilityScorePageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -344,6 +344,7 @@ function AiVisibilityScorePageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -353,7 +354,7 @@ function AiVisibilityScorePageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   const loadingDomain = normalizeDomainInput(domain) || 'domain'
 

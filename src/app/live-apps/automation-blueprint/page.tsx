@@ -218,7 +218,7 @@ function AutomationBlueprintPageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -362,6 +362,7 @@ function AutomationBlueprintPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -372,7 +373,7 @@ function AutomationBlueprintPageInner() {
     setSysState('idle')
     setTokens(null)
     setDiagramFailed(false)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   const handleCopyConfig = useCallback(async () => {
     if (!result) return

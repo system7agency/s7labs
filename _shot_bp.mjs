@@ -1,0 +1,10 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch()
+const pg = await b.newPage({ viewport: { width: 1280, height: 700 }, deviceScaleFactor: 2 })
+await pg.goto('http://localhost:3000/live-apps/_bptest', { waitUntil: 'networkidle', timeout: 45000 })
+await pg.waitForSelector('.mermaid-output svg', { timeout: 20000 }).catch(()=>{})
+await pg.waitForTimeout(1500)
+const el = pg.locator('.blueprint-panel').first()
+if (await el.count()) await el.screenshot({ path: '/tmp/bp.png' })
+console.log('svg?', await pg.locator('.mermaid-output svg').count())
+await b.close()

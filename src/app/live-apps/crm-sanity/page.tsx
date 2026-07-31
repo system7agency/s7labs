@@ -263,7 +263,7 @@ function CrmSanityPageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
@@ -414,6 +414,7 @@ function CrmSanityPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -423,7 +424,7 @@ function CrmSanityPageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   return (
     <div className="crm-sanity mini-app-scope">

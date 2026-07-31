@@ -176,7 +176,7 @@ function WebsiteRoastPageInner() {
     setSysState('complete')
     setAppState('result')
   }, [])
-  const { restoring, hasResultParam, publish } = useResultParam(applyResult)
+  const { restoring, hasResultParam, publish, clear } = useResultParam(applyResult)
 
   useEffect(() => {
     const tick = () => {
@@ -340,6 +340,7 @@ function WebsiteRoastPageInner() {
   )
 
   const handleReset = useCallback(() => {
+    clear()
     resetLoader()
     setAppState('idle')
     setResult(null)
@@ -349,7 +350,7 @@ function WebsiteRoastPageInner() {
     setSubmitting(false)
     setSysState('idle')
     setTokens(null)
-  }, [resetLoader])
+  }, [resetLoader, clear])
 
   return (
     <div className="website-roast mini-app-scope">
