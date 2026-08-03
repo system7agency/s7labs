@@ -18,6 +18,12 @@ export type Signal = {
 
 export type BriefResult = {
   company: string
+  /**
+   * Whether the analysed content is a single job posting or a broader company
+   * homepage / careers page. Optional so results saved before this field
+   * existed still parse; the UI treats a missing value as 'job_posting'.
+   */
+  input_type?: 'job_posting' | 'company_page'
   role: string
   department: string
   seniority: 'ic' | 'lead' | 'manager' | 'director' | 'vp' | 'c-suite'
@@ -38,18 +44,19 @@ type ErrorResponse = { ok: false; message: string }
 export type ApiResponse = SuccessResponse | ErrorResponse
 
 const CLAUDE_PROMPT = (content: string) => `
-You are a senior B2B sales strategist. Analyse the following job posting content and generate a structured sales brief that helps a rep understand how to sell into this company right now.
+You are a senior B2B sales strategist. The content below is EITHER a single job posting OR a company homepage / careers page. Analyse it and generate a structured sales brief that helps a rep understand how to sell into this company right now.
 
-JOB POSTING CONTENT:
+CONTENT:
 ${content.slice(0, 10000)}
 
-Return ONLY valid JSON in this exact shape — no markdown, no explanation:
+Return ONLY valid JSON in this exact shape - no markdown, no explanation:
 {
   "company": <company name>,
-  "role": <job title being hired for>,
+  "input_type": <"job_posting" | "company_page">,
+  "role": <the job title being hired for; if this is a company page hiring across several roles, a short description of the overall hiring theme, e.g. "Multiple sales roles">,
   "department": <department, e.g. "Engineering", "Revenue Operations", "Marketing">,
   "seniority": <"ic" | "lead" | "manager" | "director" | "vp" | "c-suite">,
-  "summary": <2-3 sentence executive summary — what this hire tells you about where the company is headed and why now is a good time to reach out>,
+  "summary": <2-3 sentence executive summary - what this tells you about where the company is headed and why now is a good time to reach out>,
   "signals": [
     {
       "label": <short signal label>,
@@ -58,19 +65,21 @@ Return ONLY valid JSON in this exact shape — no markdown, no explanation:
     }
   ],
   "tech_stack": <array of specific tools, platforms, or technologies mentioned>,
-  "pain_points": <array of 2-4 implied or explicit pain points this hire suggests>,
+  "pain_points": <array of 2-4 implied or explicit pain points this suggests>,
   "budget_indicators": <array of 1-3 signals that suggest budget availability or constraints>,
-  "best_angle": <1-2 sentence concrete sales angle — what specific problem or opportunity to lead with when reaching out>,
-  "ideal_contact": <job title of the best person to reach out to based on this posting — not necessarily the hiring manager>,
+  "best_angle": <1-2 sentence concrete sales angle - what specific problem or opportunity to lead with when reaching out>,
+  "ideal_contact": <job title of the best person to reach out to - not necessarily the hiring manager>,
   "urgency": <"high" | "medium" | "low">
 }
 
 Rules:
-- Extract 3-6 signals. Only include what is clearly supported by the posting.
-- tech_stack must list specific named tools (e.g. "Salesforce", "dbt", "React") — not generic terms.
+- Set "input_type" to "job_posting" ONLY when the content is one specific role with its own responsibilities and requirements. Use "company_page" for a homepage, a careers/jobs listing, or any content about company-wide hiring rather than a single role. "input_type" MUST agree with what your "summary" says the input is.
+- "seniority" describes the individual role. When "input_type" is "company_page", set it to your best estimate of the most senior role being hired (the UI will not show a seniority badge for company pages).
+- Extract 3-6 signals. Only include what is clearly supported by the content.
+- tech_stack must list specific named tools (e.g. "Salesforce", "dbt", "React") - not generic terms.
 - pain_points should be inferred from the responsibilities and requirements, not copied verbatim.
-- best_angle must be specific to this company and role — no generic templates.
-- If the company name is not in the posting, infer it from context or use "Unknown".
+- best_angle must be specific to this company - no generic templates.
+- If the company name is not present, infer it from context or use "Unknown".
 `
 
 function jsonResponse(body: ApiResponse, status: number) {

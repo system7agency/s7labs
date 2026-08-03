@@ -56,7 +56,11 @@ export function buildJobBriefPlainText(r: BriefResult): string {
     '='.repeat(60),
     '',
     `Role      : ${r.role}`,
-    `Department: ${r.department} · ${SENIORITY_LABEL[r.seniority] ?? r.seniority}`,
+    `Department: ${r.department} · ${
+      r.input_type === 'company_page'
+        ? 'Company page'
+        : (SENIORITY_LABEL[r.seniority] ?? r.seniority)
+    }`,
     `Urgency   : ${r.urgency.toUpperCase()}`,
     '',
     '// EXECUTIVE SUMMARY',
@@ -110,7 +114,17 @@ function ResultBody({ output, tsLabel = 'BRIEF' }: { output: JobBriefOutput; tsL
           <div className="role-badges">
             <span className={`badge urgency-${output.urgency}`}>{output.urgency} urgency</span>
             <span className="badge dept">{output.department}</span>
-            <span className="badge">{SENIORITY_LABEL[output.seniority] ?? output.seniority}</span>
+            {/*
+             * A seniority badge only makes sense for a single job posting. When
+             * the input is a company homepage / careers page, showing e.g.
+             * "Individual Contributor" contradicts a summary that describes
+             * company-wide hiring, so surface the classification instead.
+             */}
+            {output.input_type === 'company_page' ? (
+              <span className="badge">Company page</span>
+            ) : (
+              <span className="badge">{SENIORITY_LABEL[output.seniority] ?? output.seniority}</span>
+            )}
           </div>
         </div>
         <p className="summary-text">{output.summary}</p>
