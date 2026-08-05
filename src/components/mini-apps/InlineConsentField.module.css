@@ -8,8 +8,12 @@
   gap: 8px;
 }
 
-.consentLabel {
+/* Scoped under .consentRow so this wins over broad host-app `label` rules
+ * (e.g. `.bulk-email-finder label { flex-direction: column }`) that would
+ * otherwise stack the checkbox above the text and misalign the tick. */
+.consentRow .consentLabel {
   display: flex;
+  flex-direction: row;
   align-items: flex-start;
   gap: 12px;
   min-height: 36px;

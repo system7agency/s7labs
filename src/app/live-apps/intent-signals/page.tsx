@@ -539,7 +539,15 @@ function IntentSignalsPageInner() {
                             <p>{signal.detail}</p>
                             <div className="signal-meta">
                               <span>{signalTypeLabel(signal.type)}</span>
-                              <span>{signal.source}</span>
+                              {/* Only show the source when it adds information beyond the
+                                  type label. Otherwise a news signal renders "News" +
+                                  "News search" as the duplicated tag "NEWS NEWS SEARCH". */}
+                              {signal.source &&
+                                !signal.source
+                                  .toLowerCase()
+                                  .includes(signalTypeLabel(signal.type).toLowerCase()) && (
+                                  <span>{signal.source}</span>
+                                )}
                             </div>
                           </article>
                         ))}

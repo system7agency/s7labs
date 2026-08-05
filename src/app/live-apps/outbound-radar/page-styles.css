@@ -451,7 +451,7 @@
   box-shadow: 0 0 10px var(--grade-mid);
 }
 .outbound-radar .score-card.low .sc-big {
-  color: var(--grade-bad);
+  color: var(--grade-good);
 }
 .outbound-radar .score-card.low::before {
   content: '';
@@ -460,8 +460,8 @@
   top: 0;
   width: 2px;
   height: 100%;
-  background: var(--grade-bad);
-  box-shadow: 0 0 10px var(--grade-bad);
+  background: var(--grade-good);
+  box-shadow: 0 0 10px var(--grade-good);
 }
 .outbound-radar .score-card.neutral .sc-big {
   color: var(--blue);

@@ -79,7 +79,7 @@ type ApolloOrgResponse = {
   organization?: { primary_domain?: string | null; name?: string | null } | null
 }
 
-function parseCompany(input: string): { domain?: string; linkedinSlug?: string } {
+function parseCompany(input: string): { domain?: string; linkedinSlug?: string; name?: string } {
   const value = input.trim()
   const lower = value.toLowerCase()
   const linkedin = lower.match(LINKEDIN_RE)
@@ -92,7 +92,11 @@ function parseCompany(input: string): { domain?: string; linkedinSlug?: string }
       .split('/')[0] ?? ''
 
   if (DOMAIN_RE.test(bare)) return { domain: bare }
-  return {}
+  // Otherwise treat the input as a plain company name. Apollo's people/match
+  // accepts organization_name, so users can paste "Apple" instead of a domain
+  // or LinkedIn URL — which is what a typical CSV column contains and which
+  // every row would otherwise error on ("must be a domain or LinkedIn URL").
+  return value ? { name: value } : {}
 }
 
 function mapConfidence(emailStatus: string | null | undefined): Confidence | null {
@@ -163,7 +167,7 @@ function normalizeRows(rawRows: z.infer<typeof InputSchema>['rows']): Normalized
 
 async function lookupEmail(apiKey: string, row: NormalizedRow): Promise<BulkEmailJobResult> {
   const parsed = parseCompany(row.company)
-  if (!parsed.domain && !parsed.linkedinSlug) {
+  if (!parsed.domain && !parsed.linkedinSlug && !parsed.name) {
     return {
       row: row.row,
       firstName: row.firstName,
@@ -215,6 +219,7 @@ async function lookupEmail(apiKey: string, row: NormalizedRow): Promise<BulkEmai
       reveal_personal_emails: false,
     }
     if (domain) body.domain = domain
+    else if (parsed.name) body.organization_name = parsed.name
 
     const { status, data } = await apolloPeopleMatch(apiKey, body, controller.signal)
     if (status === 429) {

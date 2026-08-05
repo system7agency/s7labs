@@ -268,7 +268,14 @@ Return corrected JSON only, still following the exact schema and rules.
       retry.parsed.tokens_out = retry.tokensOut
       const cost = costFromPass(retry.tokensIn, retry.tokensOut)
       return jsonResponse({ ok: true, data: retry.parsed, cost }, 200)
-    } catch {
+    } catch (retryErr) {
+      // Both the first pass and the retry failed. Log the real reasons (Claude
+      // API error, timeout, or JSON/shape validation) so the 500 the user saw
+      // isn't a black box in production logs.
+      console.error('[campaign-ideation] generation failed', {
+        first: firstErr instanceof Error ? firstErr.message : String(firstErr),
+        retry: retryErr instanceof Error ? retryErr.message : String(retryErr),
+      })
       const message =
         firstErr instanceof Error && /JSON|shape|effort/i.test(firstErr.message)
           ? 'We had trouble structuring the ideas. Please try again.'

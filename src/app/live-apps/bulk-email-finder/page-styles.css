@@ -114,7 +114,7 @@
 }
 
 .bulk-email-finder .ghost {
-  color: var(--text-muted);
+  color: var(--text-dim);
 }
 
 .bulk-email-finder .actions {
