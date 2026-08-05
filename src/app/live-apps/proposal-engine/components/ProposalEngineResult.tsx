@@ -61,6 +61,30 @@ export function groupTechStack(items: TechItem[]): Map<TechItem['category'], Tec
   return map
 }
 
+/**
+ * The model returns `timeline_weeks` as a single number, which tends to be the
+ * sum of the phase lower bounds and so understates the realistic finish (each
+ * phase carries a range like "3–4 weeks"). Derive the true min–max total from
+ * the phase durations so the headline reflects the full range (e.g. "14-17"),
+ * falling back to `timeline_weeks` when no numbers can be parsed.
+ */
+export function timelineWeeksLabel(r: ProposalResult): string {
+  let min = 0
+  let max = 0
+  let matched = false
+  for (const phase of r.phases ?? []) {
+    const nums = (phase.duration.match(/\d+(?:\.\d+)?/g) ?? []).map(Number)
+    const first = nums[0]
+    const last = nums[nums.length - 1]
+    if (first === undefined || last === undefined) continue
+    matched = true
+    min += first
+    max += last
+  }
+  if (!matched) return String(r.timeline_weeks)
+  return min === max ? String(min) : `${min}-${max}`
+}
+
 export function buildProposalEnginePlainText(r: ProposalResult): string {
   const lines: string[] = [
     'Proposal Draft — S7 Labs',
@@ -96,7 +120,7 @@ export function buildProposalEnginePlainText(r: ProposalResult): string {
   lines.push(
     '',
     '// TIMELINE',
-    `${r.timeline_weeks} weeks`,
+    `${timelineWeeksLabel(r)} weeks`,
     r.timeline_note,
     '',
     `// ${r.why_s7.title.toUpperCase()}`,
@@ -195,7 +219,7 @@ function ResultBody({ output, tsLabel }: { output: ProposalEngineOutput; tsLabel
         <div className="proposal-section">
           <div className="section-eyebrow">{'// Timeline'}</div>
           <div className="timeline-display">
-            <div className="timeline-weeks">{output.timeline_weeks}</div>
+            <div className="timeline-weeks">{timelineWeeksLabel(output)}</div>
             <div className="timeline-weeks-label">estimated weeks</div>
             <p className="timeline-note">{output.timeline_note}</p>
           </div>

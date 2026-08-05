@@ -44,7 +44,7 @@ export function IntentSignalsResult({ input, output }: Props) {
         <ResultCard label="// SIGNALS">
           {out.signals.map((s, i) => (
             <div key={i} style={{ marginBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 4 }}>
                 <strong>{s.label}</strong>
                 {s.strength && (
                   <span

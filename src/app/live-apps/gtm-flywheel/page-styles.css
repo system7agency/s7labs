@@ -169,6 +169,26 @@
   display: none;
 }
 
+/* React Flow's default zoom/fit controls render dark icons on a near-white
+ * button, which is invisible against this dark canvas. Give the buttons a dark
+ * surface and light icons so the controls are legible. */
+.gtm-flywheel .react-flow__controls {
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+.gtm-flywheel .react-flow__controls-button {
+  background: rgba(18, 21, 28, 0.92);
+  border-bottom: 1px solid var(--border);
+}
+.gtm-flywheel .react-flow__controls-button:hover {
+  background: rgba(38, 43, 54, 0.95);
+}
+.gtm-flywheel .react-flow__controls-button svg {
+  fill: var(--text);
+}
+
 .gtm-flywheel .fly-node {
   min-width: 190px;
   background: linear-gradient(180deg, #0c121d, #0a1019);

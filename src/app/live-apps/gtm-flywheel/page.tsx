@@ -496,10 +496,16 @@ export default function GtmFlywheelPage() {
   }, [buildShareUrl])
 
   const handleDownloadPng = useCallback(async () => {
-    const viewport = canvasRef.current?.querySelector<HTMLElement>('.react-flow__viewport')
-    if (!viewport) return
+    const container = canvasRef.current
+    if (!container) return
+    // Fit every node into view first, then capture the whole canvas container.
+    // Capturing `.react-flow__viewport` at the current pan/zoom cropped the
+    // export to whatever was in frame (often a single motion). Two rAFs let the
+    // fitView transform settle before the snapshot.
+    instance?.fitView({ padding: 0.12, duration: 0 })
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
     try {
-      await capturePng(viewport, {
+      await capturePng(container, {
         slug: 'gtm-flywheel',
         appName: 'GTM Flywheel',
         filename: 'gtm-flywheel',
@@ -509,7 +515,7 @@ export default function GtmFlywheelPage() {
       console.error('[gtm-flywheel] PNG export failed', err)
       setShareMessage('PNG export failed. Please try again.')
     }
-  }, [])
+  }, [instance])
 
   const libraryItems = useMemo(
     () =>
