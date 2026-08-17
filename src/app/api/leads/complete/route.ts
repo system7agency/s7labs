@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { z } from 'zod'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { sendResultEmail } from '@/lib/email/send-result-email'
@@ -114,17 +114,33 @@ export async function POST(request: Request) {
     return errorResponse('Something went wrong', 500)
   }
 
-  // Fire-and-forget transactional result email on the success branch, unless the
-  // caller opted out (sendEmail:false) — gated apps suppress it on the free pass
-  // so only the full free+gated completion emails. Never await / block on it.
+  // Transactional result email on the success branch, unless the caller opted
+  // out (sendEmail:false) — gated apps suppress it on the free pass so only the
+  // full free+gated completion emails.
+  //
+  // Scheduled with after() rather than a bare unawaited promise: on Vercel the
+  // invocation is frozen the moment the response is returned, which killed the
+  // Supabase lookup + Resend fetch inside sendResultEmail before they could
+  // finish (it worked locally only because `next dev` keeps the process alive).
+  // after() keeps the function warm for this work without blocking the response.
   const sendEmail = (parsed.data as { sendEmail?: boolean }).sendEmail
   if (update.status === 'completed' && sendEmail !== false) {
     const submissionId = parsed.data.submissionId
-    sendResultEmail(submissionId).catch((err) => {
-      console.error('[leads/complete] background email send failed', {
-        submissionId,
-        err: err instanceof Error ? err.message : String(err),
-      })
+    after(async () => {
+      try {
+        const result = await sendResultEmail(submissionId)
+        if (!result.ok) {
+          console.error('[leads/complete] background email send failed', {
+            submissionId,
+            err: result.error,
+          })
+        }
+      } catch (err) {
+        console.error('[leads/complete] background email send threw', {
+          submissionId,
+          err: err instanceof Error ? err.message : String(err),
+        })
+      }
     })
   }
 
